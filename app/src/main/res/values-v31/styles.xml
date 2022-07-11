@@ -1,0 +1,8 @@
+<resources>
+    <style name="Widget.DigiDictionary.ListWidget.Container" parent="android:Widget">
+        <item name="android:id">@android:id/background</item>
+        <item name="android:padding">?attr/listWidgetPadding</item>
+        <item name="android:background">@drawable/widget_list_background</item>
+        <item name="android:clipToOutline">true</item>
+    </style>
+</resources>

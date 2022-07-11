@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <TextView
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:id="@+id/itemQuizRecord_expression"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="5dp"
+        app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Expression"
+        android:ellipsize="none"
+        android:maxLines="100"
+        android:textIsSelectable="false"/>
+
+    <TextView
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:id="@+id/itemQuizRecord_meaning"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/quiz_centerGuide"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Meaning"
+        android:ellipsize="none"
+        android:maxLines="100"
+        android:gravity="end"
+        android:textIsSelectable="false"/>
+
+    <Button
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:id="@+id/itemQuizRecord_correctAnswer"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/itemQuizRecord_actionButtonHeight"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/record_quiz_item_correct_answer"
+        app:strokeColor="@color/record_quiz_item_correct_answer"
+        android:text="@string/correctAnswer"
+        app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/itemQuizRecord_meaning" />
+
+    <Button
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:id="@+id/itemQuizRecord_wrongAnswer"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/itemQuizRecord_actionButtonHeight"
+        android:textColor="@color/record_quiz_item_wrong_answer"
+        app:strokeColor="@color/record_quiz_item_wrong_answer"
+        android:text="@string/wrongAnswer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/quiz_centerGuide"
+        app:layout_constraintTop_toTopOf="@id/itemQuizRecord_correctAnswer" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/quiz_centerGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

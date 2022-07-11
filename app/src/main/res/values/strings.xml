@@ -1,0 +1,103 @@
+<resources>
+    <string name="appName">Digi Dictionary</string>
+    <string name="addRecord">Add a new record</string>
+    <string name="applyChanges">Apply changes</string>
+    <string name="quiz">Quiz</string>
+
+    <string name="versionAndCredits">%1$s (%2$s)</string>
+
+    <string name="labelHomeFragment">Home</string>
+    <string name="labelQuizFragment">Quiz</string>
+    <string name="labelAddEditRecordFragment">Add or edit a record</string>
+    <string name="labelViewRecordFragment">View</string>
+
+    <string name="stats">Statistics</string>
+    <string name="settings">Settings</string>
+
+    <string name="expression">Expression</string>
+    <string name="meaning">Meaning</string>
+    <string name="origin">Origin</string>
+    <string name="additionalNotes">Additional notes</string>
+
+    <string name="expressionAndValueFormat">Expression: %s</string>
+    <string name="meaningPrefix">Meaning: </string>
+    <string name="originAndValueFormat">Origin: %s</string>
+    <string name="additionalNotesAndValueFormat">Additional notes: %s</string>
+    <string name="scoreAndValueFormat">Score: %d</string>
+    <string name="meaningAndOrdinalFormat">Meaning %d</string>
+
+    <string name="addExpression_existingExprError">Such expression already exists</string>
+    <string name="addExpression_tooManyMeaningListItemsError">Too many list items</string>
+    <string name="dbError">Internal error</string>
+
+    <string name="deleteRecordMessage">Do you really want to delete this record?</string>
+
+    <string name="search">Search</string>
+
+    <string name="add">Add</string>
+    <string name="emptyTextError">Text can\'t be empty</string>
+    <string name="delete">Delete</string>
+    <string name="remove">Remove</string>
+    <string name="edit">Edit</string>
+
+    <string name="correctAnswer">Correct</string>
+    <string name="wrongAnswer">Wrong</string>
+
+    <string name="saveResults">Save results</string>
+
+    <string name="exportData">Export</string>
+    <string name="importData">Import</string>
+
+    <string name="exportError">Export failed with error</string>
+    <string name="importError">Import failed with error</string>
+    <string name="exportSuccess">Export was successful</string>
+    <string name="importSuccess">Import was successful</string>
+    <string name="invalidFile">Invalid file format</string>
+
+    <string name="recordLoadingError">Failed to load record</string>
+    <string name="retry">Retry</string>
+
+    <string name="recordsCountFormat">Count: %d</string>
+    <string name="recordsAdded_last24HoursFormat">Records added in last 24 hours: %d</string>
+    <string name="recordsAdded_last7DaysFormat">Records added in last 7 days: %d</string>
+    <string name="recordsAdded_last31DaysFormat">Records added in last 31 days: %d</string>
+
+    <string name="last24Hours">Last 24 hours</string>
+    <string name="last48Hours">Last 48 hours</string>
+
+    <string name="all">All</string>
+    <string name="empty">Empty</string>
+
+    <string name="backup">Backup</string>
+
+    <string-array name="from_1_to_10" translatable="false">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+    </string-array>
+    <string name="settings_scorePointsPerCorrectAnswer_prefix">Score points per right answer: </string>
+    <string name="settings_scorePointsPerCorrectAnswer_description">
+        When you answer correct meaning of an expression, this amount of score points is added to the record
+    </string>
+
+    <string name="settings_scorePointsPerWrongAnswer_prefix">Score points per wrong answer: </string>
+    <string name="settings_scorePointsPerWrongAnswer_description">
+        When you answer wrong meaning of an expression, this amount of score points is subtracted from the record
+    </string>
+
+    <string name="listWidget_description">Widget which shows you most recent expressions you added</string>
+    <string name="listWidgetConf_title">Widget configuration</string>
+    <string name="listWidgetConf_modePrefix">Mode: </string>
+    <string-array name="listWidgetConf_modes">
+        <item>Last 24 hours</item>
+        <item>Last 48 hours</item>
+        <item>Last 96 hours</item>
+    </string-array>
+</resources>

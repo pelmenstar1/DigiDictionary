@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.home.HomeFragment"
+        android:label="@string/labelHomeFragment">
+        <action
+            android:id="@+id/action_home_to_addEditRecord"
+            app:destination="@id/addEditRecordFragment" />
+        <action
+            android:id="@+id/action_home_to_search"
+            app:destination="@id/searchFragment" />
+        <action
+            android:id="@+id/action_home_to_settings"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_home_to_stats"
+            app:destination="@id/statsFragment" />
+        <action
+            android:id="@+id/action_home_to_quizNavigation"
+            app:destination="@id/quizNavigation" />
+        <action
+            android:id="@+id/action_home_to_viewRecord"
+            app:destination="@id/viewRecordFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addEditRecordFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordFragment"
+        android:label="@string/labelAddEditRecordFragment"
+        tools:layout="@layout/fragment_add_edit_record">
+        <argument
+            android:name="recordId"
+            android:defaultValue="-1"
+            app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.search.SearchFragment"
+        android:label="@string/search">
+
+        <action
+            android:id="@+id/action_search_to_viewRecord"
+            app:destination="@id/viewRecordFragment" />
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.settings.SettingsFragment"
+        android:label="@string/settings" />
+
+    <fragment
+        android:id="@+id/statsFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.stats.StatsFragment"
+        android:label="@string/stats" />
+
+    <navigation
+        android:id="@+id/quizNavigation"
+        app:startDestination="@id/quizNavFragment">
+        <fragment
+            android:id="@+id/quizNavFragment"
+            android:name="io.github.pelmenstar1.digiDict.ui.quiz.QuizNavFragment"
+            android:label="@string/labelQuizFragment">
+            <action
+                android:id="@+id/action_quizNavFragment_to_quizFragment"
+                app:destination="@id/quizFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/quizFragment"
+            android:name="io.github.pelmenstar1.digiDict.ui.quiz.QuizFragment"
+            android:label="@string/labelQuizFragment">
+            <argument
+                android:name="mode"
+                app:argType="io.github.pelmenstar1.digiDict.ui.quiz.QuizMode"
+                app:nullable="false" />
+        </fragment>
+    </navigation>
+    <fragment
+        android:id="@+id/viewRecordFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordFragment"
+        android:label="@string/labelViewRecordFragment" >
+        <argument android:name="id"
+            app:argType="integer" />
+
+        <action
+            android:id="@+id/action_viewRecord_to_addEditRecord"
+            app:destination="@id/addEditRecordFragment" />
+    </fragment>
+</navigation>

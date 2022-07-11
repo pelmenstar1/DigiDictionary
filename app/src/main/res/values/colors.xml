@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="color_primary">#C51162</color>
+    <color name="color_on_primary">#FFFFFF</color>
+
+    <color name="color_secondary">#FF03DAC5</color>
+    <color name="color_secondary_variant">#FF018786</color>
+    <color name="color_on_secondary">#FF000000</color>
+    <color name="color_error">@color/red_700</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="red_700">#D32F2F</color>
+    <color name="green_700">#388E3C</color>
+
+    <color name="record_item_score_negative">@color/red_700</color>
+    <color name="record_item_score_positive">@color/green_700</color>
+
+    <color name="record_quiz_item_correct_answer">@color/green_700</color>
+    <color name="record_quiz_item_wrong_answer">@color/red_700</color>
+    <color name="light_blue_50">#FFE1F5FE</color>
+    <color name="light_blue_200">#FF81D4FA</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+</resources>

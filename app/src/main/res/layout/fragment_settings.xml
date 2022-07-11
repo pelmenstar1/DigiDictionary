@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="io.github.pelmenstar1.digiDict.BuildConfig" />
+
+        <variable
+            name="viewModel"
+            type="io.github.pelmenstar1.digiDict.ui.settings.SettingsViewModel" />
+
+        <variable
+            name="fragment"
+            type="androidx.fragment.app.Fragment" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Quiz settings -->
+
+        <TextView
+            android:id="@+id/settings_quizTitle"
+            style="@style/TextAppearance.Material3.HeadlineSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/quiz"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_prefix"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_scorePointsPerCorrectAnswer_prefix"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_quizTitle" />
+
+        <Spinner
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:entries="@array/from_1_to_10"
+            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerCorrectAnswer_prefix"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_prefix" />
+
+        <TextView
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_description"
+            style="@style/Widget.DigiDictionary.SettingsDescText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_scorePointsPerCorrectAnswer_description"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_spinner" />
+
+        <TextView
+            android:id="@+id/settings_scorePointsPerWrongAnswerPrefix"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:text="@string/settings_scorePointsPerWrongAnswer_prefix"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_description" />
+
+        <Spinner
+            android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:entries="@array/from_1_to_10"
+            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerWrongAnswerPrefix"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswerPrefix" />
+
+        <TextView
+            android:id="@+id/settings_scorePointsPerWrongAnswer_description"
+            style="@style/Widget.DigiDictionary.SettingsDescText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_scorePointsPerWrongAnswer_description"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_spinner" />
+
+        <!-- Backup settings -->
+
+        <TextView
+            android:id="@+id/settings_backupTitle"
+            style="@style/TextAppearance.Material3.HeadlineSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/backup"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_description" />
+
+        <Button
+            android:id="@+id/settings_import"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> viewModel.importData()}"
+            android:text="@string/importData"
+            app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_backupTitle" />
+
+        <Button
+            android:id="@+id/settings_export"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> viewModel.exportData()}"
+            android:text="@string/exportData"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/quiz_centerGuide"
+            app:layout_constraintTop_toTopOf="@+id/settings_import" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/quiz_centerGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
+
+        <TextView
+            style="@style/TextAppearance.Material3.LabelMedium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="@{@string/versionAndCredits(BuildConfig.VERSION_NAME, BuildConfig.BUILD_TYPE)}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="1.0 (Debug)" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
