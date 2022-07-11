@@ -1,14 +1,10 @@
 <h1 align="center">Digi Dictionary</h1> <br/>
-<p align="center">
-  <img src="./art/screen1.jpg" width="400px">
-  <img src="./art/screen2.jpg" width="400px">
-  <img src="./art/screen3.jpg" width="400px">
-</p>
 
 A small Android application which helps you to learn new words and expressions.
 You can:
 - List all of your expressions.
 - Add, edit, delete them.
+- Search
 - Revise them. By default, you only see random expressions without their meanings.
 The idea is to tell their meanings, click on the item and if you answered correct, then you click "Correct", if wrong, click "Wrong".
 Each record has a score.
@@ -16,6 +12,16 @@ If it is answered correct in the revision, then some score points are added to s
 In the settings, you can specify how much points you want to add, when you answer correct, and subtract, when you answer wrong.
 In the next revision, records with negative score will definitely appear and you are given a chance to answer them again 
 in hope you will do that correct.   
+
+There's also a widget which shows you records that were added during last 24 hours. 
+
+## Screenshots
+
+<p align="center">
+  <img src="./art/screen1.jpg" width="400px">
+  <img src="./art/screen2.jpg" width="400px">
+  <img src="./art/screen3.jpg" width="400px">
+</p>
 
 ## License
 
