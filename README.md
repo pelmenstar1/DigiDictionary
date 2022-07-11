@@ -6,7 +6,7 @@ You can:
 - Add, edit, delete them.
 - Search
 - Revise them. By default, you only see random expressions without their meanings.
-The idea is to tell their meanings, click on the item and if you answered correct, then you click "Correct", if wrong, click "Wrong".
+The idea is to tell their meanings, click on the item and if you answer correct, then you click "Correct", if wrong, click "Wrong".
 Each record has a score.
 If it is answered correct in the revision, then some score points are added to score, if wrong, some points are subtracted.
 In the settings, you can specify how much points you want to add, when you answer correct, and subtract, when you answer wrong.
