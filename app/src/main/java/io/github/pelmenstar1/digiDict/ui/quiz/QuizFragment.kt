@@ -120,7 +120,6 @@ class QuizFragment : Fragment() {
         }
 
         itemBackgroundHelper = QuizItemBackgroundHelper(context)
-        binding.quizItemsScrollContainer.scrollToDescendant(View(context))
 
         vm.mode = args.mode
         vm.startLoadingElements()
