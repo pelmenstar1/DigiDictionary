@@ -16,7 +16,7 @@ import io.github.pelmenstar1.digiDict.utils.getLazyValue
 @Database(
     entities = [Record::class],
     exportSchema = true,
-    version = 2,
+    version = 3,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -27,10 +27,15 @@ import io.github.pelmenstar1.digiDict.utils.getLazyValue
 )
 abstract class AppDatabase : RoomDatabase() {
     @DeleteColumn(tableName = "records", columnName = "origin")
-    class Migration_1_2: AutoMigrationSpec
+    class Migration_1_2 : AutoMigrationSpec
+
+    private object Migration_2_3 : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_records_expression ON records(expression)")
+        }
+    }
 
     abstract fun recordDao(): RecordDao
-
     inline fun createRecordTableObserver(crossinline block: () -> Unit): InvalidationTracker.Observer {
         return object : InvalidationTracker.Observer(RECORD_TABLE_ARRAY) {
             override fun onInvalidated(tables: MutableSet<String>) {
@@ -58,7 +63,7 @@ abstract class AppDatabase : RoomDatabase() {
             it.addObserver(tableObserver)
         }
 
-        lifecycle.addObserver(object: DefaultLifecycleObserver {
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 tracker.removeObserver(tableObserver)
 
@@ -66,6 +71,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         })
     }
+
     companion object {
         val RECORD_TABLE_ARRAY = arrayOf(RecordTable.name)
 
@@ -81,7 +87,10 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         fun createDatabase(context: Context): AppDatabase {
-            return Room.databaseBuilder(context, AppDatabase::class.java, "database").build()
+            return Room
+                .databaseBuilder(context, AppDatabase::class.java, "database")
+                .addMigrations(Migration_2_3)
+                .build()
         }
     }
 }

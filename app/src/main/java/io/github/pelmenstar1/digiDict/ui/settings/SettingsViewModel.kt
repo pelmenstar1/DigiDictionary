@@ -8,9 +8,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.github.pelmenstar1.digiDict.RecordImportExportManager
+import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.serialization.ValidationException
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -49,13 +52,15 @@ class SettingsViewModel @Inject constructor(
         successMessage: SettingsMessage,
         errorMessage: SettingsMessage,
         actionName: String,
-        crossinline block: suspend () -> Unit
+        crossinline block: suspend () -> Boolean
     ) {
         viewModelScope.launch {
             try {
-                block()
+                val showMessage = block()
 
-                _messageFlow.value = successMessage
+                if(showMessage) {
+                    _messageFlow.value = successMessage
+                }
             } catch (e: NullPointerException) {
                 // it means user has selected no file, so just eat an exception.
             } catch (e: ValidationException) {
@@ -75,16 +80,28 @@ class SettingsViewModel @Inject constructor(
             actionName = "export"
         ) {
             RecordImportExportManager.export(context, recordDao)
+
+            true
         }
     }
 
-    fun importData() {
+    fun importData(navController: NavController) {
         importExportInternal(
             successMessage = SettingsMessage.IMPORT_SUCCESS,
             errorMessage = SettingsMessage.IMPORT_ERROR,
             actionName = "import"
         ) {
-            RecordImportExportManager.import(context, recordDao)
+            val shouldResolveConflicts = RecordImportExportManager.import(
+                context,
+                recordDao
+            )
+
+            if(shouldResolveConflicts) {
+                navController.navigate(SettingsFragmentDirections.actionSettingsToResolveImportConflicts())
+                false
+            } else {
+                true
+            }
         }
     }
 

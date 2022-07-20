@@ -4,12 +4,16 @@ import android.database.CharArrayBuffer
 import android.database.Cursor
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.serialization.*
 import io.github.pelmenstar1.digiDict.require
+import io.github.pelmenstar1.digiDict.serialization.*
 import io.github.pelmenstar1.digiDict.validate
 
-@Entity(tableName = "records")
+@Entity(
+    tableName = "records",
+    indices = [Index(RecordTable.expression, unique = true)]
+)
 data class Record(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = RecordTable.id)
@@ -27,11 +31,16 @@ data class Record(
     }
 
     companion object {
-        val SERIALIZER = object : BinarySerializer<Record> {
+        val EXPRESSION_COMPARATOR = Comparator<Record> { a, b ->
+            a.expression.compareTo(b.expression)
+        }
+
+        val NO_ID_SERIALIZER = object : BinarySerializer<Record> {
+            override fun newArray(n: Int) = arrayOfNulls<Record>(n)
+
             override fun getByteSize(value: Record): Int {
                 return with(BinarySize) {
-                    int32 /* id */ +
-                            int32 /* score */ +
+                    int32 /* score */ +
                             int64 /* epochSeconds */ +
                             stringUtf16(value.expression) +
                             stringUtf16(value.rawMeaning) +
@@ -41,7 +50,6 @@ data class Record(
 
             override fun writeTo(writer: ValueWriter, value: Record) {
                 writer.run {
-                    int32(value.id)
                     stringUtf16(value.expression)
                     stringUtf16(value.rawMeaning)
                     stringUtf16(value.additionalNotes)
@@ -51,23 +59,22 @@ data class Record(
             }
 
             override fun readFrom(reader: ValueReader): Record {
-                val id = reader.int32()
                 val expression = reader.stringUtf16()
                 val rawMeaning = reader.stringUtf16()
                 val additionalNotes = reader.stringUtf16()
                 val score = reader.int32()
                 val epochSeconds = reader.int64()
 
-                validate(id >= 0, "Id can't be negative")
                 validate(epochSeconds >= 0, "Epoch seconds can't be negative")
 
                 return Record(
-                    id,
+                    id = 0,
                     expression, rawMeaning, additionalNotes,
                     score,
                     epochSeconds
                 )
             }
+
         }
     }
 }
@@ -83,7 +90,7 @@ object RecordTable {
     const val epochSeconds = "dateTime"
 }
 
-fun Cursor.asRecordSerializableIterable(): SerializableIterable {
+fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
     val size = count
     val cursor = this
 
@@ -91,7 +98,6 @@ fun Cursor.asRecordSerializableIterable(): SerializableIterable {
         override val size: Int
             get() = size
 
-        private val idIndex = columnIndex { id }
         private val exprIndex = columnIndex { expression }
         private val meaningIndex = columnIndex { meaning }
         private val additionalNotesIndex = columnIndex { additionalNotes }
@@ -116,7 +122,6 @@ fun Cursor.asRecordSerializableIterable(): SerializableIterable {
             iteratorCreated = true
 
             return object : SerializableIterator {
-                private var currentId = 0
                 private var currentScore = 0
                 private var currentEpochSeconds = 0L
                 private val expressionBuffer = CharArrayBuffer(32)
@@ -132,7 +137,6 @@ fun Cursor.asRecordSerializableIterable(): SerializableIterable {
 
                 override fun initCurrent() {
                     cursor.run {
-                        currentId = getInt(idIndex)
                         currentScore = getInt(scoreIndex)
                         currentEpochSeconds = getLong(epochSecondsIndex)
 
@@ -144,8 +148,7 @@ fun Cursor.asRecordSerializableIterable(): SerializableIterable {
 
                 override fun getCurrentElementByteSize(): Int {
                     return with(BinarySize) {
-                        int32 /* id */ +
-                                int32 /* score */ +
+                        int32 /* score */ +
                                 int64 /* epochSeconds */ +
                                 stringUtf16(expressionBuffer) +
                                 stringUtf16(meaningBuffer) +
@@ -155,7 +158,6 @@ fun Cursor.asRecordSerializableIterable(): SerializableIterable {
 
                 override fun writeCurrentElement(writer: ValueWriter) {
                     writer.run {
-                        int32(currentId)
                         stringUtf16(expressionBuffer)
                         stringUtf16(meaningBuffer)
                         stringUtf16(additionalNotesBuffer)

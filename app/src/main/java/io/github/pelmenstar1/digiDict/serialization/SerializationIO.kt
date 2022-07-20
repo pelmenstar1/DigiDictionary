@@ -18,6 +18,10 @@ private inline fun ioOperation(method: () -> Int) {
 private const val BUFFER_SIZE = 2048
 private const val MAGIC_WORD = 0x00FF00FF_abcdedf00L
 
+fun <T : Any> WritableByteChannel.writeValues(values: Array<T>, serializer: BinarySerializer<T>) {
+    writeValues(SerializableIterable(values, serializer))
+}
+
 fun WritableByteChannel.writeValues(values: SerializableIterable) {
     // FileChannel in Android always create wrapping direct buffer
     // if input buffer is not direct, so create it as a direct in the first place.
@@ -68,9 +72,19 @@ fun WritableByteChannel.writeValues(values: SerializableIterable) {
     }
 }
 
-fun <T : Any> FileChannel.readValues(
-    serializer: BinarySerializer<T>
-): Sequence<T> {
+fun <T : Any> FileChannel.readValuesToArray(serializer: BinarySerializer<T>): Array<T> {
+   val buffer = readValuesInternal()
+
+    return ValueReader.of(buffer).array(serializer)
+}
+
+fun <T : Any> FileChannel.readValuesToList(serializer: BinarySerializer<T>): MutableList<T> {
+    val buffer = readValuesInternal()
+
+    return ValueReader.of(buffer).list(serializer)
+}
+
+private fun FileChannel.readValuesInternal(): ByteBuffer {
     val buffer = map(FileChannel.MapMode.READ_ONLY, 0, size()).also {
         it.order(ByteOrder.LITTLE_ENDIAN)
     }
@@ -78,5 +92,5 @@ fun <T : Any> FileChannel.readValues(
     val magicWord = buffer.long
     validate(magicWord == MAGIC_WORD, "Magic words are wrong")
 
-    return ValueReader.of(buffer).sequence(serializer)
+    return buffer
 }

@@ -9,4 +9,6 @@ fun Parcel.readStringOrThrow() = requireNotNull(readString())
 
 fun Bundle.getStringOrThrow(key: String) = requireNotNull(getString(key))
 fun <T : Parcelable> Bundle.getParcelableOrThrow(key: String): T = requireNotNull(getParcelable(key))
+fun Bundle.getIntArrayOrThrow(key: String) = requireNotNull(getIntArray(key))
+
 fun Intent.getIntArrayExtraOrThrow(key: String) = requireNotNull(getIntArrayExtra(key))

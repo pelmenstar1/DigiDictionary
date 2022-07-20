@@ -1,10 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.viewRecord
 
-import android.icu.text.DisplayContext
-import android.icu.text.SimpleDateFormat
-import android.os.Build
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,13 +14,12 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.MessageMapper
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
-import io.github.pelmenstar1.digiDict.utils.getLocaleCompat
 import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.utils.waitUntilDialogAction
 import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -35,21 +30,26 @@ class ViewRecordFragment : Fragment() {
     @Inject
     lateinit var messageMapper: MessageMapper<ViewRecordMessage>
 
+    private lateinit var dateTimeFormatter: RecordDateTimeFormatter
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val vm = viewModel
+        val context = requireContext()
 
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
         binding.viewModel = vm
         binding.navController = findNavController()
 
+        dateTimeFormatter = RecordDateTimeFormatter(context)
+
         vm.id = args.id
         vm.onDeleteConfirmation = {
             waitUntilDialogAction { confirm ->
-                MaterialAlertDialogBuilder(requireContext())
+                MaterialAlertDialogBuilder(context)
                     .setMessage(R.string.deleteRecordMessage)
                     .setPositiveButton(android.R.string.ok) { _, _ -> confirm(true) }
                     .setNegativeButton(android.R.string.cancel) { _, _ -> confirm(false) }
@@ -68,8 +68,7 @@ class ViewRecordFragment : Fragment() {
                             if (record != null) {
                                 binding.record = record
 
-                                binding.viewRecordDateTime.text =
-                                    formatDateTime(record.epochSeconds)
+                                binding.viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
                             }
                         },
                         onFailure = {
@@ -88,30 +87,4 @@ class ViewRecordFragment : Fragment() {
 
         return binding.root
     }
-
-    private fun formatDateTime(epochSeconds: Long): String {
-        val date = Date().apply { time = epochSeconds * 1000 }
-
-        val locale = requireContext().getLocaleCompat()
-
-        // Find best format for locale.
-        val format = DateFormat.getBestDateTimePattern(locale, DATE_TIME_FORMAT)
-
-        return if (Build.VERSION.SDK_INT >= 24) {
-            val formatter = SimpleDateFormat(format, locale).apply {
-                setContext(DisplayContext.CAPITALIZATION_FOR_STANDALONE)
-            }
-
-            formatter.format(date)
-        } else {
-            val formatter = java.text.SimpleDateFormat(format, locale)
-
-            formatter.format(date)
-        }
-    }
-
-    companion object {
-        private const val DATE_TIME_FORMAT = "dd MMMM yyyy HH:mm"
-    }
-
 }

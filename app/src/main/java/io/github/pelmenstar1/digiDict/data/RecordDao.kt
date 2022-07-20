@@ -3,7 +3,6 @@ package io.github.pelmenstar1.digiDict.data
 import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.serialization.SerializableIterable
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.utils.generateUniqueRandomNumbers
 import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
@@ -13,10 +12,19 @@ import kotlin.random.Random
 @Dao
 abstract class RecordDao {
     @Query("SELECT count(*) FROM records")
+    abstract fun count(): Int
+
+    @Query("SELECT count(*) FROM records")
     abstract fun countFlow(): Flow<Int>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insert(value: Record)
+
+    @Insert
+    abstract suspend fun insertAll(values: Array<Record>)
+
+    @Insert
+    abstract suspend fun insertAll(values: List<Record>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract fun insertBlocking(value: Record)
@@ -45,6 +53,28 @@ abstract class RecordDao {
         newDateTimeEpochSeconds: Long
     )
 
+    @Query(
+        """UPDATE records 
+        SET meaning=:newMeaning,
+            additionalNotes=:newAdditionalNotes,
+            dateTime=:newDateTimeEpochSeconds,
+            score=:newScore
+        WHERE id=:id
+        """
+    )
+    abstract fun updateAsResolveConflict(
+        id: Int,
+        newMeaning: String,
+        newAdditionalNotes: String,
+        newDateTimeEpochSeconds: Long,
+        newScore: Int
+    )
+
+    @Transaction
+    open fun updateAsResolveConflictAll(sequence: Sequence<Record>) {
+        sequence.forEach { updateAsResolveConflict(it.id, it.rawMeaning, it.additionalNotes, it.epochSeconds, it.score) }
+    }
+
     @Query("UPDATE records SET score=:newScore WHERE id=:id")
     abstract suspend fun updateScore(id: Int, newScore: Int)
 
@@ -71,7 +101,10 @@ abstract class RecordDao {
     abstract fun getAllRecordsRaw(): Cursor
 
     @Query("SELECT * FROM records")
-    abstract fun getAllRecords(): Array<Record>
+    abstract fun getAllRecordsBlocking(): Array<Record>
+
+    @Query("SELECT * FROM records")
+    abstract suspend fun getAllRecords(): Array<Record>
 
     @Query("SELECT * FROM records ORDER BY dateTime DESC LIMIT :limit OFFSET :offset")
     abstract suspend fun getRecordsLimitOffset(
@@ -82,11 +115,17 @@ abstract class RecordDao {
     @Query("SELECT expression FROM records")
     abstract suspend fun getAllExpressions(): Array<String>
 
+    @Query("SELECT expression FROM records ORDER BY expression DESC")
+    abstract suspend fun getAllExpressionsOrderByDesc(): Array<String>
+
     @Query("SELECT dateTime FROM records WHERE dateTime >= :epochSeconds ORDER BY dateTime DESC")
     abstract suspend fun getAllDateTimesOrderByDescAfter(epochSeconds: Long): LongArray
 
     @Query("SELECT * FROM records WHERE dateTime >= :epochSeconds ORDER BY dateTime DESC")
     abstract fun getRecordsAfterBlocking(epochSeconds: Long): Array<Record>
+
+    @Query("SELECT * FROM records WHERE expression = :expr")
+    abstract suspend fun getRecordByExpression(expr: String): Record?
 
     @Query("SELECT id FROM records WHERE score >= 0")
     abstract suspend fun getIdsWithPositiveScoreAfter(): IntArray
@@ -146,9 +185,9 @@ abstract class RecordDao {
         return getRecordsByIds(narrowedIds)
     }
 
-    fun getAllRecordsIterable(): SerializableIterable {
+    fun getAllRecordsNoIdIterable(): SerializableIterable {
         val cursor = getAllRecordsRaw()
 
-        return cursor.asRecordSerializableIterable()
+        return cursor.asRecordSerializableIterableNoId()
     }
 }

@@ -12,6 +12,31 @@ sealed class ValueReader {
     abstract fun int64(): Long
     abstract fun stringUtf16(): String
 
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> array(serializer: BinarySerializer<T>): Array<T> {
+        val n = int32()
+        val result = serializer.newArray(n)
+
+        for(i in 0 until n) {
+            result[i] = serializer.readFrom(this)
+        }
+
+        return result as Array<T>
+    }
+
+    fun <T : Any> list(serializer: BinarySerializer<T>): MutableList<T> {
+        val n = int32()
+        val result = ArrayList<T>(n)
+
+        for(i in 0 until n) {
+            val element = serializer.readFrom(this)
+
+            result.add(element)
+        }
+
+        return result
+    }
+
     /**
      * Only after returned [Sequence] is fully iterated, read-method of [ValueReader] can be used again.
      * Otherwise, result is undefined.

@@ -5,7 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.serialization.readValues
+import io.github.pelmenstar1.digiDict.serialization.readValuesToArray
 import io.github.pelmenstar1.digiDict.serialization.writeValues
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,8 +32,8 @@ class RecordSerializationIntegrationTest {
         val dao = appDb.recordDao()
         dao.insertAll(originValues.asSequence())
 
-        val originValuesFromDb = dao.getAllRecords()
-        val allRecordsIterable = dao.getAllRecordsIterable()
+        val originValuesFromDb = dao.getAllRecordsBlocking()
+        val allRecordsIterable = dao.getAllRecordsNoIdIterable()
 
         try {
             FileOutputStream(file).use {
@@ -46,7 +46,7 @@ class RecordSerializationIntegrationTest {
         val valuesFromFile: Array<Record>
 
         FileInputStream(file).use {
-            valuesFromFile = it.channel.readValues(Record.SERIALIZER).toList().toTypedArray()
+            valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
         }
 
         assertContentEquals(originValuesFromDb, valuesFromFile)

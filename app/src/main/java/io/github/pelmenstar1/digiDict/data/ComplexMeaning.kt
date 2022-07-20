@@ -2,14 +2,21 @@ package io.github.pelmenstar1.digiDict.data
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.collection.ArraySet
 import io.github.pelmenstar1.digiDict.utils.*
+import kotlin.math.max
 
 enum class MeaningType {
     COMMON,
     LIST
 }
 
-sealed class ComplexMeaning(val rawText: String) : Parcelable {
+sealed class ComplexMeaning : Parcelable {
+    protected var _rawText: String = ""
+
+    val rawText: String
+        get() = _rawText
+
     /**
      * A meaning with only one entry.
      * Raw text scheme:
@@ -20,23 +27,51 @@ sealed class ComplexMeaning(val rawText: String) : Parcelable {
         override val type: MeaningType
             get() = MeaningType.COMMON
 
-        val text: CharSequence
+        val text: String
 
-        constructor(parcel: Parcel) : super(parcel.readStringOrThrow()) {
+        constructor(parcel: Parcel) {
             text = parcel.readStringOrThrow()
+            _rawText = createCommonRawText(text)
         }
 
-        constructor(text: String) : super(createCommonRawText(text)) {
+        constructor(text: String) {
+            _rawText = createCommonRawText(text)
             this.text = text
         }
 
-        constructor(text: String, rawText: String) : super(rawText) {
+        constructor(text: String, rawText: String) {
+            _rawText = rawText
             this.text = text
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun mergedWith(other: ComplexMeaning): ComplexMeaning {
+            return when(other) {
+                is Common -> {
+                    if(text == other.text) {
+                        this
+                    } else {
+                        List(arrayOf(text, other.text))
+                    }
+                }
+                is List -> {
+                    val isListContainsText = other.elements.contains(text)
+
+                    val otherElements = other.elements
+                    val elements = arrayOfNulls<String>(otherElements.size + if(isListContainsText) 0 else 1)
+
+                    System.arraycopy(otherElements, 0, elements, 0, otherElements.size)
+                    if(!isListContainsText) {
+                        elements[otherElements.size] = text
+                    }
+
+                    List(elements as Array<out String>)
+                }
+            }
         }
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
-            dest.writeString(rawText)
-            dest.writeString(text.toString())
+            dest.writeString(text)
         }
 
         override fun toString(): String {
@@ -63,24 +98,71 @@ sealed class ComplexMeaning(val rawText: String) : Parcelable {
 
         val elements: Array<out String>
 
-        constructor(parcel: Parcel) : super(parcel.readStringOrThrow()) {
+        constructor(parcel: Parcel) {
             val size = parcel.readInt()
 
             validateListItemSize(size)
 
+            _rawText = parcel.readStringOrThrow()
             elements = Array(size) { parcel.readStringOrThrow() }
         }
 
-        constructor(elements: Array<out String>) : super(createListRawText(elements)) {
+        constructor(elements: Array<out String>) {
             validateListItemSize(elements.size)
 
+            _rawText = createListRawText(elements)
             this.elements = elements
         }
 
-        constructor(elements: Array<out String>, rawText: String) : super(rawText) {
+        @Suppress("UNCHECKED_CAST")
+        constructor(firstElement: String, vararg elements: String) {
+            // As there's already firstElement, elements size should be constrained to MAX_LIST_ITEM_SIZE - 1.
+            // But if elements size is 0, this becomes -1, which is wrong as we have firstElement, so it should be at least 0 (which is valid value)
+            validateListItemSize(max(0, elements.size - 1))
+
+            val newElements = arrayOfNulls<String>(elements.size + 1) as Array<String>
+            newElements[0] = firstElement
+            System.arraycopy(elements, 0, newElements, 1, elements.size)
+
+            this.elements = newElements
+            _rawText = createListRawText(newElements)
+        }
+
+        constructor(elements: Array<out String>, rawText: String) {
            validateListItemSize(elements.size)
 
+            _rawText = rawText
             this.elements = elements
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        override fun mergedWith(other: ComplexMeaning): ComplexMeaning {
+            val elements = elements
+
+            return when(other) {
+                is Common -> {
+                    val otherText = other.text
+
+                    if(elements.contains(otherText)) {
+                        this
+                    } else {
+                        val newElements = arrayOfNulls<String>(elements.size + 1)
+                        System.arraycopy(elements, 0, newElements, 0, elements.size)
+                        newElements[elements.size] = otherText
+
+                        List(newElements as Array<out String>)
+                    }
+                }
+                is List -> {
+                    val otherElements = other.elements
+                    val resultElements = ArraySet<String>(elements.size + otherElements.size)
+
+                    elements.forEach { resultElements.add(it) }
+                    otherElements.forEach { resultElements.add(it) }
+
+                    List(resultElements.toTypedArray())
+                }
+            }
         }
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
@@ -101,6 +183,8 @@ sealed class ComplexMeaning(val rawText: String) : Parcelable {
     }
 
     abstract val type: MeaningType
+
+    abstract fun mergedWith(other: ComplexMeaning): ComplexMeaning
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true

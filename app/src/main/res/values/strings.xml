@@ -10,6 +10,7 @@
     <string name="labelQuizFragment">Quiz</string>
     <string name="labelAddEditRecordFragment">Add or edit a record</string>
     <string name="labelViewRecordFragment">View</string>
+    <string name="labelResolveImportConflictsFragment">Resolve conflicts</string>
 
     <string name="stats">Statistics</string>
     <string name="settings">Settings</string>
@@ -100,4 +101,12 @@
         <item>Last 48 hours</item>
         <item>Last 96 hours</item>
     </string-array>
+
+    <string name="resolveImportConflicts_descriptionMessage">There\'s some conflicts you need to resolve</string>
+    <string name="resolveImportConflicts_oldValue">Old</string>
+    <string name="resolveImportConflicts_newValue">New</string>
+    <string name="resolveImportConflicts_merge">Merge</string>
+    <string name="resolveImportConflicts_acceptOld">Accept old</string>
+    <string name="resolveImportConflicts_acceptNew">Accept new</string>
+
 </resources>
