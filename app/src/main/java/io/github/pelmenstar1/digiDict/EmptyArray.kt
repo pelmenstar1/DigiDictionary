@@ -6,4 +6,7 @@ object EmptyArray {
 
     @JvmField
     val INT = IntArray(0)
+
+    @JvmField
+    val STRING = emptyArray<String>()
 }

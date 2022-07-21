@@ -2,7 +2,6 @@ package io.github.pelmenstar1.digiDict
 
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import org.junit.Test
-import kotlin.math.exp
 import kotlin.test.assertEquals
 
 class ComplexMeaningTests {
@@ -15,8 +14,9 @@ class ComplexMeaningTests {
 
     @Test
     fun `create list test`() {
+        @Suppress("UNCHECKED_CAST")
         fun testCase(expected: String, vararg elements: String) {
-            assertEquals(expected, ComplexMeaning.List(elements).rawText)
+            assertEquals(expected, ComplexMeaning.List(elements as Array<String>).rawText)
         }
 
         testCase("L3@E_1\nE_2\nE_3", "E_1", "E_2", "E_3")
@@ -38,7 +38,9 @@ class ComplexMeaningTests {
     @Test
     fun `parse with list meaning test`() {
         fun testCase(expected: ComplexMeaning.List, input: String) {
-            assertEquals(expected, ComplexMeaning.parse(input))
+            val actual = ComplexMeaning.parse(input)
+
+            assertEquals(expected, actual)
         }
 
         testCase(ComplexMeaning.List(arrayOf("1", "2", "3")), "L3@1\n2\n3")

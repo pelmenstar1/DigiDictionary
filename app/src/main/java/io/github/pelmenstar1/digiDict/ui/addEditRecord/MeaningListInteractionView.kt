@@ -2,8 +2,11 @@ package io.github.pelmenstar1.digiDict.ui.addEditRecord
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.os.Parcel
+import android.os.Parcelable
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.AbsSavedState
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -17,9 +20,11 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.theme.overlay.MaterialThemeOverlay
+import io.github.pelmenstar1.digiDict.EmptyArray
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.utils.*
+import java.util.*
 
 class MeaningListInteractionView @JvmOverloads constructor(
     context: Context,
@@ -27,6 +32,30 @@ class MeaningListInteractionView @JvmOverloads constructor(
     @AttrRes defStyleAttr: Int = 0,
     @StyleRes defStyleRes: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr, defStyleRes) {
+    private class SavedState : AbsSavedState {
+        var elements: Array<String>
+
+        constructor(parcel: Parcel) : super(parcel) {
+            val n = parcel.readInt()
+            elements = Array(n) { parcel.readStringOrThrow() }
+        }
+
+        constructor(superState: Parcelable?) : super(superState) {
+            elements = EmptyArray.STRING
+        }
+
+        override fun writeToParcel(dest: Parcel, flags: Int) {
+            super.writeToParcel(dest, flags)
+
+            dest.writeStringArray(elements)
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(source: Parcel) = SavedState(source)
+            override fun newArray(size: Int) = arrayOfNulls<SavedState>(size)
+        }
+    }
+
     private var isError = true
     var onErrorStateChanged: ((state: Boolean) -> Unit)? = null
 
@@ -49,42 +78,54 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 is ComplexMeaning.Common -> {
                     adjustInputCount(1)
 
-                    val layout = getTextInputLayoutAt(0)
+                    val inputLayout = getTextInputLayoutAt(0)
                     val text = value.text
 
-                    // Update error state if necessary
-                    val errorState = text.isBlank()
-                    setErrorState(errorState)
-                    refreshErrorStateForTextLayout(layout, errorState)
+                    elements = arrayOf(text)
 
-                    layout.setText(text)
+                    // Errors and other stuff are updated later.
+                    withTextInputWatcherIgnored {
+                        inputLayout.setText(text)
+                    }
                 }
                 is ComplexMeaning.List -> {
-                    val elements = value.elements
-                    val newCount = elements.size
+                    val valueElements = value.elements
+                    val newSize = valueElements.size
 
-                    adjustInputCount(newCount)
+                    elements = Array(newSize) { "" }
+                    adjustInputCount(newSize)
 
-                    iterateInputsIndexed { input, i ->
-                        val element = elements[i]
-                        val isError = element.isBlank()
+                    // Errors and other stuff are updated later.
+                    withTextInputWatcherIgnored {
+                        valueElements.forEachIndexed { index, element ->
+                            elements[index] = element
 
-                        if (isError) {
-                            setErrorState(true)
+                            getTextInputLayoutAt(index).setText(element)
                         }
-
-                        refreshErrorStateForTextLayout(input, isError)
-                        input.setText(element)
                     }
                 }
             }
+
+            refreshHintsAndEndButtons()
+            refreshErrorState()
         }
 
+    private var ignoreTextInputWatcher = false
+
     private val emptyTextError: String
+    private var duplicateError: String? = null
+
     private var meaningAndOrdinalFormat: String? = null
     private val meaningStr: String
-    private val removeStr: String
+
+    private var endIconContentDescription: String? = null
     private var endIconDrawable: Drawable? = null
+
+    private val textLayoutContext: Context
+
+    private var elements = arrayOf("")
+
+    private val cachedBitSet = BitSet()
 
     init {
         orientation = VERTICAL
@@ -92,8 +133,14 @@ class MeaningListInteractionView @JvmOverloads constructor(
         with(context.resources) {
             emptyTextError = getString(R.string.emptyTextError)
             meaningStr = getString(R.string.meaning)
-            removeStr = getString(R.string.remove)
         }
+
+        textLayoutContext = MaterialThemeOverlay.wrap(
+            context,
+            null,
+            com.google.android.material.R.attr.textInputOutlinedStyle,
+            com.google.android.material.R.style.Widget_Material3_TextInputLayout_OutlinedBox
+        )
 
         addView(createAddButton())
 
@@ -104,7 +151,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
     private fun createAddButton() = MaterialButton(
         context,
         null,
-        ADD_BUTTON_STYLE_ATTR
+        com.google.android.material.R.attr.materialButtonOutlinedStyle
     ).apply {
         val res = resources
         val size = res.getDimensionPixelSize(R.dimen.addExpression_meaningAddButtonSize)
@@ -122,6 +169,8 @@ class MeaningListInteractionView @JvmOverloads constructor(
         setIconResource(R.drawable.ic_add)
 
         setOnClickListener {
+            elements = elements.withAddedElement("")
+
             addNewItem(isUserInteraction = true)
         }
     }
@@ -150,14 +199,6 @@ class MeaningListInteractionView @JvmOverloads constructor(
             return
         }
 
-        val baseContext = context
-        val textLayoutContext = MaterialThemeOverlay.wrap(
-            baseContext,
-            null,
-            com.google.android.material.R.attr.textInputOutlinedStyle,
-            com.google.android.material.R.style.Widget_Material3_TextInputLayout_OutlinedBox
-        )
-
         val layout = TextInputLayout(
             textLayoutContext,
             null,
@@ -165,10 +206,8 @@ class MeaningListInteractionView @JvmOverloads constructor(
         ).apply {
             layoutParams = listItemLayoutParams
 
-            endIconContentDescription = removeStr
-            setEndIconOnClickListener { removeItem(index) }
-
-            val layout = this
+            // When error icon is not null and error is not null, the error icon replaces end icon which is unwanted.
+            errorIconDrawable = null
 
             addView(
                 TextInputEditText(textLayoutContext).apply {
@@ -176,11 +215,13 @@ class MeaningListInteractionView @JvmOverloads constructor(
                     inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
 
                     addTextChangedListener {
-                        // Updates errorState if necessary
-                        val newErrorState = it?.isBlank() != false
+                        if(!ignoreTextInputWatcher) {
+                            val currentText = it?.trimToString() ?: ""
 
-                        setErrorState(newErrorState)
-                        refreshErrorStateForTextLayout(layout, newErrorState)
+                            elements[index] = currentText
+
+                            refreshErrorState()
+                        }
                     }
                 })
         }
@@ -197,8 +238,17 @@ class MeaningListInteractionView @JvmOverloads constructor(
     }
 
     private fun removeItem(index: Int) {
+        elements = elements.withRemovedElementAt(index)
+
         removeViewAt(index)
         refreshHintsAndEndButtons()
+        refreshErrorState()
+
+        // Request focus for the nearest input.
+        when {
+            index > 0 -> getChildAt(index - 1).requestFocus()
+            index < childCount - 1 -> getChildAt(index + 1).requestFocus()
+        }
     }
 
     private fun setErrorState(value: Boolean) {
@@ -209,22 +259,55 @@ class MeaningListInteractionView @JvmOverloads constructor(
     }
 
     fun refreshErrorState() {
-        iterateInputs {
-            val isError = it.getText().isBlank()
+        var resultErrorState = false
 
-            if (isError) {
-                setErrorState(true)
+        val bitSet = cachedBitSet.also {
+            // Clear the previous results.
+            it.clear()
+        }
+
+        elements.iterateDuplicates { firstIndex, secondIndex ->
+            resultErrorState = true
+
+            bitSet.run {
+                set(firstIndex)
+                set(secondIndex)
             }
 
-            refreshErrorStateForTextLayout(it, isError)
+            refreshErrorStateForTextLayout(getTextInputLayoutAt(firstIndex), ERROR_DUPLICATE)
+            refreshErrorStateForTextLayout(getTextInputLayoutAt(secondIndex), ERROR_DUPLICATE)
         }
+
+        elements.forEachIndexed { index, element ->
+            val inputLayout = getTextInputLayoutAt(index)
+
+            if(element.isBlank()) {
+                resultErrorState = true
+
+                refreshErrorStateForTextLayout(inputLayout, ERROR_EMPTY_TEXT)
+            } else {
+                // If a bit at position index is clear, it means that element at position index isn't declared as duplicate
+                // and we can clear error.
+                if(!bitSet[index]) {
+                    refreshErrorStateForTextLayout(inputLayout, ERROR_NONE)
+                }
+            }
+        }
+
+        setErrorState(resultErrorState)
     }
 
-    private fun refreshErrorStateForTextLayout(layout: TextInputLayout, state: Boolean) {
-        layout.error = if (state) {
-            emptyTextError
-        } else {
-            null
+    private fun refreshErrorStateForTextLayout(layout: TextInputLayout, state: Int) {
+        val res = context.resources
+
+        layout.error = when (state) {
+            ERROR_EMPTY_TEXT -> emptyTextError
+            ERROR_DUPLICATE -> getLazyValue(
+                duplicateError,
+                { res.getString(R.string.addRecord_meaningDuplicateError) },
+                { duplicateError = it }
+            )
+            else -> null
         }
     }
 
@@ -270,6 +353,16 @@ class MeaningListInteractionView @JvmOverloads constructor(
                     }
 
                     input.endIconDrawable = endIcon
+
+                    // When endIconDrawable is null, it means that endIconContentDescription and end icon on click listener
+                    // are null and need to be initialized.
+                    input.endIconContentDescription = getLazyValue(
+                        endIconContentDescription,
+                        { res.getString(R.string.remove) },
+                        { endIconContentDescription = it }
+                    )
+
+                    input.setEndIconOnClickListener { removeItem(i) }
                 }
             }
         }
@@ -283,17 +376,37 @@ class MeaningListInteractionView @JvmOverloads constructor(
         }
 
         // Add button should be invisible when the view is disabled
-        getChildAt(childCount - 1).visibility = if(enabled) View.VISIBLE else View.INVISIBLE
+        getChildAt(childCount - 1).visibility = if (enabled) View.VISIBLE else View.INVISIBLE
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if(state is SavedState) {
+            val stateElements = state.elements
+
+            elements = stateElements
+            adjustInputCount(stateElements.size)
+
+            withTextInputWatcherIgnored {
+                stateElements.forEachIndexed { index, element ->
+                    getTextInputLayoutAt(index).setText(element)
+                }
+            }
+
+            refreshHintsAndEndButtons()
+            refreshErrorState()
+        }
+
+        super.onRestoreInstanceState(state)
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        return SavedState(super.onSaveInstanceState()).also {
+            it.elements = elements
+        }
     }
 
     private fun getItems(): Array<out String> {
-        val inputCount = childCount - 1 // without add button
-
-        return Array(inputCount) { i ->
-            val inputLayout = getTextInputLayoutAt(i)
-
-            inputLayout.getText().trimToString()
-        }
+        return elements
     }
 
     private inline fun iterateInputsIndexed(block: (TextInputLayout, index: Int) -> Unit) {
@@ -308,13 +421,45 @@ class MeaningListInteractionView @JvmOverloads constructor(
     @Suppress("NOTHING_TO_INLINE")
     private inline fun getTextInputLayoutAt(index: Int) = getChildAt(index) as TextInputLayout
 
+    private inline fun withTextInputWatcherIgnored(block: () -> Unit) {
+        ignoreTextInputWatcher = true
+        block()
+        ignoreTextInputWatcher = false
+    }
+
     companion object {
         private val listItemLayoutParams = LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
 
-        private val ADD_BUTTON_STYLE_ATTR =
-            com.google.android.material.R.attr.materialButtonOutlinedStyle
+        private const val ERROR_NONE = 0
+        private const val ERROR_EMPTY_TEXT = 1
+        private const val ERROR_DUPLICATE = 2
+
+        /**
+         * Finds all the duplicates in the given array and invokes [block] lambda for each of them.
+         *
+         * Time complexity: `O(n^2)` where n is size of the array.
+         * It shouldn't be too much, because size of the meaning's items is expected to be small.
+         */
+        private inline fun Array<String>.iterateDuplicates(block: (Int, Int) -> Unit) {
+            for (i in indices) {
+                val element = get(i)
+
+                // Don't mark element as duplicate if it's blank, 'empty text' error should better be shown on that element.
+                if (element.isNotBlank()) {
+                    for (j in indices) {
+                        val otherElement = get(j)
+
+                        // No sense to check whether otherElement is blank, because non-blank element can't be equal to
+                        // possible blank one.
+                        if (i != j && element == otherElement) {
+                            block(i, j)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

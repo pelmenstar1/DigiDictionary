@@ -60,10 +60,9 @@ class AddEditRecordFragment : Fragment() {
 
         if (savedInstanceState != null) {
             val expression = savedInstanceState.getStringOrThrow(KEY_EXPRESSION)
-            val meaning = savedInstanceState.getParcelableOrThrow<ComplexMeaning>(KEY_MEANING)
             val notes = savedInstanceState.getStringOrThrow(KEY_ADDITIONAL_NOTES)
 
-            setRecord(expression, meaning, notes)
+            setRecord(expression, notes)
         }
 
         return binding.root
@@ -90,6 +89,12 @@ class AddEditRecordFragment : Fragment() {
         meaning: ComplexMeaning,
         notes: String
     ) {
+        setRecord(expression, notes)
+
+        binding.addExpressionMeaningListInteraction.meaning = meaning
+    }
+
+    private fun setRecord(expression: String, notes: String) {
         viewModel.run {
             newExpression = expression
             newAdditionalNotes = notes
@@ -98,8 +103,6 @@ class AddEditRecordFragment : Fragment() {
         binding.run {
             addExpressionExpressionInput.setText(expression)
             addExpressionAdditionalNotesInput.setText(notes)
-
-            addExpressionMeaningListInteraction.meaning = meaning
         }
     }
 

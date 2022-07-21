@@ -35,7 +35,6 @@
     <inspection_tool class="IncompleteDestructuring" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RedundantInnerClassModifier" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ReplaceCollectionCountWithSize" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
-    <inspection_tool class="ReplaceNotNullAssertionWithElvisReturn" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="UnusedMainParameter" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="WhenWithOnlyElse" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
   </profile>

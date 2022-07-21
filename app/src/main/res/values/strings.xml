@@ -29,6 +29,8 @@
 
     <string name="addExpression_existingExprError">Such expression already exists</string>
     <string name="addExpression_tooManyMeaningListItemsError">Too many list items</string>
+    <string name="addRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
+
     <string name="dbError">Internal error</string>
 
     <string name="deleteRecordMessage">Do you really want to delete this record?</string>

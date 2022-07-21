@@ -48,24 +48,27 @@ sealed class ComplexMeaning : Parcelable {
         override fun mergedWith(other: ComplexMeaning): ComplexMeaning {
             return when(other) {
                 is Common -> {
-                    if(text == other.text) {
+                    val otherText = other.text
+
+                    if(text == otherText) {
                         this
                     } else {
-                        List(arrayOf(text, other.text))
+                        List(ArraySet<String>(2).apply {
+                            add(text)
+                            add(otherText)
+                        })
                     }
                 }
                 is List -> {
-                    val isListContainsText = other.elements.contains(text)
-
                     val otherElements = other.elements
-                    val elements = arrayOfNulls<String>(otherElements.size + if(isListContainsText) 0 else 1)
 
-                    System.arraycopy(otherElements, 0, elements, 0, otherElements.size)
-                    if(!isListContainsText) {
-                        elements[otherElements.size] = text
+                    if(otherElements.contains(text)) {
+                        this
+                    } else {
+                        List(newArraySetFrom(otherElements, otherElements.size + 1).apply {
+                            add(text)
+                        })
                     }
-
-                    List(elements as Array<out String>)
                 }
             }
         }
@@ -73,6 +76,17 @@ sealed class ComplexMeaning : Parcelable {
         override fun writeToParcel(dest: Parcel, flags: Int) {
             dest.writeString(text)
         }
+
+        override fun equals(other: Any?): Boolean {
+            if(other === this) return true
+            if(other == null || other.javaClass != javaClass) return false
+
+            other as Common
+
+            return text == other.text
+        }
+
+        override fun hashCode(): Int = text.hashCode()
 
         override fun toString(): String {
             return "ComplexMeaning.Common(text=$text)"
@@ -96,22 +110,36 @@ sealed class ComplexMeaning : Parcelable {
         override val type: MeaningType
             get() = MeaningType.LIST
 
-        val elements: Array<out String>
+        val elements: Set<String>
 
         constructor(parcel: Parcel) {
             val size = parcel.readInt()
-
             validateListItemSize(size)
 
             _rawText = parcel.readStringOrThrow()
-            elements = Array(size) { parcel.readStringOrThrow() }
+
+            elements = ArraySet<String>(size).apply {
+                for(i in 0 until size) {
+                    add(parcel.readStringOrThrow())
+                }
+            }
+        }
+
+        constructor(elements: Set<String>) {
+            validateListItemSize(elements.size)
+
+            _rawText = createListRawText(elements)
+            this.elements = elements
         }
 
         constructor(elements: Array<out String>) {
             validateListItemSize(elements.size)
 
-            _rawText = createListRawText(elements)
-            this.elements = elements
+            this.elements = ArraySet<String>(elements.size).apply {
+                elements.forEach(::add)
+            }
+
+            _rawText = createListRawText(this.elements)
         }
 
         @Suppress("UNCHECKED_CAST")
@@ -120,15 +148,15 @@ sealed class ComplexMeaning : Parcelable {
             // But if elements size is 0, this becomes -1, which is wrong as we have firstElement, so it should be at least 0 (which is valid value)
             validateListItemSize(max(0, elements.size - 1))
 
-            val newElements = arrayOfNulls<String>(elements.size + 1) as Array<String>
-            newElements[0] = firstElement
-            System.arraycopy(elements, 0, newElements, 1, elements.size)
+            this.elements = ArraySet<String>(elements.size + 1).apply {
+                add(firstElement)
+                elements.forEach(::add)
+            }
 
-            this.elements = newElements
-            _rawText = createListRawText(newElements)
+            _rawText = createListRawText(this.elements)
         }
 
-        constructor(elements: Array<out String>, rawText: String) {
+        constructor(elements: Set<String>, rawText: String) {
            validateListItemSize(elements.size)
 
             _rawText = rawText
@@ -146,34 +174,44 @@ sealed class ComplexMeaning : Parcelable {
                     if(elements.contains(otherText)) {
                         this
                     } else {
-                        val newElements = arrayOfNulls<String>(elements.size + 1)
-                        System.arraycopy(elements, 0, newElements, 0, elements.size)
-                        newElements[elements.size] = otherText
+                        val newElements = newArraySetFrom(elements, elements.size + 1)
+                        newElements.add(otherText)
 
-                        List(newElements as Array<out String>)
+                        List(newElements)
                     }
                 }
                 is List -> {
                     val otherElements = other.elements
-                    val resultElements = ArraySet<String>(elements.size + otherElements.size)
+                    val resultElements = newArraySetFrom(elements, elements.size + otherElements.size)
 
-                    elements.forEach { resultElements.add(it) }
                     otherElements.forEach { resultElements.add(it) }
 
-                    List(resultElements.toTypedArray())
+                    List(resultElements)
                 }
             }
         }
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
+            dest.writeInt(elements.size)
+
             dest.writeString(rawText)
 
-            dest.writeInt(elements.size)
-            elements.forEach { dest.writeString(it) }
+            elements.forEach(dest::writeString)
         }
 
+        override fun equals(other: Any?): Boolean {
+            if(other === this) return true
+            if(other == null || javaClass != other.javaClass) return false
+
+            other as List
+
+            return elements == other.elements
+        }
+
+        override fun hashCode(): Int = elements.hashCode()
+
         override fun toString(): String {
-            return "ComplexMeaning.List(elements=${elements.contentToString()})"
+            return "ComplexMeaning.List(elements=$elements)"
         }
 
         companion object CREATOR : Parcelable.Creator<List> {
@@ -186,18 +224,9 @@ sealed class ComplexMeaning : Parcelable {
 
     abstract fun mergedWith(other: ComplexMeaning): ComplexMeaning
 
-    override fun equals(other: Any?): Boolean {
-        if (other === this) return true
-        if (other == null || other.javaClass != javaClass) return false
-
-        other as ComplexMeaning
-
-        return rawText == other.rawText
-    }
-
-    override fun hashCode(): Int {
-        return rawText.hashCode()
-    }
+    abstract override fun equals(other: Any?): Boolean
+    abstract override fun hashCode(): Int
+    abstract override fun toString(): String
 
     override fun describeContents() = 0
 
@@ -206,6 +235,17 @@ sealed class ComplexMeaning : Parcelable {
          * Max elements size (inclusive) of [List]
          */
         const val MAX_LIST_ITEM_SIZE = 100
+
+        private fun newArraySetFrom(set: Set<String>, capacity: Int): ArraySet<String> {
+            val newSet = ArraySet<String>(capacity)
+            if(set is ArraySet<*>) {
+                newSet.addAll(set)
+            } else {
+                set.forEach(newSet::add)
+            }
+
+            return newSet
+        }
 
         private fun validateListItemSize(size: Int) {
             require(size in 0..MAX_LIST_ITEM_SIZE) { "Size of elements is negative or greater than $MAX_LIST_ITEM_SIZE" }
@@ -219,7 +259,7 @@ sealed class ComplexMeaning : Parcelable {
             return String(buffer)
         }
 
-        private fun createListRawText(elements: Array<out String>): String {
+        private fun createListRawText(elements: Set<String>): String {
             val size = elements.size
             if (size > 100) {
                 throw IllegalArgumentException("values size is greater than 100")
@@ -230,11 +270,11 @@ sealed class ComplexMeaning : Parcelable {
 
             var capacity = 2 /* L and @ */ + sizeDigitCount
 
-            for (i in elements.indices) {
-                capacity += elements[i].length
+            elements.forEachIndexed { index, element ->
+                capacity += element.length
 
                 // Increase capacity for new line symbol only if it's not the last element
-                if (i < elements.size - 1) {
+                if(index < elements.size - 1) {
                     capacity++
                 }
             }
@@ -246,13 +286,11 @@ sealed class ComplexMeaning : Parcelable {
 
             var offset = contentStart
 
-            for (i in elements.indices) {
-                val value = elements[i]
+            elements.forEachIndexed { index, element ->
+                element.getChars(buffer, offset)
+                offset += element.length
 
-                value.getChars(buffer, offset)
-                offset += value.length
-
-                if (i < elements.size - 1) {
+                if (index < elements.size - 1) {
                     buffer[offset++] = '\n'
                 }
             }
@@ -284,7 +322,9 @@ sealed class ComplexMeaning : Parcelable {
                     val contentStart = firstDelimiterIndex + 1
 
                     var prevPos = contentStart
-                    val elements = Array(count) {
+                    val elements = ArraySet<String>()
+
+                    for(i in 0 until count) {
                         var nextDelimiterIndex = rawText.indexOf('\n', prevPos)
 
                         if (nextDelimiterIndex == -1) {
@@ -295,7 +335,7 @@ sealed class ComplexMeaning : Parcelable {
 
                         prevPos = nextDelimiterIndex + 1
 
-                        element
+                        elements.add(element)
                     }
 
                     List(elements, rawText)
