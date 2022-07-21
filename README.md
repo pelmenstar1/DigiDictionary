@@ -1,19 +1,30 @@
 <h1 align="center">Digi Dictionary</h1> <br/>
 
 A small Android application which helps you to learn new words and expressions.
-You can:
-- List all of your expressions.
+Whenever you find a new word or expression you can add it with its meaning and some notes (for example, a sentence using that word)
+
+You also can:
+- View all of your expressions.
 - Add, edit, delete them.
 - Search
 - Revise them. By default, you only see random expressions without their meanings.
 The idea is to tell their meanings, click on the item and if you answer correct, then you click "Correct", if wrong, click "Wrong".
 Each record has a score.
 If it is answered correct in the revision, then some score points are added to score, if wrong, some points are subtracted.
-In the settings, you can specify how much points you want to add, when you answer correct, and subtract, when you answer wrong.
+In the settings, you can specify how much points you want to add, when your answer is correct, and subtract, when it's wrong.
 In the next revision, records with negative score will definitely appear and you are given a chance to answer them again 
 in hope you will do that correct.   
 
 There's also a widget which shows you records that were added during last 24 hours. 
+
+## Import / Export
+
+If you want to transfer all of your expressions to another device, you can use `Import / Export` in the settings.
+Export your records, transfer the file to another device, import the records using `Import` button and choose the file.
+During the import, there can be conflicts when the application already contains the records in the file.
+Note that when a record in the application and one in the file are the same, it's not considered as conflict.
+Two records are considered as conflicting only when they have same expression and different meaning or additional notes.
+So, when there are conflicting records, you can choose what to do with them: `Accept old`, `Accept new` or `Merge`.
 
 ## Screenshots
 
