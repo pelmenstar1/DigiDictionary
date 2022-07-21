@@ -63,14 +63,13 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
     var meaning: ComplexMeaning
         get() {
-            // If childCount is 2,
-            // then there's only one input (except add button) and meaning should be considered as "common"
-            return if (childCount == 2) {
-                val layout = getTextInputLayoutAt(0)
-
-                ComplexMeaning.Common(layout.getText().trimToString())
-            } else {
-                ComplexMeaning.List(getItems())
+            // If there's only one element, meaning should be considered as "common"
+            return elements.let {
+                if (it.size == 1) {
+                    ComplexMeaning.Common(it[0])
+                } else {
+                    ComplexMeaning.List(it)
+                }
             }
         }
         set(value) {
@@ -79,7 +78,13 @@ class MeaningListInteractionView @JvmOverloads constructor(
                     adjustInputCount(1)
 
                     val inputLayout = getTextInputLayoutAt(0)
-                    val text = value.text
+
+                    // Trim text just to make sure it's valid in terms of MeaningListInteractionView
+                    // (elements should contain only trimmed strings)
+                    //
+                    // Side note: If a string is already "trimmed", trim() does not allocate,
+                    // it returns the same instance.
+                    val text = value.text.trim()
 
                     elements = arrayOf(text)
 
@@ -98,9 +103,16 @@ class MeaningListInteractionView @JvmOverloads constructor(
                     // Errors and other stuff are updated later.
                     withTextInputWatcherIgnored {
                         valueElements.forEachIndexed { index, element ->
-                            elements[index] = element
+                            // Trim element just to make sure it's valid in terms of MeaningListInteractionView
+                            // (elements should contain only trimmed strings)
+                            //
+                            // Side note: If a string is already "trimmed", trim() does not allocate,
+                            // it returns the same instance.
+                            val trimmedElement = element.trim()
 
-                            getTextInputLayoutAt(index).setText(element)
+                            elements[index] = trimmedElement
+
+                            getTextInputLayoutAt(index).setText(trimmedElement)
                         }
                     }
                 }
@@ -109,6 +121,11 @@ class MeaningListInteractionView @JvmOverloads constructor(
             refreshHintsAndEndButtons()
             refreshErrorState()
         }
+
+    // There are some variables that are lazy-initialized.
+    // It's done in such way because they are used rarely.
+    //
+    // If a variable is used in the initial state of the view, it's initialized in the constructor.
 
     private var ignoreTextInputWatcher = false
 
@@ -123,6 +140,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
     private val textLayoutContext: Context
 
+    // It should contain only trimmed strings (without leading and trailing whitespaces).
     private var elements = arrayOf("")
 
     private val cachedBitSet = BitSet()
@@ -220,7 +238,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
                     inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
 
                     addTextChangedListener {
-                        if(!ignoreTextInputWatcher) {
+                        if (!ignoreTextInputWatcher) {
                             val currentText = it?.trimToString() ?: ""
 
                             elements[index] = currentText
@@ -286,14 +304,14 @@ class MeaningListInteractionView @JvmOverloads constructor(
         elements.forEachIndexed { index, element ->
             val inputLayout = getTextInputLayoutAt(index)
 
-            if(element.isBlank()) {
+            if (element.isBlank()) {
                 resultErrorState = true
 
                 refreshErrorStateForTextLayout(inputLayout, ERROR_EMPTY_TEXT)
             } else {
                 // If a bit at position index is clear, it means that element at position index isn't declared as duplicate
                 // and we can clear error.
-                if(!bitSet[index]) {
+                if (!bitSet[index]) {
                     refreshErrorStateForTextLayout(inputLayout, ERROR_NONE)
                 }
             }
@@ -373,6 +391,24 @@ class MeaningListInteractionView @JvmOverloads constructor(
         }
     }
 
+    private inline fun iterateInputsIndexed(block: (TextInputLayout, index: Int) -> Unit) {
+        for (i in 0 until (childCount - 1)) {
+            block(getTextInputLayoutAt(i), i)
+        }
+    }
+
+    private inline fun iterateInputs(block: (TextInputLayout) -> Unit) =
+        iterateInputsIndexed { it, _ -> block(it) }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun getTextInputLayoutAt(index: Int) = getChildAt(index) as TextInputLayout
+
+    private inline fun withTextInputWatcherIgnored(block: () -> Unit) {
+        ignoreTextInputWatcher = true
+        block()
+        ignoreTextInputWatcher = false
+    }
+
     override fun setEnabled(enabled: Boolean) {
         super.setEnabled(enabled)
 
@@ -380,12 +416,12 @@ class MeaningListInteractionView @JvmOverloads constructor(
             it.isEnabled = enabled
         }
 
-        // Add button should be invisible when the view is disabled
+        // "Add" button should be invisible when the view is disabled
         getChildAt(childCount - 1).visibility = if (enabled) View.VISIBLE else View.INVISIBLE
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
-        if(state is SavedState) {
+        if (state is SavedState) {
             val stateElements = state.elements
 
             elements = stateElements
@@ -408,28 +444,6 @@ class MeaningListInteractionView @JvmOverloads constructor(
         return SavedState(super.onSaveInstanceState()).also {
             it.elements = elements
         }
-    }
-
-    private fun getItems(): Array<out String> {
-        return elements
-    }
-
-    private inline fun iterateInputsIndexed(block: (TextInputLayout, index: Int) -> Unit) {
-        for (i in 0 until (childCount - 1)) {
-            block(getTextInputLayoutAt(i), i)
-        }
-    }
-
-    private inline fun iterateInputs(block: (TextInputLayout) -> Unit) =
-        iterateInputsIndexed { it, _ -> block(it) }
-
-    @Suppress("NOTHING_TO_INLINE")
-    private inline fun getTextInputLayoutAt(index: Int) = getChildAt(index) as TextInputLayout
-
-    private inline fun withTextInputWatcherIgnored(block: () -> Unit) {
-        ignoreTextInputWatcher = true
-        block()
-        ignoreTextInputWatcher = false
     }
 
     companion object {
