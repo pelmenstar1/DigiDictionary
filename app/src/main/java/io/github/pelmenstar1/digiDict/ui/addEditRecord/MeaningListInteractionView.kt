@@ -209,6 +209,11 @@ class MeaningListInteractionView @JvmOverloads constructor(
             // When error icon is not null and error is not null, the error icon replaces end icon which is unwanted.
             errorIconDrawable = null
 
+            // This is necessary because if the meaning is set through meaning setter
+            // some text inputs will have different heights although they are initialized in the same way.
+            // It's due to the fact that no error was set on some inputs. So to fix this, we should set isErrorEnabled to true.
+            isErrorEnabled = true
+
             addView(
                 TextInputEditText(textLayoutContext).apply {
                     layoutParams = listItemLayoutParams
