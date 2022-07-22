@@ -113,7 +113,6 @@
             android:layout_marginStart="8dp"
             app:strokeColor="@color/color_error"
             android:textColor="@color/color_error"
-            android:onClick="@{() -> viewModel.delete(navController)}"
             android:text="@string/delete"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

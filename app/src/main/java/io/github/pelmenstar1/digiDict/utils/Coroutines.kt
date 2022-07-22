@@ -18,6 +18,9 @@ inline fun <T> CoroutineScope.launchFlowCollector(
     }
 }
 
+// TODO 1: In launchMessageFlowCollector() bind a snackbar to lifecycle. When lifecycle on destroy event happens, hide the snackbar.
+// TODO 2: Add launchFlowCollector() variant which accepts TextInputLayout and error mapper and sets the error to TextInputLayout from the flow.
+
 /**
  * Launches flow collector which shows snackbar on each message.
  *

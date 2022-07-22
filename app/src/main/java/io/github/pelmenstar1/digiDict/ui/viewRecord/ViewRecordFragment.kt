@@ -16,9 +16,9 @@ import io.github.pelmenstar1.digiDict.MessageMapper
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
+import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
-import io.github.pelmenstar1.digiDict.utils.waitUntilDialogAction
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,8 +30,6 @@ class ViewRecordFragment : Fragment() {
     @Inject
     lateinit var messageMapper: MessageMapper<ViewRecordMessage>
 
-    private lateinit var dateTimeFormatter: RecordDateTimeFormatter
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -39,24 +37,24 @@ class ViewRecordFragment : Fragment() {
     ): View {
         val vm = viewModel
         val context = requireContext()
+        val navController = findNavController()
 
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
         binding.viewModel = vm
-        binding.navController = findNavController()
+        binding.navController = navController
+        binding.viewRecordDelete.setOnClickListener {
+            MaterialAlertDialogBuilder(context)
+                .setMessage(R.string.deleteRecordMessage)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    viewModel.delete(navController)
+                }
+                .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
+                .show()
+        }
 
-        dateTimeFormatter = RecordDateTimeFormatter(context)
+        val dateTimeFormatter = RecordDateTimeFormatter(context)
 
         vm.id = args.id
-        vm.onDeleteConfirmation = {
-            waitUntilDialogAction { confirm ->
-                MaterialAlertDialogBuilder(context)
-                    .setMessage(R.string.deleteRecordMessage)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> confirm(true) }
-                    .setNegativeButton(android.R.string.cancel) { _, _ -> confirm(false) }
-                    .setOnDismissListener { confirm(false) }
-                    .create()
-            }
-        }
 
         lifecycleScope.run {
             launchMessageFlowCollector(vm.messageFlow, messageMapper, container)

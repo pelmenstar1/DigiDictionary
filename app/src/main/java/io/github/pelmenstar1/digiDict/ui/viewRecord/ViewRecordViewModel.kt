@@ -28,8 +28,6 @@ class ViewRecordViewModel @Inject constructor(
     private val _recordFlow = MutableStateFlow<Result<Record?>?>(null)
     val recordFlow = _recordFlow.asStateFlow()
 
-    var onDeleteConfirmation: (suspend () -> Boolean)? = null
-
     var id: Int = -1
         set(value) {
             field = value
@@ -58,16 +56,12 @@ class ViewRecordViewModel @Inject constructor(
     fun delete(navController: NavController) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val isConfirmed = onDeleteConfirmation?.invoke() ?: true
+                recordDao.deleteById(id)
 
-                if (isConfirmed) {
-                    recordDao.deleteById(id)
+                withContext(Dispatchers.Main) {
+                    listAppWidgetUpdater.updateAllWidgets()
 
-                    withContext(Dispatchers.Main) {
-                        listAppWidgetUpdater.updateAllWidgets()
-
-                        navController.popBackStack()
-                    }
+                    navController.popBackStack()
                 }
 
                 _messageFlow.value = null
