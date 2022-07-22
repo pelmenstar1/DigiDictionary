@@ -13,6 +13,8 @@ import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.preferences
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditExpressionMessageMapper
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
+import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
+import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessageMapper
 import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessage
 import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessageMapper
 import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordMessage
@@ -51,5 +53,10 @@ class AppModule {
     @Provides
     fun provideSettingsMessageMapper(@ApplicationContext context: Context): MessageMapper<SettingsMessage> {
         return SettingsMessageMapper(context)
+    }
+
+    @Provides
+    fun provideAddRemoteDictProviderMessageMapper(@ApplicationContext context: Context): MessageMapper<AddRemoteDictionaryProviderMessage> {
+        return AddRemoteDictionaryProviderMessageMapper(context)
     }
 }

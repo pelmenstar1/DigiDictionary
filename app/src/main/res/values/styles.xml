@@ -6,7 +6,7 @@
     </style>
 
     <style name="Widget.DigiDictionary.SettingsDescText" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:background">@drawable/settings_description_background</item>
+        <item name="android:background">@drawable/round_color_surface_variant</item>
         <item name="android:padding">8dp</item>
         <item name="android:layout_margin">8dp</item>
     </style>

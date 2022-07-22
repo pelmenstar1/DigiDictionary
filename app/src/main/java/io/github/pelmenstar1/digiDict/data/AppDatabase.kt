@@ -14,15 +14,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import io.github.pelmenstar1.digiDict.utils.getLazyValue
 
 @Database(
-    entities = [Record::class],
+    entities = [Record::class, RemoteDictionaryProviderInfo::class, RemoteDictionaryProviderStats::class],
     exportSchema = true,
-    version = 3,
+    version = 4,
     autoMigrations = [
         AutoMigration(
             from = 1,
             to = 2,
             spec = AppDatabase.Migration_1_2::class
-        )
+        ),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -35,7 +35,21 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
+    private object Migration_3_4 : Migration(3,4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL)")
+            database.execSQL("CREATE TABLE IF NOT EXISTS `remote_dict_provider_stats` (`id` INTEGER NOT NULL, `visitCount` INTEGER NOT NULL, PRIMARY KEY(`id`))")
+
+            RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS.forEach {
+                database.insertRemoteDictProvider(it)
+            }
+        }
+    }
+
     abstract fun recordDao(): RecordDao
+    abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
+    abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
+
     inline fun createRecordTableObserver(crossinline block: () -> Unit): InvalidationTracker.Observer {
         return object : InvalidationTracker.Observer(RECORD_TABLE_ARRAY) {
             override fun onInvalidated(tables: MutableSet<String>) {
@@ -77,6 +91,10 @@ abstract class AppDatabase : RoomDatabase() {
 
         private var singleton: AppDatabase? = null
 
+        private fun SupportSQLiteDatabase.insertRemoteDictProvider(info: RemoteDictionaryProviderInfo) {
+            execSQL("INSERT INTO remote_dict_providers (name, schema) VALUES('${info.name}', '${info.schema}')")
+        }
+
         fun getOrCreate(context: Context): AppDatabase {
             return synchronized(this) {
                 getLazyValue(
@@ -89,7 +107,14 @@ abstract class AppDatabase : RoomDatabase() {
         fun createDatabase(context: Context): AppDatabase {
             return Room
                 .databaseBuilder(context, AppDatabase::class.java, "database")
-                .addMigrations(Migration_2_3)
+                .addMigrations(Migration_2_3, Migration_3_4)
+                .addCallback(object : Callback() {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS.forEach {
+                            db.insertRemoteDictProvider(it)
+                        }
+                    }
+                })
                 .build()
         }
     }

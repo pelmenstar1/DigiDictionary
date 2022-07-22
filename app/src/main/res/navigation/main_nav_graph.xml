@@ -27,6 +27,9 @@
         <action
             android:id="@+id/action_home_to_viewRecord"
             app:destination="@id/viewRecordFragment" />
+        <action
+            android:id="@+id/action_home_to_manageRemoteDictionaryProviders"
+            app:destination="@id/manageRemoteDictionaryProvidersFragment" />
     </fragment>
 
     <fragment
@@ -38,6 +41,9 @@
             android:name="recordId"
             android:defaultValue="-1"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_addEditRecord_to_chooseRemoteDictionaryProvider"
+            app:destination="@id/chooseRemoteDictionaryProviderFragment" />
     </fragment>
 
     <fragment
@@ -102,4 +108,26 @@
         android:id="@+id/resolveImportConflictsFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.resolveImportConflicts.ResolveImportConflictsFragment"
         android:label="@string/labelResolveImportConflictsFragment"/>
+    <fragment
+        android:id="@+id/manageRemoteDictionaryProvidersFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders.ManageRemoteDictionaryProvidersFragment"
+        android:label="@string/labelManageRemoteDictProvidersFragment" >
+        <action
+            android:id="@+id/action_manageRemoteDictionaryProviders_to_addRemoteDictionaryProvider"
+            app:destination="@id/addRemoteDictionaryProviderFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addRemoteDictionaryProviderFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderFragment"
+        android:label="@string/labelAddRemoteDictProviderFragment" />
+
+    <fragment
+        android:id="@+id/chooseRemoteDictionaryProviderFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.chooseRemoteDictProvider.ChooseRemoteDictionaryProviderFragment"
+        android:label="@string/labelChooseRemoteDictProviderFragment" >
+        <argument android:name="query" app:argType="string" app:nullable="false"/>
+    </fragment>
+
+
 </navigation>

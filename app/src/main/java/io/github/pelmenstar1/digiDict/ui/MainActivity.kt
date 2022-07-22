@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val menu = toolbar.menu
             if(destination.id == R.id.homeFragment) {
-                menuInflater.inflate(R.menu.home_bottombar, menu)
+                menuInflater.inflate(R.menu.home_menu, menu)
             } else {
                 menu.clear()
             }

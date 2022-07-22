@@ -26,6 +26,10 @@
                 android:id="@+id/settingsFragment"
                 android:icon="@drawable/ic_settings"
                 android:title="@string/settings" />
+
+            <item
+                android:id="@+id/manageRemoteDictionaryProvidersFragment"
+                android:title="@string/labelManageRemoteDictProvidersFragment"/>
         </menu>
     </item>
 </menu>

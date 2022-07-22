@@ -11,7 +11,6 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.utils.trimToString
 import io.github.pelmenstar1.digiDict.utils.withBit
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
-import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
@@ -86,9 +85,8 @@ class AddEditRecordViewModel @Inject constructor(
     }
 
     fun initErrors() {
-        // If there's no 'current record', then expression is null and appropriate error should be specified.
-        // Otherwise, expression of 'current record' can't be empty.
-        if (currentRecordId < 0) {
+        // If there's a 'current record', expression can't be blank and hence no error is needed.
+        if (currentRecordId < 0 && _newExpression.isBlank()) {
             _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
         }
     }
@@ -150,6 +148,12 @@ class AddEditRecordViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun searchExpression(navController: NavController) {
+        val directions = AddEditRecordFragmentDirections.actionAddEditRecordToChooseRemoteDictionaryProvider(_newExpression)
+
+        navController.navigate(directions)
     }
 
     fun addOrEditExpression(navController: NavController) {

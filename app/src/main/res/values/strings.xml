@@ -1,6 +1,7 @@
 <resources>
     <string name="appName">Digi Dictionary</string>
     <string name="addRecord">Add a new record</string>
+    <string name="addRemoteDictProvider">Add a new remote dictionary provider</string>
     <string name="applyChanges">Apply changes</string>
     <string name="quiz">Quiz</string>
 
@@ -11,9 +12,20 @@
     <string name="labelAddEditRecordFragment">Add or edit a record</string>
     <string name="labelViewRecordFragment">View</string>
     <string name="labelResolveImportConflictsFragment">Resolve conflicts</string>
+    <string name="labelManageRemoteDictProvidersFragment">Remote dict. providers</string>
+    <string name="labelAddRemoteDictProviderFragment">Add remote dict. provider</string>
+    <string name="labelChooseRemoteDictProviderFragment">Choose remote dict. provider</string>
 
     <string name="stats">Statistics</string>
     <string name="settings">Settings</string>
+
+    <string name="remoteDictProvider_name">Name</string>
+    <string name="remoteDictProvider_schema">Schema</string>
+    <string name="addRemoteDictProvider_schemaDescription">A schema is a simple URL with query placeholder.\nExample: <i>https://dictionary.cambridge.org/dictionary/english/$query$</i>.\nHow to determine where to set $query$:\n• Search any word or expression in the dictionary site and find the word in the URL.\n• Replace the word to $query$.</string>
+    <string name="addRemoteDictProvider_providerNameExists">A provider with such name already exists</string>
+    <string name="addRemoteDictProvider_providerSchemaExists">A provider with such schema already exists</string>
+    <string name="addRemoteDictProvider_providerSchemaInvalidUrl">Invalid URL</string>
+    <string name="addRemoteDictProvider_providerNoQueryPlaceholder">Schema should contain $query$ placeholder. Read the info below</string>
 
     <string name="expression">Expression</string>
     <string name="meaning">Meaning</string>
@@ -34,6 +46,7 @@
     <string name="dbError">Internal error</string>
 
     <string name="deleteRecordMessage">Do you really want to delete this record?</string>
+    <string name="deleteRemoteDictProviderMessage">Do you really want to delete the remote dictionary provider?</string>
 
     <string name="search">Search</string>
 

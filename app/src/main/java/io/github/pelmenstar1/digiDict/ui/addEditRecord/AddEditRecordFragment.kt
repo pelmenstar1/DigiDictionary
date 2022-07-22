@@ -58,13 +58,6 @@ class AddEditRecordFragment : Fragment() {
         registerCollectors(container)
         initMeaning(container)
 
-        if (savedInstanceState != null) {
-            val expression = savedInstanceState.getStringOrThrow(KEY_EXPRESSION)
-            val notes = savedInstanceState.getStringOrThrow(KEY_ADDITIONAL_NOTES)
-
-            setRecord(expression, notes)
-        }
-
         return binding.root
     }
 
@@ -172,23 +165,5 @@ class AddEditRecordFragment : Fragment() {
 
             launchMessageFlowCollector(vm.dbErrorFlow, messageMapper, container)
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        val vm = viewModel
-
-        // Meaning is not saved here, MeaningListInteractionView handles it, because ComplexMeaning
-        // can't represent duplicate elements.
-        outState.run {
-            putString(KEY_EXPRESSION, vm.newExpression.toString())
-            putString(KEY_ADDITIONAL_NOTES, vm.newAdditionalNotes.toString())
-        }
-    }
-
-    companion object {
-        private const val KEY_EXPRESSION =
-            "io.github.pelmenstar1.digiDict.AddExpressionFragment.expression"
-        private const val KEY_ADDITIONAL_NOTES =
-            "io.github.pelmenstar1.digiDict.AddExpressionFragment.additionalNotes"
     }
 }

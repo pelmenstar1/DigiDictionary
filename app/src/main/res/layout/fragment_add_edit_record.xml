@@ -27,9 +27,7 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginBottom="60dp"
-            android:paddingLeft="@dimen/addExpression_horizontalMargin"
-            android:paddingRight="@dimen/addExpression_horizontalMargin">
+            android:layout_marginBottom="60dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -38,11 +36,14 @@
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/addExpression_expressionInputLayout"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginStart="@dimen/addExpression_horizontalMargin"
                     android:hint="@string/expression"
                     app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/addExpression_searchExpression"
                     app:layout_constraintTop_toTopOf="parent">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -55,11 +56,26 @@
                         android:text="@{viewModel.newExpression}" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <Button
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:id="@+id/addExpression_searchExpression"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="6dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/addExpression_expressionInputLayout"
+                    app:icon="@drawable/ic_search"
+                    app:iconSize="24dp"
+                    android:enabled="@{viewModel.expressionErrorFlow == null}"
+                    android:onClick="@{() -> viewModel.searchExpression(navController)}"/>
+
                 <io.github.pelmenstar1.digiDict.ui.addEditRecord.MeaningListInteractionView
                     android:id="@+id/addExpression_meaningListInteraction"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:layout_marginStart="@dimen/addExpression_horizontalMargin"
+                    android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/addExpression_expressionInputLayout" />
 
@@ -69,6 +85,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
+                    android:layout_marginStart="@dimen/addExpression_horizontalMargin"
+                    android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
                     android:hint="@string/additionalNotes"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/addExpression_meaningListInteraction">
