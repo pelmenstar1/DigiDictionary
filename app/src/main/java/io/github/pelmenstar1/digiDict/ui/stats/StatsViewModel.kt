@@ -3,9 +3,9 @@ package io.github.pelmenstar1.digiDict.ui.stats
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.SECONDS_IN_DAY
+import io.github.pelmenstar1.digiDict.SECONDS_IN_WEEK
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_WEEK
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

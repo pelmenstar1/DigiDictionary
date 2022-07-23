@@ -28,6 +28,8 @@ class ViewRecordViewModel @Inject constructor(
     private val _recordFlow = MutableStateFlow<Result<Record?>?>(null)
     val recordFlow = _recordFlow.asStateFlow()
 
+    var onRecordDeleted: (() -> Unit)? = null
+
     var id: Int = -1
         set(value) {
             field = value
@@ -53,7 +55,7 @@ class ViewRecordViewModel @Inject constructor(
         }
     }
 
-    fun delete(navController: NavController) {
+    fun delete() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 recordDao.deleteById(id)
@@ -61,7 +63,7 @@ class ViewRecordViewModel @Inject constructor(
                 withContext(Dispatchers.Main) {
                     listAppWidgetUpdater.updateAllWidgets()
 
-                    navController.popBackStack()
+                    onRecordDeleted?.invoke()
                 }
 
                 _messageFlow.value = null

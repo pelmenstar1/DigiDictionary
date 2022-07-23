@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
-import android.view.View
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import io.github.pelmenstar1.digiDict.data.Record

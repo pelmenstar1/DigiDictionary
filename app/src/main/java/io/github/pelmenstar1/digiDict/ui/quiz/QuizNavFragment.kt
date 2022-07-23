@@ -6,33 +6,35 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizNavBinding
 
 class QuizNavFragment : Fragment() {
+    private val onButtonClickListener = View.OnClickListener {
+        val mode = it.tag as QuizMode
+        val directions = QuizNavFragmentDirections.actionQuizNavFragmentToQuizFragment(mode)
+
+        findNavController().navigate(directions)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val binding = FragmentQuizNavBinding.inflate(inflater, container, false)
-        val navController = findNavController()
 
         with(binding) {
-            initNavButton(quizNavAll, navController, QuizMode.ALL)
-            initNavButton(quizNavLast24Hours, navController, QuizMode.LAST_24_HOURS)
-            initNavButton(quizNavLast48Hours, navController, QuizMode.LAST_48_HOURS)
+            initNavButton(quizNavAll, QuizMode.ALL)
+            initNavButton(quizNavLast24Hours, QuizMode.LAST_24_HOURS)
+            initNavButton(quizNavLast48Hours, QuizMode.LAST_48_HOURS)
         }
 
         return binding.root
     }
 
-    private fun initNavButton(button: Button, navController: NavController, mode: QuizMode) {
-        button.setOnClickListener {
-            val directions = QuizNavFragmentDirections.actionQuizNavFragmentToQuizFragment(mode)
-
-            navController.navigate(directions)
-        }
+    private fun initNavButton(button: Button, mode: QuizMode) {
+        button.tag = mode
+        button.setOnClickListener(onButtonClickListener)
     }
 }

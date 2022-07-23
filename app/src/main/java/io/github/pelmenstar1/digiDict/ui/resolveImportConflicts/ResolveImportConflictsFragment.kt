@@ -31,10 +31,6 @@ class ResolveImportConflictsFragment : Fragment() {
 
         val binding = FragmentResolveImportConflictsBinding.inflate(inflater, container, false)
 
-        binding.lifecycleOwner = viewLifecycleOwner
-        binding.viewModel = viewModel
-        binding.navController = navController
-
         adapter = ResolveImportConflictsAdapter(
             onItemStateChanged = viewModel::onItemStateChanged
         )
@@ -48,7 +44,7 @@ class ResolveImportConflictsFragment : Fragment() {
         adapter.also { adapter ->
             adapter.submitItems(viewModel.entries)
 
-            if(savedInstanceState != null) {
+            if (savedInstanceState != null) {
                 val itemStates = savedInstanceState.getIntArrayOrThrow(SAVED_STATE_ITEM_STATES)
 
                 adapter.setItemStates(itemStates)
@@ -71,6 +67,7 @@ class ResolveImportConflictsFragment : Fragment() {
     }
 
     companion object {
-        private const val SAVED_STATE_ITEM_STATES = "io.github.pelmenstar1.digiDict.ResolveImportConflictsFragment.itemStates"
+        private const val SAVED_STATE_ITEM_STATES =
+            "io.github.pelmenstar1.digiDict.ResolveImportConflictsFragment.itemStates"
     }
 }

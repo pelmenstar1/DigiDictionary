@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         val toolbar = findViewById<MaterialToolbar>(R.id.main_toolbar)
 
         toolbar.setOnMenuItemClickListener {
-            if(it.itemId != R.id.home_menu_more) {
+            if (it.itemId != R.id.home_menu_more) {
                 it.onNavDestinationSelected(navController)
             } else {
                 false
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val menu = toolbar.menu
-            if(destination.id == R.id.homeFragment) {
+            if (destination.id == R.id.homeFragment) {
                 menuInflater.inflate(R.menu.home_menu, menu)
             } else {
                 menu.clear()

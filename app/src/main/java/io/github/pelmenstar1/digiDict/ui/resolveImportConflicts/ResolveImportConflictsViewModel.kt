@@ -31,15 +31,15 @@ class ResolveImportConflictsViewModel @Inject constructor(
 
         val needToApplyChanges = entriesStates.all { it != ResolveImportConflictItemState.INITIAL }
 
-        if(needToApplyChanges) {
+        if (needToApplyChanges) {
             applyChanges()
         }
     }
 
     private fun applyChanges() {
         viewModelScope.launch(Dispatchers.Default) {
-            val importedRecords = TemporaryImportStorage.importedRecords ?:
-                throw IllegalStateException("Temporary import storage is empty")
+            val importedRecords = TemporaryImportStorage.importedRecords
+                ?: throw IllegalStateException("Temporary import storage is empty")
 
             val resolveRecordsSequence = entries.asSequence().mapIndexed { index, entry ->
                 resolveConflict(entry, entriesStates[index])
@@ -59,7 +59,7 @@ class ResolveImportConflictsViewModel @Inject constructor(
     }
 
     private fun resolveConflict(entry: ConflictEntry, state: Int): Record {
-        return when(state) {
+        return when (state) {
             ResolveImportConflictItemState.ACCEPT_OLD -> {
                 Record(
                     id = entry.id,

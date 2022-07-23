@@ -1,119 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
-    <data>
-        <import type="android.view.View"/>
-        <import type="io.github.pelmenstar1.digiDict.ui.MeaningTextHelper"/>
+    <TextView
+        android:id="@+id/viewRecord_expression"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Expression: "
+        android:textIsSelectable="true" />
 
-        <variable
-            name="viewModel"
-            type="io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordViewModel" />
+    <TextView
+        android:id="@+id/viewRecord_meaningPrefix"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/meaningPrefix"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
 
-        <variable
-            name="record"
-            type="io.github.pelmenstar1.digiDict.data.Record" />
+    <TextView
+        android:id="@+id/viewRecord_meaning"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:textIsSelectable="true"
+        app:layout_constraintStart_toEndOf="@id/viewRecord_meaningPrefix"
+        app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
 
-        <variable
-            name="navController"
-            type="androidx.navigation.NavController" />
-    </data>
+    <TextView
+        android:id="@+id/viewRecord_additionalNotes"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textIsSelectable="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewRecord_meaning"
+        tools:text="Additional notes: " />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:visibility="@{record != null ? View.VISIBLE : View.INVISIBLE}">
+    <TextView
+        android:id="@+id/viewRecord_score"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textIsSelectable="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewRecord_additionalNotes"
+        tools:text="Score: " />
 
-        <TextView
-            android:id="@+id/viewRecord_expression"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@{@string/expressionAndValueFormat(record.expression)}"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Expression: " />
+    <TextView
+        android:id="@+id/viewRecord_dateTime"
+        style="@style/TextAppearance.Material3.BodyMedium"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textIsSelectable="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewRecord_score"
+        tools:text="Date" />
 
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/viewRecord_meaningPrefix"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/meaningPrefix"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
+    <Button
+        android:id="@+id/viewRecord_edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/edit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTime" />
 
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/viewRecord_meaning"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="8dp"
-            android:text='@{record.rawMeaning != null ? MeaningTextHelper.parseRawMeaningToFormatted(record.rawMeaning) : ""}'
-            app:layout_constraintStart_toEndOf="@id/viewRecord_meaningPrefix"
-            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression"
-            android:textIsSelectable="true" />
+    <Button
+        android:id="@+id/viewRecord_delete"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="@string/delete"
+        android:textColor="@color/color_error"
+        app:layout_constraintStart_toEndOf="@id/viewRecord_edit"
+        app:layout_constraintTop_toTopOf="@id/viewRecord_edit"
+        app:strokeColor="@color/color_error" />
 
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/viewRecord_additionalNotes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@{@string/additionalNotesAndValueFormat(record.additionalNotes)}"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_meaning"
-            tools:text="Additional notes: " />
-
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/viewRecord_score"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@{@string/scoreAndValueFormat(record.score)}"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_additionalNotes"
-            tools:text="Score: " />
-
-        <TextView
-            style="@style/TextAppearance.Material3.BodyMedium"
-            android:id="@+id/viewRecord_dateTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_score"
-            android:textIsSelectable="true"
-            tools:text="Date" />
-
-        <Button
-            android:id="@+id/viewRecord_edit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTime"
-            android:layout_marginTop="16dp"
-            android:onClick="@{() -> viewModel.edit(navController)}"
-            android:text="@string/edit"/>
-
-        <Button
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:id="@+id/viewRecord_delete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@id/viewRecord_edit"
-            app:layout_constraintTop_toTopOf="@id/viewRecord_edit"
-            android:layout_marginStart="8dp"
-            app:strokeColor="@color/color_error"
-            android:textColor="@color/color_error"
-            android:text="@string/delete"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</layout>
+</androidx.constraintlayout.widget.ConstraintLayout>

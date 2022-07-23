@@ -33,20 +33,17 @@ class AddEditRecordFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        val navController = findNavController()
+
         val binding = FragmentAddEditRecordBinding.inflate(inflater, container, false)
         this.binding = binding
 
         val vm = viewModel
-
         val recordId = args.recordId
 
-        binding.lifecycleOwner = viewLifecycleOwner
-        binding.viewModel = vm
-        binding.navController = findNavController()
-        binding.isInEditMode = recordId >= 0
-
         if (recordId >= 0) {
-            // These inputs can't be edited before current record has been loaded
+            // If there's a record to load, inputs should be temporarily disabled and then when the record
+            // is successfully loaded, they should be re-enabled.
             setInputsEnabled(false)
         }
 
@@ -54,9 +51,11 @@ class AddEditRecordFragment : Fragment() {
 
         // Init errors only after currentRecordId is set.
         vm.initErrors()
+        vm.onRecordSuccessfullyAdded = navController.popBackStackLambda()
 
         registerCollectors(container)
         initMeaning(container)
+        initViews()
 
         return binding.root
     }
@@ -82,20 +81,55 @@ class AddEditRecordFragment : Fragment() {
         meaning: ComplexMeaning,
         notes: String
     ) {
-        setRecord(expression, notes)
+        binding.run {
+            addExpressionExpressionInputLayout.setText(expression)
+            addExpressionAdditionalNotesInputLayout.setText(notes)
+        }
 
         binding.addExpressionMeaningListInteraction.meaning = meaning
     }
 
-    private fun setRecord(expression: String, notes: String) {
-        viewModel.run {
-            newExpression = expression
-            newAdditionalNotes = notes
-        }
-
+    private fun initViews() {
         binding.run {
-            addExpressionExpressionInput.setText(expression)
-            addExpressionAdditionalNotesInput.setText(notes)
+            val vm = viewModel
+
+            addExpressionExpressionInputLayout.addTextChangedListener {
+                vm.expression = it
+            }
+
+            addExpressionAdditionalNotesInputLayout.addTextChangedListener {
+                vm.additionalNotes = it
+            }
+
+            addExpressionAddButton.run {
+                val textId = if (args.recordId >= 0) R.string.edit else R.string.addRecord
+                text = resources.getString(textId)
+
+                setOnClickListener {
+                    vm.addOrEditExpression()
+                }
+            }
+
+            addExpressionSearchExpression.setOnClickListener {
+                val directions = AddEditRecordFragmentDirections.actionAddEditRecordToChooseRemoteDictionaryProvider(
+                    vm.expression.toString()
+                )
+
+                findNavController().navigate(directions)
+            }
+
+            lifecycleScope.run {
+                launchFlowCollector(vm.expressionErrorFlow) {
+                    addExpressionExpressionInputLayout.error = it?.let(messageMapper::map)
+                    addExpressionSearchExpression.isEnabled = it == null
+                }
+
+                launchErrorFlowCollector(addExpressionExpressionInputLayout, vm.expressionErrorFlow, messageMapper)
+
+                launchFlowCollector(vm.invalidity) {
+                    addExpressionAddButton.isEnabled = it == 0
+                }
+            }
         }
     }
 
@@ -133,7 +167,8 @@ class AddEditRecordFragment : Fragment() {
 
     private fun registerCollectors(container: ViewGroup?) {
         val vm = viewModel
-        val expressionInputLayout = binding.addExpressionExpressionInputLayout
+
+        launchMessageFlowCollector(vm.dbErrorFlow, messageMapper, container)
 
         lifecycleScope.run {
             launchFlowCollector(vm.currentRecordFlow) {
@@ -158,12 +193,6 @@ class AddEditRecordFragment : Fragment() {
                     }
                 )
             }
-
-            launchFlowCollector(vm.expressionErrorFlow) { error ->
-                expressionInputLayout.error = error?.let(messageMapper::map)
-            }
-
-            launchMessageFlowCollector(vm.dbErrorFlow, messageMapper, container)
         }
     }
 }

@@ -8,9 +8,8 @@ object MeaningTextHelper {
         throw IllegalArgumentException("Raw text has illegal format ($rawText)")
     }
 
-    @JvmStatic // for view binding
-    fun parseRawMeaningToFormatted(rawText: String): String {
-        return when(rawText[0]) {
+    fun parseToFormatted(rawText: String): String {
+        return when (rawText[0]) {
             'C' -> {
                 rawText.substring(1)
             }
@@ -19,7 +18,7 @@ object MeaningTextHelper {
                 val firstDelimiterIndex = rawText.indexOf('@', 1)
                 val count = rawText.parsePositiveInt(1, firstDelimiterIndex)
 
-                if(count !in 0..ComplexMeaning.MAX_LIST_ITEM_SIZE) {
+                if (count !in 0..ComplexMeaning.MAX_LIST_ITEM_SIZE) {
                     throwIllegalFormat(rawText)
                 }
 
@@ -27,7 +26,7 @@ object MeaningTextHelper {
 
                 // 2 characters are added for each item.
                 buildString(capacity = rawText.length + count * 2) {
-                    while(offset < rawText.length) {
+                    while (offset < rawText.length) {
                         val nextDelimiterPos = rawText.indexOf('\n', offset)
 
                         append('•')

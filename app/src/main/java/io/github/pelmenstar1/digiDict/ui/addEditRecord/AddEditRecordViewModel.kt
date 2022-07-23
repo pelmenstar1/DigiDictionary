@@ -3,7 +3,6 @@ package io.github.pelmenstar1.digiDict.ui.addEditRecord
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
@@ -19,7 +18,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -48,17 +46,19 @@ class AddEditRecordViewModel @Inject constructor(
 
     private val isAddJobStarted = AtomicBoolean()
 
-    private var _newExpression = ""
+    var onRecordSuccessfullyAdded: (() -> Unit)? = null
 
-    var newExpression: CharSequence
-        get() = _newExpression
+    private var _expression = ""
+
+    var expression: CharSequence
+        get() = _expression
         set(value) {
             setExpressionInternal(value.trimToString())
         }
 
     var getMeaning: (() -> ComplexMeaning)? = null
 
-    var newAdditionalNotes: CharSequence = ""
+    var additionalNotes: CharSequence = ""
 
     // currentRecordId can be possibly updated only one, when the fragment is started, so it's thread-safe to read it
     var currentRecordId = -1
@@ -72,27 +72,23 @@ class AddEditRecordViewModel @Inject constructor(
 
     fun loadCurrentRecord() {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
+            _currentRecordFlow.value = runCatching {
                 recordDao.getRecordById(currentRecordId).also {
-                    _currentRecordFlow.value = Result.success(it)
+                    startCheckExprJobIfNecessary()
                 }
-
-                startCheckExprJobIfNecessary()
-            } catch (e: Exception) {
-                _currentRecordFlow.value = Result.failure(e)
             }
         }
     }
 
     fun initErrors() {
         // If there's a 'current record', expression can't be blank and hence no error is needed.
-        if (currentRecordId < 0 && _newExpression.isBlank()) {
+        if (currentRecordId < 0 && _expression.isBlank()) {
             _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
         }
     }
 
     private fun setExpressionInternal(value: String) {
-        _newExpression = value
+        _expression = value
 
         if (value.isBlank()) {
             invalidity.withBit(EXPRESSION_INVALIDITY_BIT, true)
@@ -114,7 +110,7 @@ class AddEditRecordViewModel @Inject constructor(
                 val expressions = recordDao.getAllExpressions()
 
                 // Sort expressions to make binary search work.
-                Arrays.sort(expressions)
+                expressions.sort()
 
                 val currentRecordExpression = if (currentRecordId >= 0) {
                     requireNotNull(_currentRecordFlow.value).getOrThrow()?.expression
@@ -129,19 +125,9 @@ class AddEditRecordViewModel @Inject constructor(
                     // then if input expression shouldn't be considered as "existing"
                     // even if it does exist to allow editing meaning, origin or notes and not expression.
                     if (currentRecordExpression == expr || expressions.binarySearch(expr) < 0) {
-                        Log.i(
-                            TAG,
-                            "Expression $expr is considered valid; currentRecordExpression=$currentRecordExpression"
-                        )
-
                         invalidity.withBit(EXPRESSION_INVALIDITY_BIT, false)
                         _expressionErrorFlow.value = null
                     } else {
-                        Log.i(
-                            TAG,
-                            "Expression $expr is considered invalid; currentRecordExpression=$currentRecordExpression"
-                        )
-
                         invalidity.withBit(EXPRESSION_INVALIDITY_BIT, true)
                         _expressionErrorFlow.value = AddEditRecordMessage.EXISTING_EXPRESSION
                     }
@@ -150,18 +136,12 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
-    fun searchExpression(navController: NavController) {
-        val directions = AddEditRecordFragmentDirections.actionAddEditRecordToChooseRemoteDictionaryProvider(_newExpression)
-
-        navController.navigate(directions)
-    }
-
-    fun addOrEditExpression(navController: NavController) {
+    fun addOrEditExpression() {
         // Disallow starting a job when it has been started already.
         if (isAddJobStarted.compareAndSet(false, true)) {
             // Saving only those values which have been typed by the time of calling addOrEditExpression()
-            val expr = _newExpression.trimToString()
-            val additionalNotes = newAdditionalNotes.trimToString()
+            val expr = _expression.trimToString()
+            val additionalNotes = additionalNotes.trimToString()
             val rawMeaning = requireNotNull(getMeaning).invoke().rawText
 
             viewModelScope.launch(Dispatchers.IO) {
@@ -188,7 +168,7 @@ class AddEditRecordViewModel @Inject constructor(
                     withContext(Dispatchers.Main) {
                         listAppWidgetUpdater.updateAllWidgets()
 
-                        navController.popBackStack()
+                        onRecordSuccessfullyAdded?.invoke()
                     }
 
                     _dbErrorFlow.value = null

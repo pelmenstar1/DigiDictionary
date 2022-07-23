@@ -1,21 +1,25 @@
 package io.github.pelmenstar1.digiDict.utils
 
-import android.view.View
-import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputLayout
-
-fun TextInputLayout.getText(): CharSequence {
-    return editText?.text ?: ""
-}
 
 fun TextInputLayout.setText(text: CharSequence) {
     editText?.setText(text)
 }
 
-fun ViewGroup.setOnClickListenerWithDescendants(listener: View.OnClickListener?) {
-    setOnClickListener(listener)
+inline fun TextInputLayout.addTextChangedListenerToString(crossinline block: (String) -> Unit) {
+    editText?.addTextChangedListener {
+        block(it?.toString() ?: "")
+    }
+}
 
-    for(i in 0 until childCount) {
-        getChildAt(i).setOnClickListener(listener)
+fun TextView.setFormattedText(format: String, vararg args: Any?) {
+    text = JvmUtils.format(context.getLocaleCompat(), format, args)
+}
+
+inline fun TextInputLayout.addTextChangedListener(crossinline block: (CharSequence) -> Unit) {
+    editText?.addTextChangedListener {
+        block(it ?: "")
     }
 }

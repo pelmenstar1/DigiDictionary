@@ -1,7 +1,10 @@
 package io.github.pelmenstar1.digiDict.utils
 
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputLayout
 import io.github.pelmenstar1.digiDict.MessageMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -18,8 +21,15 @@ inline fun <T> CoroutineScope.launchFlowCollector(
     }
 }
 
-// TODO 1: In launchMessageFlowCollector() bind a snackbar to lifecycle. When lifecycle on destroy event happens, hide the snackbar.
-// TODO 2: Add launchFlowCollector() variant which accepts TextInputLayout and error mapper and sets the error to TextInputLayout from the flow.
+fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
+    inputLayout: TextInputLayout,
+    flow: Flow<T?>,
+    errorMapper: MessageMapper<T>
+) {
+    launchFlowCollector(flow) { errorType ->
+        inputLayout.error = errorType?.let(errorMapper::map)
+    }
+}
 
 /**
  * Launches flow collector which shows snackbar on each message.
@@ -28,17 +38,19 @@ inline fun <T> CoroutineScope.launchFlowCollector(
  * @param messageMapper used to convert value [T] to string
  * @param container container in which show snackbar
  */
-fun <T : Enum<T>> CoroutineScope.launchMessageFlowCollector(
+fun <T : Enum<T>> LifecycleOwner.launchMessageFlowCollector(
     flow: Flow<T?>,
     messageMapper: MessageMapper<T>,
     container: ViewGroup?
 ) {
     if (container != null) {
-        launchFlowCollector(flow) { type ->
-            if(type != null) {
+        lifecycleScope.launchFlowCollector(flow) { type ->
+            if (type != null) {
                 val message = messageMapper.map(type)
 
-                Snackbar.make(container, message, Snackbar.LENGTH_LONG).show()
+                Snackbar.make(container, message, Snackbar.LENGTH_LONG).also {
+                    it.showLifecycleAwareSnackbar(lifecycle)
+                }
             }
         }
     }

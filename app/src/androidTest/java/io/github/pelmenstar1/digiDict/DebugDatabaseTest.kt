@@ -6,11 +6,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_HOUR
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.test.Ignore
 
 @RunWith(AndroidJUnit4::class)
 class DebugDatabaseTest {
@@ -18,6 +17,7 @@ class DebugDatabaseTest {
     private val db = Room.databaseBuilder(appContext, AppDatabase::class.java, "database").build()
 
     @Test
+    @Ignore("It should be started only manually to generate DB")
     fun generateCommon() {
         generateInternal { i, epochSeconds ->
             val ordinal = i + 1
@@ -34,6 +34,7 @@ class DebugDatabaseTest {
     }
 
     @Test
+    @Ignore("It should be started only manually to generate DB")
     fun generateList() {
         generateInternal { i, epochSeconds ->
             val ordinal = i + 1

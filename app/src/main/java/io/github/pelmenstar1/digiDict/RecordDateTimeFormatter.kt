@@ -5,7 +5,6 @@ import android.icu.text.DisplayContext
 import android.icu.text.SimpleDateFormat
 import android.os.Build
 import android.text.format.DateFormat
-import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordFragment
 import io.github.pelmenstar1.digiDict.utils.getLocaleCompat
 import java.util.*
 
@@ -35,7 +34,7 @@ class RecordDateTimeFormatter(context: Context) {
     fun format(epochSeconds: Long): String {
         date.time = epochSeconds * 1000
 
-        return if(Build.VERSION.SDK_INT >= 24) {
+        return if (Build.VERSION.SDK_INT >= 24) {
             dateFormatter24!!.format(date)
         } else {
             dateFormatter!!.format(date)

@@ -104,7 +104,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if(isCustomTabsServiceConnected) {
+        if (isCustomTabsServiceConnected) {
             isCustomTabsServiceConnected = false
 
             requireContext().unbindService(connection)

@@ -15,8 +15,8 @@ interface SerializableIterator {
     fun writeCurrentElement(writer: ValueWriter)
 }
 
-fun<T : Any> SerializableIterable(values: Array<T>, serializer: BinarySerializer<T>): SerializableIterable {
-    return object: SerializableIterable {
+fun <T : Any> SerializableIterable(values: Array<T>, serializer: BinarySerializer<T>): SerializableIterable {
+    return object : SerializableIterable {
         override val size: Int
             get() = values.size
 
@@ -25,7 +25,7 @@ fun<T : Any> SerializableIterable(values: Array<T>, serializer: BinarySerializer
             private var element: T? = null
 
             override fun moveToNext(): Boolean {
-                if(index >= values.size) {
+                if (index >= values.size) {
                     return false
                 }
 

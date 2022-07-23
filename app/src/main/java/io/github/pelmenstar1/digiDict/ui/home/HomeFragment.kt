@@ -27,9 +27,13 @@ class HomeFragment : Fragment() {
         val navController = findNavController()
 
         val binding = FragmentHomeBinding.inflate(inflater, container, false)
-        binding.viewModel = viewModel
-        binding.navController = navController
         initRecyclerView(binding, navController)
+
+        binding.homeAddExpression.setOnClickListener {
+            val directions = HomeFragmentDirections.actionHomeToAddEditRecord()
+
+            navController.navigate(directions)
+        }
 
         return binding.root
     }
@@ -44,11 +48,11 @@ class HomeFragment : Fragment() {
             navController.navigate(directions)
         })
 
-        recyclerView.run {
-            layoutManager = LinearLayoutManager(context)
-            addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
+        recyclerView.also {
+            it.adapter = adapter
+            it.layoutManager = LinearLayoutManager(context)
 
-            setAdapter(adapter)
+            it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
         lifecycleScope.run {

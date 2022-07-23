@@ -12,10 +12,8 @@ enum class MeaningType {
 }
 
 sealed class ComplexMeaning : Parcelable {
-    protected var _rawText: String = ""
-
-    val rawText: String
-        get() = _rawText
+    var rawText: String = ""
+        protected set
 
     /**
      * A meaning with only one entry.
@@ -31,26 +29,26 @@ sealed class ComplexMeaning : Parcelable {
 
         constructor(parcel: Parcel) {
             text = parcel.readStringOrThrow()
-            _rawText = createCommonRawText(text)
+            rawText = createCommonRawText(text)
         }
 
         constructor(text: String) {
-            _rawText = createCommonRawText(text)
             this.text = text
+            rawText = createCommonRawText(text)
         }
 
         constructor(text: String, rawText: String) {
-            _rawText = rawText
             this.text = text
+            this.rawText = rawText
         }
 
         @Suppress("UNCHECKED_CAST")
         override fun mergedWith(other: ComplexMeaning): ComplexMeaning {
-            return when(other) {
+            return when (other) {
                 is Common -> {
                     val otherText = other.text
 
-                    if(text == otherText) {
+                    if (text == otherText) {
                         this
                     } else {
                         List(ArraySet<String>(2).apply {
@@ -62,7 +60,7 @@ sealed class ComplexMeaning : Parcelable {
                 is List -> {
                     val otherElements = other.elements
 
-                    if(otherElements.contains(text)) {
+                    if (otherElements.contains(text)) {
                         this
                     } else {
                         List(newArraySetFrom(otherElements, otherElements.size + 1).apply {
@@ -78,8 +76,8 @@ sealed class ComplexMeaning : Parcelable {
         }
 
         override fun equals(other: Any?): Boolean {
-            if(other === this) return true
-            if(other == null || other.javaClass != javaClass) return false
+            if (other === this) return true
+            if (other == null || other.javaClass != javaClass) return false
 
             other as Common
 
@@ -116,10 +114,10 @@ sealed class ComplexMeaning : Parcelable {
             val size = parcel.readInt()
             validateListItemSize(size)
 
-            _rawText = parcel.readStringOrThrow()
+            rawText = parcel.readStringOrThrow()
 
             elements = ArraySet<String>(size).apply {
-                for(i in 0 until size) {
+                for (i in 0 until size) {
                     add(parcel.readStringOrThrow())
                 }
             }
@@ -128,18 +126,20 @@ sealed class ComplexMeaning : Parcelable {
         constructor(elements: Set<String>) {
             validateListItemSize(elements.size)
 
-            _rawText = createListRawText(elements)
             this.elements = elements
+            rawText = createListRawText(elements)
         }
 
         constructor(elements: Array<out String>) {
             validateListItemSize(elements.size)
 
-            this.elements = ArraySet<String>(elements.size).apply {
+            val set = ArraySet<String>(elements.size).apply {
                 elements.forEach(::add)
             }
 
-            _rawText = createListRawText(this.elements)
+            this.elements = set
+
+            rawText = createListRawText(set)
         }
 
         @Suppress("UNCHECKED_CAST")
@@ -148,18 +148,20 @@ sealed class ComplexMeaning : Parcelable {
             // But if elements size is 0, this becomes -1, which is wrong as we have firstElement, so it should be at least 0 (which is valid value)
             validateListItemSize(max(0, elements.size - 1))
 
-            this.elements = ArraySet<String>(elements.size + 1).apply {
+            val set = ArraySet<String>(elements.size + 1).apply {
                 add(firstElement)
                 elements.forEach(::add)
             }
 
-            _rawText = createListRawText(this.elements)
+            this.elements = set
+
+            rawText = createListRawText(set)
         }
 
         constructor(elements: Set<String>, rawText: String) {
-           validateListItemSize(elements.size)
+            validateListItemSize(elements.size)
 
-            _rawText = rawText
+            this.rawText = rawText
             this.elements = elements
         }
 
@@ -167,11 +169,11 @@ sealed class ComplexMeaning : Parcelable {
         override fun mergedWith(other: ComplexMeaning): ComplexMeaning {
             val elements = elements
 
-            return when(other) {
+            return when (other) {
                 is Common -> {
                     val otherText = other.text
 
-                    if(elements.contains(otherText)) {
+                    if (elements.contains(otherText)) {
                         this
                     } else {
                         val newElements = newArraySetFrom(elements, elements.size + 1)
@@ -193,15 +195,14 @@ sealed class ComplexMeaning : Parcelable {
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
             dest.writeInt(elements.size)
-
             dest.writeString(rawText)
 
             elements.forEach(dest::writeString)
         }
 
         override fun equals(other: Any?): Boolean {
-            if(other === this) return true
-            if(other == null || javaClass != other.javaClass) return false
+            if (other === this) return true
+            if (other == null || javaClass != other.javaClass) return false
 
             other as List
 
@@ -238,7 +239,7 @@ sealed class ComplexMeaning : Parcelable {
 
         private fun newArraySetFrom(set: Set<String>, capacity: Int): ArraySet<String> {
             val newSet = ArraySet<String>(capacity)
-            if(set is ArraySet<*>) {
+            if (set is ArraySet<*>) {
                 newSet.addAll(set)
             } else {
                 set.forEach(newSet::add)
@@ -274,7 +275,7 @@ sealed class ComplexMeaning : Parcelable {
                 capacity += element.length
 
                 // Increase capacity for new line symbol only if it's not the last element
-                if(index < elements.size - 1) {
+                if (index < elements.size - 1) {
                     capacity++
                 }
             }
@@ -324,7 +325,7 @@ sealed class ComplexMeaning : Parcelable {
                     var prevPos = contentStart
                     val elements = ArraySet<String>()
 
-                    for(i in 0 until count) {
+                    for (i in 0 until count) {
                         var nextDelimiterIndex = rawText.indexOf('\n', prevPos)
 
                         if (nextDelimiterIndex == -1) {

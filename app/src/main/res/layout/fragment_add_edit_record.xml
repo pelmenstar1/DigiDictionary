@@ -1,121 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     tools:context=".ui.addEditRecord.AddEditRecordFragment">
 
-    <data>
-
-        <variable
-            name="viewModel"
-            type="io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordViewModel" />
-
-        <variable
-            name="navController"
-            type="androidx.navigation.NavController" />
-
-        <variable
-            name="isInEditMode"
-            type="boolean" />
-    </data>
-
-    <FrameLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:animateLayoutChanges="true">
+        android:layout_marginBottom="60dp">
 
-        <ScrollView
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="60dp">
+            android:layout_height="wrap_content">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/addExpression_expressionInputLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/addExpression_horizontalMargin"
+                android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
+                android:layout_marginEnd="5dp"
+                android:hint="@string/expression"
+                app:layout_constraintEnd_toStartOf="@id/addExpression_searchExpression"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
+                    android:id="@+id/addExpression_expressionInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapSentences" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/addExpression_searchExpression"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="6dp"
+                app:icon="@drawable/ic_search"
+                app:iconSize="24dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/addExpression_expressionInputLayout" />
+
+            <io.github.pelmenstar1.digiDict.ui.addEditRecord.MeaningListInteractionView
+                android:id="@+id/addExpression_meaningListInteraction"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/addExpression_horizontalMargin"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/addExpression_expressionInputLayout" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    android:id="@+id/addExpression_expressionInputLayout"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
-                    android:layout_marginEnd="5dp"
-                    android:layout_marginStart="@dimen/addExpression_horizontalMargin"
-                    android:hint="@string/expression"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/addExpression_searchExpression"
-                    app:layout_constraintTop_toTopOf="parent">
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/addExpression_additionalNotesInputLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/addExpression_horizontalMargin"
+                android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
+                android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
+                android:hint="@string/additionalNotes"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/addExpression_meaningListInteraction">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
-                        android:id="@+id/addExpression_expressionInput"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapSentences"
-                        android:onTextChanged="@{(text, start, before, count) -> viewModel.setNewExpression(text)}"
-                        android:text="@{viewModel.newExpression}" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <Button
-                    style="@style/Widget.Material3.Button.IconButton"
-                    android:id="@+id/addExpression_searchExpression"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="6dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/addExpression_expressionInputLayout"
-                    app:icon="@drawable/ic_search"
-                    app:iconSize="24dp"
-                    android:enabled="@{viewModel.expressionErrorFlow == null}"
-                    android:onClick="@{() -> viewModel.searchExpression(navController)}"/>
-
-                <io.github.pelmenstar1.digiDict.ui.addEditRecord.MeaningListInteractionView
-                    android:id="@+id/addExpression_meaningListInteraction"
+                <com.google.android.material.textfield.TextInputEditText
+                    style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
+                    android:id="@+id/addExpression_additionalNotesInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginStart="@dimen/addExpression_horizontalMargin"
-                    android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/addExpression_expressionInputLayout" />
+                    android:inputType="textCapSentences" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                    android:id="@+id/addExpression_additionalNotesInputLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
-                    android:layout_marginStart="@dimen/addExpression_horizontalMargin"
-                    android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
-                    android:hint="@string/additionalNotes"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/addExpression_meaningListInteraction">
+    <Button
+        android:id="@+id/addExpression_addButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="8dp"
+        android:elevation="5dp"
+        tools:text="Add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
-                        android:id="@+id/addExpression_additionalNotesInput"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapSentences"
-                        android:onTextChanged="@{(text, start, before, count) -> viewModel.setNewAdditionalNotes(text)}"
-                        android:text="@{viewModel.newAdditionalNotes}" />
-                </com.google.android.material.textfield.TextInputLayout>
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </ScrollView>
-
-        <Button
-            android:id="@+id/addExpression_addButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="8dp"
-            android:elevation="5dp"
-            android:enabled="@{viewModel.invalidity == 0}"
-            android:text="@{isInEditMode ? @string/applyChanges : @string/addRecord}"
-            android:onClick="@{() -> viewModel.addOrEditExpression(navController)}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-    </FrameLayout>
-</layout>
+</FrameLayout>

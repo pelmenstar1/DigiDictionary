@@ -7,7 +7,7 @@ fun lowestNBitsSet(n: Int): Int {
     // Special case: Shift operator takes into account only lowest 5 bits which means
     // if left-shift 0xFFFFFFFF by >= 32, result will be wrong. So return 0xFFFFFFFF (-1)
     // which is most appropriate value in such case
-    if(n >= 32) return -1
+    if (n >= 32) return -1
 
     // -1 is number with all bit set.
     // Then it's left-shifted by n, to get a number which has n lowest bits unset while the others are set.
@@ -36,7 +36,7 @@ fun Long.findPositionOfNthSetBit(n: Int): Int {
     var seqIndex = 0
 
     iterateSetBits { bitIndex ->
-        if(seqIndex == n) {
+        if (seqIndex == n) {
             return bitIndex
         }
 
@@ -51,7 +51,7 @@ inline fun Long.iterateSetBits(block: (bitIndex: Int) -> Unit) {
 
     var bits = this
 
-    while(bits != 0L) {
+    while (bits != 0L) {
         val t = bits and (-bits)
         val bitIndex = t.countLeadingZeroBits()
         block(63 - bitIndex)

@@ -13,9 +13,9 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.serialization.readValuesToList
 import io.github.pelmenstar1.digiDict.serialization.writeValues
-import io.github.pelmenstar1.digiDict.time.PackedDate
 import io.github.pelmenstar1.digiDict.utils.appendPaddedFourDigit
 import io.github.pelmenstar1.digiDict.utils.appendPaddedTwoDigit
+import io.github.pelmenstar1.digiDict.utils.getLocaleCompat
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.*
 import kotlin.coroutines.resume
 
 object RecordImportExportManager {
@@ -100,7 +101,8 @@ object RecordImportExportManager {
     }
 
     suspend fun export(context: Context, dao: RecordDao) {
-        val uri = launchAndGetResult(createDocumentLauncher, createFileName())
+        val fileName = createFileName(context.getLocaleCompat())
+        val uri = launchAndGetResult(createDocumentLauncher, fileName)
 
         withContext(Dispatchers.IO) {
             uri?.useAsFile(context, mode = "w") { descriptor ->
@@ -228,16 +230,18 @@ object RecordImportExportManager {
         }
     }
 
-    private fun createFileName(): String {
-        val nowDate = PackedDate.today()
+    private fun createFileName(locale: Locale): String {
+        val calendar = Calendar.getInstance(locale)
 
         return buildString(32) {
             append("digi_dict_")
-            appendPaddedTwoDigit(nowDate.dayOfMonth)
+            appendPaddedTwoDigit(calendar[Calendar.DAY_OF_MONTH])
             append('_')
-            appendPaddedTwoDigit(nowDate.month)
+
+            // Month is 0-based in Calendar.
+            appendPaddedTwoDigit(calendar[Calendar.MONTH] + 1)
             append('_')
-            appendPaddedFourDigit(nowDate.year)
+            appendPaddedFourDigit(calendar[Calendar.YEAR])
 
             append(".$EXTENSION")
         }

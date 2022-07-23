@@ -26,8 +26,10 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     private val remoteDictProviderDao = appDatabase.remoteDictionaryProviderDao()
 
-    private val _nameErrorFlow = MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
-    private val _schemaErrorFlow = MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
+    private val _nameErrorFlow =
+        MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
+    private val _schemaErrorFlow =
+        MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
     private val _dbErrorFlow = MutableStateFlow<AddRemoteDictionaryProviderMessage?>(null)
 
     private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
@@ -55,8 +57,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     @MainThread
     private fun scheduleCheckValue(type: Int, value: String) {
-        if(value.isBlank()) {
-            val flow = when(type) {
+        if (value.isBlank()) {
+            val flow = when (type) {
                 TYPE_NAME -> _nameErrorFlow
                 TYPE_SCHEMA -> _schemaErrorFlow
                 else -> throw RuntimeException()
@@ -64,7 +66,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
             flow.value = AddRemoteDictionaryProviderMessage.EMPTY_TEXT
         } else {
-            if(!isCheckValueJobStarted) {
+            if (!isCheckValueJobStarted) {
                 isCheckValueJobStarted = true
 
                 startCheckValueJob()
@@ -97,10 +99,10 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         viewModelScope.launch {
             val allProviders = remoteDictProviderDao.getAll()
 
-            while(isActive) {
+            while (isActive) {
                 val (type, value) = checkValueChannel.receive()
 
-                when(type) {
+                when (type) {
                     TYPE_NAME -> {
                         _nameErrorFlow.value = AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS.takeIf {
                             allProviders.any { it.name == value }
@@ -108,7 +110,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                     }
                     TYPE_SCHEMA -> {
                         _schemaErrorFlow.value = when {
-                            !Patterns.WEB_URL.matcher(value).matches() -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
+                            !Patterns.WEB_URL.matcher(value)
+                                .matches() -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
                             !value.contains("\$query$") -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
                             allProviders.any { it.schema == value } -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
                             else -> null

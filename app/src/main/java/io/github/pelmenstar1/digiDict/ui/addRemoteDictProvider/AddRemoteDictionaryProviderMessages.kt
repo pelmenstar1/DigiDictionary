@@ -16,7 +16,7 @@ enum class AddRemoteDictionaryProviderMessage {
 class AddRemoteDictionaryProviderMessageMapper(
     context: Context
 ) : ResourcesMessageMapper<AddRemoteDictionaryProviderMessage>(context, enumCount = 6) {
-    override fun mapToStringResource(type: AddRemoteDictionaryProviderMessage) = when(type) {
+    override fun mapToStringResource(type: AddRemoteDictionaryProviderMessage) = when (type) {
         AddRemoteDictionaryProviderMessage.EMPTY_TEXT -> R.string.emptyTextError
         AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS -> R.string.addRemoteDictProvider_providerNameExists
         AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS -> R.string.addRemoteDictProvider_providerSchemaExists

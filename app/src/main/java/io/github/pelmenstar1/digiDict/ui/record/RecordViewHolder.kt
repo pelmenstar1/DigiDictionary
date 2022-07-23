@@ -48,7 +48,7 @@ class RecordViewHolder private constructor(private val container: ViewGroup) :
             container.tag = record
 
             expressionView.text = record.expression
-            meaningView.text = MeaningTextHelper.parseRawMeaningToFormatted(record.rawMeaning)
+            meaningView.text = MeaningTextHelper.parseToFormatted(record.rawMeaning)
 
             scoreView.run {
                 val score = record.score

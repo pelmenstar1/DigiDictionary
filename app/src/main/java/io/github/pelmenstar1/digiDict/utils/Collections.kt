@@ -8,7 +8,7 @@ inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun<reified T> Array<T>.withAddedElement(element: T): Array<T> {
+inline fun <reified T> Array<T>.withAddedElement(element: T): Array<T> {
     val newArray = unsafeNewArray<T>(size + 1)
     System.arraycopy(this, 0, newArray, 0, size)
     newArray[size] = element

@@ -10,8 +10,8 @@ import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentStatsBinding
-import io.github.pelmenstar1.digiDict.utils.getLocaleCompat
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
+import io.github.pelmenstar1.digiDict.utils.setFormattedText
 
 @AndroidEntryPoint
 class StatsFragment : Fragment() {
@@ -23,14 +23,11 @@ class StatsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-        val binding = FragmentStatsBinding.inflate(inflater, container, false)
         val vm = viewModel
-
-        binding.viewModel = vm
-        binding.lifecycleOwner = viewLifecycleOwner
-
         val res = context.resources
-        val locale = context.getLocaleCompat()
+
+        val binding = FragmentStatsBinding.inflate(inflater, container, false)
+
         val recordsCountFormat = res.getString(R.string.recordsCountFormat)
         val recordsAddedLast24HoursFormat = res.getString(R.string.recordsAdded_last24HoursFormat)
         val recordsAddedLast7DaysFormat = res.getString(R.string.recordsAdded_last7DaysFormat)
@@ -38,26 +35,23 @@ class StatsFragment : Fragment() {
 
         lifecycleScope.run {
             launchFlowCollector(vm.countFlow) { count ->
-                binding.statsCount.text = String.format(locale, recordsCountFormat, count)
+                binding.statsCount.setFormattedText(recordsCountFormat, count)
             }
 
             launchFlowCollector(vm.additionStatsFlow) { stats ->
-                if(stats != null) {
+                if (stats != null) {
                     binding.run {
-                        statsRecordsAddedLast24Hours.text = String.format(
-                            locale,
+                        statsRecordsAddedLast24Hours.setFormattedText(
                             recordsAddedLast24HoursFormat,
                             stats.last24Hours
                         )
 
-                        statsRecordsAddedLast7Days.text = String.format(
-                            locale,
+                        statsRecordsAddedLast7Days.setFormattedText(
                             recordsAddedLast7DaysFormat,
                             stats.last7Days
                         )
 
-                        statsRecordsAddedLast31Days.text = String.format(
-                            locale,
+                        statsRecordsAddedLast31Days.setFormattedText(
                             recordsAddedLast31DaysFormat,
                             stats.last31Days
                         )

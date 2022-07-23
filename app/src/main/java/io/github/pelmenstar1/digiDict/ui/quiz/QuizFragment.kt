@@ -18,6 +18,7 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
+import io.github.pelmenstar1.digiDict.utils.popBackStackLambda
 
 @AndroidEntryPoint
 class QuizFragment : Fragment() {
@@ -40,7 +41,7 @@ class QuizFragment : Fragment() {
 
             meaningView.apply {
                 visibility = View.INVISIBLE
-                text = MeaningTextHelper.parseRawMeaningToFormatted(value.rawMeaning)
+                text = MeaningTextHelper.parseToFormatted(value.rawMeaning)
             }
 
             correctButton.initActionButton(isCorrect = true)
@@ -95,8 +96,6 @@ class QuizFragment : Fragment() {
     private val args by navArgs<QuizFragmentArgs>()
     private val viewModel by viewModels<QuizViewModel>()
 
-    private lateinit var binding: FragmentQuizBinding
-
     private lateinit var itemBackgroundHelper: QuizItemBackgroundHelper
 
     private var itemsState = 0
@@ -111,12 +110,15 @@ class QuizFragment : Fragment() {
         val vm = viewModel
         val navController = findNavController()
 
-        binding = FragmentQuizBinding.inflate(inflater, container, false).also {
-            it.navController = navController
-            it.viewModel = vm
-            it.lifecycleOwner = viewLifecycleOwner
+        val binding = FragmentQuizBinding.inflate(inflater, container, false)
+        initItemsContainer(binding)
 
-            initItemsContainer(it)
+        vm.onResultSaved = navController.popBackStackLambda()
+
+        binding.quizSaveResults.run {
+            lifecycleScope.launchFlowCollector(vm.isAllAnswered) { isEnabled = it }
+
+            setOnClickListener { vm.saveResults() }
         }
 
         itemBackgroundHelper = QuizItemBackgroundHelper(context)
@@ -139,7 +141,7 @@ class QuizFragment : Fragment() {
         val vm = viewModel
 
         lifecycleScope.launchFlowCollector(vm.result) {
-            if(it != null) {
+            if (it != null) {
                 if (it.isEmpty()) {
                     emptyTextView.visibility = View.VISIBLE
                     saveResultsButton.visibility = View.GONE
@@ -156,7 +158,7 @@ class QuizFragment : Fragment() {
     private fun submitItemsToContainer(container: LinearLayout, items: Array<out Record>) {
         container.removeAllViews()
 
-        for(i in items.indices) {
+        for (i in items.indices) {
             val viewHolder = createItemViewHolder(container).also {
                 it.bind(items[i], i, itemsState.getItemState(i))
             }

@@ -73,7 +73,7 @@ fun WritableByteChannel.writeValues(values: SerializableIterable) {
 }
 
 fun <T : Any> FileChannel.readValuesToArray(serializer: BinarySerializer<T>): Array<T> {
-   val buffer = readValuesInternal()
+    val buffer = readValuesInternal()
 
     return ValueReader.of(buffer).array(serializer)
 }

@@ -1,8 +1,5 @@
 package io.github.pelmenstar1.digiDict.data
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-
 data class ConflictEntry(
     val id: Int,
     val expression: String,

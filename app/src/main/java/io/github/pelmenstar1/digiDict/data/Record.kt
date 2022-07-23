@@ -30,6 +30,14 @@ data class Record(
         require(epochSeconds >= 0, "Epoch seconds can't be negative")
     }
 
+    fun equalsNoId(other: Record): Boolean {
+        return expression == other.expression &&
+                rawMeaning == other.rawMeaning &&
+                additionalNotes == other.additionalNotes &&
+                score == other.score &&
+                epochSeconds == other.epochSeconds
+    }
+
     companion object {
         val EXPRESSION_COMPARATOR = Comparator<Record> { a, b ->
             a.expression.compareTo(b.expression)
@@ -104,7 +112,7 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
         private val scoreIndex = columnIndex { score }
         private val epochSecondsIndex = columnIndex { epochSeconds }
 
-        private var iteratorCreated = false
+        private var isIteratorCreated = false
 
         private inline fun Cursor.columnIndex(block: RecordTable.() -> String): Int {
             return getColumnIndex(block(RecordTable))
@@ -115,11 +123,11 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
         }
 
         override fun iterator(): SerializableIterator {
-            if (iteratorCreated) {
+            if (isIteratorCreated) {
                 throw IllegalStateException("Iterator was already created")
             }
 
-            iteratorCreated = true
+            isIteratorCreated = true
 
             return object : SerializableIterator {
                 private var currentScore = 0

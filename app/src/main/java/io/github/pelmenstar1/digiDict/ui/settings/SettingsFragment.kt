@@ -31,24 +31,34 @@ class SettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        val navController = findNavController()
+        val vm = viewModel
 
-        binding.lifecycleOwner = viewLifecycleOwner
-        binding.viewModel = viewModel
-        binding.navController = findNavController()
+        val binding = FragmentSettingsBinding.inflate(inflater, container, false)
 
         RecordImportExportManager.init(this)
 
-        initQuizScoreSpinner(
-            binding.settingsScorePointsPerCorrectAnswerSpinner,
-            SCORE_POINTS_PER_CORRECT_ANSWER_KEY,
-            DEFAULT_SCORE_POINTS_PER_CORRECT_ANSWER
-        )
-        initQuizScoreSpinner(
-            binding.settingsScorePointsPerWrongAnswerSpinner,
-            SCORE_POINTS_PER_WRONG_ANSWER_KEY,
-            DEFAULT_SCORE_POINTS_PER_WRONG_ANSWER
-        )
+        binding.run {
+            settingsImport.setOnClickListener { vm.importData(navController) }
+            settingsExport.setOnClickListener { vm.exportData() }
+
+            settingsVersion.text = resources.getString(
+                R.string.versionFormat,
+                BuildConfig.VERSION_NAME, BuildConfig.BUILD_TYPE
+            )
+
+            initQuizScoreSpinner(
+                settingsScorePointsPerCorrectAnswerSpinner,
+                SCORE_POINTS_PER_CORRECT_ANSWER_KEY,
+                DEFAULT_SCORE_POINTS_PER_CORRECT_ANSWER
+            )
+            initQuizScoreSpinner(
+                settingsScorePointsPerWrongAnswerSpinner,
+                SCORE_POINTS_PER_WRONG_ANSWER_KEY,
+                DEFAULT_SCORE_POINTS_PER_WRONG_ANSWER
+            )
+        }
+
 
         lifecycleScope.run {
             launchMessageFlowCollector(viewModel.messageFlow, messageMapper, container)

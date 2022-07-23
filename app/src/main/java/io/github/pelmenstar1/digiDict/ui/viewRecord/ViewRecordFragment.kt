@@ -16,9 +16,8 @@ import io.github.pelmenstar1.digiDict.MessageMapper
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
-import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
-import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
-import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
+import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.utils.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,24 +36,37 @@ class ViewRecordFragment : Fragment() {
     ): View {
         val vm = viewModel
         val context = requireContext()
+        val res = context.resources
         val navController = findNavController()
 
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
-        binding.viewModel = vm
-        binding.navController = navController
-        binding.viewRecordDelete.setOnClickListener {
-            MaterialAlertDialogBuilder(context)
-                .setMessage(R.string.deleteRecordMessage)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    viewModel.delete(navController)
-                }
-                .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
-                .show()
+
+        with(binding) {
+            viewRecordDelete.setOnClickListener {
+                MaterialAlertDialogBuilder(context)
+                    .setMessage(R.string.deleteRecordMessage)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        viewModel.delete()
+                    }
+                    .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
+                    .show()
+            }
+
+            viewRecordEdit.setOnClickListener {
+                val directions = ViewRecordFragmentDirections.actionViewRecordToAddEditRecord(args.id)
+
+                navController.navigate(directions)
+            }
         }
+
+        vm.onRecordDeleted = navController.popBackStackLambda()
+        vm.id = args.id
 
         val dateTimeFormatter = RecordDateTimeFormatter(context)
 
-        vm.id = args.id
+        val expressionFormat = res.getString(R.string.expressionAndValueFormat)
+        val additionalNotesFormat = res.getString(R.string.additionalNotesAndValueFormat)
+        val scoreFormat = res.getString(R.string.scoreAndValueFormat)
 
         lifecycleScope.run {
             launchMessageFlowCollector(vm.messageFlow, messageMapper, container)
@@ -64,9 +76,18 @@ class ViewRecordFragment : Fragment() {
                     it?.fold(
                         onSuccess = { record ->
                             if (record != null) {
-                                binding.record = record
+                                with(binding) {
+                                    viewRecordExpression.setFormattedText(expressionFormat, record.expression)
+                                    viewRecordMeaning.text =
+                                        MeaningTextHelper.parseToFormatted(record.rawMeaning)
+                                    viewRecordAdditionalNotes.setFormattedText(
+                                        additionalNotesFormat,
+                                        record.additionalNotes
+                                    )
+                                    viewRecordScore.setFormattedText(scoreFormat, record.score)
 
-                                binding.viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
+                                    viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
+                                }
                             }
                         },
                         onFailure = {

@@ -168,11 +168,3 @@ fun CharSequence.trimToString(): String {
 
     return subSequenceToString(start, end)
 }
-
-fun String.indexOf(c: Char, start: Int, end: Int): Int {
-    for(i in start until end) {
-        if(this[i] == c) return i
-    }
-
-    return -1
-}

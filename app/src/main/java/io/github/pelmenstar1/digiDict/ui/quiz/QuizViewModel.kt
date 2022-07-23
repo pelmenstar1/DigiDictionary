@@ -4,13 +4,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.scorePointsPerCorrectAnswer
 import io.github.pelmenstar1.digiDict.scorePointsPerWrongAnswer
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.utils.isBitAtPositionSet
 import io.github.pelmenstar1.digiDict.utils.lowestNBitsSet
 import io.github.pelmenstar1.digiDict.utils.withBitAtPosition
@@ -18,7 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -46,6 +44,8 @@ class QuizViewModel @Inject constructor(
     private val _result = MutableStateFlow<Array<Record>?>(null)
     val result = _result.asStateFlow()
 
+    var onResultSaved: (() -> Unit)? = null
+
     // Should be used only on main-thread.
     var mode = QuizMode.ALL
 
@@ -70,7 +70,7 @@ class QuizViewModel @Inject constructor(
                 )
             }
 
-            if(records.size > 32) {
+            if (records.size > 32) {
                 throw IllegalStateException("Too many records for quiz")
             }
 
@@ -95,7 +95,7 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    fun saveResults(navController: NavController) {
+    fun saveResults() {
         viewModelScope.launch {
             // Relies on the fact that user can't answer if result is null
             val result = requireNotNull(_result.value)
@@ -121,7 +121,7 @@ class QuizViewModel @Inject constructor(
             recordDao.updateScores(result, newScores)
 
             withContext(Dispatchers.Main) {
-                navController.popBackStack()
+                onResultSaved?.invoke()
             }
         }
     }

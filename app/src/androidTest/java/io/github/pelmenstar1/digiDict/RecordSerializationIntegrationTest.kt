@@ -12,7 +12,7 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import kotlin.test.assertContentEquals
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class RecordSerializationIntegrationTest {
@@ -22,7 +22,7 @@ class RecordSerializationIntegrationTest {
         val filesDir = context.filesDir
         filesDir.mkdir()
 
-        val file = File(filesDir, "test.dvdb")
+        val file = File(filesDir, "test.dddb")
         file.delete()
         file.createNewFile()
 
@@ -49,14 +49,27 @@ class RecordSerializationIntegrationTest {
             valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
         }
 
-        assertContentEquals(originValuesFromDb, valuesFromFile)
+        val isOriginEqualsToFileValues = run {
+            val size = valuesFromFile.size
+            if(originValuesFromDb.size != size) return@run false
+
+            for(i in 0 until size) {
+                if(!originValuesFromDb[i].equalsNoId(valuesFromFile[i])) {
+                    return@run false
+                }
+            }
+
+            true
+        }
+
+        assertTrue(isOriginEqualsToFileValues)
     }
 
     @Test
     fun testUnderBufferSize() {
         val values = Array(5) {
             Record(
-                id = 0,
+                id = it,
                 expression = "Expression",
                 rawMeaning = "Meaning",
                 additionalNotes = "Notes",
@@ -72,7 +85,7 @@ class RecordSerializationIntegrationTest {
     fun testOverBufferSize() {
         val values = Array(1000) {
             Record(
-                id = 0,
+                id = it,
                 expression = "Expression",
                 rawMeaning = "Meaning",
                 additionalNotes = "Notes",

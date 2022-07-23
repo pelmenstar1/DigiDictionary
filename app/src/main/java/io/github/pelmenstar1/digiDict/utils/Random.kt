@@ -10,7 +10,7 @@ import kotlin.random.Random
  * @param size length of the array.
  */
 fun Random.generateUniqueRandomNumbers(upperBound: Int, size: Int): IntArray {
-    if(size == 0 || upperBound == 0) {
+    if (size == 0 || upperBound == 0) {
         return EmptyArray.INT
     }
 

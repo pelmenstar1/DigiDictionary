@@ -17,7 +17,7 @@ sealed class ValueReader {
         val n = int32()
         val result = serializer.newArray(n)
 
-        for(i in 0 until n) {
+        for (i in 0 until n) {
             result[i] = serializer.readFrom(this)
         }
 
@@ -28,7 +28,7 @@ sealed class ValueReader {
         val n = int32()
         val result = ArrayList<T>(n)
 
-        for(i in 0 until n) {
+        for (i in 0 until n) {
             val element = serializer.readFrom(this)
 
             result.add(element)
@@ -44,7 +44,7 @@ sealed class ValueReader {
     fun <T : Any> sequence(serializer: BinarySerializer<T>): Sequence<T> {
         val length = int32()
 
-        validate(length >= 0,"Sequence length can't be negative")
+        validate(length >= 0, "Sequence length can't be negative")
 
         return object : Sequence<T> {
             private var iteratorCreated = false

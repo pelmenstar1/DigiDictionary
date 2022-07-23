@@ -1,8 +1,6 @@
 package io.github.pelmenstar1.digiDict
 
 import io.github.pelmenstar1.digiDict.serialization.ValidationException
-import org.jetbrains.annotations.Contract
-import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
 fun require(condition: Boolean, message: String) {
@@ -10,7 +8,7 @@ fun require(condition: Boolean, message: String) {
         returns() implies condition
     }
 
-    if(!condition) {
+    if (!condition) {
         throw IllegalArgumentException(message)
     }
 }

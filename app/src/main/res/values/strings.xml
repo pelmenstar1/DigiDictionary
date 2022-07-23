@@ -5,7 +5,7 @@
     <string name="applyChanges">Apply changes</string>
     <string name="quiz">Quiz</string>
 
-    <string name="versionAndCredits">%1$s (%2$s)</string>
+    <string name="versionFormat">%1$s (%2$s)</string>
 
     <string name="labelHomeFragment">Home</string>
     <string name="labelQuizFragment">Quiz</string>

@@ -5,10 +5,9 @@ import android.content.Intent
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 
 class ListWidgetRemoteViewsService : RemoteViewsService() {
@@ -20,13 +19,7 @@ class ListWidgetRemoteViewsFactory(
     private val context: Context
 ) : RemoteViewsService.RemoteViewsFactory {
     private var records: Array<Record>? = null
-    private val dao: RecordDao
-
-    init {
-        val db = AppDatabase.createDatabase(context)
-
-        dao = db.recordDao()
-    }
+    private val dao = AppDatabase.getOrCreate(context).recordDao()
 
     override fun onCreate() {
     }
@@ -49,16 +42,16 @@ class ListWidgetRemoteViewsFactory(
             it.setTextViewText(R.id.listWidget_item_expression, record.expression)
             it.setTextViewText(
                 R.id.listWidget_item_meaning,
-                MeaningTextHelper.parseRawMeaningToFormatted(record.rawMeaning)
+                MeaningTextHelper.parseToFormatted(record.rawMeaning)
             )
         }
     }
 
     override fun getLoadingView(): RemoteViews? = null
     override fun getViewTypeCount() = 1
+    override fun hasStableIds() = true
+
     override fun getItemId(position: Int): Long {
         return records?.let { it[position].id.toLong() } ?: 0L
     }
-
-    override fun hasStableIds() = true
 }

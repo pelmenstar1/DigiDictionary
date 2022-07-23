@@ -58,7 +58,7 @@ class SearchViewModel @Inject constructor(
 
     @MainThread
     private fun sendCommand(value: Command) {
-        if(!isSearchJobStarted) {
+        if (!isSearchJobStarted) {
             isSearchJobStarted = true
 
             startSearchJob()
@@ -80,10 +80,10 @@ class SearchViewModel @Inject constructor(
 
                 val query = command.query
 
-                _result.value = if(query.isBlank()) {
+                _result.value = if (query.isBlank()) {
                     FilteredArray.empty()
                 } else {
-                   records.filterFast { (_, expression, rawMeaning) ->
+                    records.filterFast { (_, expression, rawMeaning) ->
                         expression.startsWith(query, ignoreCase = true) ||
                                 ComplexMeaning.anyElementStartsWith(rawMeaning, query, ignoreCase = true)
                     }

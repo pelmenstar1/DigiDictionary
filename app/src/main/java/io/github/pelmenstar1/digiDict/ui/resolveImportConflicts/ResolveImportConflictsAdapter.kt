@@ -57,7 +57,7 @@ class ResolveImportConflictsAdapter(
             score: Int,
             epochSeconds: Long
         ) {
-            meaningView.text = MeaningTextHelper.parseRawMeaningToFormatted(rawMeaning)
+            meaningView.text = MeaningTextHelper.parseToFormatted(rawMeaning)
             additionalNotesView.text = String.format(locale, additionalNotesFormat, additionalNotes)
             scoreView.text = String.format(locale, scoreFormat, score)
             dateTimeView.text = dateTimeFormatter.format(epochSeconds)
@@ -104,7 +104,7 @@ class ResolveImportConflictsAdapter(
                     entry.oldAdditionalNotes.isEmpty() ||
                     entry.newAdditionalNotes.isEmpty()
 
-            mergeButton.visibility = if(showMergeButton) View.VISIBLE else View.GONE
+            mergeButton.visibility = if (showMergeButton) View.VISIBLE else View.GONE
         }
 
         private inline fun Button.initButton(state: ResolveImportConflictItemState.() -> Int) {

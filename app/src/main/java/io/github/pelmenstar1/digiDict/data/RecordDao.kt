@@ -72,7 +72,15 @@ abstract class RecordDao {
 
     @Transaction
     open fun updateAsResolveConflictAll(sequence: Sequence<Record>) {
-        sequence.forEach { updateAsResolveConflict(it.id, it.rawMeaning, it.additionalNotes, it.epochSeconds, it.score) }
+        sequence.forEach {
+            updateAsResolveConflict(
+                it.id,
+                it.rawMeaning,
+                it.additionalNotes,
+                it.epochSeconds,
+                it.score
+            )
+        }
     }
 
     @Query("UPDATE records SET score=:newScore WHERE id=:id")
@@ -97,8 +105,8 @@ abstract class RecordDao {
     @Query("SELECT * FROM records ORDER BY dateTime DESC")
     abstract suspend fun getAllRecordsOrderByDateTime(): Array<Record>
 
-    @Query("SELECT * FROM records")
-    abstract fun getAllRecordsRaw(): Cursor
+    @Query("SELECT expression, meaning, additionalNotes, dateTime, score FROM records")
+    abstract fun getAllRecordsNoIdRaw(): Cursor
 
     @Query("SELECT * FROM records")
     abstract fun getAllRecordsBlocking(): Array<Record>
@@ -128,10 +136,10 @@ abstract class RecordDao {
     abstract suspend fun getRecordByExpression(expr: String): Record?
 
     @Query("SELECT id FROM records WHERE score >= 0")
-    abstract suspend fun getIdsWithPositiveScoreAfter(): IntArray
+    abstract suspend fun getIdsWithPositiveScore(): IntArray
 
     @Query("SELECT id FROM records WHERE score < 0")
-    abstract suspend fun getIdsWithNegativeScoreAfter(): IntArray
+    abstract suspend fun getIdsWithNegativeScore(): IntArray
 
     @Query("SELECT id FROM records WHERE dateTime >= :epochSeconds")
     abstract suspend fun getIdsAfter(epochSeconds: Long): IntArray
@@ -143,8 +151,8 @@ abstract class RecordDao {
             throw IllegalArgumentException("Size must be even")
         }
 
-        val idsWithPositiveScore = getIdsWithPositiveScoreAfter()
-        val idsWithNegativeScore = getIdsWithNegativeScoreAfter()
+        val idsWithPositiveScore = getIdsWithPositiveScore()
+        val idsWithNegativeScore = getIdsWithNegativeScore()
 
         val indicesWithNegativeScore = random.generateUniqueRandomNumbers(
             upperBound = idsWithNegativeScore.size,
@@ -180,13 +188,13 @@ abstract class RecordDao {
         ids.shuffle(random)
 
         val narrowedIds = IntArray(min(ids.size, maxSize))
-        System.arraycopy(ids, 0, narrowedIds, 0, narrowedIds.size)
+        ids.copyInto(narrowedIds, endIndex = narrowedIds.size)
 
         return getRecordsByIds(narrowedIds)
     }
 
     fun getAllRecordsNoIdIterable(): SerializableIterable {
-        val cursor = getAllRecordsRaw()
+        val cursor = getAllRecordsNoIdRaw()
 
         return cursor.asRecordSerializableIterableNoId()
     }

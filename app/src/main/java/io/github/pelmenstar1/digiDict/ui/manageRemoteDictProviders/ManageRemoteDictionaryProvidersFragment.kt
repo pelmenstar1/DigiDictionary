@@ -44,7 +44,8 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
 
         binding.manageRemoteDictProvidersAdd.also {
             it.setOnClickListener {
-                val directions = ManageRemoteDictionaryProvidersFragmentDirections.actionManageRemoteDictionaryProvidersToAddRemoteDictionaryProvider()
+                val directions =
+                    ManageRemoteDictionaryProvidersFragmentDirections.actionManageRemoteDictionaryProvidersToAddRemoteDictionaryProvider()
 
                 navController.navigate(directions)
             }

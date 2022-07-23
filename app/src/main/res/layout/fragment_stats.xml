@@ -1,49 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-    <data>
-        <variable
-            name="viewModel"
-            type="io.github.pelmenstar1.digiDict.ui.stats.StatsViewModel" />
-    </data>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="8dp">
+    <TextView
+        android:id="@+id/stats_count"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="false"
+        tools:text="@string/recordsCountFormat" />
 
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/stats_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            tools:text="@string/recordsCountFormat" />
+    <TextView
+        android:id="@+id/stats_recordsAddedLast24Hours"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="false"
+        tools:text="@string/recordsAdded_last24HoursFormat" />
 
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/stats_recordsAddedLast24Hours"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            tools:text="@string/recordsAdded_last24HoursFormat" />
+    <TextView
+        android:id="@+id/stats_recordsAddedLast7Days"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="false"
+        tools:text="@string/recordsAdded_last7DaysFormat" />
 
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/stats_recordsAddedLast7Days"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            tools:text="@string/recordsAdded_last7DaysFormat" />
-
-        <TextView
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:id="@+id/stats_recordsAddedLast31Days"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            tools:text="@string/recordsAdded_last31DaysFormat" />
-
-    </LinearLayout>
-</layout>
+    <TextView
+        android:id="@+id/stats_recordsAddedLast31Days"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="false"
+        tools:text="@string/recordsAdded_last31DaysFormat" />
+</LinearLayout>

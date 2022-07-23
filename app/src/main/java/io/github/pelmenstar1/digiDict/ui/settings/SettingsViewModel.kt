@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.serialization.ValidationException
@@ -21,7 +20,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -58,7 +56,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 val showMessage = block()
 
-                if(showMessage) {
+                if (showMessage) {
                     _messageFlow.value = successMessage
                 }
             } catch (e: NullPointerException) {
@@ -96,7 +94,7 @@ class SettingsViewModel @Inject constructor(
                 recordDao
             )
 
-            if(shouldResolveConflicts) {
+            if (shouldResolveConflicts) {
                 navController.navigate(SettingsFragmentDirections.actionSettingsToResolveImportConflicts())
                 false
             } else {

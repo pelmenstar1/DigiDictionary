@@ -3,9 +3,6 @@
 package io.github.pelmenstar1.digiDict.data
 
 import android.content.Context
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
@@ -35,7 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
-    private object Migration_3_4 : Migration(3,4) {
+    private object Migration_3_4 : Migration(3, 4) {
         override fun migrate(database: SupportSQLiteDatabase) {
             database.execSQL("CREATE TABLE IF NOT EXISTS remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL)")
             database.execSQL("CREATE TABLE IF NOT EXISTS `remote_dict_provider_stats` (`id` INTEGER NOT NULL, `visitCount` INTEGER NOT NULL, PRIMARY KEY(`id`))")
@@ -68,22 +65,6 @@ abstract class AppDatabase : RoomDatabase() {
         vm.addCloseable {
             tracker.removeObserver(observer)
         }
-    }
-
-    inline fun addRecordTableObserver(lifecycle: Lifecycle, crossinline block: () -> Unit) {
-        val tableObserver = createRecordTableObserver(block)
-
-        val tracker = invalidationTracker.also {
-            it.addObserver(tableObserver)
-        }
-
-        lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onDestroy(owner: LifecycleOwner) {
-                tracker.removeObserver(tableObserver)
-
-                lifecycle.removeObserver(this)
-            }
-        })
     }
 
     companion object {

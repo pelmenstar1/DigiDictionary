@@ -53,7 +53,7 @@ class FilteredArray<T>(
         var result = true
 
         bitSet.iterateSetBits { absIndex ->
-            if(origin[absIndex] != other[seqIndex]) {
+            if (origin[absIndex] != other[seqIndex]) {
                 result = false
                 return@iterateSetBits
             }
@@ -111,6 +111,8 @@ class FilteredArray<T>(
 inline fun <E> Array<out E>.filterFast(
     predicate: (element: E) -> Boolean
 ): FilteredArray<E> {
+    val size = size
+
     // Ceiling division to 64
     val bitSetSize = (size + 63) ushr 6
     val bitSet = LongArray(bitSetSize)
@@ -120,9 +122,8 @@ inline fun <E> Array<out E>.filterFast(
 
     // Fill bitset word by word
     while (start < size) {
-        // end shouldn't overlap the array size,
-        // so add 64 to it's possible or make it equal to size
-        val end = start + min(size - start, 64)
+        // end shouldn't overlap the array size, so limit it to size.
+        val end = min(start + 64, size)
 
         var word = 0L
 

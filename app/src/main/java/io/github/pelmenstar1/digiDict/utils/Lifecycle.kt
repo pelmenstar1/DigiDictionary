@@ -2,7 +2,6 @@ package io.github.pelmenstar1.digiDict.utils
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 
@@ -14,9 +13,9 @@ fun Snackbar.showLifecycleAwareSnackbar(lifecycle: Lifecycle) {
     show()
 
     val snackbar = this
-    lifecycle.addObserver(object: LifecycleEventObserver {
+    lifecycle.addObserver(object : LifecycleEventObserver {
         override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-            if(event == Lifecycle.Event.ON_DESTROY) {
+            if (event == Lifecycle.Event.ON_DESTROY) {
                 snackbar.dismiss()
                 lifecycle.removeObserver(this)
             }
