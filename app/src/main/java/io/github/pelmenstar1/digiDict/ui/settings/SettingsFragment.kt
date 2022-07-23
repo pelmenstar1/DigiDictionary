@@ -19,6 +19,8 @@ import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
 import javax.inject.Inject
 
+// TODO: Optimize flow collectors. Don't create new coroutine, create only one that collects Preferences object and then maps its values.
+
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
     private val viewModel by viewModels<SettingsViewModel>()
@@ -47,6 +49,18 @@ class SettingsFragment : Fragment() {
                 BuildConfig.VERSION_NAME, BuildConfig.BUILD_TYPE
             )
 
+            settingsOpenBrowserInAppSwitch.also { switch ->
+                lifecycleScope.launchFlowCollector(viewModel.getPreferenceValueFlow(USE_CUSTOM_TABS_KEY)) {
+                    val state = it ?: DEFAULT_USE_CUSTOM_TABS
+
+                    switch.isChecked = state
+                }
+
+                switch.setOnCheckedChangeListener { _, isChecked ->
+                    viewModel.changePreferenceValue(USE_CUSTOM_TABS_KEY, isChecked)
+                }
+            }
+
             initQuizScoreSpinner(
                 settingsScorePointsPerCorrectAnswerSpinner,
                 SCORE_POINTS_PER_CORRECT_ANSWER_KEY,
@@ -58,7 +72,6 @@ class SettingsFragment : Fragment() {
                 DEFAULT_SCORE_POINTS_PER_WRONG_ANSWER
             )
         }
-
 
         lifecycleScope.run {
             launchMessageFlowCollector(viewModel.messageFlow, messageMapper, container)

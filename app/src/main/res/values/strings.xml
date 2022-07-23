@@ -19,6 +19,7 @@
     <string name="stats">Statistics</string>
     <string name="settings">Settings</string>
 
+    <string name="remoteDictProviderShort">Remote dict. provider</string>
     <string name="remoteDictProvider_name">Name</string>
     <string name="remoteDictProvider_schema">Schema</string>
     <string name="addRemoteDictProvider_schemaDescription">A schema is a simple URL with query placeholder.\nExample: <i>https://dictionary.cambridge.org/dictionary/english/$query$</i>.\nHow to determine where to set $query$:\n• Search any word or expression in the dictionary site and find the word in the URL.\n• Replace the word to $query$.</string>
@@ -98,6 +99,9 @@
         <item>9</item>
         <item>10</item>
     </string-array>
+
+    <string name="settings_openBrowserInApp">Open browser in-app</string>
+
     <string name="settings_scorePointsPerCorrectAnswer_prefix">Score points per right answer: </string>
     <string name="settings_scorePointsPerCorrectAnswer_description">
         When you answer correct meaning of an expression, this amount of score points is added to the record

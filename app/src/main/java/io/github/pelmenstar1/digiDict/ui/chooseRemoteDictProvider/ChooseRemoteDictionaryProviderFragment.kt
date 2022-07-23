@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.chooseRemoteDictProvider
 
 import android.content.ComponentName
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -23,7 +24,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class ChooseRemoteDictionaryProviderFragment : Fragment() {
@@ -31,6 +34,10 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
     private val viewModel by viewModels<ChooseRemoteDictionaryProviderViewModel>()
 
     private lateinit var navController: NavController
+
+    // Before the actual value is loaded, suppose the feature is disabled.
+    @Volatile
+    private var useCustomTabs = false
 
     private var isBrowserLaunched = false
 
@@ -78,16 +85,28 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
 
         adapter.query = query
 
-        bindCustomTabsClient()
-
         binding.chooseRemoteDictProviderRecyclerView.also {
             it.adapter = adapter
             it.layoutManager = LinearLayoutManager(context)
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-        lifecycleScope.launchFlowCollector(viewModel.providers) { providers ->
-            adapter.submitItems(providers)
+        lifecycleScope.run {
+            launchFlowCollector(viewModel.providers) { providers ->
+                adapter.submitItems(providers)
+            }
+
+            launch(Dispatchers.Default) {
+                val isCustomTabsEnabled = viewModel.useCustomTabs().also {
+                    useCustomTabs = it
+                }
+
+                if (isCustomTabsEnabled) {
+                    withContext(Dispatchers.Main) {
+                        bindCustomTabsClient()
+                    }
+                }
+            }
         }
 
         return binding.root
@@ -122,13 +141,23 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
 
         val url = Uri.parse(provider.resolvedUrl(query))
 
-        val intent = CustomTabsIntent.Builder()
-            .apply {
-                customTabsSession?.let { setSession(it) }
-            }
-            .build()
+        if (useCustomTabs) {
+            val intent = CustomTabsIntent.Builder()
+                .apply {
+                    customTabsSession?.let { setSession(it) }
+                }
+                .build()
 
-        intent.launchUrl(context, url)
+            intent.launchUrl(context, url)
+        } else {
+            val intent = Intent().apply {
+                action = Intent.ACTION_VIEW
+
+                data = url
+            }
+
+            context.startActivity(intent)
+        }
 
         viewModel.onRemoteDictionaryProviderUsed(provider)
 
