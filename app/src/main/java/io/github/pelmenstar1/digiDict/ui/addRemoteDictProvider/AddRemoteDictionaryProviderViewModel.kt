@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.utils.withBit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.trySendBlocking
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,16 +30,27 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     private val _nameErrorFlow =
         MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
+
     private val _schemaErrorFlow =
         MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
-    private val _dbErrorFlow = MutableStateFlow<AddRemoteDictionaryProviderMessage?>(null)
+
+    private val _isNameEnabledFlow = MutableStateFlow(true)
+    private val _isSchemaEnabledFlow = MutableStateFlow(true)
+
+    // As name and schema is empty by default, it's 0 as no validity bits are set.
+    private val _validityFlow = MutableStateFlow(0)
 
     private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
-    private var isCheckValueJobStarted = false
+    private val isCheckValueJobStarted = AtomicBoolean()
 
     val nameErrorFlow = _nameErrorFlow.asStateFlow()
     val schemaErrorFlow = _schemaErrorFlow.asStateFlow()
-    val dbErrorFlow = _dbErrorFlow.asStateFlow()
+    val isNameEnabledFlow = _isNameEnabledFlow.asStateFlow()
+    val isSchemaEnabledFlow = _isNameEnabledFlow.asStateFlow()
+    val validityErrorFlow = _validityFlow.asStateFlow()
+
+    var onAdditionError: (() -> Unit)? = null
+    var onValidityCheckError: (() -> Unit)? = null
 
     var onSuccessfulAddition: (() -> Unit)? = null
 
@@ -55,8 +68,16 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
             scheduleCheckValue(TYPE_SCHEMA, value)
         }
 
+    fun restartValidityCheck() {
+        scheduleCheckValue(TYPE_NAME, name)
+        scheduleCheckValue(TYPE_SCHEMA, schema)
+    }
+
     @MainThread
     private fun scheduleCheckValue(type: Int, value: String) {
+        // During the check, presume the value is invalid. If the value is actually valid, validity bit will be set later.
+        _validityFlow.withBit(1 shl type, false)
+
         if (value.isBlank()) {
             val flow = when (type) {
                 TYPE_NAME -> _nameErrorFlow
@@ -66,11 +87,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
             flow.value = AddRemoteDictionaryProviderMessage.EMPTY_TEXT
         } else {
-            if (!isCheckValueJobStarted) {
-                isCheckValueJobStarted = true
-
-                startCheckValueJob()
-            }
+            startCheckValueJobIfNecessary()
 
             checkValueChannel.trySendBlocking(Message(type, value))
         }
@@ -91,30 +108,75 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "during addition", e)
+
+                withContext(Dispatchers.Main) {
+                    onAdditionError?.invoke()
+                }
             }
         }
     }
 
-    private fun startCheckValueJob() {
-        viewModelScope.launch {
-            val allProviders = remoteDictProviderDao.getAll()
+    private fun startCheckValueJobIfNecessary() {
+        if (isCheckValueJobStarted.compareAndSet(false, true)) {
+            viewModelScope.launch(Dispatchers.Default) {
+                val allProviders: Array<RemoteDictionaryProviderInfo>
 
-            while (isActive) {
-                val (type, value) = checkValueChannel.receive()
+                try {
+                    allProviders = remoteDictProviderDao.getAll()
+                } catch (e: Exception) {
+                    // The job still can be restarted.
+                    isCheckValueJobStarted.set(false)
 
-                when (type) {
-                    TYPE_NAME -> {
-                        _nameErrorFlow.value = AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS.takeIf {
-                            allProviders.any { it.name == value }
-                        }
+                    _isNameEnabledFlow.value = false
+                    _isSchemaEnabledFlow.value = false
+
+                    // There can be no errors as name and schema inputs are disabled.
+                    _nameErrorFlow.value = null
+                    _schemaErrorFlow.value = null
+
+                    // Unset all validity bits in order to disable "Add" button
+                    _validityFlow.value = 0
+
+                    withContext(Dispatchers.Main) {
+                        onValidityCheckError?.invoke()
                     }
-                    TYPE_SCHEMA -> {
-                        _schemaErrorFlow.value = when {
-                            !Patterns.WEB_URL.matcher(value)
-                                .matches() -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
-                            !value.contains("\$query$") -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
-                            allProviders.any { it.schema == value } -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
-                            else -> null
+
+                    return@launch
+                }
+
+                // If the job is started after the error, _isNameEnabledFlow's and _isSchemaEnabledFlow's values might be false.
+                // So after we know allProviders are loaded successfully, we can set values to true.
+                _isNameEnabledFlow.value = true
+                _isSchemaEnabledFlow.value = true
+
+                while (isActive) {
+                    val (type, value) = checkValueChannel.receive()
+
+                    when (type) {
+                        TYPE_NAME -> {
+                            val error = AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS.takeIf {
+                                allProviders.any { it.name == value }
+                            }
+
+                            _nameErrorFlow.value = error
+                            _validityFlow.withBit(NAME_VALIDITY_BIT, error == null)
+                        }
+                        TYPE_SCHEMA -> {
+                            val error = when {
+                                !Patterns.WEB_URL.matcher(value).matches() ->
+                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
+
+                                !value.contains("\$query$") ->
+                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
+
+                                allProviders.any { it.schema == value } ->
+                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
+
+                                else -> null
+                            }
+
+                            _schemaErrorFlow.value = error
+                            _validityFlow.withBit(SCHEMA_VALIDITY_BIT, error == null)
                         }
                     }
                 }
@@ -127,5 +189,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
         private const val TYPE_NAME = 0
         private const val TYPE_SCHEMA = 1
+
+        const val NAME_VALIDITY_BIT = 1 shl TYPE_NAME
+        const val SCHEMA_VALIDITY_BIT = 1 shl TYPE_SCHEMA
+        const val ALL_VALID_MASK = NAME_VALIDITY_BIT or SCHEMA_VALIDITY_BIT
     }
 }

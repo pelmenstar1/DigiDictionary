@@ -3,7 +3,6 @@ package io.github.pelmenstar1.digiDict.ui.viewRecord
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
@@ -22,12 +21,11 @@ class ViewRecordViewModel @Inject constructor(
 ) : ViewModel() {
     private val recordDao = appDatabase.recordDao()
 
-    private val _messageFlow = MutableStateFlow<ViewRecordMessage?>(null)
-    val messageFlow = _messageFlow.asStateFlow()
-
-    private val _recordFlow = MutableStateFlow<Result<Record?>?>(null)
+    private val _recordFlow = MutableStateFlow<Record?>(null)
     val recordFlow = _recordFlow.asStateFlow()
 
+    var onDeleteError: (() -> Unit)? = null
+    var onLoadingError: (() -> Unit)? = null
     var onRecordDeleted: (() -> Unit)? = null
 
     var id: Int = -1
@@ -45,12 +43,14 @@ class ViewRecordViewModel @Inject constructor(
 
     fun refreshRecord() {
         viewModelScope.launch(Dispatchers.IO) {
-            _recordFlow.value = try {
-                val value = recordDao.getRecordById(id)
-
-                Result.success(value)
+            try {
+                _recordFlow.value = recordDao.getRecordById(id)
             } catch (e: Exception) {
-                Result.failure(e)
+                Log.e(TAG, "during loading the record", e)
+
+                withContext(Dispatchers.Main) {
+                    onLoadingError?.invoke()
+                }
             }
         }
     }
@@ -65,20 +65,12 @@ class ViewRecordViewModel @Inject constructor(
 
                     onRecordDeleted?.invoke()
                 }
-
-                _messageFlow.value = null
             } catch (e: Exception) {
                 Log.e(TAG, "during delete", e)
 
-                _messageFlow.value = ViewRecordMessage.DB_ERROR
+                onDeleteError?.invoke()
             }
         }
-    }
-
-    fun edit(navController: NavController) {
-        val directions = ViewRecordFragmentDirections.actionViewRecordToAddEditRecord(id)
-
-        navController.navigate(directions)
     }
 
     companion object {

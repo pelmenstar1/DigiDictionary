@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -12,15 +13,45 @@
             android:id="@+id/manageRemoteDictProviders_recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/manageRemoteDictProviders_errorContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                style="@style/TextAppearance.Material3.BodyLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/manageRemoteDictProvider_failedToLoadProvidersError"
+                android:textAlignment="center" />
+
+            <Button
+                android:id="@+id/manageRemoteDictProviders_retry"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="@string/retry" />
+
+        </LinearLayout>
     </FrameLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        style="@style/Widget.Material3.FloatingActionButton.Primary"
         android:id="@+id/manageRemoteDictProviders_add"
+        style="@style/Widget.Material3.FloatingActionButton.Primary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="8dp"
         android:contentDescription="@string/addRemoteDictProvider"
-        app:srcCompat="@drawable/ic_add"/>
+        app:srcCompat="@drawable/ic_add" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

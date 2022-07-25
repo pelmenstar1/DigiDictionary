@@ -20,11 +20,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -92,19 +95,37 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
         }
 
         lifecycleScope.run {
-            launchFlowCollector(viewModel.providers) { providers ->
+            launchFlowCollector(viewModel.providers.catch {
+                if (container != null) {
+                    Snackbar
+                        .make(
+                            container,
+                            R.string.chooseRemoteDictProvider_failedToLoadProvidersError,
+                            Snackbar.LENGTH_LONG
+                        )
+                        .show()
+                }
+
+                emit(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
+            }) { providers ->
                 adapter.submitItems(providers)
             }
 
             launch(Dispatchers.Default) {
-                val isCustomTabsEnabled = viewModel.useCustomTabs().also {
-                    useCustomTabs = it
-                }
-
-                if (isCustomTabsEnabled) {
-                    withContext(Dispatchers.Main) {
-                        bindCustomTabsClient()
+                try {
+                    val isCustomTabsEnabled = viewModel.useCustomTabs().also {
+                        useCustomTabs = it
                     }
+
+                    if (isCustomTabsEnabled) {
+                        withContext(Dispatchers.Main) {
+                            bindCustomTabsClient()
+                        }
+                    }
+                } catch (e: Exception) {
+                    // If there's an error while loading useCustomTabs() value,
+                    // Custom Tabs won't be enabled. The user still will be able to view the page.
+                    Log.e(TAG, "during useCustomTabs() loading", e)
                 }
             }
         }

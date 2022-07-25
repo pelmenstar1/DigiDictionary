@@ -12,6 +12,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.Record
@@ -19,6 +20,7 @@ import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.popBackStackLambda
+import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 
 @AndroidEntryPoint
 class QuizFragment : Fragment() {
@@ -111,48 +113,60 @@ class QuizFragment : Fragment() {
         val navController = findNavController()
 
         val binding = FragmentQuizBinding.inflate(inflater, container, false)
-        initItemsContainer(binding)
-
-        vm.onResultSaved = navController.popBackStackLambda()
-
-        binding.quizSaveResults.run {
-            lifecycleScope.launchFlowCollector(vm.isAllAnswered) { isEnabled = it }
-
-            setOnClickListener { vm.saveResults() }
-        }
 
         itemBackgroundHelper = QuizItemBackgroundHelper(context)
 
+        vm.onResultSaved = navController.popBackStackLambda()
         vm.mode = args.mode
-        vm.startLoadingElements()
+
+        with(binding) {
+            if (container != null) {
+                vm.onSaveError = {
+                    Snackbar
+                        .make(container, R.string.quiz_saveError, Snackbar.LENGTH_LONG)
+                        .setAnchorView(quizSaveResults)
+                        .showLifecycleAwareSnackbar(lifecycle)
+                }
+            }
+
+            vm.onLoadingError = {
+                quizErrorText.visibility = View.VISIBLE
+                quizRetry.visibility = View.VISIBLE
+
+                quizSaveResults.visibility = View.GONE
+            }
+
+            quizSaveResults.run {
+                lifecycleScope.launchFlowCollector(vm.isAllAnswered) { isEnabled = it }
+
+                setOnClickListener { vm.saveResults() }
+            }
+
+            lifecycleScope.launchFlowCollector(vm.result) {
+                if (it != null) {
+                    quizErrorText.visibility = View.GONE
+                    quizRetry.visibility = View.GONE
+
+                    if (it.isEmpty()) {
+                        quizEmptyText.visibility = View.VISIBLE
+                        quizSaveResults.visibility = View.GONE
+                    } else {
+                        submitItemsToContainer(quizItemsContainer, it)
+
+                        quizEmptyText.visibility = View.GONE
+                        quizSaveResults.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
 
         if (savedInstanceState != null) {
             itemsState = savedInstanceState.getInt(STATE_QUIZ_STATE)
         }
 
+        vm.startLoadingElements()
+
         return binding.root
-    }
-
-    private fun initItemsContainer(binding: FragmentQuizBinding) {
-        val itemsContainer = binding.quizItemsContainer
-        val emptyTextView = binding.quizEmptyText
-        val saveResultsButton = binding.quizSaveResults
-
-        val vm = viewModel
-
-        lifecycleScope.launchFlowCollector(vm.result) {
-            if (it != null) {
-                if (it.isEmpty()) {
-                    emptyTextView.visibility = View.VISIBLE
-                    saveResultsButton.visibility = View.GONE
-                } else {
-                    submitItemsToContainer(itemsContainer, it)
-
-                    emptyTextView.visibility = View.GONE
-                    saveResultsButton.visibility = View.VISIBLE
-                }
-            }
-        }
     }
 
     private fun submitItemsToContainer(container: LinearLayout, items: Array<out Record>) {

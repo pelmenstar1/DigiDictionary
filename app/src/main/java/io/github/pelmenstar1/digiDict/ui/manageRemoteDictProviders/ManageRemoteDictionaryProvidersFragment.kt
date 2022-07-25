@@ -23,6 +23,7 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
         val navController = findNavController()
+        val vm = viewModel
 
         val binding = FragmentManageRemoteDictProvidersBinding.inflate(inflater, container, false)
 
@@ -30,29 +31,45 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
             onDeleteProvider = {
                 MaterialAlertDialogBuilder(context)
                     .setMessage(io.github.pelmenstar1.digiDict.R.string.deleteRemoteDictProviderMessage)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> viewModel.delete(it) }
+                    .setPositiveButton(android.R.string.ok) { _, _ -> vm.delete(it) }
                     .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
                     .show()
             }
         )
 
-        binding.manageRemoteDictProvidersRecyclerView.also {
-            it.adapter = adapter
-            it.layoutManager = LinearLayoutManager(context)
-            it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
-        }
-
-        binding.manageRemoteDictProvidersAdd.also {
-            it.setOnClickListener {
-                val directions =
-                    ManageRemoteDictionaryProvidersFragmentDirections.actionManageRemoteDictionaryProvidersToAddRemoteDictionaryProvider()
-
-                navController.navigate(directions)
+        with(binding) {
+            manageRemoteDictProvidersRecyclerView.also {
+                it.adapter = adapter
+                it.layoutManager = LinearLayoutManager(context)
+                it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
             }
-        }
 
-        lifecycleScope.launchFlowCollector(viewModel.providersFlow) {
-            adapter.submitItems(it)
+            manageRemoteDictProvidersAdd.also {
+                it.setOnClickListener {
+                    val directions =
+                        ManageRemoteDictionaryProvidersFragmentDirections.actionManageRemoteDictionaryProvidersToAddRemoteDictionaryProvider()
+
+                    navController.navigate(directions)
+                }
+            }
+
+            manageRemoteDictProvidersRetry.setOnClickListener {
+                vm.loadProviders()
+            }
+
+            vm.onLoadingError = {
+                manageRemoteDictProvidersErrorContainer.visibility = View.VISIBLE
+                manageRemoteDictProvidersRecyclerView.visibility = View.GONE
+            }
+
+            lifecycleScope.launchFlowCollector(vm.providersFlow) {
+                if (it != null) {
+                    manageRemoteDictProvidersErrorContainer.visibility = View.GONE
+                    manageRemoteDictProvidersRecyclerView.visibility = View.VISIBLE
+
+                    adapter.submitItems(it)
+                }
+            }
         }
 
         return binding.root

@@ -19,8 +19,6 @@ import io.github.pelmenstar1.digiDict.utils.getIntArrayOrThrow
 class ResolveImportConflictsFragment : Fragment() {
     private val viewModel by viewModels<ResolveImportConflictsViewModel>()
 
-    private lateinit var adapter: ResolveImportConflictsAdapter
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -28,12 +26,21 @@ class ResolveImportConflictsFragment : Fragment() {
     ): View {
         val context = requireContext()
         val navController = findNavController()
+        val vm = viewModel
 
         val binding = FragmentResolveImportConflictsBinding.inflate(inflater, container, false)
 
-        adapter = ResolveImportConflictsAdapter(
-            onItemStateChanged = viewModel::onItemStateChanged
-        )
+        val adapter = ResolveImportConflictsAdapter(
+            onItemStateChanged = vm::onItemStateChanged
+        ).also {
+            it.submitItems(vm.entries)
+
+            if (savedInstanceState != null) {
+                val itemStates = savedInstanceState.getIntArrayOrThrow(SAVED_STATE_ITEM_STATES)
+
+                it.setItemStates(itemStates)
+            }
+        }
 
         binding.resolveImportConflictsRecyclerView.also {
             it.adapter = adapter
@@ -41,17 +48,18 @@ class ResolveImportConflictsFragment : Fragment() {
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-        adapter.also { adapter ->
-            adapter.submitItems(viewModel.entries)
-
-            if (savedInstanceState != null) {
-                val itemStates = savedInstanceState.getIntArrayOrThrow(SAVED_STATE_ITEM_STATES)
-
-                adapter.setItemStates(itemStates)
+        vm.onApplyChangesError = {
+            container?.let {
+                Snackbar
+                    .make(it, R.string.resolveImportConflicts_applyChangesError, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.retry) {
+                        vm.applyChanges()
+                    }
+                    .show()
             }
         }
 
-        viewModel.onApplyChanges = {
+        vm.onSuccessfulApplyChanges = {
             container?.let {
                 Snackbar.make(it, R.string.importSuccess, Snackbar.LENGTH_SHORT).show()
             }

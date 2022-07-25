@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.quiz
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
@@ -44,6 +45,8 @@ class QuizViewModel @Inject constructor(
     private val _result = MutableStateFlow<Array<Record>?>(null)
     val result = _result.asStateFlow()
 
+    var onLoadingError: (() -> Unit)? = null
+    var onSaveError: (() -> Unit)? = null
     var onResultSaved: (() -> Unit)? = null
 
     // Should be used only on main-thread.
@@ -52,31 +55,39 @@ class QuizViewModel @Inject constructor(
     fun startLoadingElements() {
         val selectedMode = mode
         viewModelScope.launch(Dispatchers.IO) {
-            val records = if (selectedMode == QuizMode.ALL) {
-                recordDao.getRandomRecords(random, RECORDS_MAX_SIZE)
-            } else {
-                val duration = when (selectedMode) {
-                    QuizMode.LAST_24_HOURS -> SECONDS_IN_DAY
-                    QuizMode.LAST_48_HOURS -> 2 * SECONDS_IN_DAY
-                    // It's impossible but compiler doesn't know about it
-                    else -> throw RuntimeException("Impossible")
+            try {
+                val records = if (selectedMode == QuizMode.ALL) {
+                    recordDao.getRandomRecords(random, RECORDS_MAX_SIZE)
+                } else {
+                    val duration = when (selectedMode) {
+                        QuizMode.LAST_24_HOURS -> SECONDS_IN_DAY
+                        QuizMode.LAST_48_HOURS -> 2 * SECONDS_IN_DAY
+                        // It's impossible but compiler doesn't know about it
+                        else -> throw RuntimeException("Impossible")
+                    }
+                    val nowEpochSeconds = System.currentTimeMillis() / 1000
+
+                    recordDao.getRandomRecordsAfter(
+                        random,
+                        RECORDS_MAX_SIZE,
+                        nowEpochSeconds - duration
+                    )
                 }
-                val nowEpochSeconds = System.currentTimeMillis() / 1000
 
-                recordDao.getRandomRecordsAfter(
-                    random,
-                    RECORDS_MAX_SIZE,
-                    nowEpochSeconds - duration
-                )
+                if (records.size > 32) {
+                    throw IllegalStateException("Too many records for quiz")
+                }
+
+                allAnsweredMask = lowestNBitsSet(records.size)
+
+                _result.value = records
+            } catch (e: Exception) {
+                Log.e(TAG, "during loading", e)
+
+                withContext(Dispatchers.Main) {
+                    onLoadingError?.invoke()
+                }
             }
-
-            if (records.size > 32) {
-                throw IllegalStateException("Too many records for quiz")
-            }
-
-            allAnsweredMask = lowestNBitsSet(records.size)
-
-            _result.value = records
         }
     }
 
@@ -97,36 +108,45 @@ class QuizViewModel @Inject constructor(
 
     fun saveResults() {
         viewModelScope.launch {
-            // Relies on the fact that user can't answer if result is null
-            val result = requireNotNull(_result.value)
+            try {
+                // Relies on the fact that user can't answer if result is null
+                val result = requireNotNull(_result.value)
 
-            // Results can be saved only when all questions are answered, user can't re-answer, which means
-            // by time of executing saveResults() rightAnsweredBits can't be changed.
-            val correctAnswered = correctAnsweredBits
+                // Results can be saved only when all questions are answered, user can't re-answer, which means
+                // by time of executing saveResults() rightAnsweredBits can't be changed.
+                val correctAnswered = correctAnsweredBits
 
-            val scorePointsPerCorrectAnswer = dataStore.scorePointsPerCorrectAnswer.first()
-            val scorePointsPerWrongAnswer = dataStore.scorePointsPerWrongAnswer.first()
+                val scorePointsPerCorrectAnswer = dataStore.scorePointsPerCorrectAnswer.first()
+                val scorePointsPerWrongAnswer = dataStore.scorePointsPerWrongAnswer.first()
 
-            val newScores = IntArray(result.size)
-            for (i in result.indices) {
-                val currentScore = result[i].score
-                val newScore = currentScore + if (correctAnswered.isBitAtPositionSet(i))
-                    scorePointsPerCorrectAnswer
-                else
-                    -scorePointsPerWrongAnswer
+                val newScores = IntArray(result.size)
+                for (i in result.indices) {
+                    val currentScore = result[i].score
+                    val newScore = currentScore + if (correctAnswered.isBitAtPositionSet(i))
+                        scorePointsPerCorrectAnswer
+                    else
+                        -scorePointsPerWrongAnswer
 
-                newScores[i] = newScore
-            }
+                    newScores[i] = newScore
+                }
 
-            recordDao.updateScores(result, newScores)
+                recordDao.updateScores(result, newScores)
 
-            withContext(Dispatchers.Main) {
-                onResultSaved?.invoke()
+                withContext(Dispatchers.Main) {
+                    onResultSaved?.invoke()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "during save", e)
+
+                withContext(Dispatchers.Main) {
+                    onSaveError?.invoke()
+                }
             }
         }
     }
 
     companion object {
+        private const val TAG = "QuizViewModel"
         private const val RECORDS_MAX_SIZE = 10
 
         private val random = Random(System.currentTimeMillis())

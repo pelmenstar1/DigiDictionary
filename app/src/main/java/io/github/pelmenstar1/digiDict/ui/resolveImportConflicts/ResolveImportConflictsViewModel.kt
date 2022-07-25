@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.ui.resolveImportConflicts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.backup.TemporaryImportStorage
 import io.github.pelmenstar1.digiDict.data.AppDatabase
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ResolveImportConflictsViewModel @Inject constructor(
-    appDatabase: AppDatabase
+    private val appDatabase: AppDatabase
 ) : ViewModel() {
     private val recordDao = appDatabase.recordDao()
 
@@ -24,7 +25,8 @@ class ResolveImportConflictsViewModel @Inject constructor(
 
     val entriesStates = IntArray(entries.size)
 
-    var onApplyChanges: (() -> Unit)? = null
+    var onApplyChangesError: (() -> Unit)? = null
+    var onSuccessfulApplyChanges: (() -> Unit)? = null
 
     fun onItemStateChanged(index: Int, state: Int) {
         entriesStates[index] = state
@@ -36,24 +38,32 @@ class ResolveImportConflictsViewModel @Inject constructor(
         }
     }
 
-    private fun applyChanges() {
+    fun applyChanges() {
         viewModelScope.launch(Dispatchers.Default) {
-            val importedRecords = TemporaryImportStorage.importedRecords
-                ?: throw IllegalStateException("Temporary import storage is empty")
+            try {
+                val importedRecords = TemporaryImportStorage.importedRecords
+                    ?: throw IllegalStateException("Temporary import storage is empty")
 
-            val resolveRecordsSequence = entries.asSequence().mapIndexed { index, entry ->
-                resolveConflict(entry, entriesStates[index])
-            }
+                val resolveRecordsSequence = entries.asSequence().mapIndexed { index, entry ->
+                    resolveConflict(entry, entriesStates[index])
+                }
 
-            recordDao.insertAll(importedRecords)
-            recordDao.updateAsResolveConflictAll(resolveRecordsSequence)
+                appDatabase.withTransaction {
+                    recordDao.insertAll(importedRecords)
+                    recordDao.updateAsResolveConflictAll(resolveRecordsSequence)
+                }
 
-            // Allow GC to do its work.
-            TemporaryImportStorage.importedRecords = null
-            TemporaryImportStorage.conflictEntries = null
+                // Allow GC to do its work.
+                TemporaryImportStorage.importedRecords = null
+                TemporaryImportStorage.conflictEntries = null
 
-            withContext(Dispatchers.Main) {
-                onApplyChanges?.invoke()
+                withContext(Dispatchers.Main) {
+                    onSuccessfulApplyChanges?.invoke()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onApplyChangesError?.invoke()
+                }
             }
         }
     }

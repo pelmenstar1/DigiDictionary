@@ -4,6 +4,9 @@
     <dimen name="addExpression_textInputTopMargin">5dp</dimen>
     <dimen name="addExpression_meaningAddButtonSize">48dp</dimen>
 
+    <dimen name="home_stateContainerMarginTop">5dp</dimen>
+    <dimen name="home_stateContainerMarginBottom">80dp</dimen>
+
     <dimen name="itemQuizRecord_actionButtonHeight">50dp</dimen>
     <dimen name="itemRemoteDictProvider_schemaTopMargin">8dp</dimen>
     <dimen name="itemRemoteDictProvider_padding">8dp</dimen>

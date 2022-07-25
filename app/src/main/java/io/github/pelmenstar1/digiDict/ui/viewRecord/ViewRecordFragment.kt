@@ -17,7 +17,10 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
+import io.github.pelmenstar1.digiDict.utils.popBackStackLambda
+import io.github.pelmenstar1.digiDict.utils.setFormattedText
+import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -68,41 +71,46 @@ class ViewRecordFragment : Fragment() {
         val additionalNotesFormat = res.getString(R.string.additionalNotesAndValueFormat)
         val scoreFormat = res.getString(R.string.scoreAndValueFormat)
 
-        lifecycleScope.run {
-            launchMessageFlowCollector(vm.messageFlow, messageMapper, container)
+        vm.onLoadingError = {
+            val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
 
-            launch {
-                vm.recordFlow.collect {
-                    it?.fold(
-                        onSuccess = { record ->
-                            if (record != null) {
-                                with(binding) {
-                                    viewRecordExpression.setFormattedText(expressionFormat, record.expression)
-                                    viewRecordMeaning.text =
-                                        MeaningTextHelper.parseToFormatted(record.rawMeaning)
-                                    viewRecordAdditionalNotes.setFormattedText(
-                                        additionalNotesFormat,
-                                        record.additionalNotes
-                                    )
-                                    viewRecordScore.setFormattedText(scoreFormat, record.score)
+            container?.let {
+                Snackbar.make(it, msg, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.retry) {
+                        vm.refreshRecord()
+                    }
+                    .showLifecycleAwareSnackbar(lifecycle)
+            }
+        }
 
-                                    viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
-                                }
-                            }
-                        },
-                        onFailure = {
-                            if (container != null) {
-                                val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
+        vm.onDeleteError = {
+            val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
 
-                                Snackbar.make(container, msg, Snackbar.LENGTH_INDEFINITE)
-                                    .setAction(R.string.retry) { vm.refreshRecord() }
-                                    .showLifecycleAwareSnackbar(lifecycle)
-                            }
-                        }
-                    )
+            container?.let {
+                Snackbar.make(it, msg, Snackbar.LENGTH_LONG)
+                    .showLifecycleAwareSnackbar(lifecycle)
+            }
+        }
+
+        lifecycleScope.launch {
+            vm.recordFlow.collect { record ->
+                if (record != null) {
+                    with(binding) {
+                        viewRecordExpression.setFormattedText(expressionFormat, record.expression)
+                        viewRecordMeaning.text =
+                            MeaningTextHelper.parseToFormatted(record.rawMeaning)
+                        viewRecordAdditionalNotes.setFormattedText(
+                            additionalNotesFormat,
+                            record.additionalNotes
+                        )
+                        viewRecordScore.setFormattedText(scoreFormat, record.score)
+
+                        viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
+                    }
                 }
             }
         }
+
 
         return binding.root
     }

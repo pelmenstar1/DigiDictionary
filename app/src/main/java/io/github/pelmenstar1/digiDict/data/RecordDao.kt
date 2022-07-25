@@ -12,7 +12,7 @@ import kotlin.random.Random
 @Dao
 abstract class RecordDao {
     @Query("SELECT count(*) FROM records")
-    abstract fun count(): Int
+    abstract suspend fun count(): Int
 
     @Query("SELECT count(*) FROM records")
     abstract fun countFlow(): Flow<Int>
@@ -70,6 +70,7 @@ abstract class RecordDao {
         newScore: Int
     )
 
+    // TODO: Convert to suspend functions
     @Transaction
     open fun updateAsResolveConflictAll(sequence: Sequence<Record>) {
         sequence.forEach {

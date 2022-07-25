@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui.search
 
-import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,21 +10,21 @@ import io.github.pelmenstar1.digiDict.utils.FilteredArray
 import io.github.pelmenstar1.digiDict.utils.filterFast
 import io.github.pelmenstar1.digiDict.utils.trimToString
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     appDatabase: AppDatabase
 ) : ViewModel() {
-    private data class Command(
+    private data class Request(
         val query: String,
-        val updateRecords: Boolean = false
+        val updateRecords: Boolean = false,
+        val forceRepeatRequest: Boolean = false
     )
 
     private val recordDao = appDatabase.recordDao()
@@ -40,53 +39,58 @@ class SearchViewModel @Inject constructor(
                 val str = value.trimToString()
                 _query = str
 
-                sendCommand(Command(str))
+                sendRequest(Request(str))
             }
         }
 
-    private val commandChannel = Channel<Command>(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    private var isSearchJobStarted = false
+    private val requestFlow = MutableStateFlow<Request?>(null)
+    private val isSearchJobStarted = AtomicBoolean()
 
     private val _result = MutableStateFlow(FilteredArray.empty<Record>())
     val result = _result.asStateFlow()
 
+    var onError: (() -> Unit)? = null
+
     init {
         appDatabase.addRecordTableObserver(this) {
-            sendCommand(Command(_query, updateRecords = true))
+            sendRequest(Request(_query, updateRecords = true))
         }
     }
 
-    @MainThread
-    private fun sendCommand(value: Command) {
-        if (!isSearchJobStarted) {
-            isSearchJobStarted = true
-
-            startSearchJob()
-        }
-
-        commandChannel.trySend(value)
+    fun repeatSearchQuery() {
+        sendRequest(Request(_query, forceRepeatRequest = true))
     }
 
-    private fun startSearchJob() {
-        viewModelScope.launch(Dispatchers.Default) {
-            var records: Array<Record>? = null
+    private fun sendRequest(request: Request) {
+        startSearchJobIfNecessary()
 
-            while (isActive) {
-                val command = commandChannel.receive()
+        requestFlow.value = request
+    }
 
-                if (records == null || command.updateRecords) {
-                    records = recordDao.getAllRecordsOrderByDateTime()
-                }
+    private fun startSearchJobIfNecessary() {
+        if (isSearchJobStarted.compareAndSet(false, true)) {
+            viewModelScope.launch(Dispatchers.Default) {
+                try {
+                    var records: Array<Record>? = null
 
-                val query = command.query
+                    requestFlow.filterNotNull().collect { (query, updateRecords) ->
+                        if (records == null || updateRecords) {
+                            records = recordDao.getAllRecordsOrderByDateTime()
+                        }
 
-                _result.value = if (query.isBlank()) {
-                    FilteredArray.empty()
-                } else {
-                    records.filterFast { (_, expression, rawMeaning) ->
-                        expression.startsWith(query, ignoreCase = true) ||
-                                ComplexMeaning.anyElementStartsWith(rawMeaning, query, ignoreCase = true)
+                        _result.value = if (query.isBlank()) {
+                            FilteredArray.empty()
+                        } else {
+                            records!!.filterFast { (_, expression, rawMeaning) ->
+                                expression.startsWith(query, ignoreCase = true) ||
+                                        ComplexMeaning.anyElementStartsWith(rawMeaning, query, ignoreCase = true)
+                            }
+                        }
                     }
+                } catch (e: Exception) {
+                    onError?.invoke()
+
+                    isSearchJobStarted.set(false)
                 }
             }
         }

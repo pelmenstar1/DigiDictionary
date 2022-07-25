@@ -30,31 +30,43 @@ class SearchFragment : Fragment() {
 
         val binding = FragmentSearchBinding.inflate(inflater, container, false)
 
-        binding.searchInput.addTextChangedListener {
-            vm.query = it ?: ""
-        }
-
-        val recyclerView = binding.searchRecyclerView
-
         val adapter = SearchAdapter(onViewRecord = { id ->
             val directions = SearchFragmentDirections.actionSearchToViewRecord(id)
 
             navController.navigate(directions)
         })
 
-        recyclerView.also {
-            it.layoutManager = LinearLayoutManager(context)
-            it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
+        with(binding) {
+            searchInput.addTextChangedListener {
+                vm.query = it ?: ""
+            }
 
-            it.adapter = adapter
-        }
+            searchRecyclerView.also {
+                it.layoutManager = LinearLayoutManager(context)
+                it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
 
-        lifecycleScope.run {
-            launchFlowCollector(vm.result) { data ->
-                // Scroll to start to show most appropriate results
-                recyclerView.scrollToPosition(0)
+                it.adapter = adapter
+            }
 
-                adapter.submitData(data)
+            searchRetry.setOnClickListener {
+                vm.repeatSearchQuery()
+            }
+
+            vm.onError = {
+                searchRecyclerView.visibility = View.GONE
+                searchErrorContainer.visibility = View.VISIBLE
+            }
+
+            lifecycleScope.run {
+                launchFlowCollector(vm.result) { data ->
+                    searchRecyclerView.visibility = View.VISIBLE
+                    searchErrorContainer.visibility = View.GONE
+
+                    // Scroll to start to show most appropriate results
+                    searchRecyclerView.scrollToPosition(0)
+
+                    adapter.submitData(data)
+                }
             }
         }
 

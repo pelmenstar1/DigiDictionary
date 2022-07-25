@@ -22,11 +22,17 @@
     <string name="remoteDictProviderShort">Remote dict. provider</string>
     <string name="remoteDictProvider_name">Name</string>
     <string name="remoteDictProvider_schema">Schema</string>
+
     <string name="addRemoteDictProvider_schemaDescription">A schema is a simple URL with query placeholder.\nExample: <i>https://dictionary.cambridge.org/dictionary/english/$query$</i>.\nHow to determine where to set $query$:\n• Search any word or expression in the dictionary site and find the word in the URL.\n• Replace the word to $query$.</string>
     <string name="addRemoteDictProvider_providerNameExists">A provider with such name already exists</string>
     <string name="addRemoteDictProvider_providerSchemaExists">A provider with such schema already exists</string>
     <string name="addRemoteDictProvider_providerSchemaInvalidUrl">Invalid URL</string>
     <string name="addRemoteDictProvider_providerNoQueryPlaceholder">Schema should contain $query$ placeholder. Read the info below</string>
+
+    <string name="chooseRemoteDictProvider_failedToLoadProvidersError">Failed to load actual remote dict. providers. Default providers are shown.</string>
+    <string name="manageRemoteDictProvider_failedToLoadProvidersError">Failed to load remote dictionary providers</string>
+
+    <string name="home_loadingError">There was an error during the loading of the records.</string>
 
     <string name="expression">Expression</string>
     <string name="meaning">Meaning</string>
@@ -57,10 +63,13 @@
     <string name="remove">Remove</string>
     <string name="edit">Edit</string>
 
-    <string name="correctAnswer">Correct</string>
-    <string name="wrongAnswer">Wrong</string>
+    <string name="quiz_correctAnswer">Correct</string>
+    <string name="quiz_wrongAnswer">Wrong</string>
+    <string name="quiz_loadingError">There was an error during the loading of the elements</string>
+    <string name="quiz_saveError">An error happened on saving the results.</string>
+    <string name="quiz_saveResults">Save results</string>
 
-    <string name="saveResults">Save results</string>
+    <string name="search_error">An error happened during the search</string>
 
     <string name="exportData">Export</string>
     <string name="importData">Import</string>
@@ -127,5 +136,6 @@
     <string name="resolveImportConflicts_merge">Merge</string>
     <string name="resolveImportConflicts_acceptOld">Accept old</string>
     <string name="resolveImportConflicts_acceptNew">Accept new</string>
+    <string name="resolveImportConflicts_applyChangesError">An error happened on applying changes</string>
 
 </resources>

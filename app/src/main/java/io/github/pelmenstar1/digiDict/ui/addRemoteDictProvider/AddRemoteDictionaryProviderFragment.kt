@@ -8,13 +8,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.MessageMapper
+import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddRemoteDictProviderBinding
-import io.github.pelmenstar1.digiDict.utils.addTextChangedListenerToString
-import io.github.pelmenstar1.digiDict.utils.launchErrorFlowCollector
-import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
-import io.github.pelmenstar1.digiDict.utils.popBackStackLambda
+import io.github.pelmenstar1.digiDict.utils.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -33,6 +32,28 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         val binding = FragmentAddRemoteDictProviderBinding.inflate(inflater, container, false)
 
         vm.onSuccessfulAddition = navController.popBackStackLambda()
+        vm.onValidityCheckError = {
+            if (container != null) {
+                val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
+
+                Snackbar
+                    .make(container, errorMsg, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(R.string.retry) {
+                        viewModel.restartValidityCheck()
+                    }
+                    .showLifecycleAwareSnackbar(lifecycle)
+            }
+        }
+        vm.onAdditionError = {
+            if (container != null) {
+                val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
+
+                Snackbar
+                    .make(container, errorMsg, Snackbar.LENGTH_SHORT)
+                    .setAnchorView(binding.addRemoteDictProviderAdd)
+                    .showLifecycleAwareSnackbar(lifecycle)
+            }
+        }
 
         val nameInputLayout = binding.addRemoteDictProviderNameInputLayout
         val schemaInputLayout = binding.addRemoteDictProviderSchemaInputLayout
@@ -40,7 +61,16 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         lifecycleScope.run {
             launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageMapper)
             launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageMapper)
-            launchMessageFlowCollector(viewModel.dbErrorFlow, messageMapper, container)
+
+            launchFlowCollector(vm.validityErrorFlow) {
+                val mask = AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK
+
+                // Check if all validity bits are set.
+                binding.addRemoteDictProviderAdd.isEnabled = (it and mask) == mask
+            }
+
+            launchFlowCollector(vm.isNameEnabledFlow) { nameInputLayout.isEnabled = it }
+            launchFlowCollector(vm.isSchemaEnabledFlow) { schemaInputLayout.isEnabled = it }
         }
 
         binding.run {
