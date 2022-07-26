@@ -9,7 +9,6 @@ import io.github.pelmenstar1.digiDict.data.Record
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.Ignore
 
 @RunWith(AndroidJUnit4::class)
 class DebugDatabaseTest {
@@ -17,7 +16,6 @@ class DebugDatabaseTest {
     private val db = Room.databaseBuilder(appContext, AppDatabase::class.java, "database").build()
 
     @Test
-    @Ignore("It should be started only manually to generate DB")
     fun generateCommon() {
         generateInternal { i, epochSeconds ->
             val ordinal = i + 1
@@ -34,7 +32,6 @@ class DebugDatabaseTest {
     }
 
     @Test
-    @Ignore("It should be started only manually to generate DB")
     fun generateList() {
         generateInternal { i, epochSeconds ->
             val ordinal = i + 1

@@ -10,7 +10,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.serialization.writeValues
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.FileOutputStream
@@ -24,7 +23,6 @@ class DuplicateRecordFileGenerator {
     private val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    @Ignore("It should be started only manually to generate DDDB file")
     fun generate() {
         val nowEpochSeconds = System.currentTimeMillis() / 1000
         var epochSeconds = nowEpochSeconds
