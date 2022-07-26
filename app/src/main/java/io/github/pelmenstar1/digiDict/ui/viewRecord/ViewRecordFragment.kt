@@ -67,7 +67,7 @@ class ViewRecordFragment : Fragment() {
                 navController.navigate(directions)
             }
 
-            viewRecordRetry.setOnClickListener {
+            viewRecordErrorContainer.setOnRetryListener {
                 with(binding) {
                     viewRecordLoadingIndicator.visibility = View.VISIBLE
                     viewRecordContentContainer.visibility = View.GONE

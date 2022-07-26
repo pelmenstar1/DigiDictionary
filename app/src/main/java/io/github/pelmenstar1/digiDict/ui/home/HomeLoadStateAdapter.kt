@@ -4,13 +4,13 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.LinearLayout
 import androidx.paging.LoadState
 import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.ui.ErrorContainer
 import io.github.pelmenstar1.digiDict.utils.getLazyValue
 
 class HomeLoadStateAdapter(
@@ -18,12 +18,10 @@ class HomeLoadStateAdapter(
 ) : LoadStateAdapter<HomeLoadStateAdapter.ViewHolder>() {
     inner class ViewHolder(container: ViewGroup) : RecyclerView.ViewHolder(container) {
         private val progressIndicator = container.findViewById<CircularProgressIndicator>(R.id.home_loadingIndicator)
-        private val errorContainer = container.findViewById<View>(R.id.home_errorContainer)
+        private val errorContainer = container.findViewById<ErrorContainer>(R.id.home_errorContainer)
 
         init {
-            container.findViewById<Button>(R.id.home_retry).apply {
-                setOnClickListener(retryOnClickListener)
-            }
+            errorContainer.setOnRetryListener(retryOnClickListener)
         }
 
         fun bind(state: LoadState) {

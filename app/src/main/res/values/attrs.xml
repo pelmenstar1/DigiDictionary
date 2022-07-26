@@ -4,4 +4,8 @@
         <attr name="listWidgetInnerRadius" format="dimension" />
         <attr name="listWidgetRadius" format="dimension" />
     </declare-styleable>
+
+    <declare-styleable name="ErrorContainer">
+        <attr name="errorText" format="string" />
+    </declare-styleable>
 </resources>

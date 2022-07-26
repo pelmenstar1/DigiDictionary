@@ -48,7 +48,9 @@ class SearchFragment : Fragment() {
                 it.adapter = adapter
             }
 
-            searchRetry.setOnClickListener {
+            searchErrorContainer.setOnRetryListener {
+                searchErrorContainer.visibility = View.GONE
+
                 vm.repeatSearchQuery()
             }
 

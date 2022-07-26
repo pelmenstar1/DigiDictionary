@@ -33,7 +33,7 @@ class StatsFragment : Fragment() {
         val recordsAddedLast7DaysFormat = res.getString(R.string.recordsAdded_last7DaysFormat)
         val recordsAddedLast31DaysFormat = res.getString(R.string.recordsAdded_last31DaysFormat)
 
-        binding.statsRetry.setOnClickListener {
+        binding.statsErrorContainer.setOnRetryListener {
             with(binding) {
                 statsLoadingIndicator.visibility = View.VISIBLE
                 statsErrorContainer.visibility = View.GONE

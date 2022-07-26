@@ -56,7 +56,7 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
                 }
             }
 
-            manageRemoteDictProvidersRetry.setOnClickListener {
+            manageRemoteDictProvidersErrorContainer.setOnRetryListener {
                 manageRemoteDictProvidersLoadingIndicator.visibility = View.VISIBLE
                 manageRemoteDictProvidersErrorContainer.visibility = View.GONE
                 manageRemoteDictProvidersRecyclerView.visibility = View.GONE

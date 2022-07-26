@@ -40,7 +40,7 @@ class HomeFragment : Fragment() {
 
         val stateContainerBinding = HomeLoadingErrorAndProgressMergeBinding.bind(binding.root)
 
-        stateContainerBinding.homeRetry.setOnClickListener {
+        stateContainerBinding.homeErrorContainer.setOnRetryListener {
             Log.i(TAG, "Retry loading data")
             adapter.retry()
         }
