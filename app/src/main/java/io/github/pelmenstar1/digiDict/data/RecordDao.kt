@@ -4,7 +4,6 @@ import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.serialization.SerializableIterable
 import io.github.pelmenstar1.digiDict.utils.generateUniqueRandomNumbers
-import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -14,25 +13,16 @@ abstract class RecordDao {
     @Query("SELECT count(*) FROM records")
     abstract suspend fun count(): Int
 
-    @Query("SELECT count(*) FROM records")
-    abstract fun countFlow(): Flow<Int>
-
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insert(value: Record)
 
     @Insert
-    abstract suspend fun insertAll(values: Array<Record>)
-
-    @Insert
     abstract suspend fun insertAll(values: List<Record>)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract fun insertBlocking(value: Record)
-
     @Transaction
-    open fun insertAll(values: Sequence<Record>) {
+    open suspend fun insertAll(values: Sequence<Record>) {
         for (value in values) {
-            insertBlocking(value)
+            insert(value)
         }
     }
 
@@ -62,7 +52,7 @@ abstract class RecordDao {
         WHERE id=:id
         """
     )
-    abstract fun updateAsResolveConflict(
+    abstract suspend fun updateAsResolveConflict(
         id: Int,
         newMeaning: String,
         newAdditionalNotes: String,
@@ -70,9 +60,8 @@ abstract class RecordDao {
         newScore: Int
     )
 
-    // TODO: Convert to suspend functions
     @Transaction
-    open fun updateAsResolveConflictAll(sequence: Sequence<Record>) {
+    open suspend fun updateAsResolveConflictAll(sequence: Sequence<Record>) {
         sequence.forEach {
             updateAsResolveConflict(
                 it.id,
