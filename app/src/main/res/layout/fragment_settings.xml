@@ -1,167 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Quiz settings -->
-
-    <TextView
-        android:id="@+id/settings_quizTitle"
-        style="@style/TextAppearance.Material3.HeadlineSmall"
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/settings_loadingIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/quiz"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_gravity="center"
+        android:indeterminate="true" />
 
-    <TextView
-        android:id="@+id/settings_scorePointsPerCorrectAnswer_prefix"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/settings_scorePointsPerCorrectAnswer_prefix"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/settings_quizTitle" />
-
-    <Spinner
-        android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:entries="@array/from_1_to_10"
-        app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerCorrectAnswer_prefix"
-        app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_prefix" />
-
-    <TextView
-        android:id="@+id/settings_scorePointsPerCorrectAnswer_description"
-        style="@style/Widget.DigiDictionary.SettingsDescText"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/settings_contentContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/settings_scorePointsPerCorrectAnswer_description"
-        app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_spinner" />
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible">
 
-    <TextView
-        android:id="@+id/settings_scorePointsPerWrongAnswerPrefix"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/settings_scorePointsPerWrongAnswer_prefix"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_description" />
+        <!-- Quiz settings -->
 
-    <Spinner
-        android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:entries="@array/from_1_to_10"
-        app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerWrongAnswerPrefix"
-        app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswerPrefix" />
+        <TextView
+            android:id="@+id/settings_quizTitle"
+            style="@style/TextAppearance.Material3.HeadlineSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/quiz"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/settings_scorePointsPerWrongAnswer_description"
-        style="@style/Widget.DigiDictionary.SettingsDescText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/settings_scorePointsPerWrongAnswer_description"
-        app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_spinner" />
+        <TextView
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_prefix"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_scorePointsPerCorrectAnswer_prefix"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_quizTitle" />
 
-    <!-- Remote dict. provider -->
+        <Spinner
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:entries="@array/from_1_to_10"
+            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerCorrectAnswer_prefix"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_prefix" />
 
-    <TextView
-        android:id="@+id/settings_remoteDictProviderTitle"
-        style="@style/TextAppearance.Material3.HeadlineSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/remoteDictProviderShort"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settings_scorePointsPerWrongAnswer_description" />
+        <TextView
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_description"
+            style="@style/Widget.DigiDictionary.SettingsDescText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_scorePointsPerCorrectAnswer_description"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_spinner" />
 
-    <TextView
-        android:id="@+id/settings_openBrowserInApp_prefix"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="@string/settings_openBrowserInApp"
-        app:layout_constraintBottom_toBottomOf="@id/settings_openBrowserInApp_switch"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/settings_openBrowserInApp_switch" />
+        <TextView
+            android:id="@+id/settings_scorePointsPerWrongAnswerPrefix"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_scorePointsPerWrongAnswer_prefix"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_description" />
 
-    <com.google.android.material.switchmaterial.SwitchMaterial
-        android:id="@+id/settings_openBrowserInApp_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settings_remoteDictProviderTitle" />
+        <Spinner
+            android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:entries="@array/from_1_to_10"
+            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerWrongAnswerPrefix"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswerPrefix" />
 
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/settings_openBrowserInApp_barrier"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:barrierDirection="bottom"
-        app:constraint_referenced_ids="settings_openBrowserInApp_prefix,settings_openBrowserInApp_switch" />
+        <TextView
+            android:id="@+id/settings_scorePointsPerWrongAnswer_description"
+            style="@style/Widget.DigiDictionary.SettingsDescText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_scorePointsPerWrongAnswer_description"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_spinner" />
+
+        <!-- Remote dict. provider -->
+
+        <TextView
+            android:id="@+id/settings_remoteDictProviderTitle"
+            style="@style/TextAppearance.Material3.HeadlineSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/remoteDictProviderShort"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_scorePointsPerWrongAnswer_description" />
+
+        <TextView
+            android:id="@+id/settings_openBrowserInApp_prefix"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/settings_openBrowserInApp"
+            app:layout_constraintBottom_toBottomOf="@id/settings_openBrowserInApp_switch"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/settings_openBrowserInApp_switch" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/settings_openBrowserInApp_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_remoteDictProviderTitle" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/settings_openBrowserInApp_barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="settings_openBrowserInApp_prefix,settings_openBrowserInApp_switch" />
 
 
-    <!-- Backup settings -->
+        <!-- Backup settings -->
 
-    <TextView
-        android:id="@+id/settings_backupTitle"
-        style="@style/TextAppearance.Material3.HeadlineSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/backup"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settings_openBrowserInApp_barrier" />
+        <TextView
+            android:id="@+id/settings_backupTitle"
+            style="@style/TextAppearance.Material3.HeadlineSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/backup"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_openBrowserInApp_barrier" />
 
-    <Button
-        android:id="@+id/settings_import"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/importData"
-        app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settings_backupTitle" />
+        <Button
+            android:id="@+id/settings_import"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/importData"
+            app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_backupTitle" />
 
-    <Button
-        android:id="@+id/settings_export"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/exportData"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/quiz_centerGuide"
-        app:layout_constraintTop_toTopOf="@+id/settings_import" />
+        <Button
+            android:id="@+id/settings_export"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/exportData"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/quiz_centerGuide"
+            app:layout_constraintTop_toTopOf="@+id/settings_import" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/quiz_centerGuide"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/quiz_centerGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
 
-    <TextView
-        android:id="@+id/settings_version"
-        style="@style/TextAppearance.Material3.LabelMedium"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:textIsSelectable="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:text="1.0 (Debug)" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/settings_version"
+            style="@style/TextAppearance.Material3.LabelMedium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:textIsSelectable="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="1.0 (Debug)" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

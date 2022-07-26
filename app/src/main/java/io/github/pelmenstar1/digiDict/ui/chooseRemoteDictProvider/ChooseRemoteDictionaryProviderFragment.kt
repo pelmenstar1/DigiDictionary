@@ -108,6 +108,8 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
 
                 emit(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
             }) { providers ->
+                binding.chooseRemoteDictProviderLoadingIndicator.visibility = View.GONE
+
                 adapter.submitItems(providers)
             }
 

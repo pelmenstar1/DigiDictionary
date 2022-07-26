@@ -1,41 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:id="@+id/stats_container"
-    android:padding="8dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/stats_count"
-        style="@style/TextAppearance.Material3.BodyLarge"
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/stats_loadingIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textIsSelectable="false"
-        tools:text="@string/recordsCountFormat" />
+        android:layout_gravity="center"
+        android:indeterminate="true" />
 
-    <TextView
-        android:id="@+id/stats_recordsAddedLast24Hours"
-        style="@style/TextAppearance.Material3.BodyLarge"
+    <LinearLayout
+        android:id="@+id/stats_errorContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textIsSelectable="false"
-        tools:text="@string/recordsAdded_last24HoursFormat" />
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
 
-    <TextView
-        android:id="@+id/stats_recordsAddedLast7Days"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textIsSelectable="false"
-        tools:text="@string/recordsAdded_last7DaysFormat" />
+        <TextView
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/stats_failedToComputeStats" />
 
-    <TextView
-        android:id="@+id/stats_recordsAddedLast31Days"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textIsSelectable="false"
-        tools:text="@string/recordsAdded_last31DaysFormat" />
-</LinearLayout>
+        <Button
+            android:id="@+id/stats_retry"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="@string/retry" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/stats_contentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/stats_count"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="false"
+            tools:text="@string/recordsCountFormat" />
+
+        <TextView
+            android:id="@+id/stats_recordsAddedLast24Hours"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="false"
+            tools:text="@string/recordsAdded_last24HoursFormat" />
+
+        <TextView
+            android:id="@+id/stats_recordsAddedLast7Days"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="false"
+            tools:text="@string/recordsAdded_last7DaysFormat" />
+
+        <TextView
+            android:id="@+id/stats_recordsAddedLast31Days"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="false"
+            tools:text="@string/recordsAdded_last31DaysFormat" />
+    </LinearLayout>
+</FrameLayout>

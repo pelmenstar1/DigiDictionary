@@ -7,13 +7,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentStatsBinding
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.setFormattedText
-import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 
 @AndroidEntryPoint
 class StatsFragment : Fragment() {
@@ -35,16 +33,21 @@ class StatsFragment : Fragment() {
         val recordsAddedLast7DaysFormat = res.getString(R.string.recordsAdded_last7DaysFormat)
         val recordsAddedLast31DaysFormat = res.getString(R.string.recordsAdded_last31DaysFormat)
 
-        vm.onLoadError.handler = {
-            binding.statsContainer.visibility = View.GONE
+        binding.statsRetry.setOnClickListener {
+            with(binding) {
+                statsLoadingIndicator.visibility = View.VISIBLE
+                statsErrorContainer.visibility = View.GONE
+                statsContentContainer.visibility = View.GONE
+            }
 
-            if (container != null) {
-                Snackbar
-                    .make(container, R.string.dbError, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.retry) {
-                        vm.computeStats()
-                    }
-                    .showLifecycleAwareSnackbar(lifecycle)
+            vm.computeStats()
+        }
+
+        vm.onLoadError.handler = {
+            with(binding) {
+                statsErrorContainer.visibility = View.VISIBLE
+                statsLoadingIndicator.visibility = View.GONE
+                statsContentContainer.visibility = View.GONE
             }
         }
 
@@ -55,7 +58,9 @@ class StatsFragment : Fragment() {
                     val (last24Hours, last7Days, last31Days) = result.additionStats
 
                     with(binding) {
-                        statsContainer.visibility = View.VISIBLE
+                        statsContentContainer.visibility = View.VISIBLE
+                        statsLoadingIndicator.visibility = View.GONE
+                        statsErrorContainer.visibility = View.GONE
 
                         statsCount.setFormattedText(recordsCountFormat, count)
                         statsRecordsAddedLast24Hours.setFormattedText(

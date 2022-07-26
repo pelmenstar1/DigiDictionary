@@ -57,11 +57,16 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
             }
 
             manageRemoteDictProvidersRetry.setOnClickListener {
+                manageRemoteDictProvidersLoadingIndicator.visibility = View.VISIBLE
+                manageRemoteDictProvidersErrorContainer.visibility = View.GONE
+                manageRemoteDictProvidersRecyclerView.visibility = View.GONE
+
                 vm.loadProviders()
             }
 
             vm.onLoadingError.handler = {
                 manageRemoteDictProvidersErrorContainer.visibility = View.VISIBLE
+                manageRemoteDictProvidersLoadingIndicator.visibility = View.GONE
                 manageRemoteDictProvidersRecyclerView.visibility = View.GONE
             }
 
@@ -75,8 +80,9 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
 
             lifecycleScope.launchFlowCollector(vm.providersFlow) {
                 if (it != null) {
-                    manageRemoteDictProvidersErrorContainer.visibility = View.GONE
                     manageRemoteDictProvidersRecyclerView.visibility = View.VISIBLE
+                    manageRemoteDictProvidersErrorContainer.visibility = View.GONE
+                    manageRemoteDictProvidersLoadingIndicator.visibility = View.GONE
 
                     adapter.submitItems(it)
                 }

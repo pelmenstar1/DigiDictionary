@@ -17,6 +17,8 @@
     <string name="labelChooseRemoteDictProviderFragment">Choose remote dict. provider</string>
 
     <string name="stats">Statistics</string>
+    <string name="stats_failedToComputeStats">Failed to compute the statistics</string>
+
     <string name="settings">Settings</string>
 
     <string name="remoteDictProviderShort">Remote dict. provider</string>
@@ -47,6 +49,7 @@
     <string name="additionalNotesAndValueFormat">Additional notes: %s</string>
     <string name="scoreAndValueFormat">Score: %d</string>
     <string name="meaningAndOrdinalFormat">Meaning %d</string>
+
 
     <string name="addExpression_existingExprError">Such expression already exists</string>
     <string name="addExpression_tooManyMeaningListItemsError">Too many list items</string>

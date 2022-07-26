@@ -133,7 +133,17 @@ class QuizFragment : Fragment() {
                 quizErrorText.visibility = View.VISIBLE
                 quizRetry.visibility = View.VISIBLE
 
+                quizLoadingIndicator.visibility = View.GONE
                 quizSaveResults.visibility = View.GONE
+            }
+
+            quizRetry.setOnClickListener {
+                quizLoadingIndicator.visibility = View.VISIBLE
+                quizErrorText.visibility = View.GONE
+                quizRetry.visibility = View.GONE
+                quizSaveResults.visibility = View.GONE
+
+                vm.startLoadingElements()
             }
 
             quizSaveResults.run {
@@ -146,6 +156,7 @@ class QuizFragment : Fragment() {
                 if (it != null) {
                     quizErrorText.visibility = View.GONE
                     quizRetry.visibility = View.GONE
+                    quizLoadingIndicator.visibility = View.GONE
 
                     if (it.isEmpty()) {
                         quizEmptyText.visibility = View.VISIBLE

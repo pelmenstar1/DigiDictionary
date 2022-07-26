@@ -1,96 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/viewRecord_expression"
-        style="@style/TextAppearance.Material3.BodyLarge"
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/viewRecord_loadingIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Expression: "
-        android:textIsSelectable="true" />
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/viewRecord_meaningPrefix"
-        style="@style/TextAppearance.Material3.BodyLarge"
+    <LinearLayout
+        android:id="@+id/viewRecord_errorContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/meaningPrefix"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
 
-    <TextView
-        android:id="@+id/viewRecord_meaning"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:textIsSelectable="true"
-        app:layout_constraintStart_toEndOf="@id/viewRecord_meaningPrefix"
-        app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
+        <TextView
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/recordLoadingError" />
 
-    <TextView
-        android:id="@+id/viewRecord_additionalNotes"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textIsSelectable="true"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/viewRecord_meaning"
-        tools:text="Additional notes: " />
+        <Button
+            android:id="@+id/viewRecord_retry"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="@string/retry" />
 
-    <TextView
-        android:id="@+id/viewRecord_score"
-        style="@style/TextAppearance.Material3.BodyLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textIsSelectable="true"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/viewRecord_additionalNotes"
-        tools:text="Score: " />
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/viewRecord_dateTime"
-        style="@style/TextAppearance.Material3.BodyMedium"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textIsSelectable="true"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/viewRecord_score"
-        tools:text="Date" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/viewRecord_contentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:visibility="gone"
+        tools:visibility="visible">
 
-    <Button
-        android:id="@+id/viewRecord_edit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/edit"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTime" />
+        <TextView
+            android:id="@+id/viewRecord_expression"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textIsSelectable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Expression: " />
 
-    <Button
-        android:id="@+id/viewRecord_delete"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="@string/delete"
-        android:textColor="@color/color_error"
-        app:layout_constraintStart_toEndOf="@id/viewRecord_edit"
-        app:layout_constraintTop_toTopOf="@id/viewRecord_edit"
-        app:strokeColor="@color/color_error" />
+        <TextView
+            android:id="@+id/viewRecord_meaningPrefix"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/meaningPrefix"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/viewRecord_meaning"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:textIsSelectable="true"
+            app:layout_constraintStart_toEndOf="@id/viewRecord_meaningPrefix"
+            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
+
+        <TextView
+            android:id="@+id/viewRecord_additionalNotes"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textIsSelectable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_meaning"
+            tools:text="Additional notes: " />
+
+        <TextView
+            android:id="@+id/viewRecord_score"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textIsSelectable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_additionalNotes"
+            tools:text="Score: " />
+
+        <TextView
+            android:id="@+id/viewRecord_dateTime"
+            style="@style/TextAppearance.Material3.BodyMedium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textIsSelectable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_score"
+            tools:text="Date" />
+
+        <Button
+            android:id="@+id/viewRecord_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/edit"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTime" />
+
+        <Button
+            android:id="@+id/viewRecord_delete"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/delete"
+            android:textColor="@color/color_error"
+            app:layout_constraintStart_toEndOf="@id/viewRecord_edit"
+            app:layout_constraintTop_toTopOf="@id/viewRecord_edit"
+            app:strokeColor="@color/color_error" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

@@ -88,6 +88,9 @@ class SettingsFragment : Fragment() {
                 settingsOpenBrowserInAppSwitch.also {
                     it.isChecked = prefs[USE_CUSTOM_TABS_KEY] ?: DEFAULT_USE_CUSTOM_TABS
                 }
+
+                settingsLoadingIndicator.visibility = View.GONE
+                settingsContentContainer.visibility = View.VISIBLE
             }
         }
 

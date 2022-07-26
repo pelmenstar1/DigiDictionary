@@ -42,6 +42,12 @@ class ViewRecordFragment : Fragment() {
         val res = context.resources
         val navController = findNavController()
 
+        val dateTimeFormatter = RecordDateTimeFormatter(context)
+
+        val expressionFormat = res.getString(R.string.expressionAndValueFormat)
+        val additionalNotesFormat = res.getString(R.string.additionalNotesAndValueFormat)
+        val scoreFormat = res.getString(R.string.scoreAndValueFormat)
+
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
 
         with(binding) {
@@ -60,26 +66,26 @@ class ViewRecordFragment : Fragment() {
 
                 navController.navigate(directions)
             }
+
+            viewRecordRetry.setOnClickListener {
+                with(binding) {
+                    viewRecordLoadingIndicator.visibility = View.VISIBLE
+                    viewRecordContentContainer.visibility = View.GONE
+                    viewRecordErrorContainer.visibility = View.GONE
+                }
+
+                vm.refreshRecord()
+            }
         }
-
-        val dateTimeFormatter = RecordDateTimeFormatter(context)
-
-        val expressionFormat = res.getString(R.string.expressionAndValueFormat)
-        val additionalNotesFormat = res.getString(R.string.additionalNotesAndValueFormat)
-        val scoreFormat = res.getString(R.string.scoreAndValueFormat)
 
         vm.onRecordDeleted.setPopBackStackHandler(navController)
         vm.id = args.id
 
         vm.onLoadingError.handler = {
-            val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
-
-            container?.let {
-                Snackbar.make(it, msg, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.retry) {
-                        vm.refreshRecord()
-                    }
-                    .showLifecycleAwareSnackbar(lifecycle)
+            with(binding) {
+                viewRecordErrorContainer.visibility = View.VISIBLE
+                viewRecordContentContainer.visibility = View.GONE
+                viewRecordLoadingIndicator.visibility = View.GONE
             }
         }
 
@@ -96,6 +102,10 @@ class ViewRecordFragment : Fragment() {
             vm.recordFlow.collect { record ->
                 if (record != null) {
                     with(binding) {
+                        viewRecordContentContainer.visibility = View.VISIBLE
+                        viewRecordErrorContainer.visibility = View.GONE
+                        viewRecordLoadingIndicator.visibility = View.GONE
+
                         viewRecordExpression.setFormattedText(expressionFormat, record.expression)
                         viewRecordMeaning.text =
                             MeaningTextHelper.parseToFormatted(record.rawMeaning)
