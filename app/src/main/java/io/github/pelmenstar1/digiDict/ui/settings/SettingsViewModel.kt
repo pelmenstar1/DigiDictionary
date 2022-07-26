@@ -15,10 +15,8 @@ import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.serialization.ValidationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,9 +32,7 @@ class SettingsViewModel @Inject constructor(
     private val _messageFlow = MutableStateFlow<SettingsMessage?>(null)
     val messageFlow = _messageFlow.asStateFlow()
 
-    fun <T> getPreferenceValueFlow(key: Preferences.Key<T>): Flow<T?> {
-        return dataStore.data.map { it[key] }
-    }
+    val preferencesFlow = dataStore.data
 
     fun <T> changePreferenceValue(key: Preferences.Key<T>, value: T) {
         viewModelScope.launch(Dispatchers.IO) {
