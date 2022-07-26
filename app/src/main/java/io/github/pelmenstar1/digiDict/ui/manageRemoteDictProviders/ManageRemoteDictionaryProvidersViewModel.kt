@@ -26,6 +26,10 @@ class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
     val onDeleteError = Event()
 
     init {
+        appDatabase.addRemoteDictProvidersTableObserver(this) {
+            loadProviders()
+        }
+
         loadProviders()
     }
 

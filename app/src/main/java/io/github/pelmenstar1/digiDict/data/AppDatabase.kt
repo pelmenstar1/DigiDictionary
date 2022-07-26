@@ -47,16 +47,20 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
 
-    inline fun createRecordTableObserver(crossinline block: () -> Unit): InvalidationTracker.Observer {
-        return object : InvalidationTracker.Observer(RECORD_TABLE_ARRAY) {
+    fun addRecordTableObserver(vm: ViewModel, block: () -> Unit) {
+        addTableObserver(RECORD_TABLE_ARRAY, vm, block)
+    }
+
+    fun addRemoteDictProvidersTableObserver(vm: ViewModel, block: () -> Unit) {
+        addTableObserver(REMOTE_DICT_PROVIDERS_ARRAY, vm, block)
+    }
+
+    private fun addTableObserver(tableNames: Array<out String>, vm: ViewModel, block: () -> Unit) {
+        val observer = object : InvalidationTracker.Observer(tableNames) {
             override fun onInvalidated(tables: MutableSet<String>) {
                 block()
             }
         }
-    }
-
-    inline fun addRecordTableObserver(vm: ViewModel, crossinline block: () -> Unit) {
-        val observer = createRecordTableObserver(block)
 
         val tracker = invalidationTracker.also {
             it.addObserver(observer)
@@ -69,6 +73,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         val RECORD_TABLE_ARRAY = arrayOf(RecordTable.name)
+        val REMOTE_DICT_PROVIDERS_ARRAY = arrayOf("remote_dict_providers")
 
         private var singleton: AppDatabase? = null
 
