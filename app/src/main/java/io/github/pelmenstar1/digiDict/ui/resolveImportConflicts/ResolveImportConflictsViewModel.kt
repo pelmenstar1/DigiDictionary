@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.resolveImportConflicts
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
@@ -9,9 +10,9 @@ import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConflictEntry
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,8 +26,8 @@ class ResolveImportConflictsViewModel @Inject constructor(
 
     val entriesStates = IntArray(entries.size)
 
-    var onApplyChangesError: (() -> Unit)? = null
-    var onSuccessfulApplyChanges: (() -> Unit)? = null
+    val onApplyChangesError = Event()
+    val onSuccessfulApplyChanges = Event()
 
     fun onItemStateChanged(index: Int, state: Int) {
         entriesStates[index] = state
@@ -57,13 +58,11 @@ class ResolveImportConflictsViewModel @Inject constructor(
                 TemporaryImportStorage.importedRecords = null
                 TemporaryImportStorage.conflictEntries = null
 
-                withContext(Dispatchers.Main) {
-                    onSuccessfulApplyChanges?.invoke()
-                }
+                onSuccessfulApplyChanges.raiseOnMainThread()
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onApplyChangesError?.invoke()
-                }
+                Log.e(TAG, "during applyChanges()", e)
+
+                onApplyChangesError.raiseOnMainThread()
             }
         }
     }
@@ -110,5 +109,9 @@ class ResolveImportConflictsViewModel @Inject constructor(
             }
             else -> throw IllegalArgumentException("invalid state ($state)")
         }
+    }
+
+    companion object {
+        private const val TAG = "ResolveImportConflictsVM"
     }
 }

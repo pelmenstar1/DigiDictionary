@@ -18,8 +18,8 @@ import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
-import io.github.pelmenstar1.digiDict.utils.popBackStackLambda
 import io.github.pelmenstar1.digiDict.utils.setFormattedText
+import io.github.pelmenstar1.digiDict.utils.setPopBackStackHandler
 import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -62,16 +62,16 @@ class ViewRecordFragment : Fragment() {
             }
         }
 
-        vm.onRecordDeleted = navController.popBackStackLambda()
-        vm.id = args.id
-
         val dateTimeFormatter = RecordDateTimeFormatter(context)
 
         val expressionFormat = res.getString(R.string.expressionAndValueFormat)
         val additionalNotesFormat = res.getString(R.string.additionalNotesAndValueFormat)
         val scoreFormat = res.getString(R.string.scoreAndValueFormat)
 
-        vm.onLoadingError = {
+        vm.onRecordDeleted.setPopBackStackHandler(navController)
+        vm.id = args.id
+
+        vm.onLoadingError.handler = {
             val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
 
             container?.let {
@@ -83,7 +83,7 @@ class ViewRecordFragment : Fragment() {
             }
         }
 
-        vm.onDeleteError = {
+        vm.onDeleteError.handler = {
             val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
 
             container?.let {

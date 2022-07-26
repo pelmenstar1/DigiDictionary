@@ -30,7 +30,9 @@
     <string name="addRemoteDictProvider_providerNoQueryPlaceholder">Schema should contain $query$ placeholder. Read the info below</string>
 
     <string name="chooseRemoteDictProvider_failedToLoadProvidersError">Failed to load actual remote dict. providers. Default providers are shown.</string>
+
     <string name="manageRemoteDictProvider_failedToLoadProvidersError">Failed to load remote dictionary providers</string>
+    <string name="manageRemoteDictProvider_deleteError">Failed to delete the dictionary provider.</string>
 
     <string name="home_loadingError">There was an error during the loading of the records.</string>
 

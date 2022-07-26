@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.utils.FilteredArray
 import io.github.pelmenstar1.digiDict.utils.filterFast
 import io.github.pelmenstar1.digiDict.utils.trimToString
@@ -49,7 +50,7 @@ class SearchViewModel @Inject constructor(
     private val _result = MutableStateFlow(FilteredArray.empty<Record>())
     val result = _result.asStateFlow()
 
-    var onError: (() -> Unit)? = null
+    val onError = Event()
 
     init {
         appDatabase.addRecordTableObserver(this) {
@@ -88,7 +89,7 @@ class SearchViewModel @Inject constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    onError?.invoke()
+                    onError.raiseOnMainThread()
 
                     isSearchJobStarted.set(false)
                 }

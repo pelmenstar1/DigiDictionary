@@ -19,7 +19,7 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
-import io.github.pelmenstar1.digiDict.utils.popBackStackLambda
+import io.github.pelmenstar1.digiDict.utils.setPopBackStackHandler
 import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 
 @AndroidEntryPoint
@@ -116,12 +116,12 @@ class QuizFragment : Fragment() {
 
         itemBackgroundHelper = QuizItemBackgroundHelper(context)
 
-        vm.onResultSaved = navController.popBackStackLambda()
+        vm.onResultSaved.setPopBackStackHandler(navController)
         vm.mode = args.mode
 
         with(binding) {
             if (container != null) {
-                vm.onSaveError = {
+                vm.onSaveError.handler = {
                     Snackbar
                         .make(container, R.string.quiz_saveError, Snackbar.LENGTH_LONG)
                         .setAnchorView(quizSaveResults)
@@ -129,7 +129,7 @@ class QuizFragment : Fragment() {
                 }
             }
 
-            vm.onLoadingError = {
+            vm.onLoadingError.handler = {
                 quizErrorText.visibility = View.VISIBLE
                 quizRetry.visibility = View.VISIBLE
 

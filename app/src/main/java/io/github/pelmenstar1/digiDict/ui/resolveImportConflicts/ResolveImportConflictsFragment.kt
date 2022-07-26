@@ -48,7 +48,7 @@ class ResolveImportConflictsFragment : Fragment() {
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-        vm.onApplyChangesError = {
+        vm.onApplyChangesError.handler = {
             container?.let {
                 Snackbar
                     .make(it, R.string.resolveImportConflicts_applyChangesError, Snackbar.LENGTH_INDEFINITE)
@@ -59,7 +59,7 @@ class ResolveImportConflictsFragment : Fragment() {
             }
         }
 
-        vm.onSuccessfulApplyChanges = {
+        vm.onSuccessfulApplyChanges.handler = {
             container?.let {
                 Snackbar.make(it, R.string.importSuccess, Snackbar.LENGTH_SHORT).show()
             }

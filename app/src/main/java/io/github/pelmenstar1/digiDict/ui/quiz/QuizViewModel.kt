@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.scorePointsPerCorrectAnswer
 import io.github.pelmenstar1.digiDict.scorePointsPerWrongAnswer
+import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.utils.isBitAtPositionSet
 import io.github.pelmenstar1.digiDict.utils.lowestNBitsSet
 import io.github.pelmenstar1.digiDict.utils.withBitAtPosition
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -45,9 +45,9 @@ class QuizViewModel @Inject constructor(
     private val _result = MutableStateFlow<Array<Record>?>(null)
     val result = _result.asStateFlow()
 
-    var onLoadingError: (() -> Unit)? = null
-    var onSaveError: (() -> Unit)? = null
-    var onResultSaved: (() -> Unit)? = null
+    val onLoadingError = Event()
+    val onSaveError = Event()
+    val onResultSaved = Event()
 
     // Should be used only on main-thread.
     var mode = QuizMode.ALL
@@ -84,9 +84,7 @@ class QuizViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during loading", e)
 
-                withContext(Dispatchers.Main) {
-                    onLoadingError?.invoke()
-                }
+                onLoadingError.raiseOnMainThread()
             }
         }
     }
@@ -132,15 +130,11 @@ class QuizViewModel @Inject constructor(
 
                 recordDao.updateScores(result, newScores)
 
-                withContext(Dispatchers.Main) {
-                    onResultSaved?.invoke()
-                }
+                onResultSaved.raiseOnMainThread()
             } catch (e: Exception) {
                 Log.e(TAG, "during save", e)
 
-                withContext(Dispatchers.Main) {
-                    onSaveError?.invoke()
-                }
+                onSaveError.raiseOnMainThread()
             }
         }
     }

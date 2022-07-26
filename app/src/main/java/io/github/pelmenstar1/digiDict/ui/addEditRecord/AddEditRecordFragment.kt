@@ -51,7 +51,7 @@ class AddEditRecordFragment : Fragment() {
 
         // Init errors only after currentRecordId is set.
         vm.initErrors()
-        vm.onRecordSuccessfullyAdded = navController.popBackStackLambda()
+        vm.onRecordSuccessfullyAdded.setPopBackStackHandler(navController)
 
         registerCollectors(container)
         initMeaning(container)

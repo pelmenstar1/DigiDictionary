@@ -31,27 +31,31 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
 
         val binding = FragmentAddRemoteDictProviderBinding.inflate(inflater, container, false)
 
-        vm.onSuccessfulAddition = navController.popBackStackLambda()
-        vm.onValidityCheckError = {
-            if (container != null) {
-                val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
+        vm.apply {
+            onSuccessfulAddition.setPopBackStackHandler(navController)
 
-                Snackbar
-                    .make(container, errorMsg, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.retry) {
-                        viewModel.restartValidityCheck()
-                    }
-                    .showLifecycleAwareSnackbar(lifecycle)
+            onValidityCheckError.handler = {
+                if (container != null) {
+                    val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
+
+                    Snackbar
+                        .make(container, errorMsg, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(R.string.retry) {
+                            restartValidityCheck()
+                        }
+                        .showLifecycleAwareSnackbar(lifecycle)
+                }
             }
-        }
-        vm.onAdditionError = {
-            if (container != null) {
-                val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
 
-                Snackbar
-                    .make(container, errorMsg, Snackbar.LENGTH_SHORT)
-                    .setAnchorView(binding.addRemoteDictProviderAdd)
-                    .showLifecycleAwareSnackbar(lifecycle)
+            onAdditionError.handler = {
+                if (container != null) {
+                    val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
+
+                    Snackbar
+                        .make(container, errorMsg, Snackbar.LENGTH_SHORT)
+                        .setAnchorView(binding.addRemoteDictProviderAdd)
+                        .showLifecycleAwareSnackbar(lifecycle)
+                }
             }
         }
 

@@ -7,11 +7,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.SECONDS_IN_WEEK
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,7 +23,7 @@ class StatsViewModel @Inject constructor(
     private val _resultFlow = MutableStateFlow<CommonStats?>(null)
     val resultFlow = _resultFlow.asStateFlow()
 
-    var onLoadError: (() -> Unit)? = null
+    val onLoadError = Event()
 
     init {
         computeStats()
@@ -41,9 +41,7 @@ class StatsViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during compute()", e)
 
-                withContext(Dispatchers.Main) {
-                    onLoadError?.invoke()
-                }
+                onLoadError.raiseOnMainThread()
             }
         }
     }

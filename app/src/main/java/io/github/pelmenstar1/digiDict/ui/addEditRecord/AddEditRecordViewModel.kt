@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.utils.trimToString
 import io.github.pelmenstar1.digiDict.utils.withBit
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
@@ -46,7 +47,7 @@ class AddEditRecordViewModel @Inject constructor(
 
     private val isAddJobStarted = AtomicBoolean()
 
-    var onRecordSuccessfullyAdded: (() -> Unit)? = null
+    val onRecordSuccessfullyAdded = Event()
 
     private var _expression = ""
 
@@ -168,7 +169,7 @@ class AddEditRecordViewModel @Inject constructor(
                     withContext(Dispatchers.Main) {
                         listAppWidgetUpdater.updateAllWidgets()
 
-                        onRecordSuccessfullyAdded?.invoke()
+                        onRecordSuccessfullyAdded.raise()
                     }
 
                     _dbErrorFlow.value = null

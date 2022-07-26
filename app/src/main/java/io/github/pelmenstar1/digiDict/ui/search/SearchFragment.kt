@@ -52,7 +52,7 @@ class SearchFragment : Fragment() {
                 vm.repeatSearchQuery()
             }
 
-            vm.onError = {
+            vm.onError.handler = {
                 searchRecyclerView.visibility = View.GONE
                 searchErrorContainer.visibility = View.VISIBLE
             }

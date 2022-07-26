@@ -6,11 +6,11 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,8 +22,8 @@ class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
     private val _providersFlow = MutableStateFlow<Array<RemoteDictionaryProviderInfo>?>(null)
     val providersFlow = _providersFlow.asStateFlow()
 
-    var onLoadingError: (() -> Unit)? = null
-    var onDeleteError: (() -> Unit)? = null
+    val onLoadingError = Event()
+    val onDeleteError = Event()
 
     init {
         loadProviders()
@@ -36,9 +36,7 @@ class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during getAll()", e)
 
-                withContext(Dispatchers.Main) {
-                    onLoadingError?.invoke()
-                }
+                onLoadingError.raiseOnMainThread()
             }
         }
     }
@@ -50,10 +48,7 @@ class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during delete", e)
 
-                // TODO: Add helper method that changes execution context to Main and invokes the nullable lambda. This should be done to reduce class count.
-                withContext(Dispatchers.Main) {
-                    onDeleteError?.invoke()
-                }
+                onDeleteError.raiseOnMainThread()
             }
         }
     }

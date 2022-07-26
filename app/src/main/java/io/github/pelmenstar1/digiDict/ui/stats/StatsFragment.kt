@@ -35,7 +35,7 @@ class StatsFragment : Fragment() {
         val recordsAddedLast7DaysFormat = res.getString(R.string.recordsAdded_last7DaysFormat)
         val recordsAddedLast31DaysFormat = res.getString(R.string.recordsAdded_last31DaysFormat)
 
-        vm.onLoadError = {
+        vm.onLoadError.handler = {
             binding.statsContainer.visibility = View.GONE
 
             if (container != null) {

@@ -2,6 +2,6 @@ package io.github.pelmenstar1.digiDict.utils
 
 import androidx.navigation.NavController
 
-fun NavController.popBackStackLambda(): () -> Unit {
-    return { popBackStack() }
+fun Event.setPopBackStackHandler(navController: NavController) {
+    handler = { navController.popBackStack() }
 }

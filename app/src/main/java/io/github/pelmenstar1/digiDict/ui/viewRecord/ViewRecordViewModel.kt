@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,9 +25,9 @@ class ViewRecordViewModel @Inject constructor(
     private val _recordFlow = MutableStateFlow<Record?>(null)
     val recordFlow = _recordFlow.asStateFlow()
 
-    var onDeleteError: (() -> Unit)? = null
-    var onLoadingError: (() -> Unit)? = null
-    var onRecordDeleted: (() -> Unit)? = null
+    val onDeleteError = Event()
+    val onLoadingError = Event()
+    val onRecordDeleted = Event()
 
     var id: Int = -1
         set(value) {
@@ -48,9 +49,7 @@ class ViewRecordViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during loading the record", e)
 
-                withContext(Dispatchers.Main) {
-                    onLoadingError?.invoke()
-                }
+                onLoadingError.raiseOnMainThread()
             }
         }
     }
@@ -63,12 +62,12 @@ class ViewRecordViewModel @Inject constructor(
                 withContext(Dispatchers.Main) {
                     listAppWidgetUpdater.updateAllWidgets()
 
-                    onRecordDeleted?.invoke()
+                    onRecordDeleted.raise()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "during delete", e)
 
-                onDeleteError?.invoke()
+                onDeleteError.raiseOnMainThread()
             }
         }
     }

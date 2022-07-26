@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.utils.withBit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -49,10 +49,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     val isSchemaEnabledFlow = _isNameEnabledFlow.asStateFlow()
     val validityErrorFlow = _validityFlow.asStateFlow()
 
-    var onAdditionError: (() -> Unit)? = null
-    var onValidityCheckError: (() -> Unit)? = null
-
-    var onSuccessfulAddition: (() -> Unit)? = null
+    val onAdditionError = Event()
+    val onValidityCheckError = Event()
+    val onSuccessfulAddition = Event()
 
     var name: String = ""
         set(value) {
@@ -103,15 +102,11 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
             try {
                 remoteDictProviderDao.insert(newProvider)
 
-                withContext(Dispatchers.Main) {
-                    onSuccessfulAddition?.invoke()
-                }
+                onSuccessfulAddition.raiseOnMainThread()
             } catch (e: Exception) {
                 Log.e(TAG, "during addition", e)
 
-                withContext(Dispatchers.Main) {
-                    onAdditionError?.invoke()
-                }
+                onAdditionError.raiseOnMainThread()
             }
         }
     }
@@ -137,9 +132,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                     // Unset all validity bits in order to disable "Add" button
                     _validityFlow.value = 0
 
-                    withContext(Dispatchers.Main) {
-                        onValidityCheckError?.invoke()
-                    }
+                    onValidityCheckError.raise()
 
                     return@launch
                 }
