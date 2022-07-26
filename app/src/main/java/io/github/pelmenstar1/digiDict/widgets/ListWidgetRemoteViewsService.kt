@@ -5,9 +5,8 @@ import android.content.Intent
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 
 class ListWidgetRemoteViewsService : RemoteViewsService() {
@@ -18,7 +17,7 @@ class ListWidgetRemoteViewsService : RemoteViewsService() {
 class ListWidgetRemoteViewsFactory(
     private val context: Context
 ) : RemoteViewsService.RemoteViewsFactory {
-    private var records: Array<Record>? = null
+    private var records: Array<RecordDao.IdExpressionMeaningRecord>? = null
     private val dao = AppDatabase.getOrCreate(context).recordDao()
 
     override fun onCreate() {
@@ -28,9 +27,7 @@ class ListWidgetRemoteViewsFactory(
     }
 
     override fun onDataSetChanged() {
-        val nowEpochSecondsUtc = System.currentTimeMillis() / 1000
-
-        records = dao.getRecordsAfterBlocking(nowEpochSecondsUtc - SECONDS_IN_DAY)
+        records = dao.getLastIdExprMeaningRecordsBlocking(20)
     }
 
     override fun getCount() = records?.size ?: 0
@@ -39,10 +36,13 @@ class ListWidgetRemoteViewsFactory(
         val record = records?.get(position) ?: throw IllegalStateException("Records are not loaded")
 
         return RemoteViews(context.packageName, R.layout.widget_list_item).also {
-            it.setTextViewText(R.id.listWidget_item_expression, record.expression)
+            it.setTextViewText(
+                R.id.listWidget_item_expression,
+                record.expression
+            )
             it.setTextViewText(
                 R.id.listWidget_item_meaning,
-                MeaningTextHelper.parseToFormatted(record.rawMeaning)
+                MeaningTextHelper.parseToFormatted(record.meaning)
             )
         }
     }

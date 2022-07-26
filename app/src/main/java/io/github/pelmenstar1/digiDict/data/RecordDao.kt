@@ -10,6 +10,12 @@ import kotlin.random.Random
 
 @Dao
 abstract class RecordDao {
+    data class IdExpressionMeaningRecord(
+        val id: Int,
+        val expression: String,
+        val meaning: String
+    )
+
     @Query("SELECT count(*) FROM records")
     abstract suspend fun count(): Int
 
@@ -119,8 +125,8 @@ abstract class RecordDao {
     @Query("SELECT dateTime FROM records WHERE dateTime >= :epochSeconds ORDER BY dateTime DESC")
     abstract suspend fun getAllDateTimesOrderByDescAfter(epochSeconds: Long): LongArray
 
-    @Query("SELECT * FROM records WHERE dateTime >= :epochSeconds ORDER BY dateTime DESC")
-    abstract fun getRecordsAfterBlocking(epochSeconds: Long): Array<Record>
+    @Query("SELECT id, expression, meaning FROM records ORDER BY dateTime DESC LIMIT :n")
+    abstract fun getLastIdExprMeaningRecordsBlocking(n: Int): Array<IdExpressionMeaningRecord>
 
     @Query("SELECT * FROM records WHERE expression = :expr")
     abstract suspend fun getRecordByExpression(expr: String): Record?
