@@ -7,6 +7,7 @@ import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.serialization.readValuesToArray
 import io.github.pelmenstar1.digiDict.serialization.writeValues
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -19,50 +20,53 @@ class RecordSerializationIntegrationTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     private fun testInternal(originValues: Array<Record>) {
-        val filesDir = context.filesDir
-        filesDir.mkdir()
+        runBlocking {
+            val filesDir = context.filesDir
+            filesDir.mkdir()
 
-        val file = File(filesDir, "test.dddb")
-        file.delete()
-        file.createNewFile()
+            val file = File(filesDir, "test.dddb")
+            file.delete()
+            file.createNewFile()
 
-        val appDb = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        appDb.clearAllTables()
+            val appDb = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+            appDb.clearAllTables()
 
-        val dao = appDb.recordDao()
-        dao.insertAll(originValues.asSequence())
+            val dao = appDb.recordDao()
 
-        val originValuesFromDb = dao.getAllRecordsBlocking()
-        val allRecordsIterable = dao.getAllRecordsNoIdIterable()
+            dao.insertAll(originValues.asList())
 
-        try {
-            FileOutputStream(file).use {
-                it.channel.writeValues(allRecordsIterable)
-            }
-        } finally {
-            allRecordsIterable.recycle()
-        }
+            val originValuesFromDb = dao.getAllRecords()
+            val allRecordsIterable = dao.getAllRecordsNoIdIterable()
 
-        val valuesFromFile: Array<Record>
-
-        FileInputStream(file).use {
-            valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
-        }
-
-        val isOriginEqualsToFileValues = run {
-            val size = valuesFromFile.size
-            if(originValuesFromDb.size != size) return@run false
-
-            for(i in 0 until size) {
-                if(!originValuesFromDb[i].equalsNoId(valuesFromFile[i])) {
-                    return@run false
+            try {
+                FileOutputStream(file).use {
+                    it.channel.writeValues(allRecordsIterable)
                 }
+            } finally {
+                allRecordsIterable.recycle()
             }
 
-            true
-        }
+            val valuesFromFile: Array<Record>
 
-        assertTrue(isOriginEqualsToFileValues)
+            FileInputStream(file).use {
+                valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
+            }
+
+            val isOriginEqualsToFileValues = run {
+                val size = valuesFromFile.size
+                if (originValuesFromDb.size != size) return@run false
+
+                for (i in 0 until size) {
+                    if (!originValuesFromDb[i].equalsNoId(valuesFromFile[i])) {
+                        return@run false
+                    }
+                }
+
+                true
+            }
+
+            assertTrue(isOriginEqualsToFileValues)
+        }
     }
 
     @Test

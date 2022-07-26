@@ -105,9 +105,6 @@ abstract class RecordDao {
     abstract fun getAllRecordsNoIdRaw(): Cursor
 
     @Query("SELECT * FROM records")
-    abstract fun getAllRecordsBlocking(): Array<Record>
-
-    @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
 
     @Query("SELECT * FROM records ORDER BY dateTime DESC LIMIT :limit OFFSET :offset")
@@ -118,12 +115,6 @@ abstract class RecordDao {
 
     @Query("SELECT expression FROM records")
     abstract suspend fun getAllExpressions(): Array<String>
-
-    @Query("SELECT expression FROM records ORDER BY expression DESC")
-    abstract suspend fun getAllExpressionsOrderByDesc(): Array<String>
-
-    @Query("SELECT dateTime FROM records WHERE dateTime >= :epochSeconds ORDER BY dateTime DESC")
-    abstract suspend fun getAllDateTimesOrderByDescAfter(epochSeconds: Long): LongArray
 
     @Query("SELECT id, expression, meaning FROM records ORDER BY dateTime DESC LIMIT :n")
     abstract fun getLastIdExprMeaningRecordsBlocking(n: Int): Array<IdExpressionMeaningRecord>

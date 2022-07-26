@@ -3,9 +3,9 @@ package io.github.pelmenstar1.digiDict.ui.stats
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.sqlite.db.SupportSQLiteStatement
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.SECONDS_IN_DAY
-import io.github.pelmenstar1.digiDict.SECONDS_IN_WEEK
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StatsViewModel @Inject constructor(
-    appDatabase: AppDatabase
+    private val appDatabase: AppDatabase
 ) : ViewModel() {
     private val recordDao = appDatabase.recordDao()
 
@@ -46,37 +46,23 @@ class StatsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun computeAdditionStats(): AdditionStats {
-        val nowEpochSecondsUtc = System.currentTimeMillis() / 1000
+    private fun SupportSQLiteStatement.bindLongAndExecuteToInt(value: Long): Int {
+        bindLong(1, value)
 
-        // We don't need dateTimes before last 31 days.
-        val dateTimes = recordDao.getAllDateTimesOrderByDescAfter(nowEpochSecondsUtc - 31 * SECONDS_IN_DAY)
+        return simpleQueryForLong().toInt()
+    }
 
-        var recordsAddedLast24Hours = 0
-        var recordsAddedLast7Days = 0
-        var recordsAddedLast31Days = 0
+    private fun computeAdditionStats(): AdditionStats {
+        val db = appDatabase
+        val nowEpochSecondsUtc = System.currentTimeMillis() / 1000L
 
-        for (epochSeconds in dateTimes) {
-            val delta = nowEpochSecondsUtc - epochSeconds
+        val statement = db.compileStatement("SELECT COUNT(*) FROM records WHERE dateTime >= ?")
 
-            if (delta <= SECONDS_IN_DAY) {
-                recordsAddedLast24Hours++
-            }
+        val last24Hours = statement.bindLongAndExecuteToInt(nowEpochSecondsUtc - SECONDS_IN_DAY)
+        val last7Days = statement.bindLongAndExecuteToInt(nowEpochSecondsUtc - 7 * SECONDS_IN_DAY)
+        val last31Days = statement.bindLongAndExecuteToInt(nowEpochSecondsUtc - 31 * SECONDS_IN_DAY)
 
-            if (delta <= SECONDS_IN_WEEK) {
-                recordsAddedLast7Days++
-            }
-
-            if (delta <= 31 * SECONDS_IN_DAY) {
-                recordsAddedLast31Days++
-            }
-        }
-
-        return AdditionStats(
-            recordsAddedLast24Hours,
-            recordsAddedLast7Days,
-            recordsAddedLast31Days
-        )
+        return AdditionStats(last24Hours, last7Days, last31Days)
     }
 
     companion object {
