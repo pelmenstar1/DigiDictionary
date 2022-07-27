@@ -19,11 +19,13 @@
     <TextView
         style="@style/TextAppearance.Material3.BodySmall"
         android:id="@+id/itemManageRemoteDictProvider_schema"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/itemManageRemoteDictProvider_name"
         app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginEnd="8dp"
         android:layout_marginTop="@dimen/itemRemoteDictProvider_schemaTopMargin"
+        app:layout_constraintEnd_toStartOf="@id/itemManageRemoteDictProvider_delete"
         android:textIsSelectable="false"
         tools:text="https://dicitionary.provider.example/$query$"/>
 
@@ -36,6 +38,7 @@
         app:layout_constraintTop_toTopOf="@id/itemManageRemoteDictProvider_name"
         app:layout_constraintBottom_toBottomOf="@id/itemManageRemoteDictProvider_schema"
         app:icon="@drawable/ic_remove"
+        app:iconGravity="textStart"
         app:iconTint="?attr/colorControlNormal"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
