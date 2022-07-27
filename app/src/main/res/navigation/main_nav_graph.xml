@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.home.HomeFragment"
-        android:label="@string/labelHomeFragment">
+        android:label="@string/home_label">
         <action
             android:id="@+id/action_home_to_addEditRecord"
             app:destination="@id/addEditRecordFragment" />
@@ -35,7 +35,7 @@
     <fragment
         android:id="@+id/addEditRecordFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordFragment"
-        android:label="@string/labelAddEditRecordFragment"
+        android:label="@string/addEditRecord_label"
         tools:layout="@layout/fragment_add_edit_record">
         <argument
             android:name="recordId"
@@ -56,11 +56,10 @@
             app:destination="@id/viewRecordFragment" />
     </fragment>
 
-
     <fragment
         android:id="@+id/settingsFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.settings.SettingsFragment"
-        android:label="@string/settings" >
+        android:label="@string/settings">
         <action
             android:id="@+id/action_settings_to_resolveImportConflicts"
             app:destination="@id/resolveImportConflictsFragment" />
@@ -77,26 +76,29 @@
         <fragment
             android:id="@+id/quizNavFragment"
             android:name="io.github.pelmenstar1.digiDict.ui.quiz.QuizNavFragment"
-            android:label="@string/labelQuizFragment">
+            android:label="@string/quiz">
             <action
                 android:id="@+id/action_quizNavFragment_to_quizFragment"
                 app:destination="@id/quizFragment" />
         </fragment>
+
         <fragment
             android:id="@+id/quizFragment"
             android:name="io.github.pelmenstar1.digiDict.ui.quiz.QuizFragment"
-            android:label="@string/labelQuizFragment">
+            android:label="@string/quiz">
             <argument
                 android:name="mode"
                 app:argType="io.github.pelmenstar1.digiDict.ui.quiz.QuizMode"
                 app:nullable="false" />
         </fragment>
     </navigation>
+
     <fragment
         android:id="@+id/viewRecordFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordFragment"
-        android:label="@string/labelViewRecordFragment" >
-        <argument android:name="id"
+        android:label="@string/viewRecord_label">
+        <argument
+            android:name="id"
             app:argType="integer" />
 
         <action
@@ -107,11 +109,12 @@
     <fragment
         android:id="@+id/resolveImportConflictsFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.resolveImportConflicts.ResolveImportConflictsFragment"
-        android:label="@string/labelResolveImportConflictsFragment"/>
+        android:label="@string/resolveImportConflicts_label" />
+
     <fragment
         android:id="@+id/manageRemoteDictionaryProvidersFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders.ManageRemoteDictionaryProvidersFragment"
-        android:label="@string/labelManageRemoteDictProvidersFragment" >
+        android:label="@string/manageRemoteDictProviders_label">
         <action
             android:id="@+id/action_manageRemoteDictionaryProviders_to_addRemoteDictionaryProvider"
             app:destination="@id/addRemoteDictionaryProviderFragment" />
@@ -120,13 +123,16 @@
     <fragment
         android:id="@+id/addRemoteDictionaryProviderFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderFragment"
-        android:label="@string/labelAddRemoteDictProviderFragment" />
+        android:label="@string/addRemoteDictProvider_label" />
 
     <fragment
         android:id="@+id/chooseRemoteDictionaryProviderFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.chooseRemoteDictProvider.ChooseRemoteDictionaryProviderFragment"
-        android:label="@string/labelChooseRemoteDictProviderFragment" >
-        <argument android:name="query" app:argType="string" app:nullable="false"/>
+        android:label="@string/chooseRemoteDictProvider_label">
+        <argument
+            android:name="query"
+            app:argType="string"
+            app:nullable="false" />
     </fragment>
 
 

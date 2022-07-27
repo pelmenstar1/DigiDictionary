@@ -61,7 +61,7 @@ class ResolveImportConflictsFragment : Fragment() {
 
         vm.onSuccessfulApplyChanges.handler = {
             container?.let {
-                Snackbar.make(it, R.string.importSuccess, Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(it, R.string.settings_importSuccess, Snackbar.LENGTH_SHORT).show()
             }
 
             navController.popBackStack()

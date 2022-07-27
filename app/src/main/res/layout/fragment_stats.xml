@@ -36,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textIsSelectable="false"
-            tools:text="@string/recordsCountFormat" />
+            tools:text="@string/stats_recordsCountFormat" />
 
         <TextView
             android:id="@+id/stats_recordsAddedLast24Hours"
@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textIsSelectable="false"
-            tools:text="@string/recordsAdded_last24HoursFormat" />
+            tools:text="@string/stats_recordsAdded_last24HoursFormat" />
 
         <TextView
             android:id="@+id/stats_recordsAddedLast7Days"
@@ -52,7 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textIsSelectable="false"
-            tools:text="@string/recordsAdded_last7DaysFormat" />
+            tools:text="@string/stats_recordsAdded_last7DaysFormat" />
 
         <TextView
             android:id="@+id/stats_recordsAddedLast31Days"
@@ -60,6 +60,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textIsSelectable="false"
-            tools:text="@string/recordsAdded_last31DaysFormat" />
+            tools:text="@string/stats_recordsAdded_last31DaysFormat" />
     </LinearLayout>
 </FrameLayout>

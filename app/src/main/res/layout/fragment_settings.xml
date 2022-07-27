@@ -56,7 +56,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="0dp"
-            android:entries="@array/from_1_to_10"
+            android:entries="@array/settings_from_1_to_10"
             app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_icon"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_icon" />
@@ -94,7 +94,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="0dp"
-            android:entries="@array/from_1_to_10"
+            android:entries="@array/settings_from_1_to_10"
             app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_icon"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswer_icon" />
@@ -161,7 +161,7 @@
             style="@style/Widget.DigiDictionary.SettingsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/backup"
+            android:text="@string/settings_backupTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/settings_openBrowserInApp_barrier" />
 
@@ -170,7 +170,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/importData"
+            android:text="@string/settings_import"
             app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/settings_backupTitle" />
@@ -179,7 +179,7 @@
             android:id="@+id/settings_export"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/exportData"
+            android:text="@string/settings_export"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@+id/quiz_centerGuide"
             app:layout_constraintTop_toTopOf="@+id/settings_import" />

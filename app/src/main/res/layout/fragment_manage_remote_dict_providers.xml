@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:visibility="gone"
-            app:errorText="@string/manageRemoteDictProvider_failedToLoadProvidersError"
+            app:errorText="@string/manageRemoteDictProviders_failedToLoadProvidersError"
             tools:visibility="visible" />
     </FrameLayout>
 

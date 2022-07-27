@@ -28,10 +28,10 @@ class StatsFragment : Fragment() {
 
         val binding = FragmentStatsBinding.inflate(inflater, container, false)
 
-        val recordsCountFormat = res.getString(R.string.recordsCountFormat)
-        val recordsAddedLast24HoursFormat = res.getString(R.string.recordsAdded_last24HoursFormat)
-        val recordsAddedLast7DaysFormat = res.getString(R.string.recordsAdded_last7DaysFormat)
-        val recordsAddedLast31DaysFormat = res.getString(R.string.recordsAdded_last31DaysFormat)
+        val recordsCountFormat = res.getString(R.string.stats_recordsCountFormat)
+        val recordsAddedLast24HoursFormat = res.getString(R.string.stats_recordsAdded_last24HoursFormat)
+        val recordsAddedLast7DaysFormat = res.getString(R.string.stats_recordsAdded_last7DaysFormat)
+        val recordsAddedLast31DaysFormat = res.getString(R.string.stats_recordsAdded_last31DaysFormat)
 
         binding.statsErrorContainer.setOnRetryListener {
             with(binding) {

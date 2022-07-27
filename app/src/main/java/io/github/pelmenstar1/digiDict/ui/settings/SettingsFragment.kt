@@ -55,7 +55,7 @@ class SettingsFragment : Fragment() {
             settingsExport.setOnClickListener { vm.exportData() }
 
             settingsVersion.text = resources.getString(
-                R.string.versionFormat,
+                R.string.settings_versionFormat,
                 BuildConfig.VERSION_NAME, BuildConfig.BUILD_TYPE
             )
 

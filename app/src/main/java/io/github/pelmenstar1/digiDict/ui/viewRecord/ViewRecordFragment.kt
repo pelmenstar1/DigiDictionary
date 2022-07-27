@@ -53,7 +53,7 @@ class ViewRecordFragment : Fragment() {
         with(binding) {
             viewRecordDelete.setOnClickListener {
                 MaterialAlertDialogBuilder(context)
-                    .setMessage(R.string.deleteRecordMessage)
+                    .setMessage(R.string.viewRecord_deleteMessage)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         viewModel.delete()
                     }

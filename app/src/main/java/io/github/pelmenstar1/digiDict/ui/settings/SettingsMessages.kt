@@ -15,10 +15,10 @@ enum class SettingsMessage {
 class SettingsMessageMapper(context: Context) :
     ResourcesMessageMapper<SettingsMessage>(context, 5) {
     override fun mapToStringResource(type: SettingsMessage) = when (type) {
-        SettingsMessage.EXPORT_ERROR -> R.string.exportError
-        SettingsMessage.IMPORT_ERROR -> R.string.importError
-        SettingsMessage.EXPORT_SUCCESS -> R.string.exportSuccess
-        SettingsMessage.IMPORT_SUCCESS -> R.string.importSuccess
-        SettingsMessage.INVALID_FILE -> R.string.invalidFile
+        SettingsMessage.EXPORT_ERROR -> R.string.settings_exportError
+        SettingsMessage.IMPORT_ERROR -> R.string.settings_importError
+        SettingsMessage.EXPORT_SUCCESS -> R.string.settings_exportSuccess
+        SettingsMessage.IMPORT_SUCCESS -> R.string.settings_importSuccess
+        SettingsMessage.INVALID_FILE -> R.string.settings_invalidFile
     }
 }

@@ -33,7 +33,7 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
         val adapter = ManageRemoteDictionaryAdapter(
             onDeleteProvider = {
                 MaterialAlertDialogBuilder(context)
-                    .setMessage(R.string.deleteRemoteDictProviderMessage)
+                    .setMessage(R.string.manageRemoteDictProviders_deleteMessage)
                     .setPositiveButton(android.R.string.ok) { _, _ -> vm.delete(it) }
                     .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
                     .show()
@@ -73,7 +73,7 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
             vm.onDeleteError.handler = {
                 container?.let {
                     Snackbar
-                        .make(it, R.string.manageRemoteDictProvider_deleteError, Snackbar.LENGTH_SHORT)
+                        .make(it, R.string.manageRemoteDictProviders_deleteError, Snackbar.LENGTH_SHORT)
                         .showLifecycleAwareSnackbar(lifecycle)
                 }
             }

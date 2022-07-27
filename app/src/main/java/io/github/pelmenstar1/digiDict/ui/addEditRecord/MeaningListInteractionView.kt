@@ -327,7 +327,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
             ERROR_EMPTY_TEXT -> emptyTextError
             ERROR_DUPLICATE -> getLazyValue(
                 duplicateError,
-                { res.getString(R.string.addRecord_meaningDuplicateError) },
+                { res.getString(R.string.addEditRecord_meaningDuplicateError) },
                 { duplicateError = it }
             )
             else -> null

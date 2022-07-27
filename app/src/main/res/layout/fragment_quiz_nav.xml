@@ -10,20 +10,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/all" />
+        android:text="@string/quizNav_all" />
 
     <Button
         android:id="@+id/quiz_nav_last24Hours"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/last24Hours" />
+        android:text="@string/quizNav_last24Hours" />
 
     <Button
         android:id="@+id/quiz_nav_last48Hours"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/last48Hours" />
+        android:text="@string/quizNav_last48Hours" />
 
 </LinearLayout>
