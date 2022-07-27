@@ -155,8 +155,14 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
 
     private fun bindCustomTabsClient() {
         val context = requireContext()
+        val packageName = CustomTabsClient.getPackageName(context, null)
 
-        CustomTabsClient.bindCustomTabsService(context, "com.android.chrome", connection)
+        if (packageName != null) {
+            Log.i(TAG, "Binding custom tabs service (package=$packageName)")
+            CustomTabsClient.bindCustomTabsService(context, packageName, connection)
+        } else {
+            Log.i(TAG, "No package found with Custom Tabs support")
+        }
     }
 
     private fun openUrl(provider: RemoteDictionaryProviderInfo, query: String) {
