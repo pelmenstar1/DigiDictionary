@@ -49,8 +49,7 @@
     <string name="additionalNotesAndValueFormat">Additional notes: %s</string>
     <string name="scoreAndValueFormat">Score: %d</string>
     <string name="meaningAndOrdinalFormat">Meaning %d</string>
-
-
+    
     <string name="addExpression_existingExprError">Such expression already exists</string>
     <string name="addExpression_tooManyMeaningListItemsError">Too many list items</string>
     <string name="addRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
@@ -115,16 +114,8 @@
     </string-array>
 
     <string name="settings_openBrowserInApp">Open browser in-app</string>
-
-    <string name="settings_scorePointsPerCorrectAnswer_prefix">Score points per right answer: </string>
-    <string name="settings_scorePointsPerCorrectAnswer_description">
-        When you answer correct meaning of an expression, this amount of score points is added to the record
-    </string>
-
-    <string name="settings_scorePointsPerWrongAnswer_prefix">Score points per wrong answer: </string>
-    <string name="settings_scorePointsPerWrongAnswer_description">
-        When you answer wrong meaning of an expression, this amount of score points is subtracted from the record
-    </string>
+    <string name="settings_scorePointsPerCorrectAnswer_prefix">Score points per right answer</string>
+    <string name="settings_scorePointsPerWrongAnswer_prefix">Score points per wrong answer</string>
 
     <string name="listWidget_description">Widget which shows you most recent expressions you added</string>
     <string name="listWidgetConf_title">Widget configuration</string>

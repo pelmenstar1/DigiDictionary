@@ -23,13 +23,22 @@
 
         <TextView
             android:id="@+id/settings_quizTitle"
-            style="@style/TextAppearance.Material3.HeadlineSmall"
-            android:layout_width="wrap_content"
+            style="@style/Widget.DigiDictionary.SettingsTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/quiz"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="8dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_points_per_correct_answer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_quizTitle" />
 
         <TextView
             android:id="@+id/settings_scorePointsPerCorrectAnswer_prefix"
@@ -37,68 +46,87 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:text="@string/settings_scorePointsPerCorrectAnswer_prefix"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_quizTitle" />
+            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_icon"
+            app:layout_constraintStart_toEndOf="@id/settings_scorePointsPerCorrectAnswer_icon"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_icon" />
 
         <Spinner
             android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="0dp"
             android:entries="@array/from_1_to_10"
-            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerCorrectAnswer_prefix"
-            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_prefix" />
+            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_icon" />
 
-        <TextView
-            android:id="@+id/settings_scorePointsPerCorrectAnswer_description"
-            style="@style/Widget.DigiDictionary.SettingsDescText"
-            android:layout_width="match_parent"
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/settings_scorePointsPerCorrectAnswer_barrier"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/settings_scorePointsPerCorrectAnswer_description"
-            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_spinner" />
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="settings_scorePointsPerCorrectAnswer_icon,settings_scorePointsPerCorrectAnswer_prefix,settings_scorePointsPerCorrectAnswer_spinner" />
+
+        <ImageView
+            android:id="@+id/settings_scorePointsPerWrongAnswer_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="8dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_points_per_wrong_answer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_barrier" />
 
         <TextView
-            android:id="@+id/settings_scorePointsPerWrongAnswerPrefix"
+            android:id="@+id/settings_scorePointsPerWrongAnswer_prefix"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:text="@string/settings_scorePointsPerWrongAnswer_prefix"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_description" />
+            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_icon"
+            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerWrongAnswer_icon"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswer_icon" />
 
         <Spinner
             android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="0dp"
             android:entries="@array/from_1_to_10"
-            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerWrongAnswerPrefix"
-            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswerPrefix" />
+            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswer_icon" />
 
-        <TextView
-            android:id="@+id/settings_scorePointsPerWrongAnswer_description"
-            style="@style/Widget.DigiDictionary.SettingsDescText"
-            android:layout_width="match_parent"
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/settings_scorePointsPerWrongAnswer_barrier"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/settings_scorePointsPerWrongAnswer_description"
-            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_spinner" />
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="settings_scorePointsPerWrongAnswer_icon,settings_scorePointsPerWrongAnswer_prefix,settings_scorePointsPerWrongAnswer_spinner" />
 
         <!-- Remote dict. provider -->
 
         <TextView
             android:id="@+id/settings_remoteDictProviderTitle"
-            style="@style/TextAppearance.Material3.HeadlineSmall"
-            android:layout_width="wrap_content"
+            style="@style/Widget.DigiDictionary.SettingsTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/remoteDictProviderShort"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_scorePointsPerWrongAnswer_description" />
+            app:layout_constraintTop_toBottomOf="@id/settings_scorePointsPerWrongAnswer_barrier" />
+
+        <ImageView
+            android:id="@+id/settings_openBrowserInApp_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="8dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_open_browser_in_app"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_remoteDictProviderTitle" />
 
         <TextView
             android:id="@+id/settings_openBrowserInApp_prefix"
@@ -108,14 +136,13 @@
             android:layout_marginStart="8dp"
             android:text="@string/settings_openBrowserInApp"
             app:layout_constraintBottom_toBottomOf="@id/settings_openBrowserInApp_switch"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/settings_openBrowserInApp_icon"
             app:layout_constraintTop_toTopOf="@id/settings_openBrowserInApp_switch" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/settings_openBrowserInApp_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/settings_remoteDictProviderTitle" />
@@ -127,17 +154,14 @@
             app:barrierDirection="bottom"
             app:constraint_referenced_ids="settings_openBrowserInApp_prefix,settings_openBrowserInApp_switch" />
 
-
         <!-- Backup settings -->
 
         <TextView
             android:id="@+id/settings_backupTitle"
-            style="@style/TextAppearance.Material3.HeadlineSmall"
-            android:layout_width="wrap_content"
+            style="@style/Widget.DigiDictionary.SettingsTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:text="@string/backup"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/settings_openBrowserInApp_barrier" />
 
