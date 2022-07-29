@@ -70,7 +70,6 @@
     <string name="addRecord">Add a new record</string>
     <string name="addEditRecord_label">Add or edit a record</string>
     <string name="addEditRecord_existingExprError">Such expression already exists</string>
-    <string name="addEditRecord_tooManyMeaningListItemsError">Too many list items</string>
     <string name="addEditRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
 
     <!-- View record fragment -->

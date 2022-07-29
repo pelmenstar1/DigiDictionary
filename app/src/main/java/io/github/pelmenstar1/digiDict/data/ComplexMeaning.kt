@@ -3,8 +3,10 @@ package io.github.pelmenstar1.digiDict.data
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.collection.ArraySet
-import io.github.pelmenstar1.digiDict.utils.*
-import kotlin.math.max
+import io.github.pelmenstar1.digiDict.utils.decimalDigitCount
+import io.github.pelmenstar1.digiDict.utils.getChars
+import io.github.pelmenstar1.digiDict.utils.parsePositiveInt
+import io.github.pelmenstar1.digiDict.utils.readStringOrThrow
 
 enum class MeaningType {
     COMMON,
@@ -112,7 +114,6 @@ sealed class ComplexMeaning : Parcelable {
 
         constructor(parcel: Parcel) {
             val size = parcel.readInt()
-            validateListItemSize(size)
 
             rawText = parcel.readStringOrThrow()
 
@@ -124,15 +125,11 @@ sealed class ComplexMeaning : Parcelable {
         }
 
         constructor(elements: Set<String>) {
-            validateListItemSize(elements.size)
-
             this.elements = elements
             rawText = createListRawText(elements)
         }
 
         constructor(elements: Array<out String>) {
-            validateListItemSize(elements.size)
-
             val set = ArraySet<String>(elements.size).apply {
                 elements.forEach(::add)
             }
@@ -144,10 +141,6 @@ sealed class ComplexMeaning : Parcelable {
 
         @Suppress("UNCHECKED_CAST")
         constructor(firstElement: String, vararg elements: String) {
-            // As there's already firstElement, elements size should be constrained to MAX_LIST_ITEM_SIZE - 1.
-            // But if elements size is 0, this becomes -1, which is wrong as we have firstElement, so it should be at least 0 (which is valid value)
-            validateListItemSize(max(0, elements.size - 1))
-
             val set = ArraySet<String>(elements.size + 1).apply {
                 add(firstElement)
                 elements.forEach(::add)
@@ -159,8 +152,6 @@ sealed class ComplexMeaning : Parcelable {
         }
 
         constructor(elements: Set<String>, rawText: String) {
-            validateListItemSize(elements.size)
-
             this.rawText = rawText
             this.elements = elements
         }
@@ -232,11 +223,6 @@ sealed class ComplexMeaning : Parcelable {
     override fun describeContents() = 0
 
     companion object {
-        /**
-         * Max elements size (inclusive) of [List]
-         */
-        const val MAX_LIST_ITEM_SIZE = 100
-
         private fun newArraySetFrom(set: Set<String>, capacity: Int): ArraySet<String> {
             val newSet = ArraySet<String>(capacity)
             if (set is ArraySet<*>) {
@@ -246,10 +232,6 @@ sealed class ComplexMeaning : Parcelable {
             }
 
             return newSet
-        }
-
-        private fun validateListItemSize(size: Int) {
-            require(size in 0..MAX_LIST_ITEM_SIZE) { "Size of elements is negative or greater than $MAX_LIST_ITEM_SIZE" }
         }
 
         private fun createCommonRawText(text: String): String {
@@ -262,41 +244,32 @@ sealed class ComplexMeaning : Parcelable {
 
         private fun createListRawText(elements: Set<String>): String {
             val size = elements.size
-            if (size > 100) {
-                throw IllegalArgumentException("values size is greater than 100")
-            }
+            val lastIndex = size - 1
 
-            val sizeDigitCount = size.decimalDigitCount()
-            val contentStart = sizeDigitCount + 2
-
-            var capacity = 2 /* L and @ */ + sizeDigitCount
+            var capacity = 2 /* L and @ */ + size.decimalDigitCount()
 
             elements.forEachIndexed { index, element ->
                 capacity += element.length
 
                 // Increase capacity for new line symbol only if it's not the last element
-                if (index < elements.size - 1) {
+                if (index < lastIndex) {
                     capacity++
                 }
             }
 
-            val buffer = CharArray(capacity)
-            buffer[0] = 'L'
-            buffer.write3DigitNumber(size, 1)
-            buffer[sizeDigitCount + 1] = '@'
+            return buildString(capacity) {
+                append('L')
+                append(size)
+                append('@')
 
-            var offset = contentStart
+                elements.forEachIndexed { index, element ->
+                    append(element)
 
-            elements.forEachIndexed { index, element ->
-                element.getChars(buffer, offset)
-                offset += element.length
-
-                if (index < elements.size - 1) {
-                    buffer[offset++] = '\n'
+                    if (index < lastIndex) {
+                        append('\n')
+                    }
                 }
             }
-
-            return String(buffer)
         }
 
         private fun throwInvalidFormat(rawText: String): Nothing {

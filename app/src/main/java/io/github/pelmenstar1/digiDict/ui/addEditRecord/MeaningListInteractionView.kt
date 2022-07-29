@@ -59,8 +59,6 @@ class MeaningListInteractionView @JvmOverloads constructor(
     private var isError = true
     var onErrorStateChanged: ((state: Boolean) -> Unit)? = null
 
-    var onTooManyItems: (() -> Unit)? = null
-
     var meaning: ComplexMeaning
         get() {
             // If there's only one element, meaning should be considered as "common"
@@ -210,12 +208,6 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
     private fun addNewItem(isUserInteraction: Boolean) {
         val index = childCount - 1
-
-        if (index >= 100) {
-            onTooManyItems?.invoke()
-
-            return
-        }
 
         val layout = TextInputLayout(
             textLayoutContext,

@@ -54,7 +54,7 @@ class AddEditRecordFragment : Fragment() {
         vm.onRecordSuccessfullyAdded.setPopBackStackHandler(navController)
 
         registerCollectors(container)
-        initMeaning(container)
+        initMeaning()
         initViews()
 
         return binding.root
@@ -133,7 +133,7 @@ class AddEditRecordFragment : Fragment() {
         }
     }
 
-    private fun initMeaning(container: ViewGroup?) {
+    private fun initMeaning() {
         val vm = viewModel
 
         val listInteractionView = binding.addExpressionMeaningListInteraction.also {
@@ -142,16 +142,6 @@ class AddEditRecordFragment : Fragment() {
                     AddEditRecordViewModel.MEANING_VALIDITY_BIT,
                     !isError
                 )
-            }
-
-            if (container != null) {
-                it.onTooManyItems = {
-                    Snackbar.make(
-                        container,
-                        messageMapper.map(AddEditRecordMessage.TOO_MANY_MEANING_LIST_ITEMS),
-                        Snackbar.LENGTH_LONG
-                    ).showLifecycleAwareSnackbar(lifecycle)
-                }
             }
         }
 

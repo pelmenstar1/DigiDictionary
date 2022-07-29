@@ -8,7 +8,6 @@ enum class AddEditRecordMessage {
     EMPTY_TEXT,
     EXISTING_EXPRESSION,
     DB_ERROR,
-    TOO_MANY_MEANING_LIST_ITEMS,
     LOADING_ERROR
 }
 
@@ -18,7 +17,6 @@ class AddEditExpressionMessageMapper(context: Context) :
         AddEditRecordMessage.EMPTY_TEXT -> R.string.emptyTextError
         AddEditRecordMessage.EXISTING_EXPRESSION -> R.string.addEditRecord_existingExprError
         AddEditRecordMessage.DB_ERROR -> R.string.dbError
-        AddEditRecordMessage.TOO_MANY_MEANING_LIST_ITEMS -> R.string.addEditRecord_tooManyMeaningListItemsError
         AddEditRecordMessage.LOADING_ERROR -> R.string.recordLoadingError
     }
 }

@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui
 
-import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.utils.parsePositiveInt
 
 object MeaningTextHelper {
@@ -17,10 +16,6 @@ object MeaningTextHelper {
                 // Skip mark character
                 val firstDelimiterIndex = rawText.indexOf('@', 1)
                 val count = rawText.parsePositiveInt(1, firstDelimiterIndex)
-
-                if (count !in 0..ComplexMeaning.MAX_LIST_ITEM_SIZE) {
-                    throwIllegalFormat(rawText)
-                }
 
                 var offset = firstDelimiterIndex + 1
 
