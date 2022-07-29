@@ -126,8 +126,8 @@ class AddEditRecordFragment : Fragment() {
 
                 launchErrorFlowCollector(addExpressionExpressionInputLayout, vm.expressionErrorFlow, messageMapper)
 
-                launchFlowCollector(vm.invalidity) {
-                    addExpressionAddButton.isEnabled = it == 0
+                launchFlowCollector(vm.validity) {
+                    addExpressionAddButton.isEnabled = it == AddEditRecordViewModel.ALL_VALID_MASK
                 }
             }
         }
@@ -138,9 +138,9 @@ class AddEditRecordFragment : Fragment() {
 
         val listInteractionView = binding.addExpressionMeaningListInteraction.also {
             it.onErrorStateChanged = { isError ->
-                vm.invalidity.withBit(
-                    AddEditRecordViewModel.MEANING_INVALIDITY_BIT,
-                    isError
+                vm.validity.withBit(
+                    AddEditRecordViewModel.MEANING_VALIDITY_BIT,
+                    !isError
                 )
             }
 

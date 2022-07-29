@@ -29,7 +29,8 @@ class AddEditRecordViewModel @Inject constructor(
 ) : ViewModel() {
     private val recordDao = appDatabase.recordDao()
 
-    val invalidity = MutableStateFlow(MEANING_INVALIDITY_BIT or EXPRESSION_INVALIDITY_BIT)
+    // In initial state, VM's state is invalid.
+    val validity = MutableStateFlow(0)
 
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
     private val _dbErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
@@ -92,13 +93,13 @@ class AddEditRecordViewModel @Inject constructor(
         _expression = value
 
         if (value.isBlank()) {
-            invalidity.withBit(EXPRESSION_INVALIDITY_BIT, true)
+            validity.withBit(EXPRESSION_VALIDITY_BIT, false)
             _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
         } else {
             if (currentRecordId < 0 || _currentRecordFlow.value?.isSuccess == true) {
                 startCheckExprJobIfNecessary()
 
-                invalidity.withBit(EXPRESSION_INVALIDITY_BIT, true)
+                validity.withBit(EXPRESSION_VALIDITY_BIT, false)
                 checkExpressionChannel.trySend(value)
             }
         }
@@ -126,10 +127,10 @@ class AddEditRecordViewModel @Inject constructor(
                     // then if input expression shouldn't be considered as "existing"
                     // even if it does exist to allow editing meaning, origin or notes and not expression.
                     if (currentRecordExpression == expr || expressions.binarySearch(expr) < 0) {
-                        invalidity.withBit(EXPRESSION_INVALIDITY_BIT, false)
+                        validity.withBit(EXPRESSION_VALIDITY_BIT, true)
                         _expressionErrorFlow.value = null
                     } else {
-                        invalidity.withBit(EXPRESSION_INVALIDITY_BIT, true)
+                        validity.withBit(EXPRESSION_VALIDITY_BIT, false)
                         _expressionErrorFlow.value = AddEditRecordMessage.EXISTING_EXPRESSION
                     }
                 }
@@ -189,7 +190,8 @@ class AddEditRecordViewModel @Inject constructor(
     companion object {
         private const val TAG = "AddExpressionVM"
 
-        const val EXPRESSION_INVALIDITY_BIT = 1
-        const val MEANING_INVALIDITY_BIT = 1 shl 1
+        const val EXPRESSION_VALIDITY_BIT = 1
+        const val MEANING_VALIDITY_BIT = 1 shl 1
+        const val ALL_VALID_MASK = EXPRESSION_VALIDITY_BIT or MEANING_VALIDITY_BIT
     }
 }
