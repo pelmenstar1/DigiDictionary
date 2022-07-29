@@ -22,6 +22,7 @@ import io.github.pelmenstar1.digiDict.utils.getLazyValue
         ),
     ]
 )
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     @DeleteColumn(tableName = "records", columnName = "origin")
     class Migration_1_2 : AutoMigrationSpec
@@ -34,11 +35,11 @@ abstract class AppDatabase : RoomDatabase() {
 
     private object Migration_3_4 : Migration(3, 4) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL("CREATE TABLE IF NOT EXISTS remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL)")
-            database.execSQL("CREATE TABLE IF NOT EXISTS `remote_dict_provider_stats` (`id` INTEGER NOT NULL, `visitCount` INTEGER NOT NULL, PRIMARY KEY(`id`))")
+            database.run {
+                execSQL("CREATE TABLE IF NOT EXISTS remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL)")
+                execSQL("CREATE TABLE IF NOT EXISTS `remote_dict_provider_stats` (`id` INTEGER NOT NULL, `visitCount` INTEGER NOT NULL, PRIMARY KEY(`id`))")
 
-            RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS.forEach {
-                database.insertRemoteDictProvider(it)
+                insertRemoteDictProviders(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
             }
         }
     }
@@ -77,8 +78,25 @@ abstract class AppDatabase : RoomDatabase() {
 
         private var singleton: AppDatabase? = null
 
-        private fun SupportSQLiteDatabase.insertRemoteDictProvider(info: RemoteDictionaryProviderInfo) {
-            execSQL("INSERT INTO remote_dict_providers (name, schema) VALUES('${info.name}', '${info.schema}')")
+        private fun SupportSQLiteDatabase.insertRemoteDictProviders(providers: Array<out RemoteDictionaryProviderInfo>) {
+            val statement =
+                compileStatement("INSERT INTO remote_dict_providers (name, schema, urlEncodingRules) VALUES(?, ?, ?)")
+
+            beginTransaction()
+            try {
+                providers.forEach {
+                    // Binding is 1-based.
+                    statement.bindString(1, it.name)
+                    statement.bindString(2, it.schema)
+                    statement.bindString(3, it.urlEncodingRules.raw)
+
+                    statement.executeInsert()
+                }
+
+                setTransactionSuccessful()
+            } finally {
+                endTransaction()
+            }
         }
 
         fun getOrCreate(context: Context): AppDatabase {
@@ -96,9 +114,7 @@ abstract class AppDatabase : RoomDatabase() {
                 .addMigrations(Migration_2_3, Migration_3_4)
                 .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
-                        RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS.forEach {
-                            db.insertRemoteDictProvider(it)
-                        }
+                        db.insertRemoteDictProviders(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
                     }
                 })
                 .build()

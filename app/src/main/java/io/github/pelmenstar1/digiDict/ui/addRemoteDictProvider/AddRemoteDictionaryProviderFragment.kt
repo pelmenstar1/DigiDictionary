@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -28,6 +30,7 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val navController = findNavController()
         val vm = viewModel
+        val context = requireContext()
 
         val binding = FragmentAddRemoteDictProviderBinding.inflate(inflater, container, false)
 
@@ -82,6 +85,31 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
 
             addRemoteDictProviderNameInputLayout.addTextChangedListenerToString { vm.name = it }
             addRemoteDictProviderSchemaInputLayout.addTextChangedListenerToString { vm.schema = it }
+
+            addRemoteDictProviderSpaceReplacementSpinner.apply {
+                val res = context.resources
+
+                val spaceReplacementVariantsInlined =
+                    res.getString(R.string.addRemoteDictProvider_spaceReplacementInlined)
+                val items = context.resources.getStringArray(R.array.addRemoteDictProvider_spaceReplacementVariantsUser)
+
+                adapter = ArrayAdapter(
+                    context,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    items
+                )
+
+                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                        if (position < spaceReplacementVariantsInlined.length) {
+                            vm.spaceReplacement = spaceReplacementVariantsInlined[position]
+                        }
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+                    }
+                }
+            }
         }
 
         this.binding = binding

@@ -67,6 +67,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
             scheduleCheckValue(TYPE_SCHEMA, value)
         }
 
+    var spaceReplacement: Char = RemoteDictionaryProviderInfo.UrlEncodingRules.DEFAULT_SPACE_REPLACEMENT
+
     fun restartValidityCheck() {
         scheduleCheckValue(TYPE_NAME, name)
         scheduleCheckValue(TYPE_SCHEMA, schema)
@@ -96,7 +98,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val newProvider = RemoteDictionaryProviderInfo(
                 name = name,
-                schema = schema
+                schema = schema,
+                urlEncodingRules = RemoteDictionaryProviderInfo.UrlEncodingRules(spaceReplacement)
             )
 
             try {

@@ -26,6 +26,16 @@
     <string name="addRemoteDictProvider_providerSchemaExists">A provider with such schema already exists</string>
     <string name="addRemoteDictProvider_providerSchemaInvalidUrl">Invalid URL</string>
     <string name="addRemoteDictProvider_providerNoQueryPlaceholder">Schema should contain $query$ placeholder. Read the info below</string>
+    <string name="addRemoteDictProvider_rules">URL encoding rules</string>
+    <string name="addRemoteDictProvider_spaceReplacement">Replace space to:</string>
+
+    <!-- All the space replacement variants inlined in single string in exact order as in addRemoteDictProvider_spaceReplacementVariantsUser -->
+    <string name="addRemoteDictProvider_spaceReplacementInlined" translatable="false">+-_</string>
+    <string-array name="addRemoteDictProvider_spaceReplacementVariantsUser">
+        <item>+ (Plus)</item>
+        <item>- (Minus)</item>
+        <item>_ (Underscore)</item>
+    </string-array>
 
     <!-- Choose remote dict. provider fragment -->
     <string name="chooseRemoteDictProvider_label">Choose remote dict. provider</string>
