@@ -26,6 +26,7 @@ class BinarySerializingTests {
             stringUtf16("123")
             int32(0)
             stringUtf16("55555")
+            stringUtf16("")
         }
 
         val reader = createReader()
@@ -37,6 +38,7 @@ class BinarySerializingTests {
         assertEquals("123", reader.stringUtf16())
         assertEquals(0, reader.int32())
         assertEquals("55555", reader.stringUtf16())
+        assertEquals("", reader.stringUtf16())
     }
 
     @Test

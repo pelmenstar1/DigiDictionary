@@ -1,16 +1,15 @@
 package io.github.pelmenstar1.digiDict.ui.quiz
 
 import android.util.Log
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.SECONDS_IN_DAY
-import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.scorePointsPerCorrectAnswer
-import io.github.pelmenstar1.digiDict.scorePointsPerWrongAnswer
+import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.get
+import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.utils.isBitAtPositionSet
 import io.github.pelmenstar1.digiDict.utils.lowestNBitsSet
@@ -18,18 +17,16 @@ import io.github.pelmenstar1.digiDict.utils.withBitAtPosition
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
 class QuizViewModel @Inject constructor(
-    appDatabase: AppDatabase,
-    private val dataStore: DataStore<Preferences>,
+    private val recordDao: RecordDao,
+    private val appPreferences: AppPreferences,
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : ViewModel() {
-    private val recordDao = appDatabase.recordDao()
-
     private var answeredBits = 0
 
     @Volatile
@@ -65,12 +62,13 @@ class QuizViewModel @Inject constructor(
                         // It's impossible but compiler doesn't know about it
                         else -> throw RuntimeException("Impossible")
                     }
-                    val nowEpochSeconds = System.currentTimeMillis() / 1000
+
+                    val currentEpochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
 
                     recordDao.getRandomRecordsAfter(
                         random,
                         RECORDS_MAX_SIZE,
-                        nowEpochSeconds - duration
+                        currentEpochSeconds - duration
                     )
                 }
 
@@ -114,8 +112,8 @@ class QuizViewModel @Inject constructor(
                 // by time of executing saveResults() rightAnsweredBits can't be changed.
                 val correctAnswered = correctAnsweredBits
 
-                val scorePointsPerCorrectAnswer = dataStore.scorePointsPerCorrectAnswer.first()
-                val scorePointsPerWrongAnswer = dataStore.scorePointsPerWrongAnswer.first()
+                val scorePointsPerCorrectAnswer = appPreferences.get { scorePointsPerCorrectAnswer }
+                val scorePointsPerWrongAnswer = appPreferences.get { scorePointsPerWrongAnswer }
 
                 val newScores = IntArray(result.size)
                 for (i in result.indices) {
@@ -141,7 +139,7 @@ class QuizViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "QuizViewModel"
-        private const val RECORDS_MAX_SIZE = 10
+        const val RECORDS_MAX_SIZE = 10
 
         private val random = Random(System.currentTimeMillis())
     }

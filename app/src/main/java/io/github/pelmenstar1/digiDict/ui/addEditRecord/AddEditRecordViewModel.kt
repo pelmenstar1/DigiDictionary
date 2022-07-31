@@ -4,9 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.utils.trimToString
 import io.github.pelmenstar1.digiDict.utils.withBit
@@ -14,8 +15,7 @@ import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -24,20 +24,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddEditRecordViewModel @Inject constructor(
-    appDatabase: AppDatabase,
-    private val listAppWidgetUpdater: AppWidgetUpdater
+    private val recordDao: RecordDao,
+    private val listAppWidgetUpdater: AppWidgetUpdater,
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : ViewModel() {
-    private val recordDao = appDatabase.recordDao()
-
-    // In initial state, VM's state is invalid.
-    val validity = MutableStateFlow(0)
+    val validity = MutableStateFlow<Int?>(null)
 
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
-    private val _dbErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
     private val _currentRecordFlow = MutableStateFlow<Result<Record?>?>(null)
 
     val expressionErrorFlow = _expressionErrorFlow.asStateFlow()
-    val dbErrorFlow = _dbErrorFlow.asStateFlow()
     val currentRecordFlow = _currentRecordFlow.asStateFlow()
 
     private val isCheckExpressionJobStarted = AtomicBoolean()
@@ -48,6 +44,7 @@ class AddEditRecordViewModel @Inject constructor(
 
     private val isAddJobStarted = AtomicBoolean()
 
+    val onAddError = Event()
     val onRecordSuccessfullyAdded = Event()
 
     private var _expression = ""
@@ -92,16 +89,18 @@ class AddEditRecordViewModel @Inject constructor(
     private fun setExpressionInternal(value: String) {
         _expression = value
 
-        if (value.isBlank()) {
-            validity.withBit(EXPRESSION_VALIDITY_BIT, false)
-            _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
-        } else {
-            if (currentRecordId < 0 || _currentRecordFlow.value?.isSuccess == true) {
-                startCheckExprJobIfNecessary()
+        if (currentRecordId < 0 || _currentRecordFlow.value?.isSuccess == true) {
+            startCheckExprJobIfNecessary()
 
-                validity.withBit(EXPRESSION_VALIDITY_BIT, false)
-                checkExpressionChannel.trySend(value)
+            validity.update {
+                val prevValue = it ?: 0
+
+                prevValue
+                    .withBit(EXPRESSION_VALIDITY_BIT, false)
+                    .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, true)
             }
+
+            checkExpressionChannel.trySend(value)
         }
     }
 
@@ -115,7 +114,7 @@ class AddEditRecordViewModel @Inject constructor(
                 expressions.sort()
 
                 val currentRecordExpression = if (currentRecordId >= 0) {
-                    requireNotNull(_currentRecordFlow.value).getOrThrow()?.expression
+                    _currentRecordFlow.filterNotNull().first().getOrThrow()?.expression
                 } else {
                     null
                 }
@@ -123,15 +122,26 @@ class AddEditRecordViewModel @Inject constructor(
                 while (isActive) {
                     val expr = checkExpressionChannel.receive()
 
+                    val isNotBlank = expr.isNotBlank()
+
                     // If we are is edit mode (currentRecordExpression is not null then),
                     // then if input expression shouldn't be considered as "existing"
                     // even if it does exist to allow editing meaning, origin or notes and not expression.
-                    if (currentRecordExpression == expr || expressions.binarySearch(expr) < 0) {
-                        validity.withBit(EXPRESSION_VALIDITY_BIT, true)
-                        _expressionErrorFlow.value = null
-                    } else {
-                        validity.withBit(EXPRESSION_VALIDITY_BIT, false)
-                        _expressionErrorFlow.value = AddEditRecordMessage.EXISTING_EXPRESSION
+                    val isValid =
+                        isNotBlank && (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
+
+                    validity.update {
+                        val prevValue = it ?: 0
+
+                        prevValue
+                            .withBit(EXPRESSION_VALIDITY_BIT, isValid)
+                            .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, false)
+                    }
+
+                    _expressionErrorFlow.value = when {
+                        isValid -> null
+                        isNotBlank -> AddEditRecordMessage.EXISTING_EXPRESSION
+                        else -> AddEditRecordMessage.EMPTY_TEXT
                     }
                 }
             }
@@ -148,7 +158,7 @@ class AddEditRecordViewModel @Inject constructor(
 
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val epochSeconds = System.currentTimeMillis() / 1000
+                    val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
 
                     if (currentRecordId >= 0) {
                         recordDao.update(
@@ -173,15 +183,13 @@ class AddEditRecordViewModel @Inject constructor(
                         onRecordSuccessfullyAdded.raise()
                     }
 
-                    _dbErrorFlow.value = null
-
                     // If there's no exception, then isAddJobStarted shouldn't be set to false,
                     // because view-model will be destroyed soon.
                 } catch (e: Exception) {
                     Log.e(TAG, null, e)
                     isAddJobStarted.set(false)
 
-                    _dbErrorFlow.value = AddEditRecordMessage.DB_ERROR
+                    onAddError.raiseOnMainThread()
                 }
             }
         }
@@ -191,7 +199,9 @@ class AddEditRecordViewModel @Inject constructor(
         private const val TAG = "AddExpressionVM"
 
         const val EXPRESSION_VALIDITY_BIT = 1
+        const val EXPRESSION_VALIDITY_NOT_CHOSEN_BIT = 1 shl 2
         const val MEANING_VALIDITY_BIT = 1 shl 1
+
         const val ALL_VALID_MASK = EXPRESSION_VALIDITY_BIT or MEANING_VALIDITY_BIT
     }
 }

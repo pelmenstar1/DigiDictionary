@@ -24,7 +24,7 @@ class ListAppWidget : AppWidgetProvider() {
     }
 
     companion object {
-        fun updater(context: Context) = AppWidgetUpdater(context, ListAppWidget::class.java)
+        fun updater(context: Context) = AppWidgetUpdater.create<ListAppWidget>(context)
     }
 }
 

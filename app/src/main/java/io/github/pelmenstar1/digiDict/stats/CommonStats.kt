@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.stats
+package io.github.pelmenstar1.digiDict.stats
 
 data class CommonStats(
     val count: Int,

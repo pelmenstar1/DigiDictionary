@@ -79,5 +79,4 @@ class TextTests {
         assertEquals("", "".trimToString())
         assertEquals("", "    ".trimToString())
     }
-
 }

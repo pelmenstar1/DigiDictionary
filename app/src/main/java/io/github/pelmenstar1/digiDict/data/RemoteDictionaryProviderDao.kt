@@ -22,4 +22,7 @@ interface RemoteDictionaryProviderDao {
 
     @Query("SELECT * FROM remote_dict_providers WHERE id=:id")
     suspend fun getById(id: Int): RemoteDictionaryProviderInfo?
+
+    @Query("SELECT * FROM remote_dict_providers WHERE name=:name")
+    suspend fun getByName(name: String): RemoteDictionaryProviderInfo?
 }

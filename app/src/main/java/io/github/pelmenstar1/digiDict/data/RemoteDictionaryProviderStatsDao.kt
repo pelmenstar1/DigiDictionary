@@ -7,6 +7,9 @@ import androidx.room.Transaction
 
 @Dao
 abstract class RemoteDictionaryProviderStatsDao {
+    @Query("SELECT * FROM remote_dict_provider_stats WHERE id=:id")
+    abstract suspend fun getById(id: Int): RemoteDictionaryProviderStats?
+
     @Insert
     abstract suspend fun insert(stats: RemoteDictionaryProviderStats)
 

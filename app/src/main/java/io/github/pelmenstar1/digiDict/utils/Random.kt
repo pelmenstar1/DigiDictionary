@@ -10,6 +10,10 @@ import kotlin.random.Random
  * @param size length of the array.
  */
 fun Random.generateUniqueRandomNumbers(upperBound: Int, size: Int): IntArray {
+    if (upperBound < size) {
+        throw IllegalArgumentException("upperBounds < size; upperBound=$upperBound, size=$size")
+    }
+
     if (size == 0 || upperBound == 0) {
         return EmptyArray.INT
     }

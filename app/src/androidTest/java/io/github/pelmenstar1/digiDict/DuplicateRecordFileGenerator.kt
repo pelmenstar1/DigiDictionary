@@ -10,6 +10,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.serialization.writeValues
+import io.github.pelmenstar1.digiDict.time.SECONDS_IN_HOUR
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.FileOutputStream
@@ -19,6 +21,7 @@ import kotlin.random.Random
 // Generates DDDB file which contains records whose expression has same format as in DebugDatabaseTest (Expression1, Expression2)
 // but meaning has _dup suffix to allow to test "Merge" in ResolveConflictsFragment.
 @RunWith(AndroidJUnit4::class)
+@Ignore("Should be run manually") // remove this to run the test.
 class DuplicateRecordFileGenerator {
     private val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 

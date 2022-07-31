@@ -6,22 +6,40 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 
-class AppWidgetUpdater(private val context: Context, private val widgetClass: Class<out AppWidgetProvider>) {
-    private fun createWidgetManualUpdateIntent(ids: IntArray): Intent {
-        return Intent().apply {
-            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+interface AppWidgetUpdater {
+    fun updateAllWidgets()
 
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+    private class Impl(
+        private val context: Context,
+        private val widgetClass: Class<out AppWidgetProvider>
+    ) : AppWidgetUpdater {
+        private fun createWidgetManualUpdateIntent(ids: IntArray): Intent {
+            return Intent().apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            }
+        }
+
+        override fun updateAllWidgets() {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val componentName = ComponentName(context, widgetClass)
+
+            val ids = appWidgetManager.getAppWidgetIds(componentName)
+            val intent = createWidgetManualUpdateIntent(ids)
+
+            context.sendBroadcast(intent)
         }
     }
 
-    fun updateAllWidgets() {
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        val componentName = ComponentName(context, widgetClass)
+    companion object {
+        fun create(context: Context, widgetClass: Class<out AppWidgetProvider>): AppWidgetUpdater {
+            return Impl(context, widgetClass)
+        }
 
-        val ids = appWidgetManager.getAppWidgetIds(componentName)
-        val intent = createWidgetManualUpdateIntent(ids)
-
-        context.sendBroadcast(intent)
+        inline fun <reified T : AppWidgetProvider> create(context: Context): AppWidgetUpdater {
+            return create(context, T::class.java)
+        }
     }
 }
+

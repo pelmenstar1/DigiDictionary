@@ -69,11 +69,11 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
             launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageMapper)
             launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageMapper)
 
-            launchFlowCollector(vm.validityErrorFlow) {
+            launchFlowCollector(vm.validityFlow) {
                 val mask = AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK
 
                 // Check if all validity bits are set.
-                binding.addRemoteDictProviderAdd.isEnabled = (it and mask) == mask
+                binding.addRemoteDictProviderAdd.isEnabled = it == mask
             }
 
             launchFlowCollector(vm.isNameEnabledFlow) { nameInputLayout.isEnabled = it }

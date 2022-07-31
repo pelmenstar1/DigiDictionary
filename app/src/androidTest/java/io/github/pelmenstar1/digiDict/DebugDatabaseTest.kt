@@ -6,11 +6,15 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
+import io.github.pelmenstar1.digiDict.time.SECONDS_IN_HOUR
 import kotlinx.coroutines.runBlocking
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
+@Ignore("Should be run manually") // remove this to run the test.
 class DebugDatabaseTest {
     private val appContext = InstrumentationRegistry.getInstrumentation().targetContext
     private val db = Room.databaseBuilder(appContext, AppDatabase::class.java, "database").build()
@@ -54,7 +58,7 @@ class DebugDatabaseTest {
         val recordDao = db.recordDao()
 
         runBlocking {
-            var epochSeconds = System.currentTimeMillis() / 1000  - SECONDS_IN_DAY * 10
+            var epochSeconds = System.currentTimeMillis() / 1000 - SECONDS_IN_DAY * 10
 
             repeat(100) { i ->
                 recordDao.insert(createRecord(i, epochSeconds))

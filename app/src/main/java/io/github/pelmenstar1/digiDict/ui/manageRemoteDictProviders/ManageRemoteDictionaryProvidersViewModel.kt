@@ -4,39 +4,36 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
-    appDatabase: AppDatabase
+    private val remoteDictProviderDao: RemoteDictionaryProviderDao
 ) : ViewModel() {
-    private val remoteDictProviderDao = appDatabase.remoteDictionaryProviderDao()
-
-    private val _providersFlow = MutableStateFlow<Array<RemoteDictionaryProviderInfo>?>(null)
-    val providersFlow = _providersFlow.asStateFlow()
+    val providersFlow: Flow<Array<RemoteDictionaryProviderInfo>?>
+    private val retryFlow = MutableStateFlow<Array<RemoteDictionaryProviderInfo>?>(null)
 
     val onLoadingError = Event()
     val onDeleteError = Event()
 
     init {
-        appDatabase.addRemoteDictProvidersTableObserver(this) {
-            loadProviders()
-        }
+        val daoFlow = remoteDictProviderDao.getAllFlow()
 
-        loadProviders()
+        providersFlow = merge(daoFlow, retryFlow)
     }
 
     fun loadProviders() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _providersFlow.value = remoteDictProviderDao.getAll()
+                retryFlow.value = remoteDictProviderDao.getAll()
             } catch (e: Exception) {
                 Log.e(TAG, "during getAll()", e)
 

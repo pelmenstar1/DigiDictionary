@@ -52,8 +52,35 @@ class AddEditRecordFragment : Fragment() {
         // Init errors only after currentRecordId is set.
         vm.initErrors()
         vm.onRecordSuccessfullyAdded.setPopBackStackHandler(navController)
+        vm.onAddError.handler = {
+            if (container != null) {
+                Snackbar
+                    .make(container, R.string.dbError, Snackbar.LENGTH_LONG)
+                    .showLifecycleAwareSnackbar(lifecycle)
+            }
+        }
 
-        registerCollectors(container)
+        lifecycleScope.launchFlowCollector(vm.currentRecordFlow) {
+            it?.fold(
+                onSuccess = { record ->
+                    if (record != null) {
+                        setRecord(record)
+
+                        // Enable inputs after we know that current record has been successfully loaded
+                        setInputsEnabled(true)
+                    }
+                },
+                onFailure = {
+                    if (container != null) {
+                        Snackbar
+                            .make(container, R.string.recordLoadingError, Snackbar.LENGTH_INDEFINITE)
+                            .setAction(R.string.retry) { vm.loadCurrentRecord() }
+                            .showLifecycleAwareSnackbar(lifecycle)
+                    }
+                }
+            )
+        }
+
         initMeaning()
         initViews()
 
@@ -138,7 +165,7 @@ class AddEditRecordFragment : Fragment() {
 
         val listInteractionView = binding.addExpressionMeaningListInteraction.also {
             it.onErrorStateChanged = { isError ->
-                vm.validity.withBit(
+                vm.validity.withBitNullable(
                     AddEditRecordViewModel.MEANING_VALIDITY_BIT,
                     !isError
                 )
@@ -153,36 +180,5 @@ class AddEditRecordFragment : Fragment() {
         }
 
         vm.getMeaning = { listInteractionView.meaning }
-    }
-
-    private fun registerCollectors(container: ViewGroup?) {
-        val vm = viewModel
-
-        launchMessageFlowCollector(vm.dbErrorFlow, messageMapper, container)
-
-        lifecycleScope.run {
-            launchFlowCollector(vm.currentRecordFlow) {
-                it?.fold(
-                    onSuccess = { record ->
-                        if (record != null) {
-                            setRecord(record)
-
-                            // Enable inputs after we know that current record has been successfully loaded
-                            setInputsEnabled(true)
-                        }
-                    },
-                    onFailure = {
-                        if (container != null) {
-                            val msg = messageMapper.map(AddEditRecordMessage.LOADING_ERROR)
-
-                            Snackbar
-                                .make(container, msg, Snackbar.LENGTH_INDEFINITE)
-                                .setAction(R.string.retry) { vm.loadCurrentRecord() }
-                                .showLifecycleAwareSnackbar(lifecycle)
-                        }
-                    }
-                )
-            }
-        }
     }
 }

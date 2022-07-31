@@ -8,6 +8,8 @@ import com.google.android.material.textfield.TextInputLayout
 import io.github.pelmenstar1.digiDict.MessageMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 inline fun <T> CoroutineScope.launchFlowCollector(
@@ -53,5 +55,13 @@ fun <T : Enum<T>> LifecycleOwner.launchMessageFlowCollector(
                 }
             }
         }
+    }
+}
+
+inline fun MutableStateFlow<Int?>.updateNullable(func: (Int) -> Int) {
+    update {
+        val resolved = it ?: 0
+
+        func(resolved)
     }
 }

@@ -1,29 +1,26 @@
 package io.github.pelmenstar1.digiDict.ui.chooseRemoteDictProvider
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
-import io.github.pelmenstar1.digiDict.useCustomTabs
-import kotlinx.coroutines.flow.first
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
+import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.get
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ChooseRemoteDictionaryProviderViewModel @Inject constructor(
-    appDatabase: AppDatabase,
-    private val preferences: DataStore<Preferences>
+    private val remoteDictProviderDao: RemoteDictionaryProviderDao,
+    private val remoteDictProviderStatsDao: RemoteDictionaryProviderStatsDao,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
-    private val remoteDictProviderDao = appDatabase.remoteDictionaryProviderDao()
-    private val remoteDictProviderStatsDao = appDatabase.remoteDictionaryProviderStatsDao()
-
     val providers = remoteDictProviderDao.getAllFlow()
 
     suspend fun useCustomTabs(): Boolean {
-        return preferences.useCustomTabs.first()
+        return appPreferences.get { useCustomTabs }
     }
 
     suspend fun getMostUsedProvider(): RemoteDictionaryProviderInfo? {

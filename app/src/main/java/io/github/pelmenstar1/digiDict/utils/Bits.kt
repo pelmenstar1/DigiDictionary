@@ -23,7 +23,17 @@ fun Int.withBit(mask: Int, state: Boolean): Int {
     return if (state) this or mask else this and mask.inv()
 }
 
+fun Int?.withBit(mask: Int, state: Boolean): Int {
+    val value = this ?: 0
+
+    return value.withBit(mask, state)
+}
+
 fun MutableStateFlow<Int>.withBit(mask: Int, state: Boolean) {
+    update { it.withBit(mask, state) }
+}
+
+fun MutableStateFlow<Int?>.withBitNullable(mask: Int, state: Boolean) {
     update { it.withBit(mask, state) }
 }
 

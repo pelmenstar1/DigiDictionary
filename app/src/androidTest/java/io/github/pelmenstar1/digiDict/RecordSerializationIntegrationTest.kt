@@ -1,12 +1,11 @@
 package io.github.pelmenstar1.digiDict
 
-import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.serialization.readValuesToArray
 import io.github.pelmenstar1.digiDict.serialization.writeValues
+import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,7 +27,7 @@ class RecordSerializationIntegrationTest {
             file.delete()
             file.createNewFile()
 
-            val appDb = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+            val appDb = AppDatabaseUtils.createTestDatabase(context)
             appDb.clearAllTables()
 
             val dao = appDb.recordDao()
@@ -73,8 +72,8 @@ class RecordSerializationIntegrationTest {
     fun testUnderBufferSize() {
         val values = Array(5) {
             Record(
-                id = it,
-                expression = "Expression",
+                id = 0,
+                expression = "Expression$it",
                 rawMeaning = "Meaning",
                 additionalNotes = "Notes",
                 score = it,
@@ -89,8 +88,8 @@ class RecordSerializationIntegrationTest {
     fun testOverBufferSize() {
         val values = Array(1000) {
             Record(
-                id = it,
-                expression = "Expression",
+                id = 0,
+                expression = "Expression$it",
                 rawMeaning = "Meaning",
                 additionalNotes = "Notes",
                 score = it,

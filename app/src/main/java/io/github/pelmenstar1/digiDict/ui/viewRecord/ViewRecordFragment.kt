@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.viewRecord
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,6 +33,8 @@ class ViewRecordFragment : Fragment() {
     @Inject
     lateinit var messageMapper: MessageMapper<ViewRecordMessage>
 
+    private lateinit var binding: FragmentViewRecordBinding
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -49,6 +52,7 @@ class ViewRecordFragment : Fragment() {
         val scoreFormat = res.getString(R.string.scoreAndValueFormat)
 
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
+        this.binding = binding
 
         with(binding) {
             viewRecordDelete.setOnClickListener {
@@ -81,13 +85,7 @@ class ViewRecordFragment : Fragment() {
         vm.onRecordDeleted.setPopBackStackHandler(navController)
         vm.id = args.id
 
-        vm.onLoadingError.handler = {
-            with(binding) {
-                viewRecordErrorContainer.visibility = View.VISIBLE
-                viewRecordContentContainer.visibility = View.GONE
-                viewRecordLoadingIndicator.visibility = View.GONE
-            }
-        }
+        vm.onRefreshError.handler = ::onLoadingErrorHandler
 
         vm.onDeleteError.handler = {
             val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
@@ -99,29 +97,46 @@ class ViewRecordFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-            vm.recordFlow.collect { record ->
-                if (record != null) {
-                    with(binding) {
-                        viewRecordContentContainer.visibility = View.VISIBLE
-                        viewRecordErrorContainer.visibility = View.GONE
-                        viewRecordLoadingIndicator.visibility = View.GONE
+            try {
+                vm.recordFlow?.collect { record ->
+                    if (record != null) {
+                        with(binding) {
+                            viewRecordContentContainer.visibility = View.VISIBLE
+                            viewRecordErrorContainer.visibility = View.GONE
+                            viewRecordLoadingIndicator.visibility = View.GONE
 
-                        viewRecordExpression.setFormattedText(expressionFormat, record.expression)
-                        viewRecordMeaning.text =
-                            MeaningTextHelper.parseToFormatted(record.rawMeaning)
-                        viewRecordAdditionalNotes.setFormattedText(
-                            additionalNotesFormat,
-                            record.additionalNotes
-                        )
-                        viewRecordScore.setFormattedText(scoreFormat, record.score)
+                            viewRecordExpression.setFormattedText(expressionFormat, record.expression)
+                            viewRecordMeaning.text =
+                                MeaningTextHelper.parseToFormatted(record.rawMeaning)
+                            viewRecordAdditionalNotes.setFormattedText(
+                                additionalNotesFormat,
+                                record.additionalNotes
+                            )
+                            viewRecordScore.setFormattedText(scoreFormat, record.score)
 
-                        viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
+                            viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "", e)
+
+                onLoadingErrorHandler()
             }
         }
 
-
         return binding.root
+    }
+
+    private fun onLoadingErrorHandler() {
+        with(binding) {
+            viewRecordErrorContainer.visibility = View.VISIBLE
+            viewRecordContentContainer.visibility = View.GONE
+            viewRecordLoadingIndicator.visibility = View.GONE
+        }
+    }
+
+    companion object {
+        private const val TAG = "ViewRecordFragment"
     }
 }

@@ -4,7 +4,7 @@ import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.serialization.SerializableIterable
 import io.github.pelmenstar1.digiDict.utils.generateUniqueRandomNumbers
-import kotlin.math.max
+import kotlinx.coroutines.flow.Flow
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -95,6 +95,9 @@ abstract class RecordDao {
     @Query("SELECT * FROM records WHERE id=:id")
     abstract suspend fun getRecordById(id: Int): Record?
 
+    @Query("SELECT * FROM records WHERE id=:id")
+    abstract fun getRecordFlowById(id: Int): Flow<Record?>
+
     @Query("SELECT * FROM records WHERE id IN (:ids)")
     abstract suspend fun getRecordsByIds(ids: IntArray): Array<Record>
 
@@ -148,7 +151,7 @@ abstract class RecordDao {
 
         val indicesWithPositiveScore = random.generateUniqueRandomNumbers(
             upperBound = idsWithPositiveScore.size,
-            size = max(
+            size = min(
                 size - indicesWithNegativeScore.size,
                 min(idsWithPositiveScore.size, halfSize)
             )
