@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 
 class BinarySerializingTests {
     private val capacity = with(BinarySize) {
-        int32 + int32 + int64 + int32 + int32 + stringUtf16("123") + stringUtf16("55555")
+        int32 + int32 + int64 + int32 + int32 + stringUtf16("123") + stringUtf16("55555") + stringUtf16("")
     }
 
     private fun readWriteTestInternal(
