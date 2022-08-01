@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.pelmenstar1.digiDict.BuildConfig
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
@@ -33,8 +34,8 @@ import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class ChooseRemoteDictionaryProviderFragment : Fragment() {
-    private val args by navArgs<ChooseRemoteDictionaryProviderFragmentArgs>()
-    private val viewModel by viewModels<ChooseRemoteDictionaryProviderViewModel>()
+    internal val args by navArgs<ChooseRemoteDictionaryProviderFragmentArgs>()
+    internal val viewModel by viewModels<ChooseRemoteDictionaryProviderViewModel>()
 
     private lateinit var navController: NavController
 
@@ -60,7 +61,9 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
             if (session != null) {
                 lifecycleScope.launch {
                     viewModel.getMostUsedProvider()?.let {
-                        Log.i(TAG, "Preloading page with schema '${it.schema}'")
+                        if (BuildConfig.DEBUG) {
+                            Log.i(TAG, "Preloading page with schema '${it.schema}'")
+                        }
 
                         val uri = Uri.parse(it.resolvedUrl(args.query))
 
@@ -158,10 +161,15 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
         val packageName = CustomTabsClient.getPackageName(context, null)
 
         if (packageName != null) {
-            Log.i(TAG, "Binding custom tabs service (package=$packageName)")
+            if (BuildConfig.DEBUG) {
+                Log.i(TAG, "Binding custom tabs service (package=$packageName)")
+            }
+
             CustomTabsClient.bindCustomTabsService(context, packageName, connection)
         } else {
-            Log.i(TAG, "No package found with Custom Tabs support")
+            if (BuildConfig.DEBUG) {
+                Log.i(TAG, "No package found with Custom Tabs support")
+            }
         }
     }
 

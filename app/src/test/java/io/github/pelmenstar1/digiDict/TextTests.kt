@@ -1,27 +1,21 @@
 package io.github.pelmenstar1.digiDict
 
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.utils.appendPaddedFourDigit
+import io.github.pelmenstar1.digiDict.utils.appendPaddedTwoDigit
+import io.github.pelmenstar1.digiDict.utils.parsePositiveInt
+import io.github.pelmenstar1.digiDict.utils.trimToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class TextTests {
     @Test
-    fun `paddedTwoDigits test`() {
+    fun `appendPaddedTwoDigit test`() {
         fun testCase(number: Int, expected: String) {
-            run {
-                val buffer = CharArray(2)
-                buffer.writePaddedTwoDigit(number, 0)
-
-                assertEquals(expected, String(buffer))
+            val actual = buildString {
+                appendPaddedTwoDigit(number)
             }
 
-            run {
-                val actual = buildString {
-                    appendPaddedTwoDigit(number)
-                }
-
-                assertEquals(expected, actual)
-            }
+            assertEquals(expected, actual)
         }
 
         testCase(1, "01")
@@ -32,22 +26,13 @@ class TextTests {
     }
 
     @Test
-    fun `paddedFourDigits test`() {
+    fun `appendPaddedFourDigit test`() {
         fun testCase(number: Int, expected: String) {
-            run {
-                val buffer = CharArray(4)
-                buffer.writePaddedFourDigit(number, 0)
-
-                assertEquals(expected, String(buffer))
+            val actual = buildString {
+                appendPaddedFourDigit(number)
             }
 
-            run {
-                val actual = buildString {
-                    appendPaddedFourDigit(number)
-                }
-
-                assertEquals(expected, actual)
-            }
+            assertEquals(expected, actual)
         }
 
         testCase(1, "0001")

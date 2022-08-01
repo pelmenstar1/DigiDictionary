@@ -454,7 +454,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
          * Time complexity: `O(n^2)` where n is size of the array.
          * It shouldn't be too much, because size of the meaning's items is expected to be small.
          */
-        private inline fun Array<String>.iterateDuplicates(block: (Int, Int) -> Unit) {
+        internal inline fun Array<String>.iterateDuplicates(block: (Int, Int) -> Unit) {
             for (i in indices) {
                 val element = get(i)
 

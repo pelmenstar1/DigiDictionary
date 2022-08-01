@@ -6,9 +6,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.require
 import io.github.pelmenstar1.digiDict.serialization.*
-import io.github.pelmenstar1.digiDict.validate
 
 @Entity(
     tableName = "records",
@@ -26,8 +24,8 @@ data class Record(
     @ColumnInfo(name = RecordTable.epochSeconds) val epochSeconds: Long,
 ) {
     init {
-        require(id >= 0, "Id can't be negative")
-        require(epochSeconds >= 0, "Epoch seconds can't be negative")
+        require(id >= 0) { "Id can't be negative" }
+        require(epochSeconds >= 0) { "Epoch seconds can't be negative" }
     }
 
     fun equalsNoId(other: Record): Boolean {
@@ -44,8 +42,6 @@ data class Record(
         }
 
         val NO_ID_SERIALIZER = object : BinarySerializer<Record> {
-            override fun newArray(n: Int) = arrayOfNulls<Record>(n)
-
             override fun getByteSize(value: Record): Int {
                 return with(BinarySize) {
                     int32 /* score */ +
@@ -73,7 +69,9 @@ data class Record(
                 val score = reader.int32()
                 val epochSeconds = reader.int64()
 
-                validate(epochSeconds >= 0, "Epoch seconds can't be negative")
+                if (epochSeconds < 0) {
+                    throw ValidationException("Epoch seconds can't be negative")
+                }
 
                 return Record(
                     id = 0,

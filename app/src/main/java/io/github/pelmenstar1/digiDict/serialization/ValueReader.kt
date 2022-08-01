@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.serialization
 
 import io.github.pelmenstar1.digiDict.utils.indexOf
-import io.github.pelmenstar1.digiDict.validate
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -12,19 +11,7 @@ sealed class ValueReader {
     abstract fun int64(): Long
     abstract fun stringUtf16(): String
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> array(serializer: BinarySerializer<T>): Array<T> {
-        val n = int32()
-        val result = serializer.newArray(n)
-
-        for (i in 0 until n) {
-            result[i] = serializer.readFrom(this)
-        }
-
-        return result as Array<T>
-    }
-
-    fun <T : Any> list(serializer: BinarySerializer<T>): MutableList<T> {
+    fun <T : Any> list(serializer: BinarySerializer<out T>): MutableList<T> {
         val n = int32()
         val result = ArrayList<T>(n)
 
@@ -35,41 +22,6 @@ sealed class ValueReader {
         }
 
         return result
-    }
-
-    /**
-     * Only after returned [Sequence] is fully iterated, read-method of [ValueReader] can be used again.
-     * Otherwise, result is undefined.
-     */
-    fun <T : Any> sequence(serializer: BinarySerializer<T>): Sequence<T> {
-        val length = int32()
-
-        validate(length >= 0, "Sequence length can't be negative")
-
-        return object : Sequence<T> {
-            private var iteratorCreated = false
-
-            override fun iterator(): Iterator<T> {
-                if (iteratorCreated) {
-                    throw IllegalStateException("Sequence can be iterated only once")
-                }
-
-                iteratorCreated = true
-
-                return object : Iterator<T> {
-                    private var index = 0
-
-                    override fun hasNext() = index < length
-
-                    override fun next(): T {
-                        val value = serializer.readFrom(this@ValueReader)
-                        index++
-
-                        return value
-                    }
-                }
-            }
-        }
     }
 
     private class ByteArrayImpl(private val buffer: ByteArray) : ValueReader() {

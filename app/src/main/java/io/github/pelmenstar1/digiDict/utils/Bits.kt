@@ -74,10 +74,6 @@ fun lowestNBitsSet(n: Int): Int {
     return ((-1) shl n).inv()
 }
 
-fun Int.withBitAtPosition(position: Int, state: Boolean): Int {
-    return withBit(1 shl position, state)
-}
-
 fun Int.withBit(mask: Int, state: Boolean): Int {
     return if (state) this or mask else this and mask.inv()
 }
@@ -88,16 +84,8 @@ fun Int?.withBit(mask: Int, state: Boolean): Int {
     return value.withBit(mask, state)
 }
 
-fun MutableStateFlow<Int>.withBit(mask: Int, state: Boolean) {
-    update { it.withBit(mask, state) }
-}
-
 fun MutableStateFlow<Int?>.withBitNullable(mask: Int, state: Boolean) {
     update { it.withBit(mask, state) }
-}
-
-fun Int.isBitAtPositionSet(position: Int): Boolean {
-    return (this and (1 shl position)) != 0
 }
 
 // Finds such a position S, that range [0; S] of bitSet has N set bits.
@@ -117,7 +105,6 @@ fun Long.findPositionOfNthSetBit(n: Int): Int {
 
 inline fun Long.iterateSetBits(block: (bitIndex: Int) -> Unit) {
     // Original source: https://lemire.me/blog/2018/02/21/iterating-over-set-bits-quickly/
-
     var bits = this
 
     while (bits != 0L) {

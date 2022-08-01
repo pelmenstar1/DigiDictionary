@@ -8,7 +8,7 @@ import java.util.*
 fun Context.getLocaleCompat(): Locale {
     val config = resources.configuration
 
-    return if (Build.VERSION.SDK_INT >= 23) {
+    return if (Build.VERSION.SDK_INT >= 24) {
         config.locales[0]
     } else {
         config.locale

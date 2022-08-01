@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.serialization
 
-import io.github.pelmenstar1.digiDict.validate
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
@@ -18,7 +17,7 @@ private inline fun ioOperation(method: () -> Int) {
 private const val BUFFER_SIZE = 2048
 private const val MAGIC_WORD = 0x00FF00FF_abcdedf00L
 
-fun <T : Any> WritableByteChannel.writeValues(values: Array<T>, serializer: BinarySerializer<T>) {
+fun <T : Any> WritableByteChannel.writeValues(values: Array<out T>, serializer: BinarySerializer<in T>) {
     writeValues(SerializableIterable(values, serializer))
 }
 
@@ -72,25 +71,15 @@ fun WritableByteChannel.writeValues(values: SerializableIterable) {
     }
 }
 
-fun <T : Any> FileChannel.readValuesToArray(serializer: BinarySerializer<T>): Array<T> {
-    val buffer = readValuesInternal()
-
-    return ValueReader.of(buffer).array(serializer)
-}
-
-fun <T : Any> FileChannel.readValuesToList(serializer: BinarySerializer<T>): MutableList<T> {
-    val buffer = readValuesInternal()
-
-    return ValueReader.of(buffer).list(serializer)
-}
-
-private fun FileChannel.readValuesInternal(): ByteBuffer {
+fun <T : Any> FileChannel.readValuesToList(serializer: BinarySerializer<out T>): MutableList<T> {
     val buffer = map(FileChannel.MapMode.READ_ONLY, 0, size()).also {
         it.order(ByteOrder.LITTLE_ENDIAN)
     }
 
     val magicWord = buffer.long
-    validate(magicWord == MAGIC_WORD, "Magic words are wrong")
+    if (magicWord != MAGIC_WORD) {
+        throw ValidationException("Magic words are wrong")
+    }
 
-    return buffer
+    return ValueReader.of(buffer).list(serializer)
 }

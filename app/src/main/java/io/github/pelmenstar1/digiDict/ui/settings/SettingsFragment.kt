@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
-    private val viewModel by viewModels<SettingsViewModel>()
+    internal val viewModel by viewModels<SettingsViewModel>()
 
     @Inject
     lateinit var messageMapper: MessageMapper<SettingsMessage>

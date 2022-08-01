@@ -71,7 +71,7 @@ class ChooseRemoteDictionaryProviderAdapter(
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        private fun createItemContainer(context: Context): ViewGroup {
+        internal fun createItemContainer(context: Context): ViewGroup {
             val res = context.resources
 
             return LinearLayout(context).apply {

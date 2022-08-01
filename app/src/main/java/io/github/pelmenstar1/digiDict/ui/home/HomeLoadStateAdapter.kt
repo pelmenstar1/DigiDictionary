@@ -71,7 +71,7 @@ class HomeLoadStateAdapter(
     }
 
     companion object {
-        private fun createLayoutParams(context: Context): LinearLayout.LayoutParams {
+        internal fun createLayoutParams(context: Context): LinearLayout.LayoutParams {
             val res = context.resources
 
             return LinearLayout.LayoutParams(

@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.serialization.readValuesToArray
+import io.github.pelmenstar1.digiDict.serialization.readValuesToList
 import io.github.pelmenstar1.digiDict.serialization.writeValues
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import kotlinx.coroutines.runBlocking
@@ -45,10 +45,10 @@ class RecordSerializationIntegrationTest {
                 allRecordsIterable.recycle()
             }
 
-            val valuesFromFile: Array<Record>
+            val valuesFromFile: List<Record>
 
             FileInputStream(file).use {
-                valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
+                valuesFromFile = it.channel.readValuesToList(Record.NO_ID_SERIALIZER)
             }
 
             val isOriginEqualsToFileValues = run {

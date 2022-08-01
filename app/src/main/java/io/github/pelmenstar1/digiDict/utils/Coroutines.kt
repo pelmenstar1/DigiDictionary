@@ -8,25 +8,21 @@ import com.google.android.material.textfield.TextInputLayout
 import io.github.pelmenstar1.digiDict.MessageMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-inline fun <T> CoroutineScope.launchFlowCollector(
-    flow: Flow<T>,
-    crossinline block: suspend (value: T) -> Unit
-) {
+fun <T> CoroutineScope.launchFlowCollector(flow: Flow<T>, collector: FlowCollector<T>) {
     launch {
-        flow.collect {
-            block(it)
-        }
+        flow.collect(collector)
     }
 }
 
 fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
     inputLayout: TextInputLayout,
     flow: Flow<T?>,
-    errorMapper: MessageMapper<T>
+    errorMapper: MessageMapper<in T>
 ) {
     launchFlowCollector(flow) { errorType ->
         inputLayout.error = errorType?.let(errorMapper::map)
@@ -42,7 +38,7 @@ fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
  */
 fun <T : Enum<T>> LifecycleOwner.launchMessageFlowCollector(
     flow: Flow<T?>,
-    messageMapper: MessageMapper<T>,
+    messageMapper: MessageMapper<in T>,
     container: ViewGroup?
 ) {
     if (container != null) {

@@ -3,10 +3,7 @@ package io.github.pelmenstar1.digiDict.data
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.collection.ArraySet
-import io.github.pelmenstar1.digiDict.utils.decimalDigitCount
-import io.github.pelmenstar1.digiDict.utils.getChars
-import io.github.pelmenstar1.digiDict.utils.parsePositiveInt
-import io.github.pelmenstar1.digiDict.utils.readStringOrThrow
+import io.github.pelmenstar1.digiDict.utils.*
 
 enum class MeaningType {
     COMMON,
@@ -131,7 +128,7 @@ sealed class ComplexMeaning : Parcelable {
 
         constructor(elements: Array<out String>) {
             val set = ArraySet<String>(elements.size).apply {
-                elements.forEach(::add)
+                addAllArray(elements)
             }
 
             this.elements = set
@@ -143,7 +140,7 @@ sealed class ComplexMeaning : Parcelable {
         constructor(firstElement: String, vararg elements: String) {
             val set = ArraySet<String>(elements.size + 1).apply {
                 add(firstElement)
-                elements.forEach(::add)
+                addAllArray(elements)
             }
 
             this.elements = set
@@ -176,8 +173,7 @@ sealed class ComplexMeaning : Parcelable {
                 is List -> {
                     val otherElements = other.elements
                     val resultElements = newArraySetFrom(elements, elements.size + otherElements.size)
-
-                    otherElements.forEach { resultElements.add(it) }
+                    resultElements.addAllSet(otherElements)
 
                     List(resultElements)
                 }
@@ -188,7 +184,7 @@ sealed class ComplexMeaning : Parcelable {
             dest.writeInt(elements.size)
             dest.writeString(rawText)
 
-            elements.forEach(dest::writeString)
+            elements.forEachFast(dest::writeString)
         }
 
         override fun equals(other: Any?): Boolean {
@@ -223,26 +219,15 @@ sealed class ComplexMeaning : Parcelable {
     override fun describeContents() = 0
 
     companion object {
-        private fun newArraySetFrom(set: Set<String>, capacity: Int): ArraySet<String> {
-            val newSet = ArraySet<String>(capacity)
-            if (set is ArraySet<*>) {
-                newSet.addAll(set)
-            } else {
-                set.forEach(newSet::add)
-            }
-
-            return newSet
-        }
-
-        private fun createCommonRawText(text: String): String {
+        internal fun createCommonRawText(text: String): String {
             val buffer = CharArray(text.length + 1)
             buffer[0] = 'C'
-            text.getChars(buffer, 1)
+            text.toCharArray(buffer, 1)
 
             return String(buffer)
         }
 
-        private fun createListRawText(elements: Set<String>): String {
+        internal fun createListRawText(elements: Set<String>): String {
             val size = elements.size
             val lastIndex = size - 1
 

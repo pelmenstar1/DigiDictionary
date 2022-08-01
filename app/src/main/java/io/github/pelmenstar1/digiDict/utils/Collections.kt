@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.utils
 
+import androidx.collection.ArraySet
 import java.nio.ByteBuffer
 
 @Suppress("UNCHECKED_CAST")
@@ -8,7 +9,7 @@ inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T> Array<T>.withAddedElement(element: T): Array<T> {
+inline fun <reified T> Array<out T>.withAddedElement(element: T): Array<T> {
     val newArray = unsafeNewArray<T>(size + 1)
     System.arraycopy(this, 0, newArray, 0, size)
     newArray[size] = element
@@ -17,7 +18,7 @@ inline fun <reified T> Array<T>.withAddedElement(element: T): Array<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T> Array<T>.withRemovedElementAt(index: Int): Array<T> {
+inline fun <reified T> Array<out T>.withRemovedElementAt(index: Int): Array<T> {
     val newArray = unsafeNewArray<T>(size - 1)
     System.arraycopy(this, 0, newArray, 0, index)
     System.arraycopy(this, index + 1, newArray, index, size - (index + 1))
@@ -55,4 +56,37 @@ fun ByteBuffer.indexOf(element: Byte, step: Int = 1): Int {
     }
 
     return -1
+}
+
+fun <T> newArraySetFrom(set: Set<T>, capacity: Int): ArraySet<T> {
+    return ArraySet<T>(capacity).also {
+        it.addAllSet(set)
+    }
+}
+
+fun <T> ArraySet<in T>.addAllSet(set: Set<T>) {
+    // ArraySet has addAll(ArraySet) method, it's more optimized because it uses internal specialties of the class.
+    // ArraySet also has addAll(Collection) method, it's less optimized, it uses iterator and etc.
+    //
+    // So in order to use more optimized overload, Kotlin should be convinced that set is ArraySet.
+    if (set is ArraySet<out T>) {
+        addAll(set)
+    } else {
+        addAll(set)
+    }
+}
+
+fun <T> MutableSet<in T>.addAllArray(elements: Array<out T>) {
+    elements.forEach(::add)
+}
+
+@Suppress("UNCHECKED_CAST")
+inline fun <T> Set<T>.forEachFast(action: (T) -> Unit) {
+    if (this is ArraySet<T>) {
+        for (i in 0 until size) {
+            action(valueAt(i) as T)
+        }
+    } else {
+        forEach(action)
+    }
 }

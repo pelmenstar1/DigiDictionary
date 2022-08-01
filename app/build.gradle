@@ -22,6 +22,12 @@ android {
         }
     }
 
+    lint {
+        // In most situations showLifecycleAwareSnackbar is called to show snackbar, but lint doesn't understand
+        // that showLifecycleAwareSnackbar calls show() internally and shows this warning everywhere.
+        disable 'ShowToast'
+    }
+
     defaultConfig {
         applicationId "io.github.pelmenstar1.digiDict"
         minSdk 21

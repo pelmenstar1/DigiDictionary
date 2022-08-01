@@ -89,9 +89,8 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
             addRemoteDictProviderSpaceReplacementSpinner.apply {
                 val res = context.resources
 
-                val spaceReplacementVariantsInlined =
-                    res.getString(R.string.addRemoteDictProvider_spaceReplacementInlined)
-                val items = context.resources.getStringArray(R.array.addRemoteDictProvider_spaceReplacementVariantsUser)
+                val spaceReplacementVariants = res.getString(R.string.addRemoteDictProvider_spaceReplacementInlined)
+                val items = res.getStringArray(R.array.addRemoteDictProvider_spaceReplacementVariantsUser)
 
                 adapter = ArrayAdapter(
                     context,
@@ -101,8 +100,8 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
 
                 onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                        if (position < spaceReplacementVariantsInlined.length) {
-                            vm.spaceReplacement = spaceReplacementVariantsInlined[position]
+                        if (position < spaceReplacementVariants.length) {
+                            vm.spaceReplacement = spaceReplacementVariants[position]
                         }
                     }
 

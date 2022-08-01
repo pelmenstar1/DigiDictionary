@@ -200,7 +200,7 @@ class QuizFragment : Fragment() {
         return ItemViewHolder(view as ViewGroup)
     }
 
-    private fun onItemAnswer(index: Int, isCorrect: Boolean) {
+    internal fun onItemAnswer(index: Int, isCorrect: Boolean) {
         viewModel.onItemAnswer(index, isCorrect)
     }
 
@@ -226,11 +226,11 @@ class QuizFragment : Fragment() {
         private const val STATE_BITS_COUNT = 3
         private const val STATE_MASK = 0x7
 
-        private fun Int.getItemState(index: Int): Int {
+        internal fun Int.getItemState(index: Int): Int {
             return (this shr (index * STATE_BITS_COUNT)) and STATE_MASK
         }
 
-        private fun Int.withItemState(index: Int, state: Int): Int {
+        internal fun Int.withItemState(index: Int, state: Int): Int {
             val shift = index * STATE_BITS_COUNT
 
             return (this and (STATE_MASK shl shift).inv()) or (state shl shift)

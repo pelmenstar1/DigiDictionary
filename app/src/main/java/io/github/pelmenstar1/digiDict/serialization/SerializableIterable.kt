@@ -15,7 +15,7 @@ interface SerializableIterator {
     fun writeCurrentElement(writer: ValueWriter)
 }
 
-fun <T : Any> SerializableIterable(values: Array<T>, serializer: BinarySerializer<T>): SerializableIterable {
+fun <T : Any> SerializableIterable(values: Array<out T>, serializer: BinarySerializer<in T>): SerializableIterable {
     return object : SerializableIterable {
         override val size: Int
             get() = values.size

@@ -17,8 +17,9 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.utils.getLazyValue
 
-class RecordViewHolder private constructor(private val container: ViewGroup) :
-    RecyclerView.ViewHolder(container) {
+class RecordViewHolder private constructor(
+    private val container: ViewGroup
+) : RecyclerView.ViewHolder(container) {
     private val expressionView = container.getTextViewAt(EXPRESSION_VIEW_INDEX)
     private val meaningView = container.getTextViewAt(MEANING_VIEW_INDEX)
     private val scoreView = container.getTextViewAt(SCORE_VIEW_INDEX)
@@ -101,11 +102,11 @@ class RecordViewHolder private constructor(private val container: ViewGroup) :
         private const val EXPRESSION_VIEW_INDEX = 1
         private const val MEANING_VIEW_INDEX = 2
 
-        fun createOnItemClickListener(func: (id: Int) -> Unit) = View.OnClickListener {
-            (it.tag as? Record?)?.also { (id) -> func(id) }
+        inline fun createOnItemClickListener(crossinline block: (id: Int) -> Unit) = View.OnClickListener {
+            (it.tag as? Record?)?.also { (id) -> block(id) }
         }
 
-        private fun createContainer(context: Context): ViewGroup {
+        internal fun createContainer(context: Context): ViewGroup {
             return LinearLayout(context).also { container ->
                 container.layoutParams = CONTAINER_LAYOUT_PARAMS
 
@@ -160,7 +161,7 @@ class RecordViewHolder private constructor(private val container: ViewGroup) :
             }
         }
 
-        private fun ViewGroup.getTextViewAt(index: Int) = getChildAt(index) as TextView
+        internal fun ViewGroup.getTextViewAt(index: Int) = getChildAt(index) as TextView
 
         private fun TextView.initMultilineTextView() {
             maxLines = 100

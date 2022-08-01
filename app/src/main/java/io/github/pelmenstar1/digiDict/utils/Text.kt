@@ -4,11 +4,6 @@ package io.github.pelmenstar1.digiDict.utils
 
 import android.text.GetChars
 
-@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-inline fun String.getChars(buffer: CharArray, offset: Int) {
-    (this as java.lang.String).getChars(0, length, buffer, offset)
-}
-
 fun Int.decimalDigitCount(): Int {
     return when {
         this < 10 -> 1
@@ -23,80 +18,33 @@ fun Int.decimalDigitCount(): Int {
     }
 }
 
-private inline fun paddedTwoDigit(number: Int, block: (d1: Char, d2: Char) -> Unit) {
+fun StringBuilder.appendPaddedTwoDigit(number: Int) {
     require(number in 0..99) { "Number is out of range [0; 99]" }
 
     val d1 = number / 10
     val d2 = number - d1 * 10
 
-    block('0' + d1, '0' + d2)
+    append('0' + d1)
+    append('0' + d2)
 }
 
-private inline fun paddedFourDigit(
-    number: Int,
-    block: (d1: Char, d2: Char, d3: Char, d4: Char) -> Unit
-) {
+fun StringBuilder.appendPaddedFourDigit(number: Int) {
     require(number in 0..9999) { "Number is out of range [0; 9999]" }
 
     var t = number
     val d1 = t / 1000
     t -= d1 * 1000
+
     val d2 = t / 100
     t -= d2 * 100
+
     val d3 = t / 10
     val d4 = t - d3 * 10
 
-    block('0' + d1, '0' + d2, '0' + d3, '0' + d4)
-}
-
-fun CharArray.writePaddedTwoDigit(number: Int, offset: Int) {
-    paddedTwoDigit(number) { d1, d2 ->
-        this[offset] = d1
-        this[offset + 1] = d2
-    }
-}
-
-fun StringBuilder.appendPaddedTwoDigit(number: Int) {
-    paddedTwoDigit(number) { d1, d2 ->
-        append(d1)
-        append(d2)
-    }
-}
-
-fun CharArray.writePaddedFourDigit(number: Int, offset: Int) {
-    paddedFourDigit(number) { d1, d2, d3, d4 ->
-        this[offset] = d1
-        this[offset + 1] = d2
-        this[offset + 2] = d3
-        this[offset + 3] = d4
-    }
-}
-
-fun StringBuilder.appendPaddedFourDigit(number: Int) {
-    paddedFourDigit(number) { d1, d2, d3, d4 ->
-        append(d1)
-        append(d2)
-        append(d3)
-        append(d4)
-    }
-}
-
-fun CharArray.write3DigitNumber(number: Int, offset: Int) {
-    when {
-        number < 10 -> {
-            this[offset] = '0' + number
-        }
-        number < 100 -> {
-            writePaddedTwoDigit(number, offset)
-        }
-        else -> {
-            val d1 = number / 100
-            val d1Rem = number - d1 * 100
-
-            this[offset] = '0' + d1
-            writePaddedTwoDigit(d1Rem, offset + 1)
-        }
-    }
+    append('0' + d1)
+    append('0' + d2)
+    append('0' + d3)
+    append('0' + d4)
 }
 
 /**

@@ -52,10 +52,6 @@ abstract class AppDatabase : RoomDatabase() {
         addTableObserver(RECORD_TABLE_ARRAY, vm, block)
     }
 
-    fun addRemoteDictProvidersTableObserver(vm: ViewModel, block: () -> Unit) {
-        addTableObserver(REMOTE_DICT_PROVIDERS_ARRAY, vm, block)
-    }
-
     private fun addTableObserver(tableNames: Array<out String>, vm: ViewModel, block: () -> Unit) {
         val observer = object : InvalidationTracker.Observer(tableNames) {
             override fun onInvalidated(tables: MutableSet<String>) {
@@ -74,11 +70,10 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         val RECORD_TABLE_ARRAY = arrayOf(RecordTable.name)
-        val REMOTE_DICT_PROVIDERS_ARRAY = arrayOf("remote_dict_providers")
 
         private var singleton: AppDatabase? = null
 
-        private fun SupportSQLiteDatabase.insertRemoteDictProviders(providers: Array<out RemoteDictionaryProviderInfo>) {
+        internal fun SupportSQLiteDatabase.insertRemoteDictProviders(providers: Array<out RemoteDictionaryProviderInfo>) {
             val statement =
                 compileStatement("INSERT INTO remote_dict_providers (name, schema, urlEncodingRules) VALUES(?, ?, ?)")
 
@@ -108,7 +103,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        fun createDatabase(context: Context): AppDatabase {
+        private fun createDatabase(context: Context): AppDatabase {
             return Room
                 .databaseBuilder(context, AppDatabase::class.java, "database")
                 .addMigrations(Migration_2_3, Migration_3_4)
