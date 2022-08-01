@@ -7,16 +7,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.get
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.utils.Event
-import io.github.pelmenstar1.digiDict.utils.isBitAtPositionSet
-import io.github.pelmenstar1.digiDict.utils.lowestNBitsSet
-import io.github.pelmenstar1.digiDict.utils.withBitAtPosition
+import io.github.pelmenstar1.digiDict.utils.FixedBitSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
@@ -27,14 +25,11 @@ class QuizViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : ViewModel() {
-    private var answeredBits = 0
+    @Volatile
+    private var answeredBits: FixedBitSet? = null
 
     @Volatile
-    private var correctAnsweredBits = 0
-
-    // Can be changed only once, in startLoadingElements().
-    @Volatile
-    private var allAnsweredMask = 0
+    private var correctAnsweredBits: FixedBitSet? = null
 
     private val _isAllAnswered = MutableStateFlow(false)
     val isAllAnswered = _isAllAnswered.asStateFlow()
@@ -72,11 +67,10 @@ class QuizViewModel @Inject constructor(
                     )
                 }
 
-                if (records.size > 32) {
-                    throw IllegalStateException("Too many records for quiz")
-                }
+                val size = records.size
 
-                allAnsweredMask = lowestNBitsSet(records.size)
+                answeredBits = FixedBitSet(size)
+                correctAnsweredBits = FixedBitSet(size)
 
                 _result.value = records
             } catch (e: Exception) {
@@ -88,18 +82,13 @@ class QuizViewModel @Inject constructor(
     }
 
     fun onItemAnswer(index: Int, isCorrect: Boolean) {
-        answeredBits = answeredBits.withBitAtPosition(index, true)
+        val answeredBits = answeredBits!!
+        val correctAnsweredBits = correctAnsweredBits!!
 
-        if (isCorrect) {
-            correctAnsweredBits = correctAnsweredBits.withBitAtPosition(index, true)
-        }
+        answeredBits.set(index)
+        correctAnsweredBits[index] = isCorrect
 
-        // User can answer only when the records are loaded, allAnsweredMask is set only once, on initial load,
-        // so it's safe to do such comparison 'cause allAnsweredMask can't be changed when this code is being executed.
-        val mask = allAnsweredMask
-        if ((answeredBits and mask) == mask) {
-            _isAllAnswered.value = true
-        }
+        _isAllAnswered.value = answeredBits.isAllBitsSet()
     }
 
     fun saveResults() {
@@ -109,16 +98,21 @@ class QuizViewModel @Inject constructor(
                 val result = requireNotNull(_result.value)
 
                 // Results can be saved only when all questions are answered, user can't re-answer, which means
-                // by time of executing saveResults() rightAnsweredBits can't be changed.
-                val correctAnswered = correctAnsweredBits
+                // by time of executing saveResults() correctAnsweredBits can't be changed.
+                //
+                // Also, if result is not null, it means correctAnsweredBits is not null as well.
+                val correctAnsweredBits = requireNotNull(correctAnsweredBits)
 
-                val scorePointsPerCorrectAnswer = appPreferences.get { scorePointsPerCorrectAnswer }
-                val scorePointsPerWrongAnswer = appPreferences.get { scorePointsPerWrongAnswer }
+                val snapshot = appPreferences.getSnapshotFlow().first()
+
+                val scorePointsPerCorrectAnswer = snapshot.scorePointsPerCorrectAnswer
+                val scorePointsPerWrongAnswer = snapshot.scorePointsPerWrongAnswer
 
                 val newScores = IntArray(result.size)
                 for (i in result.indices) {
                     val currentScore = result[i].score
-                    val newScore = currentScore + if (correctAnswered.isBitAtPositionSet(i))
+
+                    val newScore = currentScore + if (correctAnsweredBits[i])
                         scorePointsPerCorrectAnswer
                     else
                         -scorePointsPerWrongAnswer

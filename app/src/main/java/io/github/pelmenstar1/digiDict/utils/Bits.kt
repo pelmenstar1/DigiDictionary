@@ -3,6 +3,65 @@ package io.github.pelmenstar1.digiDict.utils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
+class FixedBitSet(val size: Int) {
+    private val words: IntArray
+
+    init {
+        val wordCount = (size + 31) ushr 5
+
+        words = IntArray(wordCount)
+    }
+
+    operator fun get(index: Int): Boolean {
+        val word = words[getWordIndex(index)]
+
+        return (word and (1 shl index)) != 0
+    }
+
+    fun set(index: Int) {
+        val wordIndex = getWordIndex(index)
+
+        words[wordIndex] = words[wordIndex] or (1 shl index)
+    }
+
+    operator fun set(index: Int, state: Boolean) {
+        val wordIndex = getWordIndex(index)
+        val word = words[wordIndex]
+        val mask = 1 shl index
+
+        words[wordIndex] = if (state) {
+            word or mask
+        } else {
+            word and mask.inv()
+        }
+    }
+
+    fun isAllBitsSet(): Boolean {
+        // Edge case: If there are no bits in the set, then all bits are set.
+        if (size == 0) {
+            return true
+        }
+
+        val fullWordCount = size ushr 5
+
+        for (i in 0 until fullWordCount) {
+            if (words[i] != -1) {
+                return false
+            }
+        }
+
+        val mask = lowestNBitsSet(size - (fullWordCount shl 5))
+
+        return (words[words.size - 1] and mask) == mask
+    }
+
+    companion object {
+        internal fun getWordIndex(index: Int): Int {
+            return index ushr 5
+        }
+    }
+}
+
 fun lowestNBitsSet(n: Int): Int {
     // Special case: Shift operator takes into account only lowest 5 bits which means
     // if left-shift 0xFFFFFFFF by >= 32, result will be wrong. So return 0xFFFFFFFF (-1)
