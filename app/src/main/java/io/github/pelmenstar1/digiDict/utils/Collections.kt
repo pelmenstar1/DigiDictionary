@@ -90,3 +90,21 @@ inline fun <T> Set<T>.forEachFast(action: (T) -> Unit) {
         forEach(action)
     }
 }
+
+fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
+    val resultSize = size - offset
+
+    when {
+        offset < 0 -> throw IllegalArgumentException("offset is negative")
+        resultSize < 0 -> throw IllegalArgumentException("size < offset")
+        resultSize == 0 -> return emptyList()
+    }
+
+    val result = ArrayList<R>(resultSize)
+
+    for (i in offset until size) {
+        result.add(block(this[i]))
+    }
+
+    return result
+}

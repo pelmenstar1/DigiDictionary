@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
 import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
-    private val remoteDictProviderDao: RemoteDictionaryProviderDao
+    private val remoteDictProviderDao: RemoteDictionaryProviderDao,
+    private val remoteDictProviderStatsDao: RemoteDictionaryProviderStatsDao
 ) : ViewModel() {
     val providersFlow: Flow<Array<RemoteDictionaryProviderInfo>?>
     private val retryFlow = MutableStateFlow<Array<RemoteDictionaryProviderInfo>?>(null)
@@ -46,6 +48,7 @@ class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 remoteDictProviderDao.delete(provider)
+                remoteDictProviderStatsDao.deleteById(provider.id)
             } catch (e: Exception) {
                 Log.e(TAG, "during delete", e)
 

@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.chooseRemoteDictProvider
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -8,25 +9,23 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.browser.customtabs.CustomTabsClient
-import androidx.browser.customtabs.CustomTabsIntent
-import androidx.browser.customtabs.CustomTabsServiceConnection
-import androidx.browser.customtabs.CustomTabsSession
+import androidx.browser.customtabs.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.pelmenstar1.digiDict.BuildConfig
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
+import io.github.pelmenstar1.digiDict.utils.logInfo
+import io.github.pelmenstar1.digiDict.utils.mapOffset
+import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -36,8 +35,6 @@ import kotlinx.coroutines.withContext
 class ChooseRemoteDictionaryProviderFragment : Fragment() {
     internal val args by navArgs<ChooseRemoteDictionaryProviderFragmentArgs>()
     internal val viewModel by viewModels<ChooseRemoteDictionaryProviderViewModel>()
-
-    private lateinit var navController: NavController
 
     // Before the actual value is loaded, suppose the feature is disabled.
     @Volatile
@@ -60,14 +57,31 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
 
             if (session != null) {
                 lifecycleScope.launch {
-                    viewModel.getMostUsedProvider()?.let {
-                        if (BuildConfig.DEBUG) {
-                            Log.i(TAG, "Preloading page with schema '${it.schema}'")
+                    try {
+                        val mostUsedProviders = viewModel.getMostUsedProviders()
+
+                        if (mostUsedProviders.isNotEmpty()) {
+                            val mostUsedProvider = mostUsedProviders[0]
+                            val query = args.query
+
+                            val uri = mostUsedProvider.resolvedUrlParsed(query)
+                            val otherLikelyUris = if (mostUsedProviders.size > 1) {
+                                mostUsedProviders.mapOffset(1) { provider ->
+                                    Bundle(1).also {
+                                        it.putParcelable(CustomTabsService.KEY_URL, provider.resolvedUrlParsed(query))
+                                    }
+                                }
+                            } else {
+                                null
+                            }
+
+                            logInfo(TAG) { "Preloading page '$uri'" }
+
+                            session.mayLaunchUrl(uri, null, otherLikelyUris)
                         }
-
-                        val uri = Uri.parse(it.resolvedUrl(args.query))
-
-                        session.mayLaunchUrl(uri, null, null)
+                    } catch (e: Exception) {
+                        // Just log the exception, nothing bad happened, mayLaunchUrl is not necessary.
+                        Log.e(TAG, "during mayLaunchUrl()", e)
                     }
                 }
             }
@@ -79,8 +93,6 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        navController = findNavController()
-
         val query = args.query
         val context = requireContext()
 
@@ -99,15 +111,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.providers.catch {
-                if (container != null) {
-                    Snackbar
-                        .make(
-                            container,
-                            R.string.chooseRemoteDictProvider_failedToLoadProvidersError,
-                            Snackbar.LENGTH_LONG
-                        )
-                        .show()
-                }
+                showLoadProvidersError()
 
                 emit(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
             }) { providers ->
@@ -135,14 +139,24 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
             }
         }
 
+        if (savedInstanceState != null) {
+            isBrowserLaunched = savedInstanceState.getBoolean(SAVED_STATE_IS_BROWSER_LAUNCHED, false)
+        }
+
         return binding.root
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putBoolean(SAVED_STATE_IS_BROWSER_LAUNCHED, isBrowserLaunched)
     }
 
     override fun onResume() {
         super.onResume()
 
         if (isBrowserLaunched) {
-            navController.popBackStack()
+            findNavController().popBackStack()
         }
     }
 
@@ -161,32 +175,51 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
         val packageName = CustomTabsClient.getPackageName(context, null)
 
         if (packageName != null) {
-            if (BuildConfig.DEBUG) {
-                Log.i(TAG, "Binding custom tabs service (package=$packageName)")
-            }
+            logInfo(TAG) { "Binding custom tabs service (package=$packageName)" }
 
             CustomTabsClient.bindCustomTabsService(context, packageName, connection)
         } else {
-            if (BuildConfig.DEBUG) {
-                Log.i(TAG, "No package found with Custom Tabs support")
-            }
+            logInfo(TAG, "There are no packages with Custom Tabs support")
         }
     }
 
     private fun openUrl(provider: RemoteDictionaryProviderInfo, query: String) {
         val context = requireContext()
 
-        val url = Uri.parse(provider.resolvedUrl(query))
+        val url = provider.resolvedUrlParsed(query)
 
-        if (useCustomTabs) {
-            val intent = CustomTabsIntent.Builder()
-                .apply {
-                    customTabsSession?.let { setSession(it) }
-                }
-                .build()
+        val isLaunched = try {
+            if (useCustomTabs) {
+                val intent = CustomTabsIntent.Builder()
+                    .apply {
+                        customTabsSession?.let { setSession(it) }
+                    }
+                    .build()
 
-            intent.launchUrl(context, url)
-        } else {
+                intent.launchUrl(context, url)
+            } else {
+                startInDefaultView(context, url)
+            }
+
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "During launch. Falling back to default view", e)
+
+            startInDefaultView(context, url)
+        }
+
+        isBrowserLaunched = isLaunched
+
+        if (isLaunched) {
+            viewModel.onRemoteDictionaryProviderUsed(provider)
+        }
+    }
+
+    /**
+     * Returns whether launch of the activity was successful.
+     */
+    private fun startInDefaultView(context: Context, url: Uri): Boolean {
+        return try {
             val intent = Intent().apply {
                 action = Intent.ACTION_VIEW
 
@@ -194,14 +227,39 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
             }
 
             context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "startInDefaultView", e)
+
+            showLaunchBrowserError()
+            false
         }
+    }
 
-        viewModel.onRemoteDictionaryProviderUsed(provider)
+    private fun showLoadProvidersError() {
+        view?.also {
+            Snackbar
+                .make(it, R.string.chooseRemoteDictProvider_failedToLoadProvidersError, Snackbar.LENGTH_LONG)
+                .showLifecycleAwareSnackbar(lifecycle)
+        }
+    }
 
-        isBrowserLaunched = true
+    private fun showLaunchBrowserError() {
+        view?.let {
+            Snackbar
+                .make(it, R.string.chooseRemoteDictProvider_failedToLaunchBrowser, Snackbar.LENGTH_LONG)
+                .showLifecycleAwareSnackbar(lifecycle)
+        }
     }
 
     companion object {
         private const val TAG = "ChooseRDPFragment"
+
+        private const val SAVED_STATE_IS_BROWSER_LAUNCHED =
+            "io.github.pelmenstar1.digiDict.ChooseRDPFragment.isBrowserLaunched"
+
+        internal fun RemoteDictionaryProviderInfo.resolvedUrlParsed(query: String): Uri {
+            return Uri.parse(resolvedUrl(query))
+        }
     }
 }

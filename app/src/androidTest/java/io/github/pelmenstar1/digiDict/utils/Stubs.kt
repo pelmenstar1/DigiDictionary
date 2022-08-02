@@ -25,11 +25,11 @@ open class RemoteDictionaryProviderDaoStub : RemoteDictionaryProviderDao {
         throw NotImplementedError()
     }
 
-    override suspend fun getById(id: Int): RemoteDictionaryProviderInfo? {
+    override suspend fun getByName(name: String): RemoteDictionaryProviderInfo? {
         throw NotImplementedError()
     }
 
-    override suspend fun getByName(name: String): RemoteDictionaryProviderInfo? {
+    override suspend fun getMostUsedProviders(): Array<RemoteDictionaryProviderInfo> {
         throw NotImplementedError()
     }
 }

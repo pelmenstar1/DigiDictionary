@@ -29,6 +29,22 @@ data class RemoteDictionaryProviderInfo(
             return text.replace(' ', spaceReplacement)
         }
 
+        override fun equals(other: Any?): Boolean {
+            return if (other is UrlEncodingRules) {
+                spaceReplacement == other.spaceReplacement
+            } else {
+                false
+            }
+        }
+
+        override fun hashCode(): Int {
+            return spaceReplacement.hashCode()
+        }
+
+        override fun toString(): String {
+            return "UrlEncodingRules(spaceReplacement='$spaceReplacement')"
+        }
+
         companion object {
             const val DEFAULT_SPACE_REPLACEMENT = '+'
         }

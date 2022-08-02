@@ -40,6 +40,7 @@
     <!-- Choose remote dict. provider fragment -->
     <string name="chooseRemoteDictProvider_label">Choose remote dict. provider</string>
     <string name="chooseRemoteDictProvider_failedToLoadProvidersError">Failed to load actual remote dict. providers. Default providers are shown.</string>
+    <string name="chooseRemoteDictProvider_failedToLaunchBrowser">Failed to launch the default browser.</string>
 
     <!-- Manage remote dict. providers fragment -->
     <string name="manageRemoteDictProviders_label">Remote dict. providers</string>

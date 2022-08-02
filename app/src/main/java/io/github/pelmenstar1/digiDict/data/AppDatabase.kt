@@ -3,7 +3,6 @@
 package io.github.pelmenstar1.digiDict.data
 
 import android.content.Context
-import androidx.lifecycle.ViewModel
 import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
@@ -48,29 +47,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
 
-    fun addRecordTableObserver(vm: ViewModel, block: () -> Unit) {
-        addTableObserver(RECORD_TABLE_ARRAY, vm, block)
-    }
-
-    private fun addTableObserver(tableNames: Array<out String>, vm: ViewModel, block: () -> Unit) {
-        val observer = object : InvalidationTracker.Observer(tableNames) {
-            override fun onInvalidated(tables: MutableSet<String>) {
-                block()
-            }
-        }
-
-        val tracker = invalidationTracker.also {
-            it.addObserver(observer)
-        }
-
-        vm.addCloseable {
-            tracker.removeObserver(observer)
-        }
-    }
-
     companion object {
-        val RECORD_TABLE_ARRAY = arrayOf(RecordTable.name)
-
         private var singleton: AppDatabase? = null
 
         internal fun SupportSQLiteDatabase.insertRemoteDictProviders(providers: Array<out RemoteDictionaryProviderInfo>) {

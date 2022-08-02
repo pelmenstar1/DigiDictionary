@@ -9,12 +9,11 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.time.SECONDS_IN_HOUR
 import kotlinx.coroutines.runBlocking
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-@Ignore("Should be run manually") // remove this to run the test.
+//@Ignore("Should be run manually") // remove this to run the test.
 class DebugDatabaseTest {
     private val appContext = InstrumentationRegistry.getInstrumentation().targetContext
     private val db = Room.databaseBuilder(appContext, AppDatabase::class.java, "database").build()

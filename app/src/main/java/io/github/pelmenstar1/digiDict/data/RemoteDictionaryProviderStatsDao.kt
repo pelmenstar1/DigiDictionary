@@ -16,8 +16,8 @@ abstract class RemoteDictionaryProviderStatsDao {
     @Query("UPDATE remote_dict_provider_stats SET visitCount = visitCount + 1 WHERE id=:id")
     abstract suspend fun updateIncrementVisitCount(id: Int): Int
 
-    @Query("SELECT id, MAX(visitCount) AS visitCount FROM remote_dict_provider_stats")
-    abstract suspend fun getMostUsedProviderStats(): RemoteDictionaryProviderStats?
+    @Query("DELETE FROM remote_dict_provider_stats WHERE id=:id")
+    abstract suspend fun deleteById(id: Int)
 
     @Transaction
     open suspend fun incrementVisitCount(id: Int) {

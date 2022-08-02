@@ -3,14 +3,10 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders.ManageRemoteDictionaryProvidersViewModel
-import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
-import io.github.pelmenstar1.digiDict.utils.RemoteDictionaryProviderDaoStub
-import io.github.pelmenstar1.digiDict.utils.assertEventHandlerOnMainThread
-import io.github.pelmenstar1.digiDict.utils.reset
+import io.github.pelmenstar1.digiDict.utils.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -22,6 +18,8 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class ManageRemoteDictionaryProvidersViewModelTests {
@@ -30,13 +28,46 @@ class ManageRemoteDictionaryProvidersViewModelTests {
         db.reset()
     }
 
-    private fun createViewModel(dao: RemoteDictionaryProviderDao = db.remoteDictionaryProviderDao()): ManageRemoteDictionaryProvidersViewModel {
-        return ManageRemoteDictionaryProvidersViewModel(dao)
+    private fun createViewModel(
+        providerDao: RemoteDictionaryProviderDao = db.remoteDictionaryProviderDao(),
+        statsDao: RemoteDictionaryProviderStatsDao = db.remoteDictionaryProviderStatsDao()
+    ): ManageRemoteDictionaryProvidersViewModel {
+        return ManageRemoteDictionaryProvidersViewModel(providerDao, statsDao)
+    }
+
+    @Test
+    fun deleteTest() = runTest {
+        val providerDao = db.remoteDictionaryProviderDao()
+        val statsDao = db.remoteDictionaryProviderStatsDao()
+
+        val vm = createViewModel(providerDao, statsDao)
+
+        providerDao.insert(
+            RemoteDictionaryProviderInfo(
+                name = "Name",
+                schema = "Schema",
+                urlEncodingRules = RemoteDictionaryProviderInfo.UrlEncodingRules()
+            )
+        )
+
+        val provider = providerDao.getByName("Name")!!
+        statsDao.insert(RemoteDictionaryProviderStats(provider.id, visitCount = 1))
+
+        vm.onDeleteError.handler = {
+            assertTrue(false)
+        }
+
+        vm.delete(provider)
+        delay(500)
+
+        assertNull(providerDao.getByName("Name"))
+        assertNull(statsDao.getById(provider.id))
+        vm.clearThroughReflection()
     }
 
     @Test
     fun onLoadingErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
+        val vm = createViewModel(providerDao = object : RemoteDictionaryProviderDaoStub() {
             override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
                 throw RuntimeException()
             }
@@ -51,7 +82,7 @@ class ManageRemoteDictionaryProvidersViewModelTests {
 
     @Test
     fun onDeleteErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
+        val vm = createViewModel(providerDao = object : RemoteDictionaryProviderDaoStub() {
             override suspend fun delete(value: RemoteDictionaryProviderInfo) {
                 throw RuntimeException()
             }
@@ -70,7 +101,7 @@ class ManageRemoteDictionaryProvidersViewModelTests {
     @Test
     fun loadProvidersTest() = runTest {
         val expectedArray = arrayOf(EMPTY_PROVIDER)
-        val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
+        val vm = createViewModel(providerDao = object : RemoteDictionaryProviderDaoStub() {
             override fun getAllFlow(): Flow<Array<RemoteDictionaryProviderInfo>> {
                 return emptyFlow()
             }
@@ -80,10 +111,12 @@ class ManageRemoteDictionaryProvidersViewModelTests {
             }
         })
 
-        vm.loadProviders()
-        val actualArray = vm.providersFlow.filterNotNull().first()
+        vm.use {
+            vm.loadProviders()
+            val actualArray = vm.providersFlow.filterNotNull().first()
 
-        assertEquals(expectedArray, actualArray)
+            assertEquals(expectedArray, actualArray)
+        }
     }
 
     companion object {
