@@ -110,6 +110,9 @@ abstract class RecordDao {
     @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
 
+    @Query("SELECT * FROM records")
+    abstract fun getAllRecordsFlow(): Flow<Array<Record>>
+
     @Query("SELECT * FROM records ORDER BY dateTime DESC LIMIT :limit OFFSET :offset")
     abstract suspend fun getRecordsLimitOffset(
         limit: Int,

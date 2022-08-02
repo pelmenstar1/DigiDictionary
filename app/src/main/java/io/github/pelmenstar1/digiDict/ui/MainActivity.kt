@@ -1,8 +1,10 @@
 package io.github.pelmenstar1.digiDict.ui
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.SupportMenuInflater
+import androidx.core.widget.addTextChangedListener
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
@@ -11,6 +13,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.ui.home.GlobalSearchQueryProvider
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -32,24 +35,59 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         val toolbar = findViewById<MaterialToolbar>(R.id.main_toolbar)
 
         toolbar.setOnMenuItemClickListener {
-            if (it.itemId != R.id.home_menu_more) {
-                it.onNavDestinationSelected(navController)
-            } else {
-                false
+            when (it.itemId) {
+                R.id.homeMenu_more, R.id.homeMenu_search -> false
+                else -> {
+                    it.onNavDestinationSelected(navController)
+                }
             }
         }
 
         NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration)
 
-        val menuInflater = SupportMenuInflater(this)
-
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val menu = toolbar.menu
-            if (destination.id == R.id.homeFragment) {
+            val destId = destination.id
+
+            menu.clear()
+
+            if (destId == R.id.homeFragment) {
                 menuInflater.inflate(R.menu.home_menu, menu)
+
+                initMenu(menu)
             } else {
-                menu.clear()
+                // If the destination isn't home, search should be active.
+                GlobalSearchQueryProvider.isActive = false
             }
+        }
+    }
+
+    private fun initMenu(menu: Menu) {
+        val item = menu.findItem(R.id.homeMenu_search)
+
+        if (item != null) {
+            val actionView = item.actionView as SimpleSearchView
+
+            actionView.addTextChangedListener { text ->
+                GlobalSearchQueryProvider.query = text ?: ""
+            }
+
+            item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+                override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                    GlobalSearchQueryProvider.isActive = true
+
+                    return true
+                }
+
+                override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                    GlobalSearchQueryProvider.isActive = false
+
+                    // In the next time the active view is expanded, text should be empty.
+                    actionView.setText("")
+
+                    return true
+                }
+            })
         }
     }
 }

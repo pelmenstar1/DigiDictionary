@@ -1,6 +1,7 @@
-package io.github.pelmenstar1.digiDict.ui.search
+package io.github.pelmenstar1.digiDict.ui.home
 
 import android.view.ViewGroup
+import androidx.annotation.MainThread
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.data.Record
@@ -46,6 +47,14 @@ class SearchAdapter(
         withContext(Dispatchers.Main) {
             diffResult.dispatchUpdatesTo(adapter)
         }
+    }
+
+    @MainThread
+    fun submitEmpty() {
+        val oldData = data
+        data = FilteredArray.empty()
+
+        notifyItemRangeRemoved(0, oldData.size)
     }
 
     override fun getItemCount() = data.size

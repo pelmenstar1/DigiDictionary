@@ -2,13 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/searchFragment"
+        android:id="@+id/homeMenu_search"
         android:icon="@drawable/ic_search"
         android:title="@string/search"
-        app:showAsAction="ifRoom" />
+        app:actionViewClass="io.github.pelmenstar1.digiDict.ui.SimpleSearchView"
+        app:showAsAction="ifRoom|collapseActionView" />
 
     <item
-        android:id="@+id/home_menu_more"
+        android:id="@+id/homeMenu_more"
         android:icon="@drawable/ic_more"
         android:title=""
         app:showAsAction="ifRoom">

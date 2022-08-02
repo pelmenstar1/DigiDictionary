@@ -94,6 +94,10 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
+    override fun getAllRecordsFlow(): Flow<Array<Record>> {
+        throw NotImplementedError()
+    }
+
     override suspend fun getRecordsLimitOffset(limit: Int, offset: Int): List<Record> {
         throw NotImplementedError()
     }

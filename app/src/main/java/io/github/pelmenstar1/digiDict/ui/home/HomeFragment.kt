@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,38 +30,58 @@ class HomeFragment : Fragment() {
         val context = requireContext()
 
         val binding = FragmentHomeBinding.inflate(inflater, container, false)
-
-        val adapter = HomeAdapter(onViewRecord = { id ->
+        val onViewRecord: (Int) -> Unit = { id ->
             val directions = HomeFragmentDirections.actionHomeToViewRecord(id)
 
             navController.navigate(directions)
-        })
-
-        val stateContainerBinding = HomeLoadingErrorAndProgressMergeBinding.bind(binding.root)
-
-        stateContainerBinding.homeErrorContainer.setOnRetryListener {
-            Log.i(TAG, "Retry loading data")
-            adapter.retry()
         }
 
+        val pagingAdapter = HomeAdapter(onViewRecord = onViewRecord)
+        val searchAdapter = SearchAdapter(onViewRecord = onViewRecord)
+
+        val stateContainerBinding = HomeLoadingErrorAndProgressMergeBinding.bind(binding.root)
+        val retryLambda = pagingAdapter::retry
+
+        stateContainerBinding.homeErrorContainer.setOnRetryListener(retryLambda)
+
         val recyclerView = binding.homeRecyclerView
+        val addRecordButton = binding.homeAddRecord.also {
+            it.setOnClickListener {
+                val directions = HomeFragmentDirections.actionHomeToAddEditRecord()
+
+                navController.navigate(directions)
+            }
+        }
+
+        val loadStatePagingAdapter = pagingAdapter.withLoadStateHeaderAndFooter(
+            HomeLoadStateAdapter(retryLambda),
+            HomeLoadStateAdapter(retryLambda)
+        )
 
         recyclerView.also {
-            val retryLambda = adapter::retry
-
-            it.adapter = adapter.withLoadStateHeaderAndFooter(
-                HomeLoadStateAdapter(retryLambda),
-                HomeLoadStateAdapter(retryLambda)
-            )
+            it.adapter = loadStatePagingAdapter
             it.layoutManager = LinearLayoutManager(context)
 
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
         lifecycleScope.run {
-            launchFlowCollector(viewModel.items, adapter::submitData)
+            launchFlowCollector(viewModel.items, pagingAdapter::submitData)
+            launchFlowCollector(viewModel.searchItems, searchAdapter::submitData)
 
-            launchFlowCollector(adapter.loadStateFlow) {
+            launchFlowCollector(GlobalSearchQueryProvider.isActiveFlow) { isActive ->
+                recyclerView.adapter = if (isActive) searchAdapter else loadStatePagingAdapter
+
+                // While search is active, there's no sense to add new record.
+                addRecordButton.isVisible = !isActive
+
+                if (!isActive) {
+                    // In the next time search is active, adapter should contain no elements as in the initial state.
+                    searchAdapter.submitEmpty()
+                }
+            }
+
+            launchFlowCollector(pagingAdapter.loadStateFlow) {
                 with(stateContainerBinding) {
                     val refresh = it.refresh
 
@@ -74,16 +93,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        binding.homeAddExpression.setOnClickListener {
-            val directions = HomeFragmentDirections.actionHomeToAddEditRecord()
-
-            navController.navigate(directions)
-        }
-
         return binding.root
-    }
-
-    companion object {
-        private const val TAG = "HomeFragment"
     }
 }

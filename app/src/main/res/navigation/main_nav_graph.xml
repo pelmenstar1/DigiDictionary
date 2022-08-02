@@ -13,9 +13,6 @@
             android:id="@+id/action_home_to_addEditRecord"
             app:destination="@id/addEditRecordFragment" />
         <action
-            android:id="@+id/action_home_to_search"
-            app:destination="@id/searchFragment" />
-        <action
             android:id="@+id/action_home_to_settings"
             app:destination="@id/settingsFragment" />
         <action
@@ -44,16 +41,6 @@
         <action
             android:id="@+id/action_addEditRecord_to_chooseRemoteDictionaryProvider"
             app:destination="@id/chooseRemoteDictionaryProviderFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/searchFragment"
-        android:name="io.github.pelmenstar1.digiDict.ui.search.SearchFragment"
-        android:label="@string/search">
-
-        <action
-            android:id="@+id/action_search_to_viewRecord"
-            app:destination="@id/viewRecordFragment" />
     </fragment>
 
     <fragment
