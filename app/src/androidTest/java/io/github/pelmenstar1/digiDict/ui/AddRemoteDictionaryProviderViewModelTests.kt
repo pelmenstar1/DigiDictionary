@@ -23,7 +23,6 @@ import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class AddRemoteDictionaryProviderViewModelTests {
@@ -224,8 +223,7 @@ class AddRemoteDictionaryProviderViewModelTests {
         vm.add()
 
         vm.onAdditionError.handler = {
-            // Crash
-            assertTrue(false)
+            throw RuntimeException("Crash")
         }
 
         vm.onSuccessfulAddition.setHandlerAndWait {

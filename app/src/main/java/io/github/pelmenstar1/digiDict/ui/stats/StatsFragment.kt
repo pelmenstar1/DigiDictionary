@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentStatsBinding
+import io.github.pelmenstar1.digiDict.utils.DataLoadState
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.setFormattedText
 
@@ -34,30 +35,28 @@ class StatsFragment : Fragment() {
         val recordsAddedLast31DaysFormat = res.getString(R.string.stats_recordsAdded_last31DaysFormat)
 
         binding.statsErrorContainer.setOnRetryListener {
-            with(binding) {
-                statsLoadingIndicator.visibility = View.VISIBLE
-                statsErrorContainer.visibility = View.GONE
-                statsContentContainer.visibility = View.GONE
-            }
-
-            vm.computeStats()
+            vm.retryComputeStats()
         }
 
-        vm.onLoadError.handler = {
+        lifecycleScope.launchFlowCollector(vm.resultStateFlow) {
             with(binding) {
-                statsErrorContainer.visibility = View.VISIBLE
-                statsLoadingIndicator.visibility = View.GONE
-                statsContentContainer.visibility = View.GONE
-            }
-        }
+                when (it) {
+                    is DataLoadState.Loading -> {
+                        statsLoadingIndicator.visibility = View.VISIBLE
+                        statsErrorContainer.visibility = View.GONE
+                        statsContentContainer.visibility = View.GONE
+                    }
+                    is DataLoadState.Error -> {
+                        statsErrorContainer.visibility = View.VISIBLE
+                        statsLoadingIndicator.visibility = View.GONE
+                        statsContentContainer.visibility = View.GONE
+                    }
+                    is DataLoadState.Success -> {
+                        val (result) = it
 
-        lifecycleScope.run {
-            launchFlowCollector(vm.resultFlow) { result ->
-                if (result != null) {
-                    val count = result.count
-                    val (last24Hours, last7Days, last31Days) = result.additionStats
+                        val count = result.count
+                        val (last24Hours, last7Days, last31Days) = result.additionStats
 
-                    with(binding) {
                         statsContentContainer.visibility = View.VISIBLE
                         statsLoadingIndicator.visibility = View.GONE
                         statsErrorContainer.visibility = View.GONE

@@ -18,6 +18,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.utils.DataLoadState
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.setPopBackStackHandler
 import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
@@ -129,21 +130,8 @@ class QuizFragment : Fragment() {
                 }
             }
 
-            vm.onLoadingError.handler = {
-                quizErrorText.visibility = View.VISIBLE
-                quizRetry.visibility = View.VISIBLE
-
-                quizLoadingIndicator.visibility = View.GONE
-                quizSaveResults.visibility = View.GONE
-            }
-
             quizRetry.setOnClickListener {
-                quizLoadingIndicator.visibility = View.VISIBLE
-                quizErrorText.visibility = View.GONE
-                quizRetry.visibility = View.GONE
-                quizSaveResults.visibility = View.GONE
-
-                vm.startLoadingElements()
+                vm.retryLoadInput()
             }
 
             quizSaveResults.run {
@@ -152,20 +140,38 @@ class QuizFragment : Fragment() {
                 setOnClickListener { vm.saveResults() }
             }
 
-            lifecycleScope.launchFlowCollector(vm.result) {
-                if (it != null) {
-                    quizErrorText.visibility = View.GONE
-                    quizRetry.visibility = View.GONE
-                    quizLoadingIndicator.visibility = View.GONE
-
-                    if (it.isEmpty()) {
-                        quizEmptyText.visibility = View.VISIBLE
+            lifecycleScope.launchFlowCollector(vm.inputStateFlow) {
+                when (it) {
+                    is DataLoadState.Loading -> {
+                        quizLoadingIndicator.visibility = View.VISIBLE
+                        quizEmptyText.visibility = View.GONE
                         quizSaveResults.visibility = View.GONE
-                    } else {
-                        submitItemsToContainer(quizItemsContainer, it)
+
+                        setErrorVisibility(View.GONE)
+                    }
+                    is DataLoadState.Error -> {
+                        setErrorVisibility(View.VISIBLE)
 
                         quizEmptyText.visibility = View.GONE
-                        quizSaveResults.visibility = View.VISIBLE
+                        quizSaveResults.visibility = View.GONE
+                        quizEmptyText.visibility = View.GONE
+                        quizLoadingIndicator.visibility = View.GONE
+                    }
+                    is DataLoadState.Success -> {
+                        val (input) = it
+
+                        setErrorVisibility(View.GONE)
+                        quizLoadingIndicator.visibility = View.GONE
+
+                        if (input.isEmpty()) {
+                            quizEmptyText.visibility = View.VISIBLE
+                            quizSaveResults.visibility = View.GONE
+                        } else {
+                            submitItemsToContainer(quizItemsContainer, input)
+
+                            quizEmptyText.visibility = View.GONE
+                            quizSaveResults.visibility = View.VISIBLE
+                        }
                     }
                 }
             }
@@ -175,9 +181,12 @@ class QuizFragment : Fragment() {
             itemsState = savedInstanceState.getInt(STATE_QUIZ_STATE)
         }
 
-        vm.startLoadingElements()
-
         return binding.root
+    }
+
+    private fun FragmentQuizBinding.setErrorVisibility(value: Int) {
+        quizErrorText.visibility = value
+        quizRetry.visibility = value
     }
 
     private fun submitItemsToContainer(container: LinearLayout, items: Array<out Record>) {

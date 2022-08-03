@@ -42,8 +42,6 @@ class AddEditRecordFragment : Fragment() {
         val recordId = args.recordId
 
         if (recordId >= 0) {
-            // If there's a record to load, inputs should be temporarily disabled and then when the record
-            // is successfully loaded, they should be re-enabled.
             setInputsEnabled(false)
         }
 
@@ -60,25 +58,32 @@ class AddEditRecordFragment : Fragment() {
             }
         }
 
-        lifecycleScope.launchFlowCollector(vm.currentRecordFlow) {
-            it?.fold(
-                onSuccess = { record ->
-                    if (record != null) {
-                        setRecord(record)
+        lifecycleScope.launchFlowCollector(vm.currentRecordStateFlow) {
+            // If there's a record to load, inputs should be temporarily disabled and then when the record
+            // is successfully loaded, they should be re-enabled.
 
-                        // Enable inputs after we know that current record has been successfully loaded
-                        setInputsEnabled(true)
-                    }
-                },
-                onFailure = {
+            when (it) {
+                is DataLoadState.Loading -> {
+                    setInputsEnabled(false)
+                }
+                is DataLoadState.Error -> {
+                    setInputsEnabled(false)
+
                     if (container != null) {
                         Snackbar
                             .make(container, R.string.recordLoadingError, Snackbar.LENGTH_INDEFINITE)
-                            .setAction(R.string.retry) { vm.loadCurrentRecord() }
+                            .setAction(R.string.retry) { vm.retryLoadCurrentRecord() }
                             .showLifecycleAwareSnackbar(lifecycle)
                     }
                 }
-            )
+                is DataLoadState.Success -> {
+                    it.value?.let { record ->
+                        setRecord(record)
+
+                        setInputsEnabled(true)
+                    }
+                }
+            }
         }
 
         initMeaning()

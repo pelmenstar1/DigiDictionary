@@ -107,7 +107,7 @@
 
     <string name="settings_export">Export</string>
     <string name="settings_import">Import</string>
-
+    <string name="settings_failedToLoadSettings">Failed to load the settings</string>
     <string name="settings_exportError">Export failed with error</string>
     <string name="settings_importError">Import failed with error</string>
     <string name="settings_exportSuccess">Export was successful</string>

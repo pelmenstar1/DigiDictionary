@@ -6,12 +6,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -21,34 +22,30 @@ class ViewRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater
 ) : ViewModel() {
-    private val retryFlow = MutableStateFlow<Record?>(null)
+    private val stateManager = DataLoadStateManager<Record?>(TAG)
 
-    private var _recordFlow: Flow<Record?>? = null
-    val recordFlow: Flow<Record?>?
-        get() = _recordFlow
-
-    val onDeleteError = Event()
-    val onRefreshError = Event()
-    val onRecordDeleted = Event()
+    private val idFlow = MutableStateFlow<Int?>(null)
 
     var id: Int = -1
         set(value) {
             field = value
 
-            val daoFlow = recordDao.getRecordFlowById(value)
-            _recordFlow = merge(daoFlow, retryFlow)
+            idFlow.value = value
         }
 
-    fun refreshRecord() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                retryFlow.value = recordDao.getRecordById(id)
-            } catch (e: Exception) {
-                Log.e(TAG, "during loading the record", e)
-
-                onRefreshError.raiseOnMainThread()
+    val recordStateFlow = stateManager.buildFlow(viewModelScope) {
+        fromFlow {
+            idFlow.filterNotNull().flatMapMerge { id ->
+                recordDao.getRecordFlowById(id)
             }
         }
+    }
+
+    val onDeleteError = Event()
+    val onRecordDeleted = Event()
+
+    fun refreshRecord() {
+        stateManager.retry()
     }
 
     fun delete() {

@@ -15,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRemoteDictProvidersBinding
+import io.github.pelmenstar1.digiDict.utils.DataLoadState
 import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
@@ -57,17 +58,7 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
             }
 
             manageRemoteDictProvidersErrorContainer.setOnRetryListener {
-                manageRemoteDictProvidersLoadingIndicator.visibility = View.VISIBLE
-                manageRemoteDictProvidersErrorContainer.visibility = View.GONE
-                manageRemoteDictProvidersRecyclerView.visibility = View.GONE
-
-                vm.loadProviders()
-            }
-
-            vm.onLoadingError.handler = {
-                manageRemoteDictProvidersErrorContainer.visibility = View.VISIBLE
-                manageRemoteDictProvidersLoadingIndicator.visibility = View.GONE
-                manageRemoteDictProvidersRecyclerView.visibility = View.GONE
+                vm.retryLoadProviders()
             }
 
             vm.onDeleteError.handler = {
@@ -78,13 +69,30 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
                 }
             }
 
-            lifecycleScope.launchFlowCollector(vm.providersFlow) {
-                if (it != null) {
-                    manageRemoteDictProvidersRecyclerView.visibility = View.VISIBLE
-                    manageRemoteDictProvidersErrorContainer.visibility = View.GONE
-                    manageRemoteDictProvidersLoadingIndicator.visibility = View.GONE
+            lifecycleScope.launchFlowCollector(vm.providersStateFlow) {
+                when (it) {
+                    is DataLoadState.Loading -> {
+                        manageRemoteDictProvidersLoadingIndicator.visibility = View.VISIBLE
+                        manageRemoteDictProvidersErrorContainer.visibility = View.GONE
+                        manageRemoteDictProvidersRecyclerView.visibility = View.GONE
+                        manageRemoteDictProvidersAdd.visibility = View.GONE
+                    }
+                    is DataLoadState.Error -> {
+                        manageRemoteDictProvidersErrorContainer.visibility = View.VISIBLE
+                        manageRemoteDictProvidersLoadingIndicator.visibility = View.GONE
+                        manageRemoteDictProvidersRecyclerView.visibility = View.GONE
+                        manageRemoteDictProvidersAdd.visibility = View.GONE
+                    }
+                    is DataLoadState.Success -> {
+                        val (providers) = it
 
-                    adapter.submitItems(it)
+                        manageRemoteDictProvidersRecyclerView.visibility = View.VISIBLE
+                        manageRemoteDictProvidersAdd.visibility = View.VISIBLE
+                        manageRemoteDictProvidersErrorContainer.visibility = View.GONE
+                        manageRemoteDictProvidersLoadingIndicator.visibility = View.GONE
+
+                        adapter.submitItems(providers)
+                    }
                 }
             }
         }

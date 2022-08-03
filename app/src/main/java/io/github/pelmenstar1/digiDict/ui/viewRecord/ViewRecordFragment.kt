@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.viewRecord
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,11 +17,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
-import io.github.pelmenstar1.digiDict.utils.setFormattedText
-import io.github.pelmenstar1.digiDict.utils.setPopBackStackHandler
-import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
-import kotlinx.coroutines.launch
+import io.github.pelmenstar1.digiDict.utils.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -72,20 +67,12 @@ class ViewRecordFragment : Fragment() {
             }
 
             viewRecordErrorContainer.setOnRetryListener {
-                with(binding) {
-                    viewRecordLoadingIndicator.visibility = View.VISIBLE
-                    viewRecordContentContainer.visibility = View.GONE
-                    viewRecordErrorContainer.visibility = View.GONE
-                }
-
                 vm.refreshRecord()
             }
         }
 
         vm.onRecordDeleted.setPopBackStackHandler(navController)
         vm.id = args.id
-
-        vm.onRefreshError.handler = ::onLoadingErrorHandler
 
         vm.onDeleteError.handler = {
             val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
@@ -96,11 +83,23 @@ class ViewRecordFragment : Fragment() {
             }
         }
 
-        lifecycleScope.launch {
-            try {
-                vm.recordFlow?.collect { record ->
-                    if (record != null) {
-                        with(binding) {
+        lifecycleScope.launchFlowCollector(vm.recordStateFlow) {
+            with(binding) {
+                when (it) {
+                    is DataLoadState.Loading -> {
+                        viewRecordLoadingIndicator.visibility = View.VISIBLE
+                        viewRecordContentContainer.visibility = View.GONE
+                        viewRecordErrorContainer.visibility = View.GONE
+                    }
+                    is DataLoadState.Error -> {
+                        viewRecordErrorContainer.visibility = View.VISIBLE
+                        viewRecordContentContainer.visibility = View.GONE
+                        viewRecordLoadingIndicator.visibility = View.GONE
+                    }
+                    is DataLoadState.Success -> {
+                        val record = it.value
+
+                        if (record != null) {
                             viewRecordContentContainer.visibility = View.VISIBLE
                             viewRecordErrorContainer.visibility = View.GONE
                             viewRecordLoadingIndicator.visibility = View.GONE
@@ -118,22 +117,10 @@ class ViewRecordFragment : Fragment() {
                         }
                     }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "", e)
-
-                onLoadingErrorHandler()
             }
         }
 
         return binding.root
-    }
-
-    private fun onLoadingErrorHandler() {
-        with(binding) {
-            viewRecordErrorContainer.visibility = View.VISIBLE
-            viewRecordContentContainer.visibility = View.GONE
-            viewRecordLoadingIndicator.visibility = View.GONE
-        }
     }
 
     companion object {

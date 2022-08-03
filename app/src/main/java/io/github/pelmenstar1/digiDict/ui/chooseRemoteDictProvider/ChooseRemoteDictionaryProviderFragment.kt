@@ -22,8 +22,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
+import io.github.pelmenstar1.digiDict.utils.debugLog
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
-import io.github.pelmenstar1.digiDict.utils.logInfo
 import io.github.pelmenstar1.digiDict.utils.mapOffset
 import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 import kotlinx.coroutines.Dispatchers
@@ -75,7 +75,9 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
                                 null
                             }
 
-                            logInfo(TAG) { "Preloading page '$uri'" }
+                            debugLog(TAG) {
+                                info("Preloading page '$uri'")
+                            }
 
                             session.mayLaunchUrl(uri, null, otherLikelyUris)
                         }
@@ -175,11 +177,15 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
         val packageName = CustomTabsClient.getPackageName(context, null)
 
         if (packageName != null) {
-            logInfo(TAG) { "Binding custom tabs service (package=$packageName)" }
+            debugLog(TAG) {
+                info("Binding custom tabs service (package=$packageName)")
+            }
 
             CustomTabsClient.bindCustomTabsService(context, packageName, connection)
         } else {
-            logInfo(TAG, "There are no packages with Custom Tabs support")
+            debugLog(TAG) {
+                info("There are no packages with Custom Tabs support")
+            }
         }
     }
 

@@ -1,25 +1,27 @@
 package io.github.pelmenstar1.digiDict.utils
 
+import android.annotation.SuppressLint
 import android.util.Log
 import io.github.pelmenstar1.digiDict.BuildConfig
 
-inline fun <reified T> T.logInfo(text: () -> String) {
-    logInfo(T::class.java.simpleName, text)
-}
+// It's actually the purpose of the class whose methods will only be called in debug builds.
+@SuppressLint("LogConditional")
+class DebugLog(private val tag: String) {
+    object Action
 
-inline fun <reified T> T.logInfo(text: String) {
-    logInfo { text }
-}
+    private inline fun action(block: () -> Unit) = Action.also { block() }
 
-inline fun logInfo(tag: String, text: () -> String) {
-    if (BuildConfig.DEBUG) {
-        Log.i(tag, text())
+    fun info(text: String) = action { Log.i(tag, text) }
+
+    fun infoIf(condition: Boolean, text: String) = action {
+        if (condition) {
+            Log.i(tag, text)
+        }
     }
 }
 
-@Suppress("NOTHING_TO_INLINE")
-inline fun logInfo(tag: String, text: String) {
+inline fun debugLog(tag: String, block: DebugLog.() -> DebugLog.Action) {
     if (BuildConfig.DEBUG) {
-        Log.i(tag, text)
+        DebugLog(tag).block()
     }
 }

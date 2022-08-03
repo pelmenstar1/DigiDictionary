@@ -17,6 +17,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.utils.DataLoadState
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
 import javax.inject.Inject
@@ -66,21 +67,44 @@ class SettingsFragment : Fragment() {
                 viewModel.changePreferenceValue(AppPreferences.Entries.useCustomTabs, isChecked)
             }
 
+            settingsErrorContainer.setOnRetryListener {
+                vm.retryLoadPreferences()
+            }
+
             settingsScorePointsPerCorrectAnswerSpinner.initAsQuizScore { scorePointsPerCorrectAnswer }
             settingsScorePointsPerWrongAnswerSpinner.initAsQuizScore { scorePointsPerWrongAnswer }
-
-            lifecycleScope.launchFlowCollector(vm.getPreferencesSnapshotFlow()) { snapshot ->
-                settingsScorePointsPerCorrectAnswerSpinner.setValue(snapshot.scorePointsPerCorrectAnswer)
-                settingsScorePointsPerWrongAnswerSpinner.setValue(snapshot.scorePointsPerWrongAnswer)
-                settingsOpenBrowserInAppSwitch.isChecked = snapshot.useCustomTabs
-
-                settingsLoadingIndicator.visibility = View.GONE
-                settingsContentContainer.visibility = View.VISIBLE
-            }
         }
 
         lifecycleScope.run {
             launchMessageFlowCollector(viewModel.messageFlow, messageMapper, container)
+
+            launchFlowCollector(viewModel.preferencesSnapshotStateFlow) {
+                with(binding) {
+                    when (it) {
+                        is DataLoadState.Loading -> {
+                            settingsLoadingIndicator.visibility = View.VISIBLE
+                            settingsErrorContainer.visibility = View.GONE
+                            settingsContentContainer.visibility = View.GONE
+                        }
+                        is DataLoadState.Error -> {
+                            settingsErrorContainer.visibility = View.VISIBLE
+                            settingsLoadingIndicator.visibility = View.GONE
+                            settingsContentContainer.visibility = View.GONE
+                        }
+                        is DataLoadState.Success -> {
+                            settingsContentContainer.visibility = View.VISIBLE
+                            settingsLoadingIndicator.visibility = View.GONE
+                            settingsErrorContainer.visibility = View.GONE
+
+                            val (snapshot) = it
+
+                            settingsScorePointsPerCorrectAnswerSpinner.setValue(snapshot.scorePointsPerCorrectAnswer)
+                            settingsScorePointsPerWrongAnswerSpinner.setValue(snapshot.scorePointsPerWrongAnswer)
+                            settingsOpenBrowserInAppSwitch.isChecked = snapshot.useCustomTabs
+                        }
+                    }
+                }
+            }
         }
 
         return binding.root

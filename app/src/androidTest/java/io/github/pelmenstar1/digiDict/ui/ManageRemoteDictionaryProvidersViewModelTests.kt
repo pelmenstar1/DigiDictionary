@@ -9,17 +9,13 @@ import io.github.pelmenstar1.digiDict.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class ManageRemoteDictionaryProvidersViewModelTests {
@@ -54,7 +50,7 @@ class ManageRemoteDictionaryProvidersViewModelTests {
         statsDao.insert(RemoteDictionaryProviderStats(provider.id, visitCount = 1))
 
         vm.onDeleteError.handler = {
-            assertTrue(false)
+            throw RuntimeException("Crash")
         }
 
         vm.delete(provider)
@@ -63,21 +59,6 @@ class ManageRemoteDictionaryProvidersViewModelTests {
         assertNull(providerDao.getByName("Name"))
         assertNull(statsDao.getById(provider.id))
         vm.clearThroughReflection()
-    }
-
-    @Test
-    fun onLoadingErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(providerDao = object : RemoteDictionaryProviderDaoStub() {
-            override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
-                throw RuntimeException()
-            }
-
-            override fun getAllFlow(): Flow<Array<RemoteDictionaryProviderInfo>> {
-                return emptyFlow()
-            }
-        })
-
-        assertEventHandlerOnMainThread(vm, vm.onLoadingError) { vm.loadProviders() }
     }
 
     @Test
@@ -94,28 +75,6 @@ class ManageRemoteDictionaryProvidersViewModelTests {
 
         assertEventHandlerOnMainThread(vm, vm.onDeleteError) {
             vm.delete(EMPTY_PROVIDER)
-        }
-    }
-
-    @Suppress("OPT_IN_USAGE")
-    @Test
-    fun loadProvidersTest() = runTest {
-        val expectedArray = arrayOf(EMPTY_PROVIDER)
-        val vm = createViewModel(providerDao = object : RemoteDictionaryProviderDaoStub() {
-            override fun getAllFlow(): Flow<Array<RemoteDictionaryProviderInfo>> {
-                return emptyFlow()
-            }
-
-            override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
-                return expectedArray
-            }
-        })
-
-        vm.use {
-            vm.loadProviders()
-            val actualArray = vm.providersFlow.filterNotNull().first()
-
-            assertEquals(expectedArray, actualArray)
         }
     }
 

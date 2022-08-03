@@ -9,12 +9,11 @@ import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
+import io.github.pelmenstar1.digiDict.utils.DataLoadState
+import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.utils.FixedBitSet
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
@@ -34,20 +33,20 @@ class QuizViewModel @Inject constructor(
     private val _isAllAnswered = MutableStateFlow(false)
     val isAllAnswered = _isAllAnswered.asStateFlow()
 
-    private val _result = MutableStateFlow<Array<Record>?>(null)
-    val result = _result.asStateFlow()
-
-    val onLoadingError = Event()
-    val onSaveError = Event()
-    val onResultSaved = Event()
+    private val modeFlow = MutableStateFlow<QuizMode?>(null)
 
     // Should be used only on main-thread.
-    var mode = QuizMode.ALL
+    var mode: QuizMode?
+        get() = modeFlow.value
+        set(value) {
+            modeFlow.value = value
+        }
 
-    fun startLoadingElements() {
-        val selectedMode = mode
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
+    private val inputStateManager = DataLoadStateManager<Array<Record>>(TAG)
+
+    val inputStateFlow = inputStateManager.buildFlow(viewModelScope) {
+        fromFlow {
+            modeFlow.filterNotNull().map { selectedMode ->
                 val records = if (selectedMode == QuizMode.ALL) {
                     recordDao.getRandomRecords(random, RECORDS_MAX_SIZE)
                 } else {
@@ -72,13 +71,16 @@ class QuizViewModel @Inject constructor(
                 answeredBits = FixedBitSet(size)
                 correctAnsweredBits = FixedBitSet(size)
 
-                _result.value = records
-            } catch (e: Exception) {
-                Log.e(TAG, "during loading", e)
-
-                onLoadingError.raiseOnMainThread()
+                records
             }
         }
+    }
+
+    val onSaveError = Event()
+    val onResultSaved = Event()
+
+    fun retryLoadInput() {
+        inputStateManager.retry()
     }
 
     fun onItemAnswer(index: Int, isCorrect: Boolean) {
@@ -95,7 +97,13 @@ class QuizViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Relies on the fact that user can't answer if result is null
-                val result = requireNotNull(_result.value)
+                val inputState = inputStateFlow.first()
+
+                if (inputState !is DataLoadState.Success<Array<Record>>) {
+                    throw IllegalStateException("Input is expected to be successful")
+                }
+
+                val (input) = inputState
 
                 // Results can be saved only when all questions are answered, user can't re-answer, which means
                 // by time of executing saveResults() correctAnsweredBits can't be changed.
@@ -108,9 +116,9 @@ class QuizViewModel @Inject constructor(
                 val scorePointsPerCorrectAnswer = snapshot.scorePointsPerCorrectAnswer
                 val scorePointsPerWrongAnswer = snapshot.scorePointsPerWrongAnswer
 
-                val newScores = IntArray(result.size)
-                for (i in result.indices) {
-                    val currentScore = result[i].score
+                val newScores = IntArray(input.size)
+                for (i in input.indices) {
+                    val currentScore = input[i].score
 
                     val newScore = currentScore + if (correctAnsweredBits[i])
                         scorePointsPerCorrectAnswer
@@ -120,7 +128,7 @@ class QuizViewModel @Inject constructor(
                     newScores[i] = newScore
                 }
 
-                recordDao.updateScores(result, newScores)
+                recordDao.updateScores(input, newScores)
 
                 onResultSaved.raiseOnMainThread()
             } catch (e: Exception) {

@@ -12,7 +12,6 @@ import io.github.pelmenstar1.digiDict.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.ui.quiz.QuizMode
 import io.github.pelmenstar1.digiDict.ui.quiz.QuizViewModel
 import io.github.pelmenstar1.digiDict.utils.*
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -22,7 +21,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.random.Random
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class QuizViewModelTests {
@@ -68,15 +66,8 @@ class QuizViewModelTests {
 
             vm.use {
                 vm.mode = QuizMode.ALL
-                vm.startLoadingElements()
 
-                vm.onLoadingError.handler = {
-                    // Crash.
-                    assertTrue(false)
-                }
-
-                // Wait until result is loaded, it's important not to do anything until then.
-                vm.result.filterNotNull().first()
+                vm.inputStateFlow.firstSuccess()
 
                 indices.forEach {
                     vm.onItemAnswer(it, false)
@@ -97,20 +88,6 @@ class QuizViewModelTests {
     }
 
     @Test
-    fun onLoadingErrorCalledOnMainThread() = runTest {
-        val dao = object : RecordDaoStub() {
-            override suspend fun getRandomRecords(random: Random, size: Int): Array<Record> {
-                throw RuntimeException()
-            }
-        }
-
-        val vm = createViewModel(recordDao = dao)
-        vm.mode = QuizMode.ALL
-
-        assertEventHandlerOnMainThread(vm, vm.onLoadingError) { vm.startLoadingElements() }
-    }
-
-    @Test
     fun onResultSavedCalledOnMainThread() = runTest {
         val dao = object : RecordDaoStub() {
             override suspend fun getRandomRecords(random: Random, size: Int): Array<Record> {
@@ -121,10 +98,9 @@ class QuizViewModelTests {
         val vm = createViewModel(recordDao = dao)
 
         vm.mode = QuizMode.ALL
-        vm.startLoadingElements()
 
-        // Wait until result is loaded.
-        vm.result.filterNotNull().first()
+        // Wait until input is loaded.
+        vm.inputStateFlow.firstSuccess()
 
         assertEventHandlerOnMainThread(vm, vm.onResultSaved) { vm.saveResults() }
     }
@@ -143,10 +119,9 @@ class QuizViewModelTests {
 
         val vm = createViewModel(recordDao = dao)
         vm.mode = QuizMode.ALL
-        vm.startLoadingElements()
 
-        // Wait until result is loaded.
-        vm.result.filterNotNull().first()
+        // Wait until input is loaded.
+        vm.inputStateFlow.firstSuccess()
 
         assertEventHandlerOnMainThread(vm, vm.onSaveError) { saveResults() }
     }

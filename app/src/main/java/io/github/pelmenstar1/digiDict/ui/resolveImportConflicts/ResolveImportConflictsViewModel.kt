@@ -112,6 +112,6 @@ class ResolveImportConflictsViewModel @Inject constructor(
     }
 
     companion object {
-        private const val TAG = "ResolveImportConflictsVM"
+        private const val TAG = "ResolveImpConflictsVM"
     }
 }

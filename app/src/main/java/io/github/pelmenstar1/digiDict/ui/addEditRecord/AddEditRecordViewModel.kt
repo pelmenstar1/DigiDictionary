@@ -8,9 +8,7 @@ import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.utils.Event
-import io.github.pelmenstar1.digiDict.utils.trimToString
-import io.github.pelmenstar1.digiDict.utils.withBit
+import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -31,10 +29,34 @@ class AddEditRecordViewModel @Inject constructor(
     val validity = MutableStateFlow<Int?>(null)
 
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
-    private val _currentRecordFlow = MutableStateFlow<Result<Record?>?>(null)
-
     val expressionErrorFlow = _expressionErrorFlow.asStateFlow()
-    val currentRecordFlow = _currentRecordFlow.asStateFlow()
+
+    private val currentRecordIdFlow = MutableStateFlow<Int?>(null)
+
+    // currentRecordId can be possibly updated only one, when the fragment is started, so it's thread-safe to read it
+    var currentRecordId = -1
+        set(value) {
+            if (field != value && value >= 0) {
+                field = value
+
+                currentRecordIdFlow.value = value
+            }
+        }
+
+    private val currentRecordStateManager = DataLoadStateManager<Record?>(TAG)
+    val currentRecordStateFlow = currentRecordStateManager.buildFlow(viewModelScope) {
+        fromFlow {
+            currentRecordIdFlow.filterNotNull().map { id ->
+                recordDao.getRecordById(id).also {
+                    validity.updateNullable {
+                        it.withBit(EXPRESSION_VALIDITY_BIT, true).withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, false)
+                    }
+
+                    startCheckExprJobIfNecessary()
+                }
+            }
+        }
+    }
 
     private val isCheckExpressionJobStarted = AtomicBoolean()
     private val checkExpressionChannel = Channel<String>(
@@ -59,24 +81,8 @@ class AddEditRecordViewModel @Inject constructor(
 
     var additionalNotes: CharSequence = ""
 
-    // currentRecordId can be possibly updated only one, when the fragment is started, so it's thread-safe to read it
-    var currentRecordId = -1
-        set(value) {
-            if (field != value && value >= 0) {
-                field = value
-
-                loadCurrentRecord()
-            }
-        }
-
-    fun loadCurrentRecord() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _currentRecordFlow.value = runCatching {
-                recordDao.getRecordById(currentRecordId).also {
-                    startCheckExprJobIfNecessary()
-                }
-            }
-        }
+    fun retryLoadCurrentRecord() {
+        currentRecordStateManager.retry()
     }
 
     fun initErrors() {
@@ -86,22 +92,22 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
+    // setExpressionInternal shouldn't be called when there's 'current record' and it's not loaded.
+    // It's not critical except 'check expression job' will be started earlier than it should be.
     private fun setExpressionInternal(value: String) {
         _expression = value
 
-        if (currentRecordId < 0 || _currentRecordFlow.value?.isSuccess == true) {
-            startCheckExprJobIfNecessary()
+        startCheckExprJobIfNecessary()
 
-            validity.update {
-                val prevValue = it ?: 0
+        validity.update {
+            val prevValue = it ?: 0
 
-                prevValue
-                    .withBit(EXPRESSION_VALIDITY_BIT, false)
-                    .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, true)
-            }
-
-            checkExpressionChannel.trySend(value)
+            prevValue
+                .withBit(EXPRESSION_VALIDITY_BIT, false)
+                .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, true)
         }
+
+        checkExpressionChannel.trySend(value)
     }
 
     // Must not be started if there's current record and it's null at the moment of calling method
@@ -111,10 +117,13 @@ class AddEditRecordViewModel @Inject constructor(
                 val expressions = recordDao.getAllExpressions()
 
                 // Sort expressions to make binary search work.
+                //
+                // SQL's ORDER BY can't be used, because apparently it uses different algorithm to order strings
+                // and it isn't compatible with string sorting algorithm in Android JVM.
                 expressions.sort()
 
                 val currentRecordExpression = if (currentRecordId >= 0) {
-                    _currentRecordFlow.filterNotNull().first().getOrThrow()?.expression
+                    currentRecordStateFlow.firstSuccess()?.expression
                 } else {
                     null
                 }
@@ -125,7 +134,7 @@ class AddEditRecordViewModel @Inject constructor(
                     val isNotBlank = expr.isNotBlank()
 
                     // If we are is edit mode (currentRecordExpression is not null then),
-                    // then if input expression shouldn't be considered as "existing"
+                    // input expression shouldn't be considered as "existing"
                     // even if it does exist to allow editing meaning, origin or notes and not expression.
                     val isValid =
                         isNotBlank && (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
@@ -152,7 +161,10 @@ class AddEditRecordViewModel @Inject constructor(
         // Disallow starting a job when it has been started already.
         if (isAddJobStarted.compareAndSet(false, true)) {
             // Saving only those values which have been typed by the time of calling addOrEditExpression()
-            val expr = _expression.trimToString()
+            //
+            // Also, make sure additionalNotes is formatted properly.
+            // (If a string does not have any trailing or leading whitespaces, then trimToString won't allocate at all)
+            val expr = _expression
             val additionalNotes = additionalNotes.trimToString()
             val rawMeaning = requireNotNull(getMeaning).invoke().rawText
 
@@ -160,21 +172,23 @@ class AddEditRecordViewModel @Inject constructor(
                 try {
                     val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
 
-                    if (currentRecordId >= 0) {
-                        recordDao.update(
-                            currentRecordId,
-                            expr, rawMeaning, additionalNotes,
-                            epochSeconds
-                        )
-                    } else {
-                        recordDao.insert(
-                            Record(
-                                id = 0,
+                    currentRecordId.let { id ->
+                        if (id >= 0) {
+                            recordDao.update(
+                                currentRecordId,
                                 expr, rawMeaning, additionalNotes,
-                                score = 0,
-                                epochSeconds = epochSeconds
+                                epochSeconds
                             )
-                        )
+                        } else {
+                            recordDao.insert(
+                                Record(
+                                    id = 0,
+                                    expr, rawMeaning, additionalNotes,
+                                    score = 0,
+                                    epochSeconds = epochSeconds
+                                )
+                            )
+                        }
                     }
 
                     withContext(Dispatchers.Main) {

@@ -12,6 +12,13 @@
         android:layout_gravity="center"
         android:indeterminate="true" />
 
+    <io.github.pelmenstar1.digiDict.ui.ErrorContainer
+        android:id="@+id/settings_errorContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:errorText="@string/settings_failedToLoadSettings" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/settings_contentContainer"
         android:layout_width="match_parent"

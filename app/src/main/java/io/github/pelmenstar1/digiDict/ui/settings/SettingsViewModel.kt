@@ -11,8 +11,8 @@ import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.serialization.ValidationException
+import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -24,11 +24,17 @@ class SettingsViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
     private val recordDao: RecordDao
 ) : ViewModel() {
+    private val preferencesSnapshotStateManager = DataLoadStateManager<AppPreferences.Snapshot>(TAG)
+
+    val preferencesSnapshotStateFlow = preferencesSnapshotStateManager.buildFlow(viewModelScope) {
+        fromFlow(appPreferences.getSnapshotFlow())
+    }
+
     private val _messageFlow = MutableStateFlow<SettingsMessage?>(null)
     val messageFlow = _messageFlow.asStateFlow()
 
-    fun getPreferencesSnapshotFlow(): Flow<AppPreferences.Snapshot> {
-        return appPreferences.getSnapshotFlow()
+    fun retryLoadPreferences() {
+        preferencesSnapshotStateManager.retry()
     }
 
     fun <T : Any> changePreferenceValue(entry: AppPreferences.Entry<T>, value: T) {

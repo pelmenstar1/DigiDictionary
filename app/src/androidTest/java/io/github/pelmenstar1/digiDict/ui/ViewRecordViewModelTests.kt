@@ -9,10 +9,7 @@ import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -22,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class ViewRecordViewModelTests {
@@ -61,33 +57,58 @@ class ViewRecordViewModelTests {
         }
 
         vm.onDeleteError.handler = {
-            assertTrue(false)
+            throw RuntimeException("Crash")
         }
+    }
+
+    @Test
+    fun loadRecordTest() = runTest {
+        val expectedId = 4
+        val expectedRecord = Record(expectedId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2)
+        val vm = createViewModel(dao = object : RecordDaoStub() {
+            override fun getRecordFlowById(id: Int): Flow<Record?> {
+                assertEquals(expectedId, id)
+
+                return flowOf(expectedRecord)
+            }
+        })
+
+        vm.id = expectedId
+
+        val actualRecord = vm.recordStateFlow.filterIsInstance<DataLoadState.Success<Record?>>().first().value
+
+        assertEquals(expectedRecord, actualRecord)
     }
 
     @Test
     fun refreshRecordTest() = runTest {
         val expectedId = 4
         val expectedRecord = Record(expectedId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2)
+
+        var isFirstCall = true
         val vm = createViewModel(dao = object : RecordDaoStub() {
             override fun getRecordFlowById(id: Int): Flow<Record?> {
-                return emptyFlow()
-            }
-
-            override suspend fun getRecordById(id: Int): Record {
                 assertEquals(expectedId, id)
 
-                return expectedRecord
+                return if (isFirstCall) {
+                    isFirstCall = false
+
+                    flow { throw RuntimeException() }
+                } else {
+                    flowOf(expectedRecord)
+                }
             }
         })
 
         vm.id = expectedId
 
+        // There should be error state, if there are not, test will time out.
+        vm.recordStateFlow.filterIsInstance<DataLoadState.Error<Record?>>().first()
+
         vm.refreshRecord()
 
-        val actualRecord = vm.recordFlow?.filterNotNull()?.first()
+        val actualRecord = vm.recordStateFlow.firstSuccess()
         assertEquals(expectedRecord, actualRecord)
-
     }
 
     @Test
@@ -99,17 +120,6 @@ class ViewRecordViewModelTests {
         })
 
         assertEventHandlerOnMainThread(vm, vm.onDeleteError) { delete() }
-    }
-
-    @Test
-    fun onRefreshErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(dao = object : RecordDaoStub() {
-            override suspend fun getRecordById(id: Int): Record? {
-                throw RuntimeException()
-            }
-        })
-
-        assertEventHandlerOnMainThread(vm, vm.onRefreshError) { refreshRecord() }
     }
 
     @Test

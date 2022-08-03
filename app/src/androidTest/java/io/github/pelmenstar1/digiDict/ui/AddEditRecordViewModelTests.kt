@@ -26,7 +26,6 @@ import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class AddEditRecordViewModelTests {
@@ -145,9 +144,9 @@ class AddEditRecordViewModelTests {
 
             vm.currentRecordId = expectedCurrentRecord.id
 
-            val actualCurrentRecord = vm.currentRecordFlow.filterNotNull().first()
+            val actualCurrentRecord = vm.currentRecordStateFlow.firstSuccess()
 
-            assertEquals(expectedCurrentRecord, actualCurrentRecord.getOrThrow())
+            assertEquals(expectedCurrentRecord, actualCurrentRecord)
 
             vm.expression = "Expr2"
 
@@ -171,7 +170,7 @@ class AddEditRecordViewModelTests {
         useViewModel(recordDao = dao) { vm ->
             vm.currentRecordId = 1
 
-            val actualRecord = vm.currentRecordFlow.filterNotNull().first().getOrThrow()
+            val actualRecord = vm.currentRecordStateFlow.firstSuccess()
 
             assertEquals(expectedRecord, actualRecord)
         }
@@ -189,7 +188,7 @@ class AddEditRecordViewModelTests {
         vm.addOrEditExpression()
 
         vm.onAddError.handler = {
-            assertTrue(false)
+            throw RuntimeException("Crash")
         }
 
         vm.onRecordSuccessfullyAdded.setHandlerAndWait {
@@ -223,7 +222,7 @@ class AddEditRecordViewModelTests {
         vm.currentRecordId = 1
 
         // Wait until current record is loaded
-        vm.currentRecordFlow.filterNotNull().first()
+        vm.currentRecordStateFlow.filterNotNull().first()
 
         vm.expression = "Expr1_New"
         vm.additionalNotes = "Notes1_New"
@@ -232,8 +231,7 @@ class AddEditRecordViewModelTests {
         vm.addOrEditExpression()
 
         vm.onAddError.handler = {
-            // Crash
-            assertTrue(false)
+            throw RuntimeException("Crash")
         }
 
         vm.onRecordSuccessfullyAdded.setHandlerAndWait {

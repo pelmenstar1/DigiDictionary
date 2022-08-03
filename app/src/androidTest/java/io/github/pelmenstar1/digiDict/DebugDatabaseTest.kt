@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict
 
-import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.AppDatabase
@@ -17,7 +16,7 @@ import org.junit.runner.RunWith
 @Ignore("Should be run manually") // remove this to run the test.
 class DebugDatabaseTest {
     private val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    private val db = Room.databaseBuilder(appContext, AppDatabase::class.java, "database").build()
+    private val db = AppDatabase.getOrCreate(appContext)
 
     @Test
     fun generateCommon() {

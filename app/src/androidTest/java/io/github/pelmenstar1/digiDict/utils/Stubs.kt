@@ -5,8 +5,6 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
-import io.github.pelmenstar1.digiDict.stats.AdditionStats
-import io.github.pelmenstar1.digiDict.stats.AdditionStatsProvider
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.Flow
 
@@ -129,11 +127,5 @@ open class RecordDaoStub : RecordDao() {
 
 object AppWidgetUpdaterStub : AppWidgetUpdater {
     override fun updateAllWidgets() {
-    }
-}
-
-object AdditionStatsProviderStub : AdditionStatsProvider {
-    override fun compute(currentEpochSeconds: Long): AdditionStats {
-        throw RuntimeException()
     }
 }
