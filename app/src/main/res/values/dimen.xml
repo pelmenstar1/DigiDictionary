@@ -7,6 +7,10 @@
     <dimen name="home_stateContainerMarginTop">5dp</dimen>
     <dimen name="home_stateContainerMarginBottom">80dp</dimen>
 
+    <dimen name="settingItemContainer_iconSize">32dp</dimen>
+    <dimen name="settingItemContainer_padding">8dp</dimen>
+    <dimen name="settingItemContainer_nameMarginStart">8dp</dimen>
+
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
 

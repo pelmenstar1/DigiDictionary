@@ -10,7 +10,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:indeterminate="true" />
+        android:indeterminate="true"
+        tools:visibility="gone" />
 
     <io.github.pelmenstar1.digiDict.ui.ErrorContainer
         android:id="@+id/settings_errorContainer"
@@ -19,10 +20,22 @@
         android:layout_gravity="center"
         app:errorText="@string/settings_failedToLoadSettings" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <TextView
+        android:id="@+id/settings_version"
+        style="@style/TextAppearance.Material3.LabelMedium"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:textIsSelectable="false"
+        tools:text="1.0 (Debug)" />
+
+    <LinearLayout
         android:id="@+id/settings_contentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         android:visibility="gone"
         tools:visibility="visible">
 
@@ -33,85 +46,35 @@
             style="@style/Widget.DigiDictionary.SettingsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/quiz"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:text="@string/quiz" />
 
-        <ImageView
-            android:id="@+id/settings_scorePointsPerCorrectAnswer_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_margin="8dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/ic_points_per_correct_answer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_quizTitle" />
-
-        <TextView
-            android:id="@+id/settings_scorePointsPerCorrectAnswer_prefix"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
+        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/settings_scorePointsPerCorrectAnswer_prefix"
-            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_icon"
-            app:layout_constraintStart_toEndOf="@id/settings_scorePointsPerCorrectAnswer_icon"
-            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_icon" />
+            app:icon="@drawable/ic_points_per_correct_answer"
+            app:name="@string/settings_scorePointsPerCorrectAnswer_prefix">
 
-        <Spinner
-            android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
-            android:layout_width="wrap_content"
+            <Spinner
+                android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/settings_from_1_to_10" />
+
+        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="0dp"
-            android:entries="@array/settings_from_1_to_10"
-            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_icon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerCorrectAnswer_icon" />
+            app:icon="@drawable/ic_points_per_wrong_answer"
+            app:name="@string/settings_scorePointsPerWrongAnswer_prefix">
 
-        <androidx.constraintlayout.widget.Barrier
-            android:id="@+id/settings_scorePointsPerCorrectAnswer_barrier"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:barrierDirection="bottom"
-            app:constraint_referenced_ids="settings_scorePointsPerCorrectAnswer_icon,settings_scorePointsPerCorrectAnswer_prefix,settings_scorePointsPerCorrectAnswer_spinner" />
+            <Spinner
+                android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/settings_from_1_to_10" />
 
-        <ImageView
-            android:id="@+id/settings_scorePointsPerWrongAnswer_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_margin="8dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/ic_points_per_wrong_answer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_scorePointsPerCorrectAnswer_barrier" />
-
-        <TextView
-            android:id="@+id/settings_scorePointsPerWrongAnswer_prefix"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/settings_scorePointsPerWrongAnswer_prefix"
-            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_icon"
-            app:layout_constraintStart_toEndOf="@+id/settings_scorePointsPerWrongAnswer_icon"
-            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswer_icon" />
-
-        <Spinner
-            android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="0dp"
-            android:entries="@array/settings_from_1_to_10"
-            app:layout_constraintBottom_toBottomOf="@+id/settings_scorePointsPerWrongAnswer_icon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/settings_scorePointsPerWrongAnswer_icon" />
-
-        <androidx.constraintlayout.widget.Barrier
-            android:id="@+id/settings_scorePointsPerWrongAnswer_barrier"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:barrierDirection="bottom"
-            app:constraint_referenced_ids="settings_scorePointsPerWrongAnswer_icon,settings_scorePointsPerWrongAnswer_prefix,settings_scorePointsPerWrongAnswer_spinner" />
+        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
 
         <!-- Remote dict. provider -->
 
@@ -120,46 +83,20 @@
             style="@style/Widget.DigiDictionary.SettingsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/remoteDictProviderShort"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_scorePointsPerWrongAnswer_barrier" />
+            android:text="@string/remoteDictProviderShort" />
 
-        <ImageView
-            android:id="@+id/settings_openBrowserInApp_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_margin="8dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/ic_open_browser_in_app"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_remoteDictProviderTitle" />
-
-        <TextView
-            android:id="@+id/settings_openBrowserInApp_prefix"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
+        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/settings_openBrowserInApp"
-            app:layout_constraintBottom_toBottomOf="@id/settings_openBrowserInApp_switch"
-            app:layout_constraintStart_toEndOf="@+id/settings_openBrowserInApp_icon"
-            app:layout_constraintTop_toTopOf="@id/settings_openBrowserInApp_switch" />
+            app:icon="@drawable/ic_open_browser_in_app"
+            app:name="@string/settings_openBrowserInApp">
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/settings_openBrowserInApp_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_remoteDictProviderTitle" />
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/settings_openBrowserInApp_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-        <androidx.constraintlayout.widget.Barrier
-            android:id="@+id/settings_openBrowserInApp_barrier"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:barrierDirection="bottom"
-            app:constraint_referenced_ids="settings_openBrowserInApp_prefix,settings_openBrowserInApp_switch" />
+        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
 
         <!-- Remind me! -->
 
@@ -168,97 +105,46 @@
             style="@style/Widget.DigiDictionary.SettingsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/remindRecords_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_openBrowserInApp_barrier" />
+            android:text="@string/remindRecords_label" />
 
-        <ImageView
-            android:id="@+id/settings_remindMaxItems_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/ic_list_numbered"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_remindTitle" />
-
-        <TextView
-            android:id="@+id/settings_remindMaxItems_prefix"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/settings_remindMaxItems"
-            app:layout_constraintBottom_toBottomOf="@id/settings_remindMaxItems_icon"
-            app:layout_constraintStart_toEndOf="@id/settings_remindMaxItems_icon"
-            app:layout_constraintTop_toTopOf="@id/settings_remindMaxItems_icon" />
-
-        <Spinner
-            android:id="@+id/settings_remindMaxItems_spinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:entries="@array/settings_from_1_to_30"
-            app:layout_constraintBottom_toBottomOf="@id/settings_remindMaxItems_icon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/settings_remindMaxItems_icon" />
-
-        <androidx.constraintlayout.widget.Barrier
-            android:id="@+id/settings_remindMaxItems_barrier"
+        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:barrierDirection="bottom"
-            app:constraint_referenced_ids="settings_remindMaxItems_icon,settings_remindMaxItems_prefix,settings_remindMaxItems_spinner" />
+            app:icon="@drawable/ic_list_numbered"
+            app:name="@string/settings_remindMaxItems">
 
-        <!-- Backup settings -->
+            <Spinner
+                android:id="@+id/settings_remindMaxItems_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/settings_from_1_to_30" />
+
+        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+        <!-- Backup -->
 
         <TextView
             android:id="@+id/settings_backupTitle"
             style="@style/Widget.DigiDictionary.SettingsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_backupTitle"
-            android:layout_marginTop="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_remindMaxItems_barrier" />
+            android:text="@string/settings_backupTitle" />
 
         <Button
             android:id="@+id/settings_import"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
-            android:text="@string/settings_import"
-            app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_backupTitle" />
+            android:text="@string/settings_import" />
 
         <Button
             android:id="@+id/settings_export"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/settings_export"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/quiz_centerGuide"
-            app:layout_constraintTop_toTopOf="@+id/settings_import" />
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_export" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/quiz_centerGuide"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.5" />
-
-        <TextView
-            android:id="@+id/settings_version"
-            style="@style/TextAppearance.Material3.LabelMedium"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:textIsSelectable="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="1.0 (Debug)" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </FrameLayout>
