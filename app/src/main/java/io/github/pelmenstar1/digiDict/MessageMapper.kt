@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict
 
 import android.content.Context
 import androidx.annotation.StringRes
+import io.github.pelmenstar1.digiDict.utils.getEnumFieldCount
 import java.util.concurrent.atomic.AtomicReferenceArray
 
 /**
@@ -19,7 +20,7 @@ abstract class ResourcesMessageMapper<T : Enum<T>>(
     private val cachedStrings = AtomicReferenceArray<String?>(enumCount)
 
     final override fun map(type: T): String {
-        // Even if two threads simultaneously mapping same type T, then state remains consistent anyway,
+        // Even if two threads are simultaneously trying to map same type T, then state remains consistent anyway,
         // simply Resources.getString() will be called twice.
         val cachedStr = cachedStrings.get(type.ordinal)
         if (cachedStr != null) {
@@ -35,4 +36,13 @@ abstract class ResourcesMessageMapper<T : Enum<T>>(
 
     @StringRes
     protected abstract fun mapToStringResource(type: T): Int
+}
+
+inline fun <reified T : Enum<T>> resourcesMessageMapper(
+    context: Context,
+    crossinline mapToStringRes: (T) -> Int
+): ResourcesMessageMapper<T> {
+    return object : ResourcesMessageMapper<T>(context, getEnumFieldCount<T>()) {
+        override fun mapToStringResource(type: T) = mapToStringRes(type)
+    }
 }

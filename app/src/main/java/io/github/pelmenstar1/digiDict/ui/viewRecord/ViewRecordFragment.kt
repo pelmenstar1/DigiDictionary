@@ -12,21 +12,16 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.pelmenstar1.digiDict.MessageMapper
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.utils.*
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class ViewRecordFragment : Fragment() {
     private val args by navArgs<ViewRecordFragmentArgs>()
     private val viewModel by viewModels<ViewRecordViewModel>()
-
-    @Inject
-    lateinit var messageMapper: MessageMapper<ViewRecordMessage>
 
     private lateinit var binding: FragmentViewRecordBinding
 
@@ -70,10 +65,8 @@ class ViewRecordFragment : Fragment() {
         vm.id = args.id
 
         vm.onDeleteError.handler = {
-            val msg = messageMapper.map(ViewRecordMessage.DB_ERROR)
-
             container?.let {
-                Snackbar.make(it, msg, Snackbar.LENGTH_LONG)
+                Snackbar.make(it, R.string.dbError, Snackbar.LENGTH_LONG)
                     .showLifecycleAwareSnackbar(lifecycle)
             }
         }
@@ -115,9 +108,5 @@ class ViewRecordFragment : Fragment() {
         }
 
         return binding.root
-    }
-
-    companion object {
-        private const val TAG = "ViewRecordFragment"
     }
 }

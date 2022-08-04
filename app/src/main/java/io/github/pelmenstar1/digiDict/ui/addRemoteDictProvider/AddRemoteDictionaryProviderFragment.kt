@@ -39,10 +39,8 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
 
             onValidityCheckError.handler = {
                 if (container != null) {
-                    val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
-
                     Snackbar
-                        .make(container, errorMsg, Snackbar.LENGTH_INDEFINITE)
+                        .make(container, R.string.dbError, Snackbar.LENGTH_INDEFINITE)
                         .setAction(R.string.retry) {
                             restartValidityCheck()
                         }
@@ -52,10 +50,8 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
 
             onAdditionError.handler = {
                 if (container != null) {
-                    val errorMsg = messageMapper.map(AddRemoteDictionaryProviderMessage.DB_ERROR)
-
                     Snackbar
-                        .make(container, errorMsg, Snackbar.LENGTH_SHORT)
+                        .make(container, R.string.dbError, Snackbar.LENGTH_SHORT)
                         .setAnchorView(binding.addRemoteDictProviderAdd)
                         .showLifecycleAwareSnackbar(lifecycle)
                 }

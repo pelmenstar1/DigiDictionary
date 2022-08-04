@@ -18,14 +18,9 @@ import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.time.SystemEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditExpressionMessageMapper
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
-import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessageMapper
 import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessage
-import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessageMapper
-import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordMessage
-import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordMessageMapper
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -77,22 +72,20 @@ class AppModule {
     }
 
     @Provides
+    @Singleton
     fun providesAddExpressionMessageMapper(@ApplicationContext context: Context): MessageMapper<AddEditRecordMessage> {
-        return AddEditExpressionMessageMapper(context)
+        return AddEditRecordMessage.defaultMapper(context)
     }
 
     @Provides
-    fun provideViewRecordMessageMapper(@ApplicationContext context: Context): MessageMapper<ViewRecordMessage> {
-        return ViewRecordMessageMapper(context)
-    }
-
-    @Provides
+    @Singleton
     fun provideSettingsMessageMapper(@ApplicationContext context: Context): MessageMapper<SettingsMessage> {
-        return SettingsMessageMapper(context)
+        return SettingsMessage.defaultMapper(context)
     }
 
     @Provides
+    @Singleton
     fun provideAddRemoteDictProviderMessageMapper(@ApplicationContext context: Context): MessageMapper<AddRemoteDictionaryProviderMessage> {
-        return AddRemoteDictionaryProviderMessageMapper(context)
+        return AddRemoteDictionaryProviderMessage.defaultMapper(context)
     }
 }
