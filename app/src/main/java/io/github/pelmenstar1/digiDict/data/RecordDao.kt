@@ -128,6 +128,9 @@ abstract class RecordDao {
     @Query("SELECT * FROM records WHERE expression = :expr")
     abstract suspend fun getRecordByExpression(expr: String): Record?
 
+    @Query("SELECT id FROM records")
+    abstract suspend fun getAllIds(): IntArray
+
     @Query("SELECT id FROM records WHERE score >= 0")
     abstract suspend fun getIdsWithPositiveScore(): IntArray
 
@@ -136,6 +139,19 @@ abstract class RecordDao {
 
     @Query("SELECT id FROM records WHERE dateTime >= :epochSeconds")
     abstract suspend fun getIdsAfter(epochSeconds: Long): IntArray
+
+    @Transaction
+    open suspend fun getRandomRecordsRegardlessScore(random: Random, requestedSize: Int): Array<Record> {
+        val totalSize = count()
+        val resolvedSize = min(requestedSize, totalSize)
+
+        val indices = random.generateUniqueRandomNumbers(totalSize, resolvedSize)
+        val allIds = getAllIds()
+
+        val resultIds = IntArray(indices.size) { allIds[indices[it]] }
+
+        return getRecordsByIds(resultIds)
+    }
 
     @Transaction
     open suspend fun getRandomRecords(random: Random, size: Int): Array<Record> {

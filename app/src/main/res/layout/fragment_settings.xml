@@ -161,6 +161,56 @@
             app:barrierDirection="bottom"
             app:constraint_referenced_ids="settings_openBrowserInApp_prefix,settings_openBrowserInApp_switch" />
 
+        <!-- Remind me! -->
+
+        <TextView
+            android:id="@+id/settings_remindTitle"
+            style="@style/Widget.DigiDictionary.SettingsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/remindRecords_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_openBrowserInApp_barrier" />
+
+        <ImageView
+            android:id="@+id/settings_remindMaxItems_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_list_numbered"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_remindTitle" />
+
+        <TextView
+            android:id="@+id/settings_remindMaxItems_prefix"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/settings_remindMaxItems"
+            app:layout_constraintBottom_toBottomOf="@id/settings_remindMaxItems_icon"
+            app:layout_constraintStart_toEndOf="@id/settings_remindMaxItems_icon"
+            app:layout_constraintTop_toTopOf="@id/settings_remindMaxItems_icon" />
+
+        <Spinner
+            android:id="@+id/settings_remindMaxItems_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:entries="@array/settings_from_1_to_30"
+            app:layout_constraintBottom_toBottomOf="@id/settings_remindMaxItems_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/settings_remindMaxItems_icon" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/settings_remindMaxItems_barrier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="settings_remindMaxItems_icon,settings_remindMaxItems_prefix,settings_remindMaxItems_spinner" />
+
         <!-- Backup settings -->
 
         <TextView
@@ -169,8 +219,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/settings_backupTitle"
+            android:layout_marginTop="8dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/settings_openBrowserInApp_barrier" />
+            app:layout_constraintTop_toBottomOf="@id/settings_remindMaxItems_barrier" />
 
         <Button
             android:id="@+id/settings_import"

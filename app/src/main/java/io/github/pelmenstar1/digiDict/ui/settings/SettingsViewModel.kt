@@ -37,6 +37,13 @@ class SettingsViewModel @Inject constructor(
         preferencesSnapshotStateManager.retry()
     }
 
+    inline fun <T : Any> changePreferenceValue(
+        value: T,
+        getEntry: AppPreferences.Entries.() -> AppPreferences.Entry<T>
+    ) {
+        changePreferenceValue(AppPreferences.Entries.getEntry(), value)
+    }
+
     fun <T : Any> changePreferenceValue(entry: AppPreferences.Entry<T>, value: T) {
         viewModelScope.launch(Dispatchers.IO) {
             appPreferences.set(entry, value)

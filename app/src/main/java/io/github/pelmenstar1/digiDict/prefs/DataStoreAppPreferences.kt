@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -22,6 +23,12 @@ class DataStoreAppPreferences(private val dataStore: DataStore<Preferences>) : A
         return prefs.getValue(entry.getKey(), entry)
     }
 
+    override fun <T : Any> getFlow(entry: Entry<T>): Flow<T> {
+        val key = entry.getKey()
+
+        return dataStore.data.map { it.getValue(key, entry) }
+    }
+
     override suspend fun <T : Any> set(entry: Entry<T>, value: T) {
         dataStore.updateData {
             it.toMutablePreferences().also { prefs ->
@@ -34,12 +41,14 @@ class DataStoreAppPreferences(private val dataStore: DataStore<Preferences>) : A
         private val SCORE_POINTS_PER_CORRECT_ANSWER_KEY = intPreferencesKey("scorePointsPerCorrectAnswer")
         private val SCORE_POINTS_PER_WRONG_ANSWER_KEY = intPreferencesKey("scorePointsPerWrongAnswer")
         private val USE_CUSTOM_TABS_KEY = booleanPreferencesKey("useCustomTabs")
+        private val REMIND_ITEMS_SIZE_KEY = intPreferencesKey("remindItemsSize")
 
         internal fun Preferences.toSnapshot(): Snapshot {
             return Snapshot(
                 getValue(SCORE_POINTS_PER_CORRECT_ANSWER_KEY, Entries.scorePointsPerCorrectAnswer),
                 getValue(SCORE_POINTS_PER_WRONG_ANSWER_KEY, Entries.scorePointsPerWrongAnswer),
                 getValue(USE_CUSTOM_TABS_KEY, Entries.useCustomTabs),
+                getValue(REMIND_ITEMS_SIZE_KEY, Entries.remindItemsSize)
             )
         }
 
@@ -53,6 +62,7 @@ class DataStoreAppPreferences(private val dataStore: DataStore<Preferences>) : A
                 this === Entries.scorePointsPerCorrectAnswer -> SCORE_POINTS_PER_CORRECT_ANSWER_KEY
                 this === Entries.scorePointsPerWrongAnswer -> SCORE_POINTS_PER_WRONG_ANSWER_KEY
                 this === Entries.useCustomTabs -> USE_CUSTOM_TABS_KEY
+                this === Entries.remindItemsSize -> REMIND_ITEMS_SIZE_KEY
                 else -> throw IllegalStateException("Invalid preference entry")
             } as Preferences.Key<T>
 

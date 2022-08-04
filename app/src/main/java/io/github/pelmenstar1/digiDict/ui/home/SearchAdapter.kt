@@ -5,26 +5,11 @@ import androidx.annotation.MainThread
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.ui.record.FilteredArrayRecordDiffCallback
 import io.github.pelmenstar1.digiDict.ui.record.RecordViewHolder
 import io.github.pelmenstar1.digiDict.utils.FilteredArray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-class RecordDiffCallback(
-    private val oldArray: FilteredArray<Record>,
-    private val newArray: FilteredArray<Record>
-) : DiffUtil.Callback() {
-    override fun getOldListSize() = oldArray.size
-    override fun getNewListSize() = newArray.size
-
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldArray[oldItemPosition].id == newArray[newItemPosition].id
-    }
-
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldArray[oldItemPosition] == newArray[newItemPosition]
-    }
-}
 
 class SearchAdapter(
     onViewRecord: (id: Int) -> Unit
@@ -39,7 +24,7 @@ class SearchAdapter(
             return
         }
 
-        val diffResult = DiffUtil.calculateDiff(RecordDiffCallback(data, newData))
+        val diffResult = DiffUtil.calculateDiff(FilteredArrayRecordDiffCallback(data, newData))
 
         data = newData
 

@@ -64,7 +64,7 @@ class SettingsFragment : Fragment() {
             )
 
             settingsOpenBrowserInAppSwitch.setOnCheckedChangeListener { _, isChecked ->
-                viewModel.changePreferenceValue(AppPreferences.Entries.useCustomTabs, isChecked)
+                viewModel.changePreferenceValue(isChecked) { useCustomTabs }
             }
 
             settingsErrorContainer.setOnRetryListener {
@@ -73,6 +73,15 @@ class SettingsFragment : Fragment() {
 
             settingsScorePointsPerCorrectAnswerSpinner.initAsQuizScore { scorePointsPerCorrectAnswer }
             settingsScorePointsPerWrongAnswerSpinner.initAsQuizScore { scorePointsPerWrongAnswer }
+
+            settingsRemindMaxItemsSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    vm.changePreferenceValue(position + 1) { remindItemsSize }
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                }
+            }
         }
 
         lifecycleScope.run {
@@ -100,6 +109,7 @@ class SettingsFragment : Fragment() {
 
                             settingsScorePointsPerCorrectAnswerSpinner.setValue(snapshot.scorePointsPerCorrectAnswer)
                             settingsScorePointsPerWrongAnswerSpinner.setValue(snapshot.scorePointsPerWrongAnswer)
+                            settingsRemindMaxItemsSpinner.setValue(snapshot.remindItemsSize)
                             settingsOpenBrowserInAppSwitch.isChecked = snapshot.useCustomTabs
                         }
                     }

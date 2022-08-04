@@ -131,7 +131,8 @@ class QuizViewModelTests {
             AppPreferences.Snapshot(
                 scorePointsPerCorrectAnswer = scorePointsPerCorrectAnswer.defaultValue,
                 scorePointsPerWrongAnswer = scorePointsPerWrongAnswer.defaultValue,
-                useCustomTabs = useCustomTabs.defaultValue
+                useCustomTabs = useCustomTabs.defaultValue,
+                remindItemsSize = remindItemsSize.defaultValue
             )
         }
 

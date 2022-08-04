@@ -84,8 +84,13 @@ class FixedBitSetTests {
         testCase(size = 0, setBits = intArrayOf(), expectedValue = true)
         testCase(size = 1, setBits = intArrayOf(), expectedValue = false)
         testCase(size = 4, setBits = intArrayOf(0, 1, 2, 3), expectedValue = true)
-        testCase(size = 32, setBits = (0..31).toList().toIntArray(), expectedValue = true)
-        testCase(size = 35, setBits = (0..34).toList().toIntArray(), expectedValue = true)
-        testCase(size = 34, setBits = (0..32).toList().toIntArray(), expectedValue = false)
+        testCase(size = 32, setBits = (0..31).toIntArray(), expectedValue = true)
+        testCase(size = 35, setBits = (0..34).toIntArray(), expectedValue = true)
+        testCase(size = 34, setBits = (0..32).toIntArray(), expectedValue = false)
+        testCase(size = 64, setBits = (0..63).toIntArray(), expectedValue = true)
+        testCase(size = 67, setBits = (0..65).toIntArray(), expectedValue = false)
+        testCase(size = 128, setBits = (0..127).toIntArray(), expectedValue = true)
+        testCase(size = 129, setBits = (0..127).toIntArray(), expectedValue = false)
+        testCase(size = 130, setBits = (0..129).toIntArray(), expectedValue = true)
     }
 }

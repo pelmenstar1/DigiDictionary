@@ -112,6 +112,10 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
+    override suspend fun getAllIds(): IntArray {
+        throw NotImplementedError()
+    }
+
     override suspend fun getIdsWithPositiveScore(): IntArray {
         throw NotImplementedError()
     }

@@ -8,6 +8,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertEquals
 
+fun IntRange.toIntArray() = toList().toIntArray()
+
 fun assertOnMainThread() {
     assertEquals(Looper.getMainLooper().thread, Thread.currentThread())
 }

@@ -17,12 +17,12 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.utils.getLazyValue
 
-class RecordViewHolder private constructor(
-    private val container: ViewGroup
+open class RecordViewHolder private constructor(
+    val container: ViewGroup
 ) : RecyclerView.ViewHolder(container) {
-    private val expressionView = container.getTextViewAt(EXPRESSION_VIEW_INDEX)
-    private val meaningView = container.getTextViewAt(MEANING_VIEW_INDEX)
-    private val scoreView = container.getTextViewAt(SCORE_VIEW_INDEX)
+    val expressionView = container.getTextViewAt(EXPRESSION_VIEW_INDEX)
+    val meaningView = container.getTextViewAt(MEANING_VIEW_INDEX)
+    val scoreView = container.getTextViewAt(SCORE_VIEW_INDEX)
 
     constructor(context: Context) : this(createContainer(context))
 
@@ -110,10 +110,10 @@ class RecordViewHolder private constructor(
             return LinearLayout(context).also { container ->
                 container.layoutParams = CONTAINER_LAYOUT_PARAMS
 
-                val density = context.resources.displayMetrics.density
-                val dp5 = (5f * density + 0.5f).toInt()
+                val res = context.resources
+                val padding = res.getDimensionPixelOffset(R.dimen.itemRecord_padding)
 
-                container.setPadding(dp5)
+                container.setPadding(padding)
 
                 container.addView(MaterialTextView(context).apply {
                     layoutParams = SCORE_LAYOUT_PARAMS
@@ -133,8 +133,7 @@ class RecordViewHolder private constructor(
                     ).apply {
                         weight = 0.5f
 
-                        leftMargin = dp5
-                        rightMargin = dp5
+                        marginStart = res.getDimensionPixelOffset(R.dimen.itemRecord_expressionMarginStart)
                     }
 
                     TextViewCompat.setTextAppearance(

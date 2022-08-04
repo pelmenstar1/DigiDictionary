@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict
 
 import io.github.pelmenstar1.digiDict.utils.findPositionOfNthSetBit
 import io.github.pelmenstar1.digiDict.utils.iterateSetBits
-import io.github.pelmenstar1.digiDict.utils.lowestNBitsSet
+import io.github.pelmenstar1.digiDict.utils.lowestNBitsSetInt
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -73,14 +73,14 @@ class BitsTest {
 
     @Test
     fun lowestNBitsSetTest() {
-        assertEquals(0, lowestNBitsSet(0))
-        assertEquals(1, lowestNBitsSet(1))
-        assertEquals(0b11, lowestNBitsSet(2))
-        assertEquals(0b111, lowestNBitsSet(3))
-        assertEquals(0b1111, lowestNBitsSet(4))
-        assertEquals(0b11111, lowestNBitsSet(5))
-        assertEquals(0xFFFF, lowestNBitsSet(16))
-        assertEquals((-1), lowestNBitsSet(32))
-        assertEquals((-1), lowestNBitsSet(33))
+        assertEquals(0, lowestNBitsSetInt(0))
+        assertEquals(1, lowestNBitsSetInt(1))
+        assertEquals(0b11, lowestNBitsSetInt(2))
+        assertEquals(0b111, lowestNBitsSetInt(3))
+        assertEquals(0b1111, lowestNBitsSetInt(4))
+        assertEquals(0b11111, lowestNBitsSetInt(5))
+        assertEquals(0xFFFF, lowestNBitsSetInt(16))
+        assertEquals((-1), lowestNBitsSetInt(32))
+        assertEquals((-1), lowestNBitsSetInt(33))
     }
 }
