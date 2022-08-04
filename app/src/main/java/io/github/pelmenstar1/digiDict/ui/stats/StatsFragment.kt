@@ -8,11 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentStatsBinding
 import io.github.pelmenstar1.digiDict.utils.DataLoadState
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
-import io.github.pelmenstar1.digiDict.utils.setFormattedText
 
 @AndroidEntryPoint
 class StatsFragment : Fragment() {
@@ -23,23 +21,16 @@ class StatsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val context = requireContext()
         val vm = viewModel
-        val res = context.resources
 
         val binding = FragmentStatsBinding.inflate(inflater, container, false)
 
-        val recordsCountFormat = res.getString(R.string.stats_recordsCountFormat)
-        val recordsAddedLast24HoursFormat = res.getString(R.string.stats_recordsAdded_last24HoursFormat)
-        val recordsAddedLast7DaysFormat = res.getString(R.string.stats_recordsAdded_last7DaysFormat)
-        val recordsAddedLast31DaysFormat = res.getString(R.string.stats_recordsAdded_last31DaysFormat)
+        with(binding) {
+            statsErrorContainer.setOnRetryListener {
+                vm.retryComputeStats()
+            }
 
-        binding.statsErrorContainer.setOnRetryListener {
-            vm.retryComputeStats()
-        }
-
-        lifecycleScope.launchFlowCollector(vm.resultStateFlow) {
-            with(binding) {
+            lifecycleScope.launchFlowCollector(vm.resultStateFlow) {
                 when (it) {
                     is DataLoadState.Loading -> {
                         statsLoadingIndicator.visibility = View.VISIBLE
@@ -53,29 +44,16 @@ class StatsFragment : Fragment() {
                     }
                     is DataLoadState.Success -> {
                         val (result) = it
-
-                        val count = result.count
-                        val (last24Hours, last7Days, last31Days) = result.additionStats
+                        val (count, additionStats) = result
 
                         statsContentContainer.visibility = View.VISIBLE
                         statsLoadingIndicator.visibility = View.GONE
                         statsErrorContainer.visibility = View.GONE
 
-                        statsCount.setFormattedText(recordsCountFormat, count)
-                        statsRecordsAddedLast24Hours.setFormattedText(
-                            recordsAddedLast24HoursFormat,
-                            last24Hours
-                        )
-
-                        statsRecordsAddedLast7Days.setFormattedText(
-                            recordsAddedLast7DaysFormat,
-                            last7Days
-                        )
-
-                        statsRecordsAddedLast31Days.setFormattedText(
-                            recordsAddedLast31DaysFormat,
-                            last31Days
-                        )
+                        statsCountView.setValue(count)
+                        statsRecordsAddedLast24HoursView.setValue(additionStats.last24Hours)
+                        statsRecordsAddedLast7DaysView.setValue(additionStats.last7Days)
+                        statsRecordsAddedLast31DaysView.setValue(additionStats.last31Days)
                     }
                 }
             }

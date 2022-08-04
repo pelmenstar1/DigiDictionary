@@ -34,7 +34,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Old meaning" />
 
-    <TextView
+    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_oldAdditionalNotes"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="0dp"
@@ -46,9 +46,10 @@
         app:layout_constraintEnd_toStartOf="@+id/itemResolveImportConflict_newGuide"
         app:layout_constraintStart_toEndOf="@id/itemResolveImportConflict_expressionGuide"
         app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_oldMeaning"
+        app:prefix="@string/additionalNotes"
         tools:text="Old additional notes" />
 
-    <TextView
+    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_oldScore"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="wrap_content"
@@ -58,7 +59,8 @@
         android:textIsSelectable="false"
         app:layout_constraintStart_toStartOf="@id/itemResolveImportConflict_expressionGuide"
         app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_oldAdditionalNotes"
-        tools:text="Old score"/>
+        app:prefix="@string/score"
+        tools:text="Old score" />
 
     <TextView
         android:id="@+id/itemResolveImportConflict_oldDateTime"
@@ -70,7 +72,7 @@
         android:textIsSelectable="false"
         app:layout_constraintStart_toStartOf="@id/itemResolveImportConflict_expressionGuide"
         app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_oldScore"
-        tools:text="Old datetime"/>
+        tools:text="Old datetime" />
 
 
     <!-- New values -->
@@ -88,7 +90,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="New meaning" />
 
-    <TextView
+    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_newAdditionalNotes"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="0dp"
@@ -99,9 +101,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/itemResolveImportConflict_newGuide"
         app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_newMeaning"
+        app:prefix="@string/additionalNotes"
         tools:text="New additional notes" />
 
-    <TextView
+    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_newScore"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="wrap_content"
@@ -111,7 +114,8 @@
         android:textIsSelectable="false"
         app:layout_constraintStart_toStartOf="@id/itemResolveImportConflict_newGuide"
         app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_newAdditionalNotes"
-        tools:text="New score"/>
+        app:prefix="@string/score"
+        tools:text="New score" />
 
     <TextView
         android:id="@+id/itemResolveImportConflict_newDateTime"
@@ -123,42 +127,42 @@
         android:textIsSelectable="false"
         app:layout_constraintStart_toStartOf="@id/itemResolveImportConflict_newGuide"
         app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_newScore"
-        tools:text="New datetime"/>
+        tools:text="New datetime" />
 
     <!-- Actions -->
 
     <Button
-        style="@style/Widget.Material3.Button.OutlinedButton"
         android:id="@+id/itemResolveImportConflict_acceptOld"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
         android:text="@string/resolveImportConflicts_acceptOld"
-        android:layout_marginTop="5dp"
-        app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_bottomBarrier"
+        app:layout_constraintEnd_toStartOf="@id/itemResolveImportConflict_1_3_guide"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/itemResolveImportConflict_1_3_guide"/>
+        app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_bottomBarrier" />
 
     <Button
-        style="@style/Widget.Material3.Button.OutlinedButton"
         android:id="@+id/itemResolveImportConflict_merge"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/resolveImportConflicts_merge"
         android:layout_marginTop="5dp"
-        app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_bottomBarrier"
+        android:text="@string/resolveImportConflicts_merge"
+        app:layout_constraintEnd_toStartOf="@id/itemResolveImportConflict_2_3_guide"
         app:layout_constraintStart_toEndOf="@id/itemResolveImportConflict_1_3_guide"
-        app:layout_constraintEnd_toStartOf="@id/itemResolveImportConflict_2_3_guide"/>
+        app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_bottomBarrier" />
 
     <Button
-        style="@style/Widget.Material3.Button.OutlinedButton"
         android:id="@+id/itemResolveImportConflict_acceptNew"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/resolveImportConflicts_acceptNew"
         android:layout_marginTop="5dp"
-        app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_bottomBarrier"
+        android:text="@string/resolveImportConflicts_acceptNew"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/itemResolveImportConflict_newGuide"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/itemResolveImportConflict_bottomBarrier" />
 
     <!-- Guidelines -->
 
@@ -195,6 +199,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="itemResolveImportConflict_oldDateTime,itemResolveImportConflict_newAdditionalNotes"/>
+        app:constraint_referenced_ids="itemResolveImportConflict_oldDateTime,itemResolveImportConflict_newAdditionalNotes" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

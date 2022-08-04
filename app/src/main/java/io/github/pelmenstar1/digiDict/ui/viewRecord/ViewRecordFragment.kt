@@ -37,14 +37,9 @@ class ViewRecordFragment : Fragment() {
     ): View {
         val vm = viewModel
         val context = requireContext()
-        val res = context.resources
         val navController = findNavController()
 
         val dateTimeFormatter = RecordDateTimeFormatter(context)
-
-        val expressionFormat = res.getString(R.string.expressionAndValueFormat)
-        val additionalNotesFormat = res.getString(R.string.additionalNotesAndValueFormat)
-        val scoreFormat = res.getString(R.string.scoreAndValueFormat)
 
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
         this.binding = binding
@@ -97,23 +92,22 @@ class ViewRecordFragment : Fragment() {
                         viewRecordLoadingIndicator.visibility = View.GONE
                     }
                     is DataLoadState.Success -> {
-                        val record = it.value
+                        val (record) = it
 
                         if (record != null) {
                             viewRecordContentContainer.visibility = View.VISIBLE
                             viewRecordErrorContainer.visibility = View.GONE
                             viewRecordLoadingIndicator.visibility = View.GONE
 
-                            viewRecordExpression.setFormattedText(expressionFormat, record.expression)
-                            viewRecordMeaning.text =
-                                MeaningTextHelper.parseToFormatted(record.rawMeaning)
-                            viewRecordAdditionalNotes.setFormattedText(
-                                additionalNotesFormat,
-                                record.additionalNotes
+                            viewRecordExpressionView.setValue(record.expression)
+                            viewRecordMeaningView.text = MeaningTextHelper.parseToFormatted(
+                                record.rawMeaning
                             )
-                            viewRecordScore.setFormattedText(scoreFormat, record.score)
 
-                            viewRecordDateTime.text = dateTimeFormatter.format(record.epochSeconds)
+                            viewRecordAdditionalNotesView.setValue(record.additionalNotes)
+                            viewRecordScore.setValue(record.score)
+
+                            viewRecordDateTimeView.text = dateTimeFormatter.format(record.epochSeconds)
                         }
                     }
                 }

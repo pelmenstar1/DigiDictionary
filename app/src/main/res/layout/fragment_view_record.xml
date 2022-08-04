@@ -31,8 +31,8 @@
         android:visibility="gone"
         tools:visibility="visible">
 
-        <TextView
-            android:id="@+id/viewRecord_expression"
+        <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+            android:id="@+id/viewRecord_expressionView"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -40,6 +40,7 @@
             android:textIsSelectable="true"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:prefix="@string/expression"
             tools:text="Expression: " />
 
         <TextView
@@ -50,32 +51,33 @@
             android:layout_marginTop="8dp"
             android:text="@string/meaningPrefix"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
+            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expressionView" />
 
         <TextView
-            android:id="@+id/viewRecord_meaning"
+            android:id="@+id/viewRecord_meaningView"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:textIsSelectable="true"
-            app:layout_constraintStart_toEndOf="@id/viewRecord_meaningPrefix"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expression" />
+            app:layout_constraintStart_toEndOf="@id/viewRecord_meaningPrefix"
+            app:layout_constraintTop_toBottomOf="@+id/viewRecord_expressionView" />
 
-        <TextView
-            android:id="@+id/viewRecord_additionalNotes"
+        <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+            android:id="@+id/viewRecord_additionalNotesView"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textIsSelectable="true"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_meaning"
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_meaningView"
+            app:prefix="@string/additionalNotes"
             tools:text="Additional notes: " />
 
-        <TextView
+        <io.github.pelmenstar1.digiDict.ui.PrefixTextView
             android:id="@+id/viewRecord_score"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="wrap_content"
@@ -83,11 +85,12 @@
             android:layout_marginTop="8dp"
             android:textIsSelectable="true"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_additionalNotes"
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_additionalNotesView"
+            app:prefix="@string/score"
             tools:text="Score: " />
 
         <TextView
-            android:id="@+id/viewRecord_dateTime"
+            android:id="@+id/viewRecord_dateTimeView"
             style="@style/TextAppearance.Material3.BodyMedium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -104,7 +107,7 @@
             android:layout_marginTop="16dp"
             android:text="@string/edit"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTime" />
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTimeView" />
 
         <Button
             android:id="@+id/viewRecord_delete"

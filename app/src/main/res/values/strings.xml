@@ -57,12 +57,9 @@
     <string name="meaning">Meaning</string>
     <string name="origin">Origin</string>
     <string name="additionalNotes">Additional notes</string>
+    <string name="score">Score</string>
 
-    <string name="expressionAndValueFormat">Expression: %s</string>
     <string name="meaningPrefix">Meaning: </string>
-    <string name="originAndValueFormat">Origin: %s</string>
-    <string name="additionalNotesAndValueFormat">Additional notes: %s</string>
-    <string name="scoreAndValueFormat">Score: %d</string>
     <string name="meaningAndOrdinalFormat">Meaning %d</string>
 
     <string name="recordLoadingError">Failed to load record</string>
@@ -97,10 +94,10 @@
     <!-- Stats fragment -->
     <string name="stats">Statistics</string>
     <string name="stats_failedToComputeStats">Failed to compute the statistics</string>
-    <string name="stats_recordsCountFormat">Count: %d</string>
-    <string name="stats_recordsAdded_last24HoursFormat">Records added in last 24 hours: %d</string>
-    <string name="stats_recordsAdded_last7DaysFormat">Records added in last 7 days: %d</string>
-    <string name="stats_recordsAdded_last31DaysFormat">Records added in last 31 days: %d</string>
+    <string name="stats_count">Count</string>
+    <string name="stats_recordsAdded_last24Hours">Records added in last 24 hours</string>
+    <string name="stats_recordsAdded_last7Days">Records added in last 7 days</string>
+    <string name="stats_recordsAdded_last31Days">Records added in last 31 days</string>
 
     <!-- Settings fragment -->
     <string name="settings">Settings</string>

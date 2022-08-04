@@ -12,6 +12,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.data.ConflictEntry
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.ui.PrefixTextView
 import io.github.pelmenstar1.digiDict.utils.getLazyValue
 import io.github.pelmenstar1.digiDict.utils.getLocaleCompat
 import java.util.*
@@ -29,12 +30,9 @@ class ResolveImportConflictsAdapter(
         @IdRes dateTimeId: Int
     ) {
         private val meaningView = container.findViewById<TextView>(meaningId)
-        private val additionalNotesView = container.findViewById<TextView>(notesId)
-        private val scoreView = container.findViewById<TextView>(scoreId)
+        private val additionalNotesView = container.findViewById<PrefixTextView>(notesId)
+        private val scoreView = container.findViewById<PrefixTextView>(scoreId)
         private val dateTimeView = container.findViewById<TextView>(dateTimeId)
-
-        private val additionalNotesFormat: String
-        private val scoreFormat: String
 
         private val locale: Locale
         private val dateTimeFormatter: RecordDateTimeFormatter
@@ -44,11 +42,6 @@ class ResolveImportConflictsAdapter(
             locale = context.getLocaleCompat()
 
             dateTimeFormatter = RecordDateTimeFormatter(context)
-
-            with(context.resources) {
-                additionalNotesFormat = getString(R.string.additionalNotesAndValueFormat)
-                scoreFormat = getString(R.string.scoreAndValueFormat)
-            }
         }
 
         fun setContent(
@@ -58,8 +51,8 @@ class ResolveImportConflictsAdapter(
             epochSeconds: Long
         ) {
             meaningView.text = MeaningTextHelper.parseToFormatted(rawMeaning)
-            additionalNotesView.text = String.format(locale, additionalNotesFormat, additionalNotes)
-            scoreView.text = String.format(locale, scoreFormat, score)
+            additionalNotesView.setValue(additionalNotes)
+            scoreView.setValue(score)
             dateTimeView.text = dateTimeFormatter.format(epochSeconds)
         }
     }
