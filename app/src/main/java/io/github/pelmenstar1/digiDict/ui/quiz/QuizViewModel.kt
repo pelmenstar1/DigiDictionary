@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.quiz
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.Record
@@ -9,6 +8,7 @@ import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
+import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.utils.DataLoadState
 import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.Event
@@ -23,7 +23,7 @@ class QuizViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val appPreferences: AppPreferences,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
-) : ViewModel() {
+) : SingleDataLoadStateViewModel<Array<Record>>(TAG) {
     @Volatile
     private var answeredBits: FixedBitSet? = null
 
@@ -42,45 +42,37 @@ class QuizViewModel @Inject constructor(
             modeFlow.value = value
         }
 
-    private val inputStateManager = DataLoadStateManager<Array<Record>>(TAG)
-
-    val inputStateFlow = inputStateManager.buildFlow(viewModelScope) {
-        fromFlow {
-            modeFlow.filterNotNull().map { selectedMode ->
-                val records = if (selectedMode == QuizMode.ALL) {
-                    recordDao.getRandomRecords(random, RECORDS_MAX_SIZE)
-                } else {
-                    val duration = when (selectedMode) {
-                        QuizMode.LAST_24_HOURS -> SECONDS_IN_DAY
-                        QuizMode.LAST_48_HOURS -> 2 * SECONDS_IN_DAY
-                        // It's impossible but compiler doesn't know about it
-                        else -> throw RuntimeException("Impossible")
-                    }
-
-                    val currentEpochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
-
-                    recordDao.getRandomRecordsAfter(
-                        random,
-                        RECORDS_MAX_SIZE,
-                        currentEpochSeconds - duration
-                    )
-                }
-
-                val size = records.size
-
-                answeredBits = FixedBitSet(size)
-                correctAnsweredBits = FixedBitSet(size)
-
-                records
-            }
-        }
-    }
-
     val onSaveError = Event()
     val onResultSaved = Event()
 
-    fun retryLoadInput() {
-        inputStateManager.retry()
+    override fun DataLoadStateManager.FlowBuilder<Array<Record>>.buildDataFlow() = fromFlow {
+        modeFlow.filterNotNull().map { selectedMode ->
+            val records = if (selectedMode == QuizMode.ALL) {
+                recordDao.getRandomRecords(random, RECORDS_MAX_SIZE)
+            } else {
+                val duration = when (selectedMode) {
+                    QuizMode.LAST_24_HOURS -> SECONDS_IN_DAY
+                    QuizMode.LAST_48_HOURS -> 2 * SECONDS_IN_DAY
+                    // It's impossible but compiler doesn't know about it
+                    else -> throw RuntimeException("Impossible")
+                }
+
+                val currentEpochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
+
+                recordDao.getRandomRecordsAfter(
+                    random,
+                    RECORDS_MAX_SIZE,
+                    currentEpochSeconds - duration
+                )
+            }
+
+            val size = records.size
+
+            answeredBits = FixedBitSet(size)
+            correctAnsweredBits = FixedBitSet(size)
+
+            records
+        }
     }
 
     fun onItemAnswer(index: Int, isCorrect: Boolean) {
@@ -97,7 +89,7 @@ class QuizViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Relies on the fact that user can't answer if result is null
-                val inputState = inputStateFlow.first()
+                val inputState = dataStateFlow.first()
 
                 if (inputState !is DataLoadState.Success<Array<Record>>) {
                     throw IllegalStateException("Input is expected to be successful")

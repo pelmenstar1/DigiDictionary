@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/manageRemoteDictProviders_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <FrameLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -14,30 +14,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/manageRemoteDictProviders_loadingIndicator"
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/manageRemoteDictProviders_add"
+            style="@style/Widget.Material3.FloatingActionButton.Primary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:indeterminate="true" />
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="@string/addRemoteDictProvider"
+            app:srcCompat="@drawable/ic_add" />
 
-        <io.github.pelmenstar1.digiDict.ui.ErrorContainer
-            android:id="@+id/manageRemoteDictProviders_errorContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            app:errorText="@string/manageRemoteDictProviders_failedToLoadProvidersError"
-            tools:visibility="visible" />
-    </FrameLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/manageRemoteDictProviders_add"
-        style="@style/Widget.Material3.FloatingActionButton.Primary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginBottom="8dp"
-        android:contentDescription="@string/addRemoteDictProvider"
-        app:srcCompat="@drawable/ic_add" />
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer>

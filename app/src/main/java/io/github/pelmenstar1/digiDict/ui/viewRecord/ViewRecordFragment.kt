@@ -16,7 +16,9 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
+import io.github.pelmenstar1.digiDict.utils.setPopBackStackHandler
+import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 
 @AndroidEntryPoint
 class ViewRecordFragment : Fragment() {
@@ -56,8 +58,18 @@ class ViewRecordFragment : Fragment() {
                 navController.navigate(directions)
             }
 
-            viewRecordErrorContainer.setOnRetryListener {
-                vm.refreshRecord()
+            viewRecordContainer.setupLoadStateFlow(lifecycleScope, vm) { record ->
+                if (record != null) {
+                    viewRecordExpressionView.setValue(record.expression)
+                    viewRecordMeaningView.text = MeaningTextHelper.parseToFormatted(
+                        record.rawMeaning
+                    )
+
+                    viewRecordAdditionalNotesView.setValue(record.additionalNotes)
+                    viewRecordScore.setValue(record.score)
+
+                    viewRecordDateTimeView.text = dateTimeFormatter.format(record.epochSeconds)
+                }
             }
         }
 
@@ -68,42 +80,6 @@ class ViewRecordFragment : Fragment() {
             container?.let {
                 Snackbar.make(it, R.string.dbError, Snackbar.LENGTH_LONG)
                     .showLifecycleAwareSnackbar(lifecycle)
-            }
-        }
-
-        lifecycleScope.launchFlowCollector(vm.recordStateFlow) {
-            with(binding) {
-                when (it) {
-                    is DataLoadState.Loading -> {
-                        viewRecordLoadingIndicator.visibility = View.VISIBLE
-                        viewRecordContentContainer.visibility = View.GONE
-                        viewRecordErrorContainer.visibility = View.GONE
-                    }
-                    is DataLoadState.Error -> {
-                        viewRecordErrorContainer.visibility = View.VISIBLE
-                        viewRecordContentContainer.visibility = View.GONE
-                        viewRecordLoadingIndicator.visibility = View.GONE
-                    }
-                    is DataLoadState.Success -> {
-                        val (record) = it
-
-                        if (record != null) {
-                            viewRecordContentContainer.visibility = View.VISIBLE
-                            viewRecordErrorContainer.visibility = View.GONE
-                            viewRecordLoadingIndicator.visibility = View.GONE
-
-                            viewRecordExpressionView.setValue(record.expression)
-                            viewRecordMeaningView.text = MeaningTextHelper.parseToFormatted(
-                                record.rawMeaning
-                            )
-
-                            viewRecordAdditionalNotesView.setValue(record.additionalNotes)
-                            viewRecordScore.setValue(record.score)
-
-                            viewRecordDateTimeView.text = dateTimeFormatter.format(record.epochSeconds)
-                        }
-                    }
-                }
             }
         }
 

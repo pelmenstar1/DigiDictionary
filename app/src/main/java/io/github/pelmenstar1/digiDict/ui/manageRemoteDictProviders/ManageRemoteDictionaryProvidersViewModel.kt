@@ -1,12 +1,12 @@
 package io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
+import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
@@ -17,19 +17,11 @@ import javax.inject.Inject
 class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
     private val remoteDictProviderDao: RemoteDictionaryProviderDao,
     private val remoteDictProviderStatsDao: RemoteDictionaryProviderStatsDao
-) : ViewModel() {
-    private val providersStateManager = DataLoadStateManager<Array<RemoteDictionaryProviderInfo>>(TAG)
-
-    val providersStateFlow = providersStateManager.buildFlow(viewModelScope) {
-        fromFlow {
-            remoteDictProviderDao.getAllFlow()
-        }
-    }
-
+) : SingleDataLoadStateViewModel<Array<RemoteDictionaryProviderInfo>>(TAG) {
     val onDeleteError = Event()
 
-    fun retryLoadProviders() {
-        providersStateManager.retry()
+    override fun DataLoadStateManager.FlowBuilder<Array<RemoteDictionaryProviderInfo>>.buildDataFlow() = fromFlow {
+        remoteDictProviderDao.getAllFlow()
     }
 
     fun delete(provider: RemoteDictionaryProviderInfo) {

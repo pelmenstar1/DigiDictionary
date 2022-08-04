@@ -1,26 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/viewRecord_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/viewRecord_loadingIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:indeterminate="true"
-        android:visibility="gone" />
-
-    <io.github.pelmenstar1.digiDict.ui.ErrorContainer
-        android:id="@+id/viewRecord_errorContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        app:errorText="@string/recordLoadingError"
-        tools:visibility="visible" />
+    android:layout_height="match_parent"
+    app:errorText="@string/recordLoadingError">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/viewRecord_contentContainer"
@@ -121,4 +106,4 @@
             app:layout_constraintTop_toTopOf="@id/viewRecord_edit"
             app:strokeColor="@color/color_error" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-</FrameLayout>
+</io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer>

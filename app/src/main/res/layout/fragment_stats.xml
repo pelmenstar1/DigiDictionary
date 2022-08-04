@@ -1,25 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/stats_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/stats_loadingIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:indeterminate="true" />
-
-    <io.github.pelmenstar1.digiDict.ui.ErrorContainer
-        android:id="@+id/stats_errorContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        app:errorText="@string/stats_failedToComputeStats"
-        tools:visibility="visible" />
+    android:layout_height="match_parent"
+    app:errorText="@string/stats_failedToComputeStats">
 
     <LinearLayout
         android:id="@+id/stats_contentContainer"
@@ -66,4 +52,4 @@
             app:prefix="@string/stats_recordsAdded_last31Days"
             tools:text="@string/stats_recordsAdded_last31Days" />
     </LinearLayout>
-</FrameLayout>
+</io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer>

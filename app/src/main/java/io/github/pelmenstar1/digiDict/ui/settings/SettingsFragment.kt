@@ -17,8 +17,6 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.utils.DataLoadState
-import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
 import javax.inject.Inject
 
@@ -67,10 +65,6 @@ class SettingsFragment : Fragment() {
                 viewModel.changePreferenceValue(isChecked) { useCustomTabs }
             }
 
-            settingsErrorContainer.setOnRetryListener {
-                vm.retryLoadPreferences()
-            }
-
             settingsScorePointsPerCorrectAnswerSpinner.initAsQuizScore { scorePointsPerCorrectAnswer }
             settingsScorePointsPerWrongAnswerSpinner.initAsQuizScore { scorePointsPerWrongAnswer }
 
@@ -87,32 +81,12 @@ class SettingsFragment : Fragment() {
         lifecycleScope.run {
             launchMessageFlowCollector(viewModel.messageFlow, messageMapper, container)
 
-            launchFlowCollector(viewModel.preferencesSnapshotStateFlow) {
-                with(binding) {
-                    when (it) {
-                        is DataLoadState.Loading -> {
-                            settingsLoadingIndicator.visibility = View.VISIBLE
-                            settingsErrorContainer.visibility = View.GONE
-                            settingsContentContainer.visibility = View.GONE
-                        }
-                        is DataLoadState.Error -> {
-                            settingsErrorContainer.visibility = View.VISIBLE
-                            settingsLoadingIndicator.visibility = View.GONE
-                            settingsContentContainer.visibility = View.GONE
-                        }
-                        is DataLoadState.Success -> {
-                            settingsContentContainer.visibility = View.VISIBLE
-                            settingsLoadingIndicator.visibility = View.GONE
-                            settingsErrorContainer.visibility = View.GONE
-
-                            val (snapshot) = it
-
-                            settingsScorePointsPerCorrectAnswerSpinner.setValue(snapshot.scorePointsPerCorrectAnswer)
-                            settingsScorePointsPerWrongAnswerSpinner.setValue(snapshot.scorePointsPerWrongAnswer)
-                            settingsRemindMaxItemsSpinner.setValue(snapshot.remindItemsSize)
-                            settingsOpenBrowserInAppSwitch.isChecked = snapshot.useCustomTabs
-                        }
-                    }
+            with(binding) {
+                settingsContainer.setupLoadStateFlow(this@run, vm) {
+                    settingsScorePointsPerCorrectAnswerSpinner.setValue(it.scorePointsPerCorrectAnswer)
+                    settingsScorePointsPerWrongAnswerSpinner.setValue(it.scorePointsPerWrongAnswer)
+                    settingsRemindMaxItemsSpinner.setValue(it.remindItemsSize)
+                    settingsOpenBrowserInAppSwitch.isChecked = it.useCustomTabs
                 }
             }
         }

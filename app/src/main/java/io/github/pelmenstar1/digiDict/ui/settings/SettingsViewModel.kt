@@ -3,7 +3,6 @@ package io.github.pelmenstar1.digiDict.ui.settings
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +10,7 @@ import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.serialization.ValidationException
+import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,18 +23,12 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
     private val recordDao: RecordDao
-) : ViewModel() {
-    private val preferencesSnapshotStateManager = DataLoadStateManager<AppPreferences.Snapshot>(TAG)
-
-    val preferencesSnapshotStateFlow = preferencesSnapshotStateManager.buildFlow(viewModelScope) {
-        fromFlow(appPreferences.getSnapshotFlow())
-    }
-
+) : SingleDataLoadStateViewModel<AppPreferences.Snapshot>(TAG) {
     private val _messageFlow = MutableStateFlow<SettingsMessage?>(null)
     val messageFlow = _messageFlow.asStateFlow()
 
-    fun retryLoadPreferences() {
-        preferencesSnapshotStateManager.retry()
+    override fun DataLoadStateManager.FlowBuilder<AppPreferences.Snapshot>.buildDataFlow() = fromFlow {
+        appPreferences.getSnapshotFlow()
     }
 
     inline fun <T : Any> changePreferenceValue(

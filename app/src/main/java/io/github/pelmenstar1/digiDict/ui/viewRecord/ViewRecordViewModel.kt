@@ -1,11 +1,11 @@
 package io.github.pelmenstar1.digiDict.ui.viewRecord
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
@@ -21,9 +21,7 @@ import javax.inject.Inject
 class ViewRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater
-) : ViewModel() {
-    private val stateManager = DataLoadStateManager<Record?>(TAG)
-
+) : SingleDataLoadStateViewModel<Record?>(TAG) {
     private val idFlow = MutableStateFlow<Int?>(null)
 
     var id: Int = -1
@@ -33,19 +31,13 @@ class ViewRecordViewModel @Inject constructor(
             idFlow.value = value
         }
 
-    val recordStateFlow = stateManager.buildFlow(viewModelScope) {
-        fromFlow {
-            idFlow.filterNotNull().flatMapMerge { id ->
-                recordDao.getRecordFlowById(id)
-            }
-        }
-    }
-
     val onDeleteError = Event()
     val onRecordDeleted = Event()
 
-    fun refreshRecord() {
-        stateManager.retry()
+    override fun DataLoadStateManager.FlowBuilder<Record?>.buildDataFlow() = fromFlow {
+        idFlow.filterNotNull().flatMapMerge { id ->
+            recordDao.getRecordFlowById(id)
+        }
     }
 
     fun delete() {

@@ -63,12 +63,16 @@ class ErrorContainer @JvmOverloads constructor(
 
             try {
                 array.getText(R.styleable.ErrorContainer_errorText)?.let {
-                    errorTextView.text = it
+                    setErrorText(it)
                 }
             } finally {
                 array.recycle()
             }
         }
+    }
+
+    fun setErrorText(text: CharSequence) {
+        errorTextView.text = text
     }
 
     fun setOnRetryListener(listener: OnClickListener) {

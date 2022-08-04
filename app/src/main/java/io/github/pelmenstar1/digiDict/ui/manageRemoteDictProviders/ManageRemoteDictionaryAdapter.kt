@@ -11,8 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.utils.getLazyValue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 private class RemoteDictProviderInfoCallback(
     private val oldArray: Array<RemoteDictionaryProviderInfo>,
@@ -56,16 +54,13 @@ class ManageRemoteDictionaryAdapter(
 
     private var layoutInflater: LayoutInflater? = null
 
-    suspend fun submitItems(items: Array<RemoteDictionaryProviderInfo>) {
+    fun submitItems(items: Array<RemoteDictionaryProviderInfo>) {
         val oldItems = this.items
         val result = DiffUtil.calculateDiff(RemoteDictProviderInfoCallback(oldItems, items))
 
         this.items = items
 
-        val adapter = this
-        withContext(Dispatchers.Main) {
-            result.dispatchUpdatesTo(adapter)
-        }
+        result.dispatchUpdatesTo(this)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
