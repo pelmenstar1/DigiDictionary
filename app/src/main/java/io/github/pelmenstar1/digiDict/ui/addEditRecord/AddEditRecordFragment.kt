@@ -35,15 +35,11 @@ class AddEditRecordFragment : Fragment() {
     ): View {
         val navController = findNavController()
 
-        val binding = FragmentAddEditRecordBinding.inflate(inflater, container, false)
-        this.binding = binding
-
         val vm = viewModel
         val recordId = args.recordId
 
-        if (recordId >= 0) {
-            setInputsEnabled(false)
-        }
+        val binding = FragmentAddEditRecordBinding.inflate(inflater, container, false)
+        this.binding = binding
 
         vm.currentRecordId = recordId
 
@@ -58,29 +54,34 @@ class AddEditRecordFragment : Fragment() {
             }
         }
 
-        lifecycleScope.launchFlowCollector(vm.currentRecordStateFlow) {
-            // If there's a record to load, inputs should be temporarily disabled and then when the record
-            // is successfully loaded, they should be re-enabled.
+        // If there's no 'current record', currentRecordStateFlow shouldn't be collect at all
+        // because as there's no record to load, state of currentRecordStateFlow will always be Loading
+        // and the inputs will be disabled.
+        if (recordId >= 0) {
+            lifecycleScope.launchFlowCollector(vm.currentRecordStateFlow) {
+                // If there's a record to load, inputs should be temporarily disabled and then when the record
+                // is successfully loaded, they should be re-enabled.
 
-            when (it) {
-                is DataLoadState.Loading -> {
-                    setInputsEnabled(false)
-                }
-                is DataLoadState.Error -> {
-                    setInputsEnabled(false)
-
-                    if (container != null) {
-                        Snackbar
-                            .make(container, R.string.recordLoadingError, Snackbar.LENGTH_INDEFINITE)
-                            .setAction(R.string.retry) { vm.retryLoadCurrentRecord() }
-                            .showLifecycleAwareSnackbar(lifecycle)
+                when (it) {
+                    is DataLoadState.Loading -> {
+                        setInputsEnabled(false)
                     }
-                }
-                is DataLoadState.Success -> {
-                    it.value?.let { record ->
-                        setRecord(record)
+                    is DataLoadState.Error -> {
+                        setInputsEnabled(false)
 
-                        setInputsEnabled(true)
+                        if (container != null) {
+                            Snackbar
+                                .make(container, R.string.recordLoadingError, Snackbar.LENGTH_INDEFINITE)
+                                .setAction(R.string.retry) { vm.retryLoadCurrentRecord() }
+                                .showLifecycleAwareSnackbar(lifecycle)
+                        }
+                    }
+                    is DataLoadState.Success -> {
+                        it.value?.let { record ->
+                            setRecord(record)
+
+                            setInputsEnabled(true)
+                        }
                     }
                 }
             }
