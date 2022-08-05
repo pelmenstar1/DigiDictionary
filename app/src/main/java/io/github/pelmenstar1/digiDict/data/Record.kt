@@ -22,13 +22,13 @@ data class Record(
     @ColumnInfo(name = RecordTable.score) val score: Int,
     // in UTC
     @ColumnInfo(name = RecordTable.epochSeconds) val epochSeconds: Long,
-) {
+) : EntityWithPrimaryKeyId<Record> {
     init {
         require(id >= 0) { "Id can't be negative" }
         require(epochSeconds >= 0) { "Epoch seconds can't be negative" }
     }
 
-    fun equalsNoId(other: Record): Boolean {
+    override fun equalsNoId(other: Record): Boolean {
         return expression == other.expression &&
                 rawMeaning == other.rawMeaning &&
                 additionalNotes == other.additionalNotes &&

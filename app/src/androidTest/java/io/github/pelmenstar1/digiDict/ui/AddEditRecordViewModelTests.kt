@@ -26,6 +26,7 @@ import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.fail
 
 @RunWith(AndroidJUnit4::class)
 class AddEditRecordViewModelTests {
@@ -188,7 +189,7 @@ class AddEditRecordViewModelTests {
         vm.addOrEditExpression()
 
         vm.onAddError.handler = {
-            throw RuntimeException("Crash")
+            fail()
         }
 
         vm.onRecordSuccessfullyAdded.setHandlerAndWait {
@@ -231,7 +232,7 @@ class AddEditRecordViewModelTests {
         vm.addOrEditExpression()
 
         vm.onAddError.handler = {
-            throw RuntimeException("Crash")
+            fail()
         }
 
         vm.onRecordSuccessfullyAdded.setHandlerAndWait {

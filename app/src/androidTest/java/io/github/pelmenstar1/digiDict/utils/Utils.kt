@@ -3,10 +3,30 @@ package io.github.pelmenstar1.digiDict.utils
 import android.os.Looper
 import androidx.lifecycle.ViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertEquals
+import kotlin.test.fail
+
+fun <T : EntityWithPrimaryKeyId<T>> assertContentEqualsNoId(expected: Array<T>, actual: Array<T>) {
+    val expectedSize = expected.size
+    val actualSize = actual.size
+
+    if (expectedSize != actualSize) {
+        fail("Size of expected array differs from size of actual array. Expected size: $expectedSize, actual size: $actualSize")
+    }
+
+    for (i in 0 until expectedSize) {
+        val expectedElement = expected[i]
+        val actualElement = actual[i]
+
+        if (!expectedElement.equalsNoId(actualElement)) {
+            fail("Elements at index $i differ: Expected element: '$expectedElement' \n Actual element: '$actualElement'")
+        }
+    }
+}
 
 fun IntRange.toIntArray() = toList().toIntArray()
 

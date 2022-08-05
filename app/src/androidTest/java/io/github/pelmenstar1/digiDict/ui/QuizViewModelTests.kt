@@ -67,7 +67,7 @@ class QuizViewModelTests {
             vm.use {
                 vm.mode = QuizMode.ALL
 
-                vm.inputStateFlow.firstSuccess()
+                vm.dataStateFlow.firstSuccess()
 
                 indices.forEach {
                     vm.onItemAnswer(it, false)
@@ -100,7 +100,7 @@ class QuizViewModelTests {
         vm.mode = QuizMode.ALL
 
         // Wait until input is loaded.
-        vm.inputStateFlow.firstSuccess()
+        vm.dataStateFlow.firstSuccess()
 
         assertEventHandlerOnMainThread(vm, vm.onResultSaved) { vm.saveResults() }
     }
@@ -121,7 +121,7 @@ class QuizViewModelTests {
         vm.mode = QuizMode.ALL
 
         // Wait until input is loaded.
-        vm.inputStateFlow.firstSuccess()
+        vm.dataStateFlow.firstSuccess()
 
         assertEventHandlerOnMainThread(vm, vm.onSaveError) { saveResults() }
     }

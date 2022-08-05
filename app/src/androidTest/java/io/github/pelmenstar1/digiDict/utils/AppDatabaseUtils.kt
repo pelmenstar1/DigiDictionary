@@ -1,15 +1,10 @@
 package io.github.pelmenstar1.digiDict.utils
 
 import android.content.Context
-import androidx.room.Room
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 
 object AppDatabaseUtils {
-
-
     fun createTestDatabase(context: Context): AppDatabase {
-        return Room
-            .inMemoryDatabaseBuilder(context, AppDatabase::class.java)
-            .build()
+        return AppDatabase.createInMemory(context)
     }
 }

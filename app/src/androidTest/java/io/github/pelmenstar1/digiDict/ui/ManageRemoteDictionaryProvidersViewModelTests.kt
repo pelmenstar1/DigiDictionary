@@ -16,6 +16,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertNull
+import kotlin.test.fail
 
 @RunWith(AndroidJUnit4::class)
 class ManageRemoteDictionaryProvidersViewModelTests {
@@ -50,7 +51,7 @@ class ManageRemoteDictionaryProvidersViewModelTests {
         statsDao.insert(RemoteDictionaryProviderStats(provider.id, visitCount = 1))
 
         vm.onDeleteError.handler = {
-            throw RuntimeException("Crash")
+            fail()
         }
 
         vm.delete(provider)

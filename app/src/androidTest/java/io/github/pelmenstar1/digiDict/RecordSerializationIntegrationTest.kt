@@ -6,13 +6,13 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.serialization.readValuesToList
 import io.github.pelmenstar1.digiDict.serialization.writeValues
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
+import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class RecordSerializationIntegrationTest {
@@ -51,20 +51,7 @@ class RecordSerializationIntegrationTest {
                 valuesFromFile = it.channel.readValuesToList(Record.NO_ID_SERIALIZER)
             }
 
-            val isOriginEqualsToFileValues = run {
-                val size = valuesFromFile.size
-                if (originValuesFromDb.size != size) return@run false
-
-                for (i in 0 until size) {
-                    if (!originValuesFromDb[i].equalsNoId(valuesFromFile[i])) {
-                        return@run false
-                    }
-                }
-
-                true
-            }
-
-            assertTrue(isOriginEqualsToFileValues)
+            assertContentEqualsNoId(originValuesFromDb, valuesFromFile.toTypedArray())
         }
     }
 

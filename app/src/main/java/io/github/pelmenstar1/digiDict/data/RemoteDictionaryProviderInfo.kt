@@ -10,7 +10,7 @@ data class RemoteDictionaryProviderInfo(
     val name: String,
     val schema: String,
     val urlEncodingRules: UrlEncodingRules
-) {
+) : EntityWithPrimaryKeyId<RemoteDictionaryProviderInfo> {
     class UrlEncodingRules {
         val raw: String
         val spaceReplacement: Char
@@ -55,6 +55,10 @@ data class RemoteDictionaryProviderInfo(
         encodedQuery = Uri.encode(encodedQuery, "+")
 
         return schema.replace("\$query$", encodedQuery)
+    }
+
+    override fun equalsNoId(other: RemoteDictionaryProviderInfo): Boolean {
+        return name == other.name && schema == other.schema && urlEncodingRules == other.urlEncodingRules
     }
 
     companion object {

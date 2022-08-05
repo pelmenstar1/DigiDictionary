@@ -19,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.fail
 
 @RunWith(AndroidJUnit4::class)
 class ViewRecordViewModelTests {
@@ -57,7 +58,7 @@ class ViewRecordViewModelTests {
         }
 
         vm.onDeleteError.handler = {
-            throw RuntimeException("Crash")
+            fail()
         }
     }
 
@@ -75,7 +76,7 @@ class ViewRecordViewModelTests {
 
         vm.id = expectedId
 
-        val actualRecord = vm.recordStateFlow.filterIsInstance<DataLoadState.Success<Record?>>().first().value
+        val actualRecord = vm.dataStateFlow.filterIsInstance<DataLoadState.Success<Record?>>().first().value
 
         assertEquals(expectedRecord, actualRecord)
     }
@@ -103,11 +104,11 @@ class ViewRecordViewModelTests {
         vm.id = expectedId
 
         // There should be error state, if there are not, test will time out.
-        vm.recordStateFlow.filterIsInstance<DataLoadState.Error<Record?>>().first()
+        vm.dataStateFlow.filterIsInstance<DataLoadState.Error<Record?>>().first()
 
-        vm.refreshRecord()
+        vm.retryLoadData()
 
-        val actualRecord = vm.recordStateFlow.firstSuccess()
+        val actualRecord = vm.dataStateFlow.firstSuccess()
         assertEquals(expectedRecord, actualRecord)
     }
 

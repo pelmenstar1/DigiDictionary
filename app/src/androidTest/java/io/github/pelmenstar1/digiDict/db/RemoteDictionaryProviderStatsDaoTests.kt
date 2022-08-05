@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict
+package io.github.pelmenstar1.digiDict.db
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
