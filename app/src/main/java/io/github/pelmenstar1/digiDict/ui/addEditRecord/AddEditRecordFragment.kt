@@ -45,14 +45,8 @@ class AddEditRecordFragment : Fragment() {
 
         // Init errors only after currentRecordId is set.
         vm.initErrors()
-        vm.onRecordSuccessfullyAdded.setPopBackStackHandler(navController)
-        vm.onAddError.handler = {
-            if (container != null) {
-                Snackbar
-                    .make(container, R.string.dbError, Snackbar.LENGTH_LONG)
-                    .showLifecycleAwareSnackbar(lifecycle)
-            }
-        }
+        vm.onRecordSuccessfullyAdded.handler = navController.popBackStackEventHandler()
+        vm.onAddError.handler = showSnackbarEventHandler(container, R.string.dbError)
 
         // If there's no 'current record', currentRecordStateFlow shouldn't be collect at all
         // because as there's no record to load, state of currentRecordStateFlow will always be Loading
@@ -139,7 +133,7 @@ class AddEditRecordFragment : Fragment() {
                 text = resources.getString(textId)
 
                 setOnClickListener {
-                    vm.addOrEditExpression()
+                    vm.addOrEditRecord()
                 }
             }
 
@@ -158,10 +152,7 @@ class AddEditRecordFragment : Fragment() {
                 }
 
                 launchErrorFlowCollector(addExpressionExpressionInputLayout, vm.expressionErrorFlow, messageMapper)
-
-                launchFlowCollector(vm.validity) {
-                    addExpressionAddButton.isEnabled = it == AddEditRecordViewModel.ALL_VALID_MASK
-                }
+                launchSetEnabledIfEquals(addExpressionAddButton, AddEditRecordViewModel.ALL_VALID_MASK, vm.validity)
             }
         }
     }

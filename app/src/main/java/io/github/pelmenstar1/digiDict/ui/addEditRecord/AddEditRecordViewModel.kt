@@ -157,7 +157,7 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
-    fun addOrEditExpression() {
+    fun addOrEditRecord() {
         // Disallow starting a job when it has been started already.
         if (isAddJobStarted.compareAndSet(false, true)) {
             // Saving only those values which have been typed by the time of calling addOrEditExpression()

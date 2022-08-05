@@ -35,27 +35,21 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         val binding = FragmentAddRemoteDictProviderBinding.inflate(inflater, container, false)
 
         vm.apply {
-            onSuccessfulAddition.setPopBackStackHandler(navController)
+            onSuccessfulAddition.handler = navController.popBackStackEventHandler()
 
-            onValidityCheckError.handler = {
-                if (container != null) {
-                    Snackbar
-                        .make(container, R.string.dbError, Snackbar.LENGTH_INDEFINITE)
-                        .setAction(R.string.retry) {
-                            restartValidityCheck()
-                        }
-                        .showLifecycleAwareSnackbar(lifecycle)
-                }
-            }
+            onValidityCheckError.handler = showSnackbarEventHandler(
+                container,
+                msgId = R.string.dbError,
+                duration = Snackbar.LENGTH_INDEFINITE,
+                actionText = R.string.retry,
+                action = { vm.restartValidityCheck() }
+            )
 
-            onAdditionError.handler = {
-                if (container != null) {
-                    Snackbar
-                        .make(container, R.string.dbError, Snackbar.LENGTH_SHORT)
-                        .setAnchorView(binding.addRemoteDictProviderAdd)
-                        .showLifecycleAwareSnackbar(lifecycle)
-                }
-            }
+            onAdditionError.handler = showSnackbarEventHandler(
+                container,
+                msgId = R.string.dbError,
+                anchorView = binding.addRemoteDictProviderAdd
+            )
         }
 
         val nameInputLayout = binding.addRemoteDictProviderNameInputLayout
@@ -65,15 +59,14 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
             launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageMapper)
             launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageMapper)
 
-            launchFlowCollector(vm.validityFlow) {
-                val mask = AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK
+            launchSetEnabledIfEquals(
+                binding.addRemoteDictProviderAdd,
+                AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK,
+                vm.validityFlow
+            )
 
-                // Check if all validity bits are set.
-                binding.addRemoteDictProviderAdd.isEnabled = it == mask
-            }
-
-            launchFlowCollector(vm.isNameEnabledFlow) { nameInputLayout.isEnabled = it }
-            launchFlowCollector(vm.isSchemaEnabledFlow) { schemaInputLayout.isEnabled = it }
+            launchSetEnabledFlowCollector(nameInputLayout, vm.isNameEnabledFlow)
+            launchSetEnabledFlowCollector(schemaInputLayout, vm.isSchemaEnabledFlow)
         }
 
         binding.run {

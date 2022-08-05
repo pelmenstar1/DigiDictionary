@@ -186,7 +186,7 @@ class AddEditRecordViewModelTests {
         vm.additionalNotes = "Notes1"
         vm.getMeaning = { ComplexMeaning.Common("Meaning") }
 
-        vm.addOrEditExpression()
+        vm.addOrEditRecord()
 
         vm.onAddError.handler = {
             fail()
@@ -229,7 +229,7 @@ class AddEditRecordViewModelTests {
         vm.additionalNotes = "Notes1_New"
         vm.getMeaning = { ComplexMeaning.Common("Meaning1_New") }
 
-        vm.addOrEditExpression()
+        vm.addOrEditRecord()
 
         vm.onAddError.handler = {
             fail()
@@ -254,7 +254,7 @@ class AddEditRecordViewModelTests {
         val vm = createViewModel()
         vm.getMeaning = { ComplexMeaning.Common("") }
 
-        assertEventHandlerOnMainThread(vm, vm.onRecordSuccessfullyAdded) { addOrEditExpression() }
+        assertEventHandlerOnMainThread(vm, vm.onRecordSuccessfullyAdded) { addOrEditRecord() }
     }
 
     @Test
@@ -266,7 +266,7 @@ class AddEditRecordViewModelTests {
         })
         vm.getMeaning = { ComplexMeaning.Common("") }
 
-        assertEventHandlerOnMainThread(vm, vm.onAddError) { addOrEditExpression() }
+        assertEventHandlerOnMainThread(vm, vm.onAddError) { addOrEditRecord() }
     }
 
     @Test
@@ -277,7 +277,7 @@ class AddEditRecordViewModelTests {
                     vm.getMeaning = { ComplexMeaning.Common("") }
                 }
             },
-            triggerAction = { addOrEditExpression() }
+            triggerAction = { addOrEditRecord() }
         )
     }
 

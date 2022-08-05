@@ -14,6 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentResolveImportConflictsBinding
 import io.github.pelmenstar1.digiDict.utils.getIntArrayOrThrow
+import io.github.pelmenstar1.digiDict.utils.showSnackbarEventHandler
 
 @AndroidEntryPoint
 class ResolveImportConflictsFragment : Fragment() {
@@ -48,16 +49,12 @@ class ResolveImportConflictsFragment : Fragment() {
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-        vm.onApplyChangesError.handler = {
-            container?.let {
-                Snackbar
-                    .make(it, R.string.resolveImportConflicts_applyChangesError, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.retry) {
-                        vm.applyChanges()
-                    }
-                    .show()
-            }
-        }
+        vm.onApplyChangesError.handler = showSnackbarEventHandler(
+            container,
+            msgId = R.string.resolveImportConflicts_applyChangesError,
+            actionText = R.string.retry,
+            action = { vm.applyChanges() }
+        )
 
         vm.onSuccessfulApplyChanges.handler = {
             container?.let {

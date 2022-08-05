@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.utils
 
+import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -26,6 +27,19 @@ fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
 ) {
     launchFlowCollector(flow) { errorType ->
         inputLayout.error = errorType?.let(errorMapper::map)
+    }
+}
+
+fun CoroutineScope.launchSetEnabledFlowCollector(
+    view: View,
+    flow: Flow<Boolean>
+) {
+    launchFlowCollector(flow) { view.isEnabled = it }
+}
+
+fun <T> CoroutineScope.launchSetEnabledIfEquals(view: View, value: T, flow: Flow<T>) {
+    launchFlowCollector(flow) {
+        view.isEnabled = it == value
     }
 }
 

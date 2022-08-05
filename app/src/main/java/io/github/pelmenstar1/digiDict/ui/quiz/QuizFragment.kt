@@ -12,15 +12,14 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
-import io.github.pelmenstar1.digiDict.utils.setPopBackStackHandler
-import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
+import io.github.pelmenstar1.digiDict.utils.launchSetEnabledFlowCollector
+import io.github.pelmenstar1.digiDict.utils.popBackStackEventHandler
+import io.github.pelmenstar1.digiDict.utils.showSnackbarEventHandler
 
 @AndroidEntryPoint
 class QuizFragment : Fragment() {
@@ -116,21 +115,18 @@ class QuizFragment : Fragment() {
 
         itemBackgroundHelper = QuizItemBackgroundHelper(context)
 
-        vm.onResultSaved.setPopBackStackHandler(navController)
+        vm.onResultSaved.handler = navController.popBackStackEventHandler()
         vm.mode = args.mode
 
         with(binding) {
-            if (container != null) {
-                vm.onSaveError.handler = {
-                    Snackbar
-                        .make(container, R.string.quiz_saveError, Snackbar.LENGTH_LONG)
-                        .setAnchorView(quizSaveResults)
-                        .showLifecycleAwareSnackbar(lifecycle)
-                }
-            }
+            vm.onSaveError.handler = showSnackbarEventHandler(
+                container,
+                msgId = R.string.quiz_saveError,
+                anchorView = quizSaveResults
+            )
 
             quizSaveResults.run {
-                lifecycleScope.launchFlowCollector(vm.isAllAnswered) { isEnabled = it }
+                lifecycleScope.launchSetEnabledFlowCollector(this, vm.isAllAnswered)
 
                 setOnClickListener { vm.saveResults() }
             }

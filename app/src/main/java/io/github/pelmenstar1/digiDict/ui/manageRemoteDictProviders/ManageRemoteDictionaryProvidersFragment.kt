@@ -11,12 +11,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRemoteDictProvidersBinding
 import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
-import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
+import io.github.pelmenstar1.digiDict.utils.showSnackbarEventHandler
 
 @AndroidEntryPoint
 class ManageRemoteDictionaryProvidersFragment : Fragment() {
@@ -53,13 +52,10 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
                 navController.navigate(directions)
             }
 
-            vm.onDeleteError.handler = {
-                container?.let {
-                    Snackbar
-                        .make(it, R.string.manageRemoteDictProviders_deleteError, Snackbar.LENGTH_SHORT)
-                        .showLifecycleAwareSnackbar(lifecycle)
-                }
-            }
+            vm.onDeleteError.handler = showSnackbarEventHandler(
+                container,
+                msgId = R.string.manageRemoteDictProviders_deleteError
+            )
 
             manageRemoteDictProvidersContainer.setupLoadStateFlow(lifecycleScope, vm) {
                 adapter.submitItems(it)
