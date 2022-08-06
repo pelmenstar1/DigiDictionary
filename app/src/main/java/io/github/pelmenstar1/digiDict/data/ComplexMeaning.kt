@@ -306,15 +306,13 @@ sealed class ComplexMeaning : Parcelable {
         inline fun <R> typeSwitch(
             value: CharSequence,
             onCommon: () -> R,
-            onList: () -> R,
-            start: Int = 0,
-            end: Int = value.length
+            onList: () -> R
         ): R {
-            if (end == start) {
+            if (value.isEmpty()) {
                 throwInvalidFormat(value)
             }
 
-            return when (value[start]) {
+            return when (value[0]) {
                 'C', 'c' -> onCommon()
                 'L', 'l' -> onList()
                 else -> throwInvalidFormat(value)

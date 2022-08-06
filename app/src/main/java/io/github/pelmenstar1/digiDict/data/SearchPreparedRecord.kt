@@ -41,32 +41,20 @@ data class SearchPreparedRecord(
 
         fun prepareToKeywords(
             expression: CharSequence,
-            rawMeaning: CharSequence,
+            meaning: CharSequence,
             needToLower: Boolean,
             locale: Locale? = null
         ): String {
-            var expr = expression
-            var meaning = rawMeaning
-
-            if (needToLower) {
-                val l = locale ?: Locale.ROOT
-
-                expr = expression.toString().lowercase(l)
-                meaning = rawMeaning.toString().lowercase(l)
-            }
-
-            val exprLength = expr.length
+            val exprLength = expression.length
             val meaningLength = meaning.length
 
             // The result string should be no longer than sum of expression, meaning lengths and +1 for null character.
-            return buildString(exprLength + meaningLength + 1) {
-                appendReducedNonLettersOrDigitsReplacedToSpace(expr, 0, exprLength)
+            var result = buildString(exprLength + meaningLength + 1) {
+                appendReducedNonLettersOrDigitsReplacedToSpace(expression, 0, exprLength)
                 append(NULL_CHAR)
 
                 ComplexMeaning.typeSwitch(
                     meaning,
-                    start = 0,
-                    end = meaningLength,
                     onCommon = {
                         appendReducedNonLettersOrDigitsReplacedToSpace(meaning, 1, meaningLength)
                     },
@@ -85,6 +73,14 @@ data class SearchPreparedRecord(
                     }
                 )
             }
+
+            if (needToLower) {
+                val l = locale ?: Locale.ROOT
+
+                result = result.lowercase(l)
+            }
+
+            return result
         }
     }
 }
