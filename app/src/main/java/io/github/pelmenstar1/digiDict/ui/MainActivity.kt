@@ -1,8 +1,10 @@
 package io.github.pelmenstar1.digiDict.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.navigation.fragment.NavHostFragment
@@ -45,6 +47,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration)
 
+        // TODO: Hide IME when dest fragment is changed.
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val menu = toolbar.menu
             val destId = destination.id
@@ -82,9 +85,18 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 GlobalSearchQueryProvider.query = text ?: ""
             }
 
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
             item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
                 override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                     GlobalSearchQueryProvider.isActive = true
+
+                    actionView.requestFocusFromTouch()
+
+                    // It's deprecated, but at least it works. The same can't be said about setSoftInputMode().
+                    // For some unknown reason, it does not work.
+                    @Suppress("DEPRECATION")
+                    imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
 
                     return true
                 }
@@ -94,6 +106,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
                     // In the next time the active view is expanded, text should be empty.
                     actionView.setText("")
+
+                    imm.hideSoftInputFromWindow(actionView.windowToken, 0)
 
                     return true
                 }
