@@ -23,6 +23,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     @Inject
     lateinit var appDatabase: AppDatabase
 
+    private lateinit var toolbar: MaterialToolbar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -34,7 +36,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             fallbackOnNavigateUpListener = ::onSupportNavigateUp
         )
 
-        val toolbar = findViewById<MaterialToolbar>(R.id.main_toolbar)
+        toolbar = findViewById(R.id.main_toolbar)
 
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
@@ -68,11 +70,15 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onStop() {
         super.onStop()
 
-        // If the activity is stopped, action view in the toolbar is collapsed but for some reason,
-        // appropriate event is not raised.
-        //
-        // When the action view is collapsed, the search should be no longer considered as active.
-        GlobalSearchQueryProvider.isActive = false
+        val searchItem = toolbar.menu.findItem(R.id.homeMenu_search)
+
+        if (searchItem == null || !searchItem.isActionViewExpanded) {
+            // If the activity is stopped, action view in the toolbar is collapsed but for some reason,
+            // appropriate event is not raised.
+            //
+            // When the action view is collapsed, the search should be no longer considered as active.
+            GlobalSearchQueryProvider.isActive = false
+        }
     }
 
     private fun initMenu(menu: Menu) {
