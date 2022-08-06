@@ -5,14 +5,12 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.*
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFails
 
@@ -99,6 +97,34 @@ class AppDatabaseMigrationTests {
         db.insertRdpStats(0, 1)
     }
 
+    // Migration 5 -> 6 should add and fill search_prepared_records table.
+    @Test
+    fun migration_5_6() {
+        val expr1 = "Expression test, some other stuff"
+        val expr2 = "Expression2, test; s; 1 2"
+
+        val meaning1 = "CMeaning and others: 1, 2, 3"
+        val meaning2 = "L3@M A A \n Bacccc bbb \n 12 ffb; afb"
+
+        var db = helper.createDatabase(TEST_DB_NAME, 5)
+
+        db.use {
+            it.insertRecord(expr1, meaning1, "Notes", 1)
+            it.insertRecord(expr2, meaning2, "Notes", 1)
+        }
+
+        val expectedSearchRecords = arrayOf(
+            SearchPreparedRecord.prepare(0, expr1, meaning1, Locale.ROOT),
+            SearchPreparedRecord.prepare(0, expr2, meaning2, Locale.ROOT)
+        )
+
+        db = helper.runMigrationsAndValidate(TEST_DB_NAME, 6, false, AppDatabase.Migration_5_6)
+
+        val actualSearchRecords = db.getAllSearchRecords()
+
+        assertContentEqualsNoId(expectedSearchRecords, actualSearchRecords)
+    }
+
     companion object {
         private const val TEST_DB_NAME = "database-test"
 
@@ -166,6 +192,15 @@ class AppDatabaseMigrationTests {
 
         private fun SupportSQLiteDatabase.insertRdpStats(id: Int, visitCount: Int) {
             execSQL("INSERT INTO remote_dict_provider_stats VALUES(?, ?)", arrayOf(id, visitCount))
+        }
+
+        private fun SupportSQLiteDatabase.getAllSearchRecords(): Array<SearchPreparedRecord> {
+            return querySelectAll(tableName = "search_prepared_records") {
+                val id = it.getInt(0)
+                val keywords = it.getString(1)
+
+                SearchPreparedRecord(id, keywords)
+            }
         }
 
         private inline fun <reified T> SupportSQLiteDatabase.querySelectAll(

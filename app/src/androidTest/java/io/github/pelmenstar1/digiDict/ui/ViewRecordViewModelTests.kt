@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.SearchPreparedRecordDao
 import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
@@ -29,10 +30,11 @@ class ViewRecordViewModelTests {
     }
 
     private fun createViewModel(
-        dao: RecordDao = db.recordDao(),
+        recordDao: RecordDao = db.recordDao(),
+        searchPreparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         listAppWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub
     ): ViewRecordViewModel {
-        return ViewRecordViewModel(dao, listAppWidgetUpdater)
+        return ViewRecordViewModel(recordDao, searchPreparedRecordDao, listAppWidgetUpdater)
     }
 
     @Test
@@ -66,7 +68,7 @@ class ViewRecordViewModelTests {
     fun loadRecordTest() = runTest {
         val expectedId = 4
         val expectedRecord = Record(expectedId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2)
-        val vm = createViewModel(dao = object : RecordDaoStub() {
+        val vm = createViewModel(recordDao = object : RecordDaoStub() {
             override fun getRecordFlowById(id: Int): Flow<Record?> {
                 assertEquals(expectedId, id)
 
@@ -87,7 +89,7 @@ class ViewRecordViewModelTests {
         val expectedRecord = Record(expectedId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2)
 
         var isFirstCall = true
-        val vm = createViewModel(dao = object : RecordDaoStub() {
+        val vm = createViewModel(recordDao = object : RecordDaoStub() {
             override fun getRecordFlowById(id: Int): Flow<Record?> {
                 assertEquals(expectedId, id)
 
@@ -114,7 +116,7 @@ class ViewRecordViewModelTests {
 
     @Test
     fun onDeleteErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(dao = object : RecordDaoStub() {
+        val vm = createViewModel(recordDao = object : RecordDaoStub() {
             override suspend fun deleteById(id: Int): Int {
                 throw RuntimeException()
             }

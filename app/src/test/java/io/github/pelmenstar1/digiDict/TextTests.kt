@@ -1,9 +1,6 @@
 package io.github.pelmenstar1.digiDict
 
-import io.github.pelmenstar1.digiDict.utils.appendPaddedFourDigit
-import io.github.pelmenstar1.digiDict.utils.appendPaddedTwoDigit
-import io.github.pelmenstar1.digiDict.utils.parsePositiveInt
-import io.github.pelmenstar1.digiDict.utils.trimToString
+import io.github.pelmenstar1.digiDict.utils.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -63,5 +60,25 @@ class TextTests {
         assertEquals("aaa", "   aaa    ".trimToString())
         assertEquals("", "".trimToString())
         assertEquals("", "    ".trimToString())
+    }
+
+    @Test
+    fun `reduceWhitespaceReplacedToSpace test`() {
+        fun testCase(input: String, expected: String) {
+            val actual = input.reduceNonLettersOrDigitsReplacedToSpace()
+
+            assertEquals(expected, actual)
+        }
+
+        testCase(input = " AA BB  CC:  AA BB; JJ KK K  ;  ;", expected = "AA BB CC AA BB JJ KK K")
+        testCase(input = " A;  :, B,,,,,; C ... Abcd,  ff -- mm.", expected = "A B C Abcd ff mm")
+        testCase(input = "ABCD", expected = "ABCD")
+        testCase(input = " AA;;;;", expected = "AA")
+        testCase(input = "  ;  ., ? ;", expected = "")
+        testCase(input = "A", expected = "A")
+        testCase(input = "Some ordinal sentence", expected = "Some ordinal sentence")
+        testCase(input = ".....;.. Some ???;;..--- ordinal   ... sentence", expected = "Some ordinal sentence")
+        testCase(input = "", expected = "")
+        testCase(input = ";A;", expected = "A")
     }
 }

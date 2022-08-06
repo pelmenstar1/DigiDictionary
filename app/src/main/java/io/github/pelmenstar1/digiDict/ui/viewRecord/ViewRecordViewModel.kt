@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.SearchPreparedRecordDao
 import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.Event
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ViewRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
+    private val preparedRecordDao: SearchPreparedRecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater
 ) : SingleDataLoadStateViewModel<Record?>(TAG) {
     private val idFlow = MutableStateFlow<Int?>(null)
@@ -44,6 +46,7 @@ class ViewRecordViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 recordDao.deleteById(id)
+                preparedRecordDao.deleteById(id)
 
                 withContext(Dispatchers.Main) {
                     listAppWidgetUpdater.updateAllWidgets()

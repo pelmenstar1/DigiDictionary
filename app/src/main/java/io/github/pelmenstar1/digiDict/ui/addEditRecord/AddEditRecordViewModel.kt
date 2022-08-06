@@ -4,9 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
@@ -23,8 +21,10 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
+    private val searchPreparedRecordDao: SearchPreparedRecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
-    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
+    private val localeProvider: LocaleProvider
 ) : ViewModel() {
     val validity = MutableStateFlow<Int?>(null)
 
@@ -173,11 +173,17 @@ class AddEditRecordViewModel @Inject constructor(
                     val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
 
                     currentRecordId.let { id ->
+                        val locale = localeProvider.get()
+
                         if (id >= 0) {
                             recordDao.update(
                                 currentRecordId,
                                 expr, rawMeaning, additionalNotes,
                                 epochSeconds
+                            )
+
+                            searchPreparedRecordDao.update(
+                                SearchPreparedRecord.prepare(id, expr, rawMeaning, locale)
                             )
                         } else {
                             recordDao.insert(
@@ -188,6 +194,12 @@ class AddEditRecordViewModel @Inject constructor(
                                     epochSeconds = epochSeconds
                                 )
                             )
+
+                            recordDao.getRecordIdByExpression(expr)?.let {
+                                searchPreparedRecordDao.insert(
+                                    SearchPreparedRecord.prepare(it, expr, rawMeaning, locale)
+                                )
+                            }
                         }
                     }
 

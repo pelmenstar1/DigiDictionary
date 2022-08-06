@@ -108,9 +108,7 @@ class FilteredArray<T>(
     }
 }
 
-inline fun <E> Array<out E>.filterFast(
-    predicate: (element: E) -> Boolean
-): FilteredArray<E> {
+inline fun <E> Array<out E>.filterToBitSet(predicate: (element: E) -> Boolean): LongArray {
     val size = size
 
     // Ceiling division to 64
@@ -138,5 +136,5 @@ inline fun <E> Array<out E>.filterFast(
         start = end
     }
 
-    return FilteredArray(this, bitSet)
+    return bitSet
 }

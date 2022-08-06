@@ -92,7 +92,7 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override fun getAllRecordsFlow(): Flow<Array<Record>> {
+    override fun getAllRecordsOrderByIdFlow(): Flow<Array<Record>> {
         throw NotImplementedError()
     }
 
@@ -109,6 +109,10 @@ open class RecordDaoStub : RecordDao() {
     }
 
     override suspend fun getRecordByExpression(expr: String): Record? {
+        throw NotImplementedError()
+    }
+
+    override suspend fun getRecordIdByExpression(expr: String): Int? {
         throw NotImplementedError()
     }
 
