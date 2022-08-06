@@ -4,8 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import io.github.pelmenstar1.digiDict.utils.NULL_CHAR
 import io.github.pelmenstar1.digiDict.utils.appendReducedNonLettersOrDigitsReplacedToSpace
-import io.github.pelmenstar1.digiDict.utils.reduceNonLettersOrDigitsReplacedToSpace
-import io.github.pelmenstar1.digiDict.utils.splitToLazyRanges
 import java.util.*
 
 /**
@@ -57,53 +55,32 @@ data class SearchPreparedRecord(
                 meaning = rawMeaning.toString().lowercase(l)
             }
 
-            val reducedExpr = expr.reduceNonLettersOrDigitsReplacedToSpace()
-            val reducedMeaning = meaning.reduceRawMeaning()
+            val exprLength = expr.length
+            val meaningLength = meaning.length
 
-            val result = buildString(reducedExpr.length + reducedMeaning.length + 1) {
-                reducedExpr.splitBySpaceAndAppend(this)
+            // The result string should be no longer than sum of expression, meaning lengths and +1 for null character.
+            return buildString(exprLength + meaningLength + 1) {
+                appendReducedNonLettersOrDigitsReplacedToSpace(expr, 0, exprLength)
                 append(NULL_CHAR)
-                reducedMeaning.splitBySpaceAndAppend(this)
-            }
 
-            return result
-        }
-
-        private fun String.splitBySpaceAndAppend(sb: StringBuilder) {
-            val length = length
-
-            splitToLazyRanges(delimiter = ' ') { start, end ->
-                sb.append(this, start, end)
-
-                if (end != length) {
-                    sb.append(' ')
-                }
-            }
-        }
-
-        private fun CharSequence.reduceRawMeaning(): String {
-            val value = this
-            val valueLength = length
-
-            return buildString {
                 ComplexMeaning.typeSwitch(
-                    value,
+                    meaning,
                     start = 0,
-                    end = valueLength,
+                    end = meaningLength,
                     onCommon = {
-                        appendReducedNonLettersOrDigitsReplacedToSpace(value, 1, valueLength)
+                        appendReducedNonLettersOrDigitsReplacedToSpace(meaning, 1, meaningLength)
                     },
                     onList = {
                         var isFirst = true
 
-                        ComplexMeaning.iterateListElementRanges(value, 0, valueLength) { rangeStart, rangeEnd ->
+                        ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
                             if (isFirst) {
                                 isFirst = false
                             } else {
                                 append(' ')
                             }
 
-                            appendReducedNonLettersOrDigitsReplacedToSpace(value, rangeStart, rangeEnd)
+                            appendReducedNonLettersOrDigitsReplacedToSpace(meaning, start, end)
                         }
                     }
                 )

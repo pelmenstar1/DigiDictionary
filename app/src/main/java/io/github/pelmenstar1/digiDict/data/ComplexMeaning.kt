@@ -323,12 +323,12 @@ sealed class ComplexMeaning : Parcelable {
 
         inline fun iterateListElementRanges(
             rawText: CharSequence,
-            start: Int,
-            end: Int,
             block: (start: Int, end: Int) -> Unit
         ) {
+            val length = rawText.length
+
             // Skip mark character
-            val firstDelimiterIndex = rawText.indexOf('@', start + 1, end)
+            val firstDelimiterIndex = rawText.indexOf('@', 1)
             if (firstDelimiterIndex < 0) {
                 throwInvalidFormat(rawText)
             }
@@ -342,9 +342,9 @@ sealed class ComplexMeaning : Parcelable {
             var i = firstDelimiterIndex + 1
 
             repeat(count) {
-                var nextDelimiterPos = rawText.indexOf('\n', i, end)
+                var nextDelimiterPos = rawText.indexOf('\n', i)
                 if (nextDelimiterPos < 0) {
-                    nextDelimiterPos = end
+                    nextDelimiterPos = length
                 }
 
                 block(i, nextDelimiterPos)

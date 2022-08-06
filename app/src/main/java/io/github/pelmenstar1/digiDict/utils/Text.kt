@@ -168,32 +168,6 @@ fun CharSequence.getTrimRangeNonLetterOrDigit(start: Int, end: Int): PackedIntRa
 }
 
 /**
- * Splits [String] to sequence of ranges around occurrences of specified [delimiter] char.
- * Each range is passed to [block] lambda.
- *
- * Acts like [split] or [splitToSequence] except it doesn't allocate.
- */
-fun String.splitToLazyRanges(delimiter: Char, block: (start: Int, end: Int) -> Unit) {
-    var prevIndex = 0
-    val length = length
-
-    while (true) {
-        var nextIndex = indexOf(delimiter, prevIndex)
-        if (nextIndex == -1) {
-            nextIndex = length
-        }
-
-        block(prevIndex, nextIndex)
-
-        prevIndex = nextIndex + 1
-
-        if (nextIndex == length) {
-            break
-        }
-    }
-}
-
-/**
  * Appends processed subsequence of [text] in range `[start; end)`.
  * The main idea of the 'processing' is to leave only meaningful parts of the sequence joined with spaces.
  * Example: " .. ; . AA  BB     CC DD ;;;" becomes "AA BB CC DD"
