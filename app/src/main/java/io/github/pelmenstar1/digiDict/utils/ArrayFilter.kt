@@ -79,10 +79,11 @@ class FilteredArray<out T>(
             append(size)
             append(", elements=[")
 
+            var seqIndex = 0
             bitSet.iterateSetBits { i ->
                 append(origin[i])
 
-                if (i < size - 1) {
+                if ((seqIndex++) < size - 1) {
                     append(", ")
                 }
             }
