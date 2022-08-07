@@ -243,3 +243,30 @@ inline fun LongArray.iterateSetBits(block: (bitIndex: Int) -> Unit) {
         }
     }
 }
+
+fun LongArray.nextSetBit(fromIndex: Int): Int {
+    if (fromIndex < 0) {
+        throw IllegalArgumentException("fromIndex < 0 (fromIndex=$fromIndex)")
+    }
+
+    val size = size
+    var wordIndex = fromIndex shr 6
+
+    if (wordIndex >= size) {
+        return -1
+    }
+
+    var word = this[wordIndex] and (-1L shl fromIndex)
+
+    while (true) {
+        if (word != 0L) {
+            return wordIndex * 64 + word.countTrailingZeroBits()
+        }
+
+        if (++wordIndex == size) {
+            return -1
+        }
+
+        word = this[wordIndex]
+    }
+}

@@ -7,9 +7,15 @@ class FilteredArray<out T>(
     private val origin: Array<out T>,
 
     // If the bit at position N is set, it means that element N in origin passed a filtering.
-    private val bitSet: LongArray
+    private val bitSet: LongArray,
+
+    // If 'size' argument is negative, size will be computed using bitSet and Long.countOneBits
+    //
+    // If 'size' argument is positive or zero, it will be used to init size. It allows to skip countOneBits part.
+    // 'size' argument must equal to the count of set bits in bitSet, otherwise it may lead to unexpected results.
+    size: Int = -1
 ) : Iterable<T> {
-    val size: Int = bitSet.sumOf(Long::countOneBits)
+    val size: Int = if (size >= 0) size else bitSet.sumOf(Long::countOneBits)
 
     operator fun get(index: Int): T {
         return origin[resolveIndex(index)]
@@ -28,20 +34,27 @@ class FilteredArray<out T>(
 
         if (size != other.size) return false
 
-        if (origin.contentEquals(other.origin)) {
-            return bitSet.contentEquals(other.bitSet)
+        val origin = origin
+        val bitSet = bitSet
+
+        val otherOrigin = other.origin
+        val otherBitSet = other.bitSet
+
+        if (origin === otherOrigin) {
+            return bitSet.contentEquals(otherBitSet)
         }
 
-        var seqIndex = 0
         var result = true
 
+        var otherBitIndex = otherBitSet.nextSetBit(0)
+
         bitSet.iterateSetBits { absIndex ->
-            if (origin[absIndex] != other[seqIndex]) {
+            if (origin[absIndex] != otherOrigin[otherBitIndex]) {
                 result = false
                 return@iterateSetBits
             }
 
-            seqIndex++
+            otherBitIndex = otherBitSet.nextSetBit(otherBitIndex + 1)
         }
 
         return result
@@ -59,6 +72,9 @@ class FilteredArray<out T>(
 
     override fun toString(): String {
         return buildString {
+            val origin = origin
+            val size = size
+
             append("FilteredArray(size=")
             append(size)
             append(", elements=[")
@@ -100,6 +116,7 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
 
     var wordIndex = 0
     var start = 0
+    var filteredSize = 0
 
     // Fill bitset word by word
     while (start < size) {
@@ -110,6 +127,7 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
 
         for (i in start until end) {
             if (predicate(this[i])) {
+                filteredSize++
                 word = word or (1L shl i)
             }
         }
@@ -119,5 +137,5 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
         start = end
     }
 
-    return FilteredArray(this, bitSet)
+    return FilteredArray(this, bitSet, size = filteredSize)
 }
