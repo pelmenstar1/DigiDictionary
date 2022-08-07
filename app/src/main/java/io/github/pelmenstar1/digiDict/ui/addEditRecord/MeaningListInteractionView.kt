@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.addEditRecord
 
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Parcel
 import android.os.Parcelable
@@ -129,6 +130,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
     private val emptyTextError: String
     private var duplicateError: String? = null
+    private var noLetterOrDigitError: String? = null
 
     private var meaningAndOrdinalFormat: String? = null
     private val meaningStr: String
@@ -276,37 +278,30 @@ class MeaningListInteractionView @JvmOverloads constructor(
     fun refreshErrorState() {
         var resultErrorState = false
 
-        val bitSet = cachedBitSet.also {
-            // Clear the previous results.
+        val duplicateBitSet = cachedBitSet.also {
+            // Bitset needs to be empty.
             it.clear()
         }
 
         elements.iterateDuplicates { firstIndex, secondIndex ->
-            resultErrorState = true
-
-            bitSet.run {
+            duplicateBitSet.run {
                 set(firstIndex)
                 set(secondIndex)
             }
-
-            refreshErrorStateForTextLayout(getTextInputLayoutAt(firstIndex), ERROR_DUPLICATE)
-            refreshErrorStateForTextLayout(getTextInputLayoutAt(secondIndex), ERROR_DUPLICATE)
         }
 
         elements.forEachIndexed { index, element ->
             val inputLayout = getTextInputLayoutAt(index)
 
-            if (element.isBlank()) {
-                resultErrorState = true
-
-                refreshErrorStateForTextLayout(inputLayout, ERROR_EMPTY_TEXT)
-            } else {
-                // If a bit at position index is clear, it means that element at position index isn't declared as duplicate
-                // and we can clear error.
-                if (!bitSet[index]) {
-                    refreshErrorStateForTextLayout(inputLayout, ERROR_NONE)
-                }
+            val error = when {
+                element.isBlank() -> ERROR_EMPTY_TEXT
+                !element.containsLetterOrDigit() -> ERROR_NO_LETTER_OR_DIGIT
+                duplicateBitSet[index] -> ERROR_DUPLICATE
+                else -> ERROR_NONE
             }
+
+            resultErrorState = resultErrorState or (error != ERROR_NONE)
+            refreshErrorStateForTextLayout(inputLayout, error)
         }
 
         setErrorState(resultErrorState)
@@ -317,11 +312,14 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
         layout.error = when (state) {
             ERROR_EMPTY_TEXT -> emptyTextError
-            ERROR_DUPLICATE -> getLazyValue(
+            ERROR_DUPLICATE -> res.getLazyString(
                 duplicateError,
-                { res.getString(R.string.addEditRecord_meaningDuplicateError) },
-                { duplicateError = it }
-            )
+                R.string.addEditRecord_meaningDuplicateError,
+            ) { duplicateError = it }
+            ERROR_NO_LETTER_OR_DIGIT -> res.getLazyString(
+                noLetterOrDigitError,
+                R.string.addEditRecord_meaningNoLetterOrDigit,
+            ) { noLetterOrDigitError = it }
             else -> null
         }
     }
@@ -341,11 +339,10 @@ class MeaningListInteractionView @JvmOverloads constructor(
             val res = context.resources
             val locale = context.getLocaleCompat()
 
-            val format = getLazyValue(
+            val format = res.getLazyString(
                 meaningAndOrdinalFormat,
-                { res.getString(R.string.meaningAndOrdinalFormat) },
-                { meaningAndOrdinalFormat = it }
-            )
+                R.string.meaningAndOrdinalFormat
+            ) { meaningAndOrdinalFormat = it }
 
             iterateInputsIndexed { input, i ->
                 // Index is 0-based, but user would except it to be 1-based, so +1
@@ -447,6 +444,15 @@ class MeaningListInteractionView @JvmOverloads constructor(
         private const val ERROR_NONE = 0
         private const val ERROR_EMPTY_TEXT = 1
         private const val ERROR_DUPLICATE = 2
+        private const val ERROR_NO_LETTER_OR_DIGIT = 3
+
+        internal inline fun Resources.getLazyString(cached: String?, id: Int, set: (String) -> Unit): String {
+            return getLazyValue(
+                cached,
+                { getString(id) },
+                set
+            )
+        }
 
         /**
          * Finds all the duplicates in the given array and invokes [block] lambda for each of them.

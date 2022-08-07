@@ -74,6 +74,8 @@
     <string name="addEditRecord_label">Add or edit a record</string>
     <string name="addEditRecord_existingExprError">Such expression already exists</string>
     <string name="addEditRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
+    <string name="addEditRecord_exprNoLetterOrDigit">Expression should contain at least one letter or digit</string>
+    <string name="addEditRecord_meaningNoLetterOrDigit">Meaning should contain at least one letter or digit</string>
 
     <!-- View record fragment -->
     <string name="viewRecord_label">View</string>

@@ -131,13 +131,15 @@ class AddEditRecordViewModel @Inject constructor(
                 while (isActive) {
                     val expr = checkExpressionChannel.receive()
 
-                    val isNotBlank = expr.isNotBlank()
+                    val isBlank = expr.isBlank()
+                    val containsLetterOrDigit = expr.any { it.isLetterOrDigit() }
 
                     // If we are is edit mode (currentRecordExpression is not null then),
                     // input expression shouldn't be considered as "existing"
                     // even if it does exist to allow editing meaning, origin or notes and not expression.
-                    val isValid =
-                        isNotBlank && (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
+                    val isValid = !isBlank &&
+                            containsLetterOrDigit &&
+                            (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
 
                     validity.update {
                         val prevValue = it ?: 0
@@ -149,8 +151,9 @@ class AddEditRecordViewModel @Inject constructor(
 
                     _expressionErrorFlow.value = when {
                         isValid -> null
-                        isNotBlank -> AddEditRecordMessage.EXISTING_EXPRESSION
-                        else -> AddEditRecordMessage.EMPTY_TEXT
+                        isBlank -> AddEditRecordMessage.EMPTY_TEXT
+                        !containsLetterOrDigit -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT
+                        else -> AddEditRecordMessage.EXISTING_EXPRESSION
                     }
                 }
             }

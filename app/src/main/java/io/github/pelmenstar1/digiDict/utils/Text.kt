@@ -225,3 +225,5 @@ fun CharSequence.reduceNonLettersOrDigitsReplacedToSpace(): String {
 
     return sb.toString()
 }
+
+fun String.containsLetterOrDigit() = any { it.isLetterOrDigit() }
