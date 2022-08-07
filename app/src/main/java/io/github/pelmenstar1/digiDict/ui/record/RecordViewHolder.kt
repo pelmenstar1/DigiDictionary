@@ -103,7 +103,7 @@ open class RecordViewHolder private constructor(
         private const val MEANING_VIEW_INDEX = 2
 
         inline fun createOnItemClickListener(crossinline block: (id: Int) -> Unit) = View.OnClickListener {
-            (it.tag as? Record?)?.also { (id) -> block(id) }
+            (it.tag as? Record?)?.also { record -> block(record.id) }
         }
 
         internal fun createContainer(context: Context): ViewGroup {

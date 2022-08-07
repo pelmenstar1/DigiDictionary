@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordWithSearchInfo
 import io.github.pelmenstar1.digiDict.data.SearchPreparedRecord
 import io.github.pelmenstar1.digiDict.utils.*
 import org.jetbrains.annotations.TestOnly
@@ -8,37 +9,33 @@ import java.util.*
 
 object RecordSearchUtil {
     /**
-     * Filters given [records] array with corresponding [searchPreparedRecords] helping array using given [query].
+     * Filters given [recordsWithSearchInfo] array using given [query].
      * [locale] is used to convert [query] to lowercase.
-     *
-     * It's very important for [records] and [searchPreparedRecords] to have exact order
-     * (```records[i].id == searchPreparedRecords[i]``` should hold)
      */
     fun filter(
-        records: Array<out Record>,
-        searchPreparedRecords: Array<out SearchPreparedRecord>,
+        recordsWithSearchInfo: Array<out RecordWithSearchInfo>,
         query: String,
         locale: Locale
     ): FilteredArray<Record> {
         val preparedQuery = query.lowercase(locale).reduceNonLettersOrDigitsReplacedToSpace()
 
-        val bitSet = searchPreparedRecords.filterToBitSet {
-            filterPredicate(it, preparedQuery)
-        }
+        return recordsWithSearchInfo.filterFast {
+            var keywords = it.keywords
+            if (keywords == null) {
+                keywords = SearchPreparedRecord.prepareToKeywords(
+                    it.expression,
+                    it.rawMeaning,
+                    needToLower = true,
+                    locale = locale
+                )
+            }
 
-        // That's why records and searchPreparedRecords are expected to have exact order.
-        // 'searchPreparedRecords' has more useful information for search but id doesn't have
-        // another important information that 'records' has.
-        //
-        // Firstly, we filter searchPreparedRecords to get the bitset. And then we pass the bitset
-        // FilteredArray but for records to be filtered. Again, for this to work records and searchPreparedRecords
-        // should have exact order.
-        return FilteredArray(records, bitSet)
+            filterPredicate(keywords, preparedQuery)
+        }
     }
 
     @TestOnly
-    fun filterPredicate(preparedRecord: SearchPreparedRecord, query: String): Boolean {
-        val keywords = preparedRecord.keywords
+    fun filterPredicate(keywords: String, query: String): Boolean {
         val nullCharIndex = keywords.indexOf(NULL_CHAR)
         if (nullCharIndex < 0) {
             throw IllegalStateException("Invalid format")
@@ -52,6 +49,9 @@ object RecordSearchUtil {
                 return true
             }
 
+            // Try to find the index of the next space.
+            // If it's not found ( == -1 ), it's the last keyword we are checking and to handle everything in correct way,
+            // nextIndex should be equal to the length of 'keywords'
             var nextIndex = keywords.indexOf(' ', prevIndex, length)
             if (nextIndex == -1) {
                 nextIndex = length

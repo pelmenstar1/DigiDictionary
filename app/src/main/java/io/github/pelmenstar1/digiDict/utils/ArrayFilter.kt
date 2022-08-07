@@ -3,30 +3,13 @@ package io.github.pelmenstar1.digiDict.utils
 import io.github.pelmenstar1.digiDict.EmptyArray
 import kotlin.math.min
 
-class FilteredArray<T>(
+class FilteredArray<out T>(
     private val origin: Array<out T>,
 
     // If the bit at position N is set, it means that element N in origin passed a filtering.
     private val bitSet: LongArray
-) : Collection<T> {
-    override val size: Int = bitSet.sumOf(Long::countOneBits)
-
-    override fun isEmpty() = size == 0
-
-    override fun contains(element: T): Boolean {
-        var result = false
-
-        bitSet.iterateSetBits { i ->
-            if (origin[i] == element) {
-                result = true
-                return@iterateSetBits
-            }
-        }
-
-        return result
-    }
-
-    override fun containsAll(elements: Collection<T>) = elements.all { contains(it) }
+) : Iterable<T> {
+    val size: Int = bitSet.sumOf(Long::countOneBits)
 
     operator fun get(index: Int): T {
         return origin[resolveIndex(index)]
@@ -108,7 +91,7 @@ class FilteredArray<T>(
     }
 }
 
-inline fun <E> Array<out E>.filterToBitSet(predicate: (element: E) -> Boolean): LongArray {
+inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): FilteredArray<E> {
     val size = size
 
     // Ceiling division to 64
@@ -136,5 +119,5 @@ inline fun <E> Array<out E>.filterToBitSet(predicate: (element: E) -> Boolean): 
         start = end
     }
 
-    return bitSet
+    return FilteredArray(this, bitSet)
 }

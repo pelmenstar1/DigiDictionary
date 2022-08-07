@@ -32,13 +32,12 @@ class HomeViewModel @Inject constructor(
 
     val searchItems = combineTransform(
         GlobalSearchQueryProvider.queryFlow,
-        appDatabase.recordDao().getAllRecordsOrderByIdFlow(),
-        appDatabase.searchPreparedRecordDao().getAllOrderByIdFlow()
-    ) { query, records, searchRecords ->
+        appDatabase.recordDao().getAllRecordsWithSearchInfoFlow()
+    ) { query, records ->
         val result = if (query.isBlank()) {
             FilteredArray.empty()
         } else {
-            RecordSearchUtil.filter(records, searchRecords, query, locale)
+            RecordSearchUtil.filter(records, query, locale)
         }
 
         emit(result)

@@ -84,3 +84,13 @@ data class SearchPreparedRecord(
         }
     }
 }
+
+class RecordWithSearchInfo(
+    id: Int,
+    expression: String,
+    rawMeaning: String,
+    additionalNotes: String,
+    score: Int,
+    epochSeconds: Long,
+    val keywords: String?
+) : Record(id, expression, rawMeaning, additionalNotes, score, epochSeconds)
