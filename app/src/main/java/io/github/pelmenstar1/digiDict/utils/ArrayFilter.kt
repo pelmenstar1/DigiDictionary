@@ -118,9 +118,9 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
     var start = 0
     var filteredSize = 0
 
-    // Fill bitset word by word
+    // Fill bitSet word by word
     while (start < size) {
-        // end shouldn't overlap the array size, so limit it to size.
+        // end shouldn't be greater than size of the array
         val end = min(start + 64, size)
 
         var word = 0L
@@ -128,6 +128,14 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
         for (i in start until end) {
             if (predicate(this[i])) {
                 filteredSize++
+
+                // Two facts make (1L shl i) mask valid:
+                // - left shift operator takes into account only 6 lowest-order bits
+                //   which means that (1L shl i) is actually (1L shl (i % 64))
+                // - start is always aligned to 64, which means that (1L shl start) is (1L shl 0),
+                //   (1L shl (start + 1)) is equals to (1L shl 1) and so on.
+                //   To generalize, say we have variable n within [start; end) range and (end - start) <= 64, then:
+                //   (1L shl n) = (1L shl (n - start))
                 word = word or (1L shl i)
             }
         }

@@ -212,18 +212,21 @@ inline fun Long.iterateSetBits(block: (bitIndex: Int) -> Unit) {
 
 // Finds such a position S, that range [0; S] in bitSet has N set bits.
 fun LongArray.findPositionOfNthSetBit(n: Int): Int {
-    var remainingN = n
+    var countOfBitsUntilTarget = n
 
+    // This loop tries to find a word which contains n-th bit.
     for (i in indices) {
         val element = this[i]
         val bitCount = element.countOneBits()
 
-        // Skip a word if we know it doesn't contain appropriate amount of set bits (It has less bits than it's needed)
-        if (bitCount <= remainingN) {
-            remainingN -= bitCount
+        // If element contains less bits than countOfBitsUntilTarget, element is not the target.
+        if (countOfBitsUntilTarget >= bitCount) {
+            countOfBitsUntilTarget -= bitCount
         } else {
-            val index = element.findPositionOfNthSetBit(remainingN)
+            val index = element.findPositionOfNthSetBit(countOfBitsUntilTarget)
 
+            // As 'index' is within [0; 64) range, it needs to be translated to bitset-wide index
+            // by multiplying index of the target by 64 (word size) and adding word-wide index.
             return (i shl 6) + index
         }
     }
@@ -244,6 +247,9 @@ inline fun LongArray.iterateSetBits(block: (bitIndex: Int) -> Unit) {
     }
 }
 
+// The implementation was taken from OpenJDK
+// (https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/BitSet.java)
+// and converted to Kotlin.
 fun LongArray.nextSetBit(fromIndex: Int): Int {
     if (fromIndex < 0) {
         throw IllegalArgumentException("fromIndex < 0 (fromIndex=$fromIndex)")
