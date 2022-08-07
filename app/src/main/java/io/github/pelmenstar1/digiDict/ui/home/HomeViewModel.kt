@@ -7,13 +7,16 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.FilteredArray
 import io.github.pelmenstar1.digiDict.utils.LocaleProvider
+import io.github.pelmenstar1.digiDict.utils.containsLetterOrDigit
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,16 +33,31 @@ class HomeViewModel @Inject constructor(
 
     private val locale = localeProvider.get()
 
-    val searchItems = combineTransform(
-        GlobalSearchQueryProvider.queryFlow,
-        appDatabase.recordDao().getAllRecordsWithSearchInfoFlow()
-    ) { query, records ->
-        val result = if (query.isBlank()) {
-            FilteredArray.empty()
-        } else {
-            RecordSearchUtil.filter(records, query, locale)
-        }
+    private val searchStateManager = DataLoadStateManager<FilteredArray<Record>>(TAG)
+    val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
+        fromFlow {
+            val recordFlow = GlobalSearchQueryProvider
+                .isActiveFlow
+                .filter { it }
+                .flatMapConcat {
+                    appDatabase.recordDao().getAllRecordsWithSearchInfoFlow()
+                }
 
-        emit(result)
-    }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.Lazily, FilteredArray.empty())
+            recordFlow.combine(GlobalSearchQueryProvider.queryFlow) { records, query ->
+                if (query.containsLetterOrDigit()) {
+                    RecordSearchUtil.filter(records, query, locale)
+                } else {
+                    FilteredArray.empty()
+                }
+            }.flowOn(Dispatchers.IO)
+        }
+    }
+
+    fun retrySearch() {
+        searchStateManager.retry()
+    }
+
+    companion object {
+        private const val TAG = "HomeViewModel"
+    }
 }

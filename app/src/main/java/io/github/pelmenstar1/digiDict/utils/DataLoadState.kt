@@ -77,6 +77,7 @@ class DataLoadStateManager<T>(val logTag: String) {
         }
 
         inline fun fromFlow(flowProvider: () -> Flow<T>): DataLoadStateFlow<T> {
+            // TODO: Catch possible exception in flowProvider.
             return fromFlow(flowProvider())
         }
     }
