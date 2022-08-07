@@ -15,7 +15,7 @@ class FixedBitSet : Parcelable {
     constructor(size: Int) {
         this.size = size
 
-        val wordCount = (size + WORD_BITS_COUNT - 1) ushr WORD_SIZE
+        val wordCount = (size + WORD_BITS_COUNT - 1) shr WORD_SIZE
 
         words = LongArray(wordCount)
     }
@@ -86,7 +86,7 @@ class FixedBitSet : Parcelable {
             return true
         }
 
-        val fullWordCount = size ushr WORD_SIZE
+        val fullWordCount = size shr WORD_SIZE
         var concatMask = -1L
 
         for (i in 0 until fullWordCount) {
@@ -152,7 +152,7 @@ class FixedBitSet : Parcelable {
             override fun newArray(size: Int) = arrayOfNulls<FixedBitSet>(size)
         }
 
-        internal fun getWordIndex(index: Int) = index ushr WORD_SIZE
+        internal fun getWordIndex(index: Int) = index shr WORD_SIZE
     }
 }
 

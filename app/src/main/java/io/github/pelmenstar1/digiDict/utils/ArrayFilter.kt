@@ -111,7 +111,7 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
     val size = size
 
     // Ceiling division to 64
-    val bitSetSize = (size + 63) ushr 6
+    val bitSetSize = (size + 63) shr 6
     val bitSet = LongArray(bitSetSize)
 
     var wordIndex = 0
