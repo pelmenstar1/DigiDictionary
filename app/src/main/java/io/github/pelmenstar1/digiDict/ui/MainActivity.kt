@@ -15,7 +15,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.ui.home.GlobalSearchQueryProvider
+import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import javax.inject.Inject
 
 @AndroidEntryPoint

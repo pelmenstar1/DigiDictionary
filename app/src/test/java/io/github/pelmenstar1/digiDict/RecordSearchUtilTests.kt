@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict
 
-import io.github.pelmenstar1.digiDict.ui.home.RecordSearchUtil
+import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import io.github.pelmenstar1.digiDict.utils.NULL_CHAR
 import org.junit.Test
 import kotlin.test.assertEquals

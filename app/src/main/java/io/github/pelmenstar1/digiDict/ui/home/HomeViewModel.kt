@@ -8,6 +8,8 @@ import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
+import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.utils.FilteredArray
 import io.github.pelmenstar1.digiDict.utils.LocaleProvider

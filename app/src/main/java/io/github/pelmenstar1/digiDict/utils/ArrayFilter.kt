@@ -14,8 +14,8 @@ class FilteredArray<out T>(
     // If 'size' argument is positive or zero, it will be used to init size. It allows to skip countOneBits part.
     // 'size' argument must equal to the count of set bits in bitSet, otherwise it may lead to unexpected results.
     size: Int = -1
-) : Iterable<T> {
-    val size: Int = if (size >= 0) size else bitSet.sumOf(Long::countOneBits)
+) : SizedIterable<T> {
+    override val size: Int = if (size >= 0) size else bitSet.sumOf(Long::countOneBits)
 
     operator fun get(index: Int): T {
         return origin[resolveIndex(index)]
