@@ -2,9 +2,9 @@ package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.pelmenstar1.digiDict.common.serialization.readValuesToList
+import io.github.pelmenstar1.digiDict.common.serialization.writeValues
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.serialization.readValuesToList
-import io.github.pelmenstar1.digiDict.serialization.writeValues
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
 import kotlinx.coroutines.runBlocking

@@ -6,7 +6,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.serialization.*
+import io.github.pelmenstar1.digiDict.common.serialization.*
 
 @Entity(
     tableName = "records",

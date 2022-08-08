@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.*
-import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow

@@ -13,12 +13,12 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.pelmenstar1.digiDict.common.DataLoadState
+import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.SearchAdapter
-import io.github.pelmenstar1.digiDict.utils.DataLoadState
-import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.plus

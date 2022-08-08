@@ -3,11 +3,11 @@ package io.github.pelmenstar1.digiDict
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_HOUR
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_HOUR
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset
 import kotlinx.coroutines.test.runTest

@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
-import io.github.pelmenstar1.digiDict.utils.trimToString
+import io.github.pelmenstar1.digiDict.common.trimToString
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 

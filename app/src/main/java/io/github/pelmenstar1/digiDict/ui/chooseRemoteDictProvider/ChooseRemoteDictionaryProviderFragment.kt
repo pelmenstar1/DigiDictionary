@@ -20,12 +20,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.debugLog
+import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.mapOffset
+import io.github.pelmenstar1.digiDict.common.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
-import io.github.pelmenstar1.digiDict.utils.debugLog
-import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
-import io.github.pelmenstar1.digiDict.utils.mapOffset
-import io.github.pelmenstar1.digiDict.utils.showLifecycleAwareSnackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch

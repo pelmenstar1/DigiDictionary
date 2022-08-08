@@ -14,13 +14,13 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.switchmaterial.SwitchMaterial
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.BuildConfig
-import io.github.pelmenstar1.digiDict.MessageMapper
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
+import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.prefs.AppPreferencesGetEntry
-import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
 import javax.inject.Inject
 
 @AndroidEntryPoint

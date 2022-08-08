@@ -12,10 +12,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.pelmenstar1.digiDict.MessageMapper
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListenerToString
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddRemoteDictProviderBinding
-import io.github.pelmenstar1.digiDict.utils.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -41,7 +41,7 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
                 container,
                 msgId = R.string.dbError,
                 duration = Snackbar.LENGTH_INDEFINITE,
-                actionText = R.string.retry,
+                actionText = io.github.pelmenstar1.digiDict.common.ui.R.string.retry,
                 action = { vm.restartValidityCheck() }
             )
 

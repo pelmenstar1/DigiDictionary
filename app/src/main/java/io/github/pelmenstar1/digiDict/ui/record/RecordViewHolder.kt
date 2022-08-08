@@ -13,9 +13,9 @@ import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.utils.getLazyValue
 
 open class RecordViewHolder private constructor(
     val container: ViewGroup

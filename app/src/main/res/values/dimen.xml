@@ -17,7 +17,4 @@
     <dimen name="itemQuizRecord_actionButtonHeight">50dp</dimen>
     <dimen name="itemRemoteDictProvider_schemaTopMargin">8dp</dimen>
     <dimen name="itemRemoteDictProvider_padding">8dp</dimen>
-
-    <dimen name="errorContainer_textHorizontalMargin">8dp</dimen>
-    <dimen name="errorContainer_retryTopMargin">16dp</dimen>
 </resources>

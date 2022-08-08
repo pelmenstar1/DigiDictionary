@@ -13,9 +13,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRemoteDictProvidersBinding
-import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
-import io.github.pelmenstar1.digiDict.utils.showSnackbarEventHandler
 
 @AndroidEntryPoint
 class ManageRemoteDictionaryProvidersFragment : Fragment() {

@@ -2,8 +2,8 @@ package io.github.pelmenstar1.digiDict.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.utils.NULL_CHAR
-import io.github.pelmenstar1.digiDict.utils.appendReducedNonLettersOrDigitsReplacedToSpace
+import io.github.pelmenstar1.digiDict.common.NULL_CHAR
+import io.github.pelmenstar1.digiDict.common.appendReducedNonLettersOrDigitsReplacedToSpace
 import java.util.*
 
 /**

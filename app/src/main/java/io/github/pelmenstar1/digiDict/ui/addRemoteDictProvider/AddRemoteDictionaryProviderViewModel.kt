@@ -6,11 +6,11 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.common.Event
+import io.github.pelmenstar1.digiDict.common.updateNullable
+import io.github.pelmenstar1.digiDict.common.withBit
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
-import io.github.pelmenstar1.digiDict.utils.Event
-import io.github.pelmenstar1.digiDict.utils.updateNullable
-import io.github.pelmenstar1.digiDict.utils.withBit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.trySendBlocking

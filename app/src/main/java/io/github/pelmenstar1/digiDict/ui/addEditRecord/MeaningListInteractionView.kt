@@ -21,10 +21,10 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.theme.overlay.MaterialThemeOverlay
-import io.github.pelmenstar1.digiDict.EmptyArray
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import io.github.pelmenstar1.digiDict.utils.*
 import java.util.*
 
 class MeaningListInteractionView @JvmOverloads constructor(

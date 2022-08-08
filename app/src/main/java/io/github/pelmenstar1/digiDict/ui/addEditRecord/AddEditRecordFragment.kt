@@ -11,12 +11,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.pelmenstar1.digiDict.MessageMapper
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
+import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
-import io.github.pelmenstar1.digiDict.utils.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -66,7 +67,9 @@ class AddEditRecordFragment : Fragment() {
                         if (container != null) {
                             Snackbar
                                 .make(container, R.string.recordLoadingError, Snackbar.LENGTH_INDEFINITE)
-                                .setAction(R.string.retry) { vm.retryLoadCurrentRecord() }
+                                .setAction(io.github.pelmenstar1.digiDict.common.ui.R.string.retry) {
+                                    vm.retryLoadCurrentRecord()
+                                }
                                 .showLifecycleAwareSnackbar(lifecycle)
                         }
                     }

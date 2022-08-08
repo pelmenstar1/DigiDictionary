@@ -6,11 +6,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.backup.TemporaryImportStorage
+import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConflictEntry
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject

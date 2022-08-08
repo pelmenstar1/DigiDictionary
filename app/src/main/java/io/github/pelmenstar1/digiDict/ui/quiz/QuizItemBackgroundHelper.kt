@@ -6,9 +6,9 @@ import android.graphics.drawable.GradientDrawable
 import androidx.annotation.ColorRes
 import androidx.core.content.res.ResourcesCompat
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.utils.getLazyValue
-import io.github.pelmenstar1.digiDict.utils.transparent
-import io.github.pelmenstar1.digiDict.utils.withAlpha
+import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.transparent
+import io.github.pelmenstar1.digiDict.common.withAlpha
 
 class QuizItemBackgroundHelper(private val context: Context) {
     private var correctAnswerColors: IntArray? = null

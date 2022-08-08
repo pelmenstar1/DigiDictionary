@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.utils
 
 import android.os.Looper
 import androidx.lifecycle.ViewModel
+import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
@@ -27,8 +28,6 @@ fun <T : EntityWithPrimaryKeyId<T>> assertContentEqualsNoId(expected: Array<T>, 
         }
     }
 }
-
-fun IntRange.toIntArray() = toList().toIntArray()
 
 fun assertOnMainThread() {
     assertEquals(Looper.getMainLooper().thread, Thread.currentThread())

@@ -5,20 +5,12 @@
         <attr name="listWidgetRadius" format="dimension" />
     </declare-styleable>
 
-    <declare-styleable name="ErrorContainer">
-        <attr name="errorText" format="string" />
-    </declare-styleable>
 
-    <declare-styleable name="PrefixTextView">
-        <attr name="prefix" format="string" />
-    </declare-styleable>
 
     <declare-styleable name="SettingItemContainer">
         <attr name="icon" />
         <attr name="name" format="string" />
     </declare-styleable>
 
-    <declare-styleable name="DataLoadStateContainer">
-        <attr name="errorText" />
-    </declare-styleable>
+
 </resources>

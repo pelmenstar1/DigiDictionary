@@ -12,12 +12,11 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
+import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
+import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.utils.NO_OP_DIALOG_ON_CLICK_LISTENER
-import io.github.pelmenstar1.digiDict.utils.popBackStackEventHandler
-import io.github.pelmenstar1.digiDict.utils.showSnackbarEventHandler
 
 @AndroidEntryPoint
 class ViewRecordFragment : Fragment() {
@@ -35,7 +34,7 @@ class ViewRecordFragment : Fragment() {
         val context = requireContext()
         val navController = findNavController()
 
-        val dateTimeFormatter = RecordDateTimeFormatter(context)
+        val dateTimeFormatter = CompatDateTimeFormatter(context, DATE_TIME_FORMAT)
 
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
         this.binding = binding
@@ -47,7 +46,9 @@ class ViewRecordFragment : Fragment() {
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         viewModel.delete()
                     }
-                    .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
+                    .setNegativeButton(android.R.string.cancel,
+                        io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
+                    )
                     .show()
             }
 
@@ -78,5 +79,9 @@ class ViewRecordFragment : Fragment() {
         vm.onDeleteError.handler = showSnackbarEventHandler(container, R.string.dbError)
 
         return binding.root
+    }
+
+    companion object {
+        private const val DATE_TIME_FORMAT = "dd MMMM yyyy HH:mm"
     }
 }

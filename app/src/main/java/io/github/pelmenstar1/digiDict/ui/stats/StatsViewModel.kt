@@ -1,11 +1,11 @@
 package io.github.pelmenstar1.digiDict.ui.stats
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
+import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.stats.CommonStats
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
-import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
-import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import javax.inject.Inject
 
 @HiltViewModel

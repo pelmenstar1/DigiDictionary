@@ -7,11 +7,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
+import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
+import io.github.pelmenstar1.digiDict.common.serialization.ValidationException
+import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.serialization.ValidationException
-import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
-import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

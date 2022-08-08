@@ -14,6 +14,7 @@ import androidx.navigation.ui.onNavDestinationSelected
 import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.ui.SimpleSearchView
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import javax.inject.Inject

@@ -3,12 +3,12 @@ package io.github.pelmenstar1.digiDict.ui.viewRecord
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
+import io.github.pelmenstar1.digiDict.common.Event
+import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.data.SearchPreparedRecordDao
-import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
-import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
-import io.github.pelmenstar1.digiDict.utils.Event
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

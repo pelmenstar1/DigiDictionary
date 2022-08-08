@@ -4,10 +4,9 @@ import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import io.github.pelmenstar1.digiDict.EmptyArray
+import io.github.pelmenstar1.digiDict.common.FixedBitSet
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.ui.record.RecordViewHolder
-import io.github.pelmenstar1.digiDict.utils.FixedBitSet
 
 class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolder>() {
     class ViewHolder(context: Context) : RecordViewHolder(context) {
@@ -29,7 +28,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
         }
     }
 
-    private var items = EmptyArray.RECORD
+    private var items = emptyArray<Record>()
 
     private var _revealedStates = FixedBitSet.EMPTY
     var revealedStates: FixedBitSet

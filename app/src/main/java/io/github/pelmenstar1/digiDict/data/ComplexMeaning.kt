@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.data
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.collection.ArraySet
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.common.*
 
 enum class MeaningType {
     COMMON,
@@ -62,9 +62,14 @@ sealed class ComplexMeaning : Parcelable {
                     if (otherElements.contains(text)) {
                         this
                     } else {
-                        List(newArraySetFrom(otherElements, otherElements.size + 1).apply {
-                            add(text)
-                        })
+                        List(
+                            newArraySetFrom(
+                                otherElements,
+                                otherElements.size + 1
+                            ).apply {
+                                add(text)
+                            }
+                        )
                     }
                 }
             }
@@ -172,7 +177,10 @@ sealed class ComplexMeaning : Parcelable {
                 }
                 is List -> {
                     val otherElements = other.elements
-                    val resultElements = newArraySetFrom(elements, elements.size + otherElements.size)
+                    val resultElements = newArraySetFrom(
+                        elements,
+                        elements.size + otherElements.size
+                    )
                     resultElements.addAllSet(otherElements)
 
                     List(resultElements)

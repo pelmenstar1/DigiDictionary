@@ -34,7 +34,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Old meaning" />
 
-    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+    <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_oldAdditionalNotes"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="0dp"
@@ -49,7 +49,7 @@
         app:prefix="@string/additionalNotes"
         tools:text="Old additional notes" />
 
-    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+    <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_oldScore"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="wrap_content"
@@ -90,7 +90,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="New meaning" />
 
-    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+    <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_newAdditionalNotes"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="0dp"
@@ -104,7 +104,7 @@
         app:prefix="@string/additionalNotes"
         tools:text="New additional notes" />
 
-    <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+    <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
         android:id="@+id/itemResolveImportConflict_newScore"
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="wrap_content"

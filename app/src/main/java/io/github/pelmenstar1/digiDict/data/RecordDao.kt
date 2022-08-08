@@ -2,8 +2,8 @@ package io.github.pelmenstar1.digiDict.data
 
 import android.database.Cursor
 import androidx.room.*
-import io.github.pelmenstar1.digiDict.serialization.SerializableIterable
-import io.github.pelmenstar1.digiDict.utils.generateUniqueRandomNumbers
+import io.github.pelmenstar1.digiDict.common.generateUniqueRandomNumbers
+import io.github.pelmenstar1.digiDict.common.serialization.SerializableIterable
 import kotlinx.coroutines.flow.Flow
 import kotlin.math.min
 import kotlin.random.Random

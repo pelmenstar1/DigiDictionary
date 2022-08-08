@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict.ui.addEditRecord
 
 import android.content.Context
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.resourcesMessageMapper
+import io.github.pelmenstar1.digiDict.common.resourcesMessageMapper
 
 enum class AddEditRecordMessage {
     EMPTY_TEXT,

@@ -9,8 +9,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
-import io.github.pelmenstar1.digiDict.utils.getLazyValue
 
 private class RemoteDictProviderInfoCallback(
     private val oldArray: Array<RemoteDictionaryProviderInfo>,

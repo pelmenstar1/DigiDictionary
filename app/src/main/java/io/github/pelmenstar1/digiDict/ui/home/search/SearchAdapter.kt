@@ -2,11 +2,11 @@ package io.github.pelmenstar1.digiDict.ui.home.search
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import io.github.pelmenstar1.digiDict.common.FilteredArray
+import io.github.pelmenstar1.digiDict.common.ui.AsyncDataDiffer
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.ui.AsyncDataDiffer
 import io.github.pelmenstar1.digiDict.ui.record.FilteredArrayRecordDiffCallback
 import io.github.pelmenstar1.digiDict.ui.record.RecordViewHolder
-import io.github.pelmenstar1.digiDict.utils.FilteredArray
 import kotlinx.coroutines.CoroutineScope
 
 class SearchAdapter(

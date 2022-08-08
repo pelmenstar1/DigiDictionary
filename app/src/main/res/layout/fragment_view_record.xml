@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer xmlns:android="http://schemas.android.com/apk/res/android"
+<io.github.pelmenstar1.digiDict.common.ui.DataLoadStateContainer xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/viewRecord_container"
@@ -16,7 +16,7 @@
         android:visibility="gone"
         tools:visibility="visible">
 
-        <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
             android:id="@+id/viewRecord_expressionView"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="wrap_content"
@@ -50,7 +50,7 @@
             app:layout_constraintStart_toEndOf="@id/viewRecord_meaningPrefix"
             app:layout_constraintTop_toBottomOf="@+id/viewRecord_expressionView" />
 
-        <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
             android:id="@+id/viewRecord_additionalNotesView"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="wrap_content"
@@ -62,7 +62,7 @@
             app:prefix="@string/additionalNotes"
             tools:text="Additional notes: " />
 
-        <io.github.pelmenstar1.digiDict.ui.PrefixTextView
+        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
             android:id="@+id/viewRecord_score"
             style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="wrap_content"
@@ -106,4 +106,4 @@
             app:layout_constraintTop_toTopOf="@id/viewRecord_edit"
             app:strokeColor="@color/color_error" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-</io.github.pelmenstar1.digiDict.ui.DataLoadStateContainer>
+</io.github.pelmenstar1.digiDict.common.ui.DataLoadStateContainer>

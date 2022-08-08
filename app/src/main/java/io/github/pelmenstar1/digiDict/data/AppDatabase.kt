@@ -6,9 +6,9 @@ import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import io.github.pelmenstar1.digiDict.utils.asCharSequence
-import io.github.pelmenstar1.digiDict.utils.getLazyValue
-import io.github.pelmenstar1.digiDict.utils.runInTransitionBlocking
+import io.github.pelmenstar1.digiDict.common.asCharSequence
+import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
 
 @Database(
     entities = [

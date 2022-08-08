@@ -3,12 +3,12 @@ package io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
+import io.github.pelmenstar1.digiDict.common.Event
+import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
-import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
-import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
-import io.github.pelmenstar1.digiDict.utils.Event
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject

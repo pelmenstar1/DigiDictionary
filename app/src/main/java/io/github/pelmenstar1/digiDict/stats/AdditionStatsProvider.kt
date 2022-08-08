@@ -1,8 +1,8 @@
 package io.github.pelmenstar1.digiDict.stats
 
 import androidx.sqlite.db.SupportSQLiteStatement
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

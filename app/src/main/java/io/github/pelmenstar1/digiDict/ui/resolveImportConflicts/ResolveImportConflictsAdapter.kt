@@ -9,40 +9,30 @@ import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.RecordDateTimeFormatter
+import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
+import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
 import io.github.pelmenstar1.digiDict.data.ConflictEntry
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.ui.PrefixTextView
-import io.github.pelmenstar1.digiDict.utils.getLazyValue
-import io.github.pelmenstar1.digiDict.utils.getLocaleCompat
-import java.util.*
 
 class ResolveImportConflictsAdapter(
     private val onItemStateChanged: (index: Int, state: Int) -> Unit
 ) : RecyclerView.Adapter<ResolveImportConflictsAdapter.ViewHolder>() {
     private class ConflictEntryAndIndex(val stableIndex: Int, val value: ConflictEntry)
 
-    private class CompareBlockInfo(
+    private inner class CompareBlockInfo(
         container: ViewGroup,
         @IdRes meaningId: Int,
         @IdRes notesId: Int,
         @IdRes scoreId: Int,
         @IdRes dateTimeId: Int
     ) {
+        private val context = container.context
+
         private val meaningView = container.findViewById<TextView>(meaningId)
         private val additionalNotesView = container.findViewById<PrefixTextView>(notesId)
         private val scoreView = container.findViewById<PrefixTextView>(scoreId)
         private val dateTimeView = container.findViewById<TextView>(dateTimeId)
-
-        private val locale: Locale
-        private val dateTimeFormatter: RecordDateTimeFormatter
-
-        init {
-            val context = container.context
-            locale = context.getLocaleCompat()
-
-            dateTimeFormatter = RecordDateTimeFormatter(context)
-        }
 
         fun setContent(
             rawMeaning: String,
@@ -50,10 +40,15 @@ class ResolveImportConflictsAdapter(
             score: Int,
             epochSeconds: Long
         ) {
+            val dtf = getLazyValue(
+                dateTimeFormatter,
+                { CompatDateTimeFormatter(context, DATE_TIME_FORMAT) }
+            ) { dateTimeFormatter = it }
+
             meaningView.text = MeaningTextHelper.parseToFormatted(rawMeaning)
             additionalNotesView.setValue(additionalNotes)
             scoreView.setValue(score)
-            dateTimeView.text = dateTimeFormatter.format(epochSeconds)
+            dateTimeView.text = dtf.format(epochSeconds)
         }
     }
 
@@ -111,6 +106,7 @@ class ResolveImportConflictsAdapter(
         }
     }
 
+    private var dateTimeFormatter: CompatDateTimeFormatter? = null
     private val viewItems = ArrayList<ConflictEntryAndIndex>()
     private var layoutInflaterHolder: LayoutInflater? = null
 
@@ -169,6 +165,7 @@ class ResolveImportConflictsAdapter(
     }
 
     companion object {
+        private const val DATE_TIME_FORMAT = "dd MMMM yyyy HH:mm"
 
         private val ITEM_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,

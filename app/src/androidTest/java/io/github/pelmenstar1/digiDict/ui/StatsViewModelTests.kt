@@ -3,11 +3,11 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
-import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.ui.stats.StatsViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset

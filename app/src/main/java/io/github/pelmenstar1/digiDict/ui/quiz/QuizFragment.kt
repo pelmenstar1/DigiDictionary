@@ -14,12 +14,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.launchSetEnabledFlowCollector
+import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
-import io.github.pelmenstar1.digiDict.utils.launchSetEnabledFlowCollector
-import io.github.pelmenstar1.digiDict.utils.popBackStackEventHandler
-import io.github.pelmenstar1.digiDict.utils.showSnackbarEventHandler
 
 @AndroidEntryPoint
 class QuizFragment : Fragment() {

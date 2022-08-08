@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui
 
-import io.github.pelmenstar1.digiDict.utils.parsePositiveInt
+import io.github.pelmenstar1.digiDict.common.parsePositiveInt
 
 object MeaningTextHelper {
     private fun throwIllegalFormat(rawText: String): Nothing {

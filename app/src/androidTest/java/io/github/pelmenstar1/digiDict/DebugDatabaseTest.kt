@@ -2,11 +2,11 @@ package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_HOUR
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_DAY
-import io.github.pelmenstar1.digiDict.time.SECONDS_IN_HOUR
 import kotlinx.coroutines.runBlocking
 import org.junit.Ignore
 import org.junit.Test

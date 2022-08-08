@@ -12,9 +12,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.getIntArrayOrThrow
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
 import io.github.pelmenstar1.digiDict.databinding.FragmentResolveImportConflictsBinding
-import io.github.pelmenstar1.digiDict.utils.getIntArrayOrThrow
-import io.github.pelmenstar1.digiDict.utils.showSnackbarEventHandler
 
 @AndroidEntryPoint
 class ResolveImportConflictsFragment : Fragment() {
@@ -52,7 +52,7 @@ class ResolveImportConflictsFragment : Fragment() {
         vm.onApplyChangesError.handler = showSnackbarEventHandler(
             container,
             msgId = R.string.resolveImportConflicts_applyChangesError,
-            actionText = R.string.retry,
+            actionText = io.github.pelmenstar1.digiDict.common.ui.R.string.retry,
             action = { vm.applyChanges() }
         )
 

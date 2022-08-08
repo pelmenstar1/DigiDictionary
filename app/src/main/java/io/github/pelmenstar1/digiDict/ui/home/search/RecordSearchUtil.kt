@@ -1,9 +1,9 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
+import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordWithSearchInfo
 import io.github.pelmenstar1.digiDict.data.SearchPreparedRecord
-import io.github.pelmenstar1.digiDict.utils.*
 import org.jetbrains.annotations.TestOnly
 import java.util.*
 

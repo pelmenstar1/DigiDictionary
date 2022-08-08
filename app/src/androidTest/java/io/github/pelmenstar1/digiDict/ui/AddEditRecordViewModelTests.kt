@@ -3,9 +3,10 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.firstSuccess
+import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.*
-import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
@@ -38,7 +39,7 @@ class AddEditRecordViewModelTests {
         preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT)
+        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(Locale.ROOT)
     ): AddEditRecordViewModel {
         return AddEditRecordViewModel(
             recordDao,
@@ -54,7 +55,7 @@ class AddEditRecordViewModelTests {
         preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT),
+        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(Locale.ROOT),
         block: (AddEditRecordViewModel) -> Unit
     ) {
         createViewModel(
