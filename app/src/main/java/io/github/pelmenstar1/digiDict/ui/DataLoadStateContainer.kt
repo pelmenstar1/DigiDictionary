@@ -63,7 +63,7 @@ class DataLoadStateContainer @JvmOverloads constructor(
     fun <T> setupLoadStateFlow(
         scope: CoroutineScope,
         stateHolder: SingleDataLoadStateHolder<T>,
-        onSuccess: (T) -> Unit
+        onSuccess: suspend (T) -> Unit
     ) {
         errorContainer.setOnRetryListener {
             stateHolder.retryLoadData()

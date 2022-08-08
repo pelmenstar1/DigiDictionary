@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.databinding.FragmentRemindRecordsBinding
 import io.github.pelmenstar1.digiDict.utils.FixedBitSet
+import kotlinx.coroutines.flow.first
 
 @AndroidEntryPoint
 class RemindRecordsFragment : Fragment() {
@@ -32,6 +33,7 @@ class RemindRecordsFragment : Fragment() {
             remindRecordsContentRecyclerView.also {
                 it.adapter = adapter
                 it.layoutManager = LinearLayoutManager(context)
+                it.itemAnimator = null
                 it.addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))
             }
 
@@ -44,8 +46,9 @@ class RemindRecordsFragment : Fragment() {
             var isSavedStateApplied = false
 
             remindRecordsContainer.setupLoadStateFlow(lifecycleScope, vm) { items ->
-                adapter.submitItems(items)
-                adapter.concealAll()
+                val defaultRevealState = vm.showMeaningFlow.first()
+
+                adapter.submitItems(items, defaultRevealState)
 
                 // Saved state shouldn't be applied to the next items if it was already.
                 // The fact of receiving new items makes the saved state invalid.

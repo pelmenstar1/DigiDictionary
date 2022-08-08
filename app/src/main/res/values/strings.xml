@@ -170,6 +170,7 @@
     <string name="settings_scorePointsPerCorrectAnswer_prefix">Score points per right answer</string>
     <string name="settings_scorePointsPerWrongAnswer_prefix">Score points per wrong answer</string>
     <string name="settings_remindMaxItems">Max items</string>
+    <string name="settings_remindShowMeaning">Show meaning</string>
 
     <!-- Resolve import conflicts fragment -->
     <string name="resolveImportConflicts_label">Resolve conflicts</string>

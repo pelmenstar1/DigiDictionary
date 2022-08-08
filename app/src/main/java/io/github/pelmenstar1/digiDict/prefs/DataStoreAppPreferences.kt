@@ -42,13 +42,15 @@ class DataStoreAppPreferences(private val dataStore: DataStore<Preferences>) : A
         private val SCORE_POINTS_PER_WRONG_ANSWER_KEY = intPreferencesKey("scorePointsPerWrongAnswer")
         private val USE_CUSTOM_TABS_KEY = booleanPreferencesKey("useCustomTabs")
         private val REMIND_ITEMS_SIZE_KEY = intPreferencesKey("remindItemsSize")
+        private val REMIND_SHOW_MEANING_KEY = booleanPreferencesKey("remindShowMeaning")
 
         internal fun Preferences.toSnapshot(): Snapshot {
             return Snapshot(
                 getValue(SCORE_POINTS_PER_CORRECT_ANSWER_KEY, Entries.scorePointsPerCorrectAnswer),
                 getValue(SCORE_POINTS_PER_WRONG_ANSWER_KEY, Entries.scorePointsPerWrongAnswer),
                 getValue(USE_CUSTOM_TABS_KEY, Entries.useCustomTabs),
-                getValue(REMIND_ITEMS_SIZE_KEY, Entries.remindItemsSize)
+                getValue(REMIND_ITEMS_SIZE_KEY, Entries.remindItemsSize),
+                getValue(REMIND_SHOW_MEANING_KEY, Entries.remindShowMeaning)
             )
         }
 
@@ -63,6 +65,7 @@ class DataStoreAppPreferences(private val dataStore: DataStore<Preferences>) : A
                 this === Entries.scorePointsPerWrongAnswer -> SCORE_POINTS_PER_WRONG_ANSWER_KEY
                 this === Entries.useCustomTabs -> USE_CUSTOM_TABS_KEY
                 this === Entries.remindItemsSize -> REMIND_ITEMS_SIZE_KEY
+                this === Entries.remindShowMeaning -> REMIND_SHOW_MEANING_KEY
                 else -> throw IllegalStateException("Invalid preference entry")
             } as Preferences.Key<T>
 

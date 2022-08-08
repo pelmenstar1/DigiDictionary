@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
+typealias AppPreferencesGetEntry<T> = AppPreferences.Entries.() -> AppPreferences.Entry<T>
+
 abstract class AppPreferences {
     data class Entry<T : Any>(val defaultValue: T)
 
@@ -12,13 +14,15 @@ abstract class AppPreferences {
         val scorePointsPerWrongAnswer = Entry(defaultValue = 2)
         val useCustomTabs = Entry(defaultValue = true)
         val remindItemsSize = Entry(defaultValue = 15)
+        val remindShowMeaning = Entry(defaultValue = false)
     }
 
     data class Snapshot(
         val scorePointsPerCorrectAnswer: Int,
         val scorePointsPerWrongAnswer: Int,
         val useCustomTabs: Boolean,
-        val remindItemsSize: Int
+        val remindItemsSize: Int,
+        val remindShowMeaning: Boolean
     ) {
         @Suppress("UNCHECKED_CAST")
         operator fun <T : Any> get(entry: Entry<T>): T {
@@ -27,6 +31,7 @@ abstract class AppPreferences {
                 entry === Entries.scorePointsPerWrongAnswer -> scorePointsPerWrongAnswer
                 entry === Entries.useCustomTabs -> useCustomTabs
                 entry === Entries.remindItemsSize -> remindItemsSize
+                entry === Entries.remindShowMeaning -> remindShowMeaning
                 else -> throw IllegalStateException("Invalid preference entry")
             } as T
         }
@@ -46,10 +51,10 @@ abstract class AppPreferences {
     }
 }
 
-suspend inline fun <T : Any> AppPreferences.get(getEntry: AppPreferences.Entries.() -> AppPreferences.Entry<T>): T {
+suspend inline fun <T : Any> AppPreferences.get(getEntry: AppPreferencesGetEntry<T>): T {
     return get(AppPreferences.Entries.getEntry())
 }
 
-inline fun <T : Any> AppPreferences.getFlow(getEntry: AppPreferences.Entries.() -> AppPreferences.Entry<T>): Flow<T> {
+inline fun <T : Any> AppPreferences.getFlow(getEntry: AppPreferencesGetEntry<T>): Flow<T> {
     return getFlow(AppPreferences.Entries.getEntry())
 }

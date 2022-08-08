@@ -4,7 +4,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.getFlow
 import io.github.pelmenstar1.digiDict.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.utils.DataLoadStateManager
 import kotlinx.coroutines.flow.map
@@ -14,13 +13,17 @@ import kotlin.random.Random
 @HiltViewModel
 class RemindRecordsViewModel @Inject constructor(
     private val recordDao: RecordDao,
-    private val appPreferences: AppPreferences
+    appPreferences: AppPreferences
 ) : SingleDataLoadStateViewModel<Array<Record>>(TAG) {
     private val random = Random(System.currentTimeMillis())
 
+    private val preferencesSnapshotFlow = appPreferences.getSnapshotFlow()
+
+    val showMeaningFlow = preferencesSnapshotFlow.map { it.remindShowMeaning }
+
     override fun DataLoadStateManager.FlowBuilder<Array<Record>>.buildDataFlow() = fromFlow {
-        appPreferences.getFlow { remindItemsSize }.map { size ->
-            recordDao.getRandomRecordsRegardlessScore(random, size)
+        preferencesSnapshotFlow.map {
+            recordDao.getRandomRecordsRegardlessScore(random, it.remindItemsSize)
         }
     }
 

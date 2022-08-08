@@ -3,20 +3,14 @@ package io.github.pelmenstar1.digiDict.ui.remindRecords
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.EmptyArray
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.ui.record.ArrayRecordDiffCallback
 import io.github.pelmenstar1.digiDict.ui.record.RecordViewHolder
 import io.github.pelmenstar1.digiDict.utils.FixedBitSet
 
 class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolder>() {
     class ViewHolder(context: Context) : RecordViewHolder(context) {
-        init {
-            setRevealed(false)
-        }
-
         fun setRevealed(state: Boolean) {
             // Use INVISIBLE instead of GONE to reduce jumps on revealing.
             val visibility = if (state) View.VISIBLE else View.INVISIBLE
@@ -37,32 +31,59 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
 
     private var items = EmptyArray.RECORD
 
-    var revealedStates: FixedBitSet = FixedBitSet.EMPTY
+    private var _revealedStates = FixedBitSet.EMPTY
+    var revealedStates: FixedBitSet
+        get() = _revealedStates
         set(value) {
-            field = value
+            _revealedStates = value
 
             if (value.size != items.size) {
                 throw IllegalStateException("revealedStates should be set after submitItems() and size should be equal to items size")
             }
 
-            value.iterateSetBits { index ->
-                reveal(index)
-            }
+            notifyItemRangeChanged(0, items.size, updateRevealStatePayload)
         }
 
-    fun submitItems(newItems: Array<Record>) {
-        val diffResult = DiffUtil.calculateDiff(ArrayRecordDiffCallback(items, newItems))
+    fun submitItems(newItems: Array<Record>, defaultRevealState: Boolean) {
+        val newSize = newItems.size
+        val revStates = _revealedStates
+
+        if (revStates.size != newItems.size) {
+            _revealedStates = FixedBitSet(newSize).also {
+                if (defaultRevealState) {
+                    it.setAll()
+                }
+            }
+        } else {
+            revStates.setAll(defaultRevealState)
+        }
+
+        val oldItems = items
+        val oldSize = oldItems.size
+
         items = newItems
 
-        diffResult.dispatchUpdatesTo(this)
+        when {
+            oldSize == 0 && newSize >= 0 -> {
+                notifyItemRangeInserted(0, newSize)
+            }
+            // Almost impossible situation but should be handled.
+            oldSize != newSize -> {
+                notifyItemRangeRemoved(0, oldSize)
+                notifyItemRangeInserted(0, newSize)
+
+                notifyItemRangeChanged(0, newSize)
+            }
+            else -> {
+                notifyItemRangeChanged(0, newSize)
+            }
+        }
     }
 
     private fun reveal(index: Int) {
-        notifyItemChanged(index, revealPayload)
-    }
+        revealedStates.set(index)
 
-    fun concealAll() {
-        notifyItemRangeChanged(0, items.size, concealPayload)
+        notifyItemChanged(index, updateRevealStatePayload)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -71,6 +92,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(items[position], onContainerClickListener)
+        holder.setRevealed(revealedStates[position])
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -79,9 +101,8 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
         } else {
             val payload = payloads[0]
 
-            when {
-                payload === revealPayload -> holder.setRevealed(true)
-                payload === concealPayload -> holder.setRevealed(false)
+            if (payload === updateRevealStatePayload) {
+                holder.setRevealed(_revealedStates[position])
             }
         }
     }
@@ -89,7 +110,6 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     override fun getItemCount() = items.size
 
     companion object {
-        private val revealPayload = Any()
-        private val concealPayload = Any()
+        private val updateRevealStatePayload = Any()
     }
 }

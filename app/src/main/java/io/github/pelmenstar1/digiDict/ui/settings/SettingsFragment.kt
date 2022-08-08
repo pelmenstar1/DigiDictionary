@@ -5,11 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import android.widget.CompoundButton
 import android.widget.Spinner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.switchmaterial.SwitchMaterial
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.BuildConfig
 import io.github.pelmenstar1.digiDict.MessageMapper
@@ -17,6 +19,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.AppPreferencesGetEntry
 import io.github.pelmenstar1.digiDict.utils.launchMessageFlowCollector
 import javax.inject.Inject
 
@@ -30,13 +33,20 @@ class SettingsFragment : Fragment() {
     private val quizSpinnerOnItemSelectedListener = object : AdapterView.OnItemSelectedListener {
         @Suppress("UNCHECKED_CAST")
         override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-            val key = parent.tag as AppPreferences.Entry<Int>
+            val entry = parent.tag as AppPreferences.Entry<Int>
 
-            viewModel.changePreferenceValue(key, position + 1)
+            viewModel.changePreferenceValue(entry, position + 1)
         }
 
         override fun onNothingSelected(parent: AdapterView<*>?) {
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private val switchOnCheckChangedListener = CompoundButton.OnCheckedChangeListener { view, isChecked ->
+        val entry = view.tag as AppPreferences.Entry<Boolean>
+
+        viewModel.changePreferenceValue(entry, isChecked)
     }
 
     override fun onCreateView(
@@ -61,9 +71,8 @@ class SettingsFragment : Fragment() {
                 BuildConfig.VERSION_NAME, BuildConfig.BUILD_TYPE
             )
 
-            settingsOpenBrowserInAppSwitch.setOnCheckedChangeListener { _, isChecked ->
-                viewModel.changePreferenceValue(isChecked) { useCustomTabs }
-            }
+            settingsOpenBrowserInAppSwitch.initSwitch { useCustomTabs }
+            settingsRemindShowMeaningSwitch.initSwitch { remindShowMeaning }
 
             settingsScorePointsPerCorrectAnswerSpinner.initAsQuizScore { scorePointsPerCorrectAnswer }
             settingsScorePointsPerWrongAnswerSpinner.initAsQuizScore { scorePointsPerWrongAnswer }
@@ -87,6 +96,7 @@ class SettingsFragment : Fragment() {
                     settingsScorePointsPerWrongAnswerSpinner.setValue(it.scorePointsPerWrongAnswer)
                     settingsRemindMaxItemsSpinner.setValue(it.remindItemsSize)
                     settingsOpenBrowserInAppSwitch.isChecked = it.useCustomTabs
+                    settingsRemindShowMeaningSwitch.isChecked = it.remindShowMeaning
                 }
             }
         }
@@ -98,7 +108,12 @@ class SettingsFragment : Fragment() {
         setSelection(value - 1)
     }
 
-    private inline fun Spinner.initAsQuizScore(getEntry: AppPreferences.Entries.() -> AppPreferences.Entry<Int>) {
+    private inline fun SwitchMaterial.initSwitch(getEntry: AppPreferencesGetEntry<Boolean>) {
+        tag = AppPreferences.Entries.getEntry()
+        setOnCheckedChangeListener(switchOnCheckChangedListener)
+    }
+
+    private inline fun Spinner.initAsQuizScore(getEntry: AppPreferencesGetEntry<Int>) {
         tag = AppPreferences.Entries.getEntry()
         onItemSelectedListener = quizSpinnerOnItemSelectedListener
     }

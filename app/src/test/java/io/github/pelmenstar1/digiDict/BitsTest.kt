@@ -1,11 +1,13 @@
 package io.github.pelmenstar1.digiDict
 
+import io.github.pelmenstar1.digiDict.utils.FixedBitSet
 import io.github.pelmenstar1.digiDict.utils.findPositionOfNthSetBit
 import io.github.pelmenstar1.digiDict.utils.iterateSetBits
-import io.github.pelmenstar1.digiDict.utils.lowestNBitsSetInt
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class BitsTest {
     @Test
@@ -72,15 +74,67 @@ class BitsTest {
     }
 
     @Test
-    fun lowestNBitsSetTest() {
-        assertEquals(0, lowestNBitsSetInt(0))
-        assertEquals(1, lowestNBitsSetInt(1))
-        assertEquals(0b11, lowestNBitsSetInt(2))
-        assertEquals(0b111, lowestNBitsSetInt(3))
-        assertEquals(0b1111, lowestNBitsSetInt(4))
-        assertEquals(0b11111, lowestNBitsSetInt(5))
-        assertEquals(0xFFFF, lowestNBitsSetInt(16))
-        assertEquals((-1), lowestNBitsSetInt(32))
-        assertEquals((-1), lowestNBitsSetInt(33))
+    fun setAllBitsTest() {
+        fun testCase(size: Int) {
+            val bitSet = FixedBitSet(size)
+            bitSet.setAll()
+
+            for (i in 0 until size) {
+                assertTrue(bitSet[i])
+            }
+        }
+
+        testCase(32)
+        testCase(64)
+        testCase(65)
+        testCase(128)
+        testCase(129)
+        testCase(513)
     }
+
+    @Test
+    fun setAllBitsTrueTest() {
+        fun testCase(size: Int) {
+            val bitSet = FixedBitSet(size)
+            bitSet.setAll()
+
+            for (i in 0 until size) {
+                assertTrue(bitSet[i])
+            }
+        }
+
+        testCase(1)
+        testCase(32)
+        testCase(64)
+        testCase(65)
+        testCase(128)
+        testCase(129)
+        testCase(513)
+    }
+
+    @Test
+    fun setAllBitsFalseTest() {
+        fun testCase(size: Int) {
+            val bitSet = FixedBitSet(size)
+            for (i in 0 until size) {
+                bitSet.set(i)
+            }
+
+            bitSet.setAll(false)
+
+            for (i in 0 until size) {
+                assertFalse(bitSet[i])
+            }
+        }
+
+        testCase(1)
+        testCase(32)
+        testCase(64)
+        testCase(65)
+        testCase(128)
+        testCase(129)
+        testCase(512)
+        testCase(515)
+    }
+
 }

@@ -5,10 +5,10 @@ import android.os.Parcelable
 import io.github.pelmenstar1.digiDict.EmptyArray
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import java.util.*
 
 class FixedBitSet : Parcelable {
-    @JvmField
-    val words: LongArray
+    private val words: LongArray
 
     val size: Int
 
@@ -43,10 +43,6 @@ class FixedBitSet : Parcelable {
 
     override fun describeContents() = 0
 
-    inline fun iterateSetBits(block: (bitIndex: Int) -> Unit) {
-        words.iterateSetBits(block)
-    }
-
     operator fun get(index: Int): Boolean {
         checkIndex(index)
 
@@ -75,6 +71,14 @@ class FixedBitSet : Parcelable {
         } else {
             word and mask.inv()
         }
+    }
+
+    fun setAll(state: Boolean) {
+        Arrays.fill(words, if (state) -1L else 0L)
+    }
+
+    fun setAll() {
+        Arrays.fill(words, -1L)
     }
 
     fun isAllBitsSet(): Boolean {
@@ -154,18 +158,6 @@ class FixedBitSet : Parcelable {
 
         internal fun getWordIndex(index: Int) = index shr WORD_SIZE
     }
-}
-
-fun lowestNBitsSetInt(n: Int): Int {
-    // Special case: Shift operator takes into account only lowest 5 bits which means
-    // if left-shift 0xFFFFFFFF by >= 32, result will be wrong. So return 0xFFFFFFFF (-1)
-    // which is most appropriate value in such case
-    if (n >= 32) return -1
-
-    // -1 is number with all bit set.
-    // Then it's left-shifted by n, to get a number which has n lowest bits unset while the others are set.
-    // In order to get desired number we invert it and get the number which has n lowest bits set.
-    return ((-1) shl n).inv()
 }
 
 fun Int.withBit(mask: Int, state: Boolean): Int {
