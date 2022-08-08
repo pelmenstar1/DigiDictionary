@@ -49,12 +49,17 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration)
 
-        // TODO: Hide IME when dest fragment is changed.
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val menu = toolbar.menu
             val destId = destination.id
 
             menu.clear()
+
+            // For some reason, IME is not always hidden when fragment is changed.
+            currentFocus?.let {
+                imm.hideSoftInputFromWindow(it.windowToken, 0)
+            }
 
             if (destId == R.id.homeFragment) {
                 menuInflater.inflate(R.menu.home_menu, menu)
