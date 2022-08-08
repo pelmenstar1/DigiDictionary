@@ -36,6 +36,9 @@ class HomeViewModel @Inject constructor(
     private val searchStateManager = DataLoadStateManager<FilteredArray<Record>>(TAG)
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {
+            // This makes getAllRecordsWithSearchInfoFlow() to be collected once
+            // value of isActiveFlow is true. When value is changed from true to false,
+            // filter { it } will prevent false to trigger creation and collection of getAllRecordsWithSearchInfoFlow()
             val recordFlow = GlobalSearchQueryProvider
                 .isActiveFlow
                 .filter { it }
@@ -44,6 +47,8 @@ class HomeViewModel @Inject constructor(
                 }
 
             recordFlow.combine(GlobalSearchQueryProvider.queryFlow) { records, query ->
+                // Search can only be performed if query contains at least one letter or digit.
+                // Otherwise, there's no sense in it.
                 if (query.containsLetterOrDigit()) {
                     RecordSearchUtil.filter(records, query, locale)
                 } else {

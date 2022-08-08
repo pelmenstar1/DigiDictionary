@@ -27,6 +27,7 @@ sealed class DataLoadState<out T> {
     }
 }
 
+// TODO: Add option to disallow logging states.
 class DataLoadStateManager<T>(val logTag: String) {
     class FlowBuilder<T>(private val manager: DataLoadStateManager<T>) {
         fun fromAction(block: suspend () -> T): DataLoadStateFlow<T> {
