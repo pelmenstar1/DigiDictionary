@@ -27,9 +27,10 @@ sealed class DataLoadState<out T> {
     }
 }
 
-// TODO: Add option to disallow logging states.
+private const val LOG_LOAD_STATES = false
+
 class DataLoadStateManager<T>(val logTag: String) {
-    class FlowBuilder<T>(private val manager: DataLoadStateManager<T>) {
+    class FlowBuilder<T>(val manager: DataLoadStateManager<T>) {
         fun fromAction(block: suspend () -> T): DataLoadStateFlow<T> {
             return flow {
                 logLoading()
@@ -66,7 +67,7 @@ class DataLoadStateManager<T>(val logTag: String) {
 
         private inline fun logLoadState(getInfo: () -> String) {
             debugLog(manager.logTag) {
-                info("loadState=${getInfo()}")
+                infoIf(LOG_LOAD_STATES, "loadState=${getInfo()}")
             }
         }
 
@@ -78,8 +79,13 @@ class DataLoadStateManager<T>(val logTag: String) {
         }
 
         inline fun fromFlow(flowProvider: () -> Flow<T>): DataLoadStateFlow<T> {
-            // TODO: Catch possible exception in flowProvider.
-            return fromFlow(flowProvider())
+            return try {
+                fromFlow(flowProvider())
+            } catch (e: Exception) {
+                Log.e(manager.logTag, "", e)
+
+                flowOf(DataLoadState.error())
+            }
         }
     }
 
