@@ -89,34 +89,21 @@ class DataLoadStateManager<T>(val logTag: String) {
         }
     }
 
-    private enum class RetryState { IDLE, RETRY }
-
-    private val retryFlow = MutableStateFlow(RetryState.RETRY)
+    private val retryFlow = MutableStateFlow(Any())
 
     fun buildFlow(
         scope: CoroutineScope,
         provider: FlowBuilder<T>.() -> DataLoadStateFlow<T>
-    ): StateFlow<DataLoadState<T>> {
+    ): SharedFlow<DataLoadState<T>> {
         val builder = FlowBuilder(this)
 
-        return retryFlow.filter {
-            it == RetryState.RETRY
-        }.onEach {
-            retryFlow.value = RetryState.IDLE
-        }.flatMapMerge {
+        return retryFlow.flatMapLatest {
             builder.provider()
-        }.stateIn(scope, SharingStarted.Lazily, DataLoadState.loading())
+        }.shareIn(scope, SharingStarted.Lazily, replay = 1)
     }
 
     fun retry() {
-        debugLog(logTag) {
-            infoIf(
-                retryFlow.value == RetryState.RETRY,
-                "Action can't be retried because it's already in RETRY state"
-            )
-        }
-
-        retryFlow.value = RetryState.RETRY
+        retryFlow.value = Any()
     }
 }
 
