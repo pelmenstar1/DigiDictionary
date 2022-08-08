@@ -126,7 +126,7 @@ class QuizViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during save", e)
 
-                onSaveError.raiseOnMainThread()
+                onSaveError.raiseOnMainThreadIfNotCancellation(e)
             }
         }
     }

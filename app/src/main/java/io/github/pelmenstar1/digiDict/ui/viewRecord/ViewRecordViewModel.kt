@@ -56,7 +56,7 @@ class ViewRecordViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during delete", e)
 
-                onDeleteError.raiseOnMainThread()
+                onDeleteError.raiseOnMainThreadIfNotCancellation(e)
             }
         }
     }

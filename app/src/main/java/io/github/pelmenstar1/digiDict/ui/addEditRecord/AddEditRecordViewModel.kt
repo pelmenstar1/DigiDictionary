@@ -218,7 +218,7 @@ class AddEditRecordViewModel @Inject constructor(
                     Log.e(TAG, null, e)
                     isAddJobStarted.set(false)
 
-                    onAddError.raiseOnMainThread()
+                    onAddError.raiseOnMainThreadIfNotCancellation(e)
                 }
             }
         }

@@ -99,7 +99,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during addition", e)
 
-                onAdditionError.raiseOnMainThread()
+                onAdditionError.raiseOnMainThreadIfNotCancellation(e)
             }
         }
     }
@@ -125,7 +125,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                     // Unset all validity bits in order to disable "Add" button
                     _validityFlow.value = 0
 
-                    onValidityCheckError.raiseOnMainThread()
+                    onValidityCheckError.raiseOnMainThreadIfNotCancellation(e)
 
                     return@launch
                 }

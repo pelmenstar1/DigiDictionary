@@ -1,10 +1,7 @@
 package io.github.pelmenstar1.digiDict.utils
 
 import android.database.Cursor
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.Flow
 
@@ -92,7 +89,7 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override fun getAllRecordsOrderByIdFlow(): Flow<Array<Record>> {
+    override fun getAllRecordsWithSearchInfoFlow(): Flow<Array<RecordWithSearchInfo>> {
         throw NotImplementedError()
     }
 

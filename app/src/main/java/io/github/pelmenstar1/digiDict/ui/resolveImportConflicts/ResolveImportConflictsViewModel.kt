@@ -62,7 +62,7 @@ class ResolveImportConflictsViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "during applyChanges()", e)
 
-                onApplyChangesError.raiseOnMainThread()
+                onApplyChangesError.raiseOnMainThreadIfNotCancellation(e)
             }
         }
     }

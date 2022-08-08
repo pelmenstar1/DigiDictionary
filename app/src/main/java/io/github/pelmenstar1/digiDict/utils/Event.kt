@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.utils
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import kotlinx.coroutines.CancellationException
 
 class Event {
     @Volatile
@@ -60,6 +61,12 @@ class Event {
                     isCalled = true
                 }
             }
+        }
+    }
+
+    fun raiseOnMainThreadIfNotCancellation(e: Throwable) {
+        if (e !is CancellationException) {
+            raiseOnMainThread()
         }
     }
 
