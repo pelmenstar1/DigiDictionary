@@ -3,30 +3,19 @@ package io.github.pelmenstar1.digiDict.utils
 import io.github.pelmenstar1.digiDict.EmptyArray
 import kotlin.math.min
 
-class FilteredArray<T>(
+class FilteredArray<out T>(
     private val origin: Array<out T>,
 
     // If the bit at position N is set, it means that element N in origin passed a filtering.
-    private val bitSet: LongArray
-) : Collection<T> {
-    override val size: Int = bitSet.sumOf(Long::countOneBits)
+    private val bitSet: LongArray,
 
-    override fun isEmpty() = size == 0
-
-    override fun contains(element: T): Boolean {
-        var result = false
-
-        bitSet.iterateSetBits { i ->
-            if (origin[i] == element) {
-                result = true
-                return@iterateSetBits
-            }
-        }
-
-        return result
-    }
-
-    override fun containsAll(elements: Collection<T>) = elements.all { contains(it) }
+    // If 'size' argument is negative, size will be computed using bitSet and Long.countOneBits
+    //
+    // If 'size' argument is positive or zero, it will be used to init size. It allows to skip countOneBits part.
+    // 'size' argument must equal to the count of set bits in bitSet, otherwise it may lead to unexpected results.
+    size: Int = -1
+) : SizedIterable<T> {
+    override val size: Int = if (size >= 0) size else bitSet.sumOf(Long::countOneBits)
 
     operator fun get(index: Int): T {
         return origin[resolveIndex(index)]
@@ -45,20 +34,27 @@ class FilteredArray<T>(
 
         if (size != other.size) return false
 
-        if (origin.contentEquals(other.origin)) {
-            return bitSet.contentEquals(other.bitSet)
+        val origin = origin
+        val bitSet = bitSet
+
+        val otherOrigin = other.origin
+        val otherBitSet = other.bitSet
+
+        if (origin === otherOrigin) {
+            return bitSet.contentEquals(otherBitSet)
         }
 
-        var seqIndex = 0
         var result = true
 
+        var otherBitIndex = otherBitSet.nextSetBit(0)
+
         bitSet.iterateSetBits { absIndex ->
-            if (origin[absIndex] != other[seqIndex]) {
+            if (origin[absIndex] != otherOrigin[otherBitIndex]) {
                 result = false
                 return@iterateSetBits
             }
 
-            seqIndex++
+            otherBitIndex = otherBitSet.nextSetBit(otherBitIndex + 1)
         }
 
         return result
@@ -76,14 +72,18 @@ class FilteredArray<T>(
 
     override fun toString(): String {
         return buildString {
+            val origin = origin
+            val size = size
+
             append("FilteredArray(size=")
             append(size)
             append(", elements=[")
 
+            var seqIndex = 0
             bitSet.iterateSetBits { i ->
                 append(origin[i])
 
-                if (i < size - 1) {
+                if ((seqIndex++) < size - 1) {
                     append(", ")
                 }
             }
@@ -108,27 +108,35 @@ class FilteredArray<T>(
     }
 }
 
-inline fun <E> Array<out E>.filterFast(
-    predicate: (element: E) -> Boolean
-): FilteredArray<E> {
+inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): FilteredArray<E> {
     val size = size
 
     // Ceiling division to 64
-    val bitSetSize = (size + 63) ushr 6
+    val bitSetSize = (size + 63) shr 6
     val bitSet = LongArray(bitSetSize)
 
     var wordIndex = 0
     var start = 0
+    var filteredSize = 0
 
-    // Fill bitset word by word
+    // Fill bitSet word by word
     while (start < size) {
-        // end shouldn't overlap the array size, so limit it to size.
+        // end shouldn't be greater than size of the array
         val end = min(start + 64, size)
 
         var word = 0L
 
         for (i in start until end) {
             if (predicate(this[i])) {
+                filteredSize++
+
+                // Two facts make (1L shl i) mask valid:
+                // - left shift operator takes into account only 6 lowest-order bits
+                //   which means that (1L shl i) is actually (1L shl (i % 64))
+                // - start is always aligned to 64, which means that (1L shl start) is (1L shl 0),
+                //   (1L shl (start + 1)) is equals to (1L shl 1) and so on.
+                //   To generalize, say we have variable n within [start; end) range and (end - start) <= 64, then:
+                //   (1L shl n) = (1L shl (n - start))
                 word = word or (1L shl i)
             }
         }
@@ -138,5 +146,5 @@ inline fun <E> Array<out E>.filterFast(
         start = end
     }
 
-    return FilteredArray(this, bitSet)
+    return FilteredArray(this, bitSet, size = filteredSize)
 }

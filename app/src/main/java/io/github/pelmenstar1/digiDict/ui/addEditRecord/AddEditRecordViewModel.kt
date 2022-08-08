@@ -4,9 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
@@ -23,8 +21,10 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
+    private val searchPreparedRecordDao: SearchPreparedRecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
-    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
+    private val localeProvider: LocaleProvider
 ) : ViewModel() {
     val validity = MutableStateFlow<Int?>(null)
 
@@ -131,13 +131,15 @@ class AddEditRecordViewModel @Inject constructor(
                 while (isActive) {
                     val expr = checkExpressionChannel.receive()
 
-                    val isNotBlank = expr.isNotBlank()
+                    val isBlank = expr.isBlank()
+                    val containsLetterOrDigit = expr.any { it.isLetterOrDigit() }
 
                     // If we are is edit mode (currentRecordExpression is not null then),
                     // input expression shouldn't be considered as "existing"
                     // even if it does exist to allow editing meaning, origin or notes and not expression.
-                    val isValid =
-                        isNotBlank && (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
+                    val isValid = !isBlank &&
+                            containsLetterOrDigit &&
+                            (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
 
                     validity.update {
                         val prevValue = it ?: 0
@@ -149,8 +151,9 @@ class AddEditRecordViewModel @Inject constructor(
 
                     _expressionErrorFlow.value = when {
                         isValid -> null
-                        isNotBlank -> AddEditRecordMessage.EXISTING_EXPRESSION
-                        else -> AddEditRecordMessage.EMPTY_TEXT
+                        isBlank -> AddEditRecordMessage.EMPTY_TEXT
+                        !containsLetterOrDigit -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT
+                        else -> AddEditRecordMessage.EXISTING_EXPRESSION
                     }
                 }
             }
@@ -173,11 +176,17 @@ class AddEditRecordViewModel @Inject constructor(
                     val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
 
                     currentRecordId.let { id ->
+                        val locale = localeProvider.get()
+
                         if (id >= 0) {
                             recordDao.update(
                                 currentRecordId,
                                 expr, rawMeaning, additionalNotes,
                                 epochSeconds
+                            )
+
+                            searchPreparedRecordDao.update(
+                                SearchPreparedRecord.prepare(id, expr, rawMeaning, locale)
                             )
                         } else {
                             recordDao.insert(
@@ -188,6 +197,12 @@ class AddEditRecordViewModel @Inject constructor(
                                     epochSeconds = epochSeconds
                                 )
                             )
+
+                            recordDao.getRecordIdByExpression(expr)?.let {
+                                searchPreparedRecordDao.insert(
+                                    SearchPreparedRecord.prepare(it, expr, rawMeaning, locale)
+                                )
+                            }
                         }
                     }
 

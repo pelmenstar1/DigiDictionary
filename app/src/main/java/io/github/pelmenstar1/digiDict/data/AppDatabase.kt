@@ -1,16 +1,24 @@
 package io.github.pelmenstar1.digiDict.data
 
 import android.content.Context
+import android.database.CharArrayBuffer
 import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import io.github.pelmenstar1.digiDict.utils.asCharSequence
 import io.github.pelmenstar1.digiDict.utils.getLazyValue
+import io.github.pelmenstar1.digiDict.utils.runInTransitionBlocking
 
 @Database(
-    entities = [Record::class, RemoteDictionaryProviderInfo::class, RemoteDictionaryProviderStats::class],
+    entities = [
+        Record::class,
+        RemoteDictionaryProviderInfo::class,
+        RemoteDictionaryProviderStats::class,
+        SearchPreparedRecord::class
+    ],
     exportSchema = true,
-    version = 5,
+    version = 6,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -54,9 +62,54 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
+    object Migration_5_6 : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.runInTransitionBlocking {
+                execSQL("CREATE TABLE search_prepared_records (id INTEGER PRIMARY KEY NOT NULL, keywords TEXT NOT NULL)")
+                val insertStatement = compileStatement("INSERT INTO search_prepared_records VALUES(?, ?)")
+
+                database.query("SELECT id, lower(expression), lower(meaning) FROM records").use { cursor ->
+                    val size = cursor.count
+
+                    val exprBuffer = CharArrayBuffer(64)
+
+                    // In general, meaning is longer than expression.
+                    val meaningBuffer = CharArrayBuffer(128)
+
+                    val exprBufferAsCs = exprBuffer.asCharSequence()
+                    val meaningBufferAsCs = meaningBuffer.asCharSequence()
+
+                    for (i in 0 until size) {
+                        cursor.moveToPosition(i)
+
+                        val id = cursor.getLong(0)
+                        cursor.copyStringToBuffer(1, exprBuffer)
+                        cursor.copyStringToBuffer(2, meaningBuffer)
+
+                        // Expression and meaning is already lowered in the query.
+                        val keywords = SearchPreparedRecord.prepareToKeywords(
+                            exprBufferAsCs,
+                            meaningBufferAsCs,
+                            needToLower = false
+                        )
+
+                        insertStatement.run {
+                            // Binding index is 1-based
+                            bindLong(1, id)
+                            bindString(2, keywords)
+
+                            executeInsert()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     abstract fun recordDao(): RecordDao
     abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
+    abstract fun searchPreparedRecordDao(): SearchPreparedRecordDao
 
     companion object {
         private var singleton: AppDatabase? = null
@@ -113,24 +166,12 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun Builder<AppDatabase>.configureAndBuild(): AppDatabase =
-            this.addMigrations(Migration_2_3, Migration_3_4, Migration_4_5)
+            this.addMigrations(Migration_2_3, Migration_3_4, Migration_4_5, Migration_5_6)
                 .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         db.insertRemoteDictProviders_5(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
                     }
                 })
                 .build()
-
-        internal inline fun SupportSQLiteDatabase.runInTransitionBlocking(block: SupportSQLiteDatabase.() -> Unit) {
-            beginTransaction()
-
-            try {
-                block()
-
-                setTransactionSuccessful()
-            } finally {
-                endTransaction()
-            }
-        }
     }
 }

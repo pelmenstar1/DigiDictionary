@@ -15,7 +15,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
+import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
+import io.github.pelmenstar1.digiDict.ui.home.search.SearchAdapter
+import io.github.pelmenstar1.digiDict.utils.DataLoadState
 import io.github.pelmenstar1.digiDict.utils.launchFlowCollector
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.plus
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -37,12 +43,22 @@ class HomeFragment : Fragment() {
         }
 
         val pagingAdapter = HomeAdapter(onViewRecord = onViewRecord)
-        val searchAdapter = SearchAdapter(onViewRecord = onViewRecord)
+        val searchAdapter =
+            SearchAdapter(differScope = lifecycleScope + Dispatchers.Default, onViewRecord = onViewRecord)
 
         val stateContainerBinding = HomeLoadingErrorAndProgressMergeBinding.bind(binding.root)
         val retryLambda = pagingAdapter::retry
 
-        stateContainerBinding.homeErrorContainer.setOnRetryListener(retryLambda)
+        val loadingIndicator = stateContainerBinding.homeLoadingIndicator
+        val errorContainer = stateContainerBinding.homeErrorContainer
+
+        errorContainer.setOnRetryListener {
+            if (GlobalSearchQueryProvider.isActive) {
+                viewModel.retrySearch()
+            } else {
+                pagingAdapter.retry()
+            }
+        }
 
         val recyclerView = binding.homeRecyclerView
         val addRecordButton = binding.homeAddRecord.also {
@@ -67,7 +83,28 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.items, pagingAdapter::submitData)
-            launchFlowCollector(viewModel.searchItems, searchAdapter::submitData)
+
+            launchFlowCollector(viewModel.searchStateFlow) {
+                when (it) {
+                    is DataLoadState.Loading -> {
+                        loadingIndicator.visibility = View.VISIBLE
+                        errorContainer.visibility = View.GONE
+                        recyclerView.visibility = View.GONE
+                    }
+                    is DataLoadState.Error -> {
+                        errorContainer.visibility = View.VISIBLE
+                        loadingIndicator.visibility = View.GONE
+                        recyclerView.visibility = View.GONE
+                    }
+                    is DataLoadState.Success -> {
+                        recyclerView.visibility = View.VISIBLE
+                        loadingIndicator.visibility = View.GONE
+                        errorContainer.visibility = View.GONE
+
+                        searchAdapter.submitData(it.value)
+                    }
+                }
+            }
 
             launchFlowCollector(GlobalSearchQueryProvider.isActiveFlow) { isActive ->
                 recyclerView.adapter = if (isActive) searchAdapter else loadStatePagingAdapter
@@ -81,15 +118,21 @@ class HomeFragment : Fragment() {
                 }
             }
 
-            launchFlowCollector(pagingAdapter.loadStateFlow) {
-                with(stateContainerBinding) {
-                    val refresh = it.refresh
+            launchFlowCollector(
+                pagingAdapter.loadStateFlow
+                    .combineTransform(GlobalSearchQueryProvider.isActiveFlow) { state, isActive ->
+                        // While search is active, UI should not respond to pagingAdapter state,
+                        // as it's not on the screen.
+                        if (!isActive) {
+                            emit(state)
+                        }
+                    }
+            ) {
+                val refresh = it.refresh
 
-                    homeLoadingIndicator.isVisible = refresh is LoadState.Loading
-                    homeErrorContainer.isVisible = refresh is LoadState.Error
-
-                    recyclerView.isVisible = refresh is LoadState.NotLoading && !refresh.endOfPaginationReached
-                }
+                loadingIndicator.isVisible = refresh is LoadState.Loading
+                errorContainer.isVisible = refresh is LoadState.Error
+                recyclerView.isVisible = refresh is LoadState.NotLoading && !refresh.endOfPaginationReached
             }
         }
 

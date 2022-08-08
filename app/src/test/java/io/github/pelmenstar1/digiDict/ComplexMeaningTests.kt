@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict
 
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import org.junit.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class ComplexMeaningTests {
@@ -50,27 +51,6 @@ class ComplexMeaningTests {
     }
 
     @Test
-    fun `anyElementStartsWith test`() {
-        fun testCase(rawText: String, prefix: String, ignoreCase: Boolean, expectedResult: Boolean) {
-            assertEquals(expectedResult, ComplexMeaning.anyElementStartsWith(rawText, prefix, ignoreCase))
-        }
-
-        testCase("Cabd", "ab", ignoreCase = true, expectedResult = true)
-        testCase("Cabd", "abd", ignoreCase = true, expectedResult = true)
-        testCase("Cbbb", "bbb", ignoreCase = true, expectedResult = true)
-        testCase("CABDCC", "ab", ignoreCase = true, expectedResult = true)
-        testCase("CABDCC", "ab", ignoreCase = false, expectedResult = false)
-
-        testCase("L1@abc", "abc", ignoreCase = true, expectedResult = true)
-        testCase("L2@a\nbb", "b", ignoreCase = true, expectedResult = true)
-        testCase("L2@uu\naa", "r", ignoreCase = true, expectedResult = false)
-        testCase("L0@", "123", ignoreCase = true, expectedResult = false)
-        testCase("L1@A", "a", ignoreCase = true, expectedResult = true)
-        testCase("L1@A", "a", ignoreCase = false, expectedResult = false)
-        testCase("L2@A\nBB", "a", ignoreCase = true, expectedResult = true)
-    }
-
-    @Test
     fun `common mergedWith test`() {
         fun testCase(origin: ComplexMeaning.Common, other: ComplexMeaning, expected: ComplexMeaning) {
             assertEquals(origin.mergedWith(other), expected)
@@ -115,5 +95,24 @@ class ComplexMeaningTests {
             ComplexMeaning.Common("3"),
             expected = ComplexMeaning.List("1", "2", "3")
         )
+    }
+
+    @Test
+    fun `iterateListElementRanges test`() {
+        fun testCase(text: String, expectedRanges: Array<Pair<Int, Int>>) {
+            val actualRanges = ArrayList<Pair<Int, Int>>()
+
+            ComplexMeaning.iterateListElementRanges(text) { start, end ->
+                actualRanges.add(start to end)
+            }
+
+            assertContentEquals(expectedRanges, actualRanges.toTypedArray())
+        }
+
+        testCase("L1@A", expectedRanges = arrayOf(3 to 4))
+        testCase("L0@", expectedRanges = emptyArray())
+        testCase("L3@Abcc\nb\n1", expectedRanges = arrayOf(3 to 7, 8 to 9, 10 to 11))
+        testCase("L1@", expectedRanges = arrayOf(3 to 3))
+        testCase("L2@1\n", expectedRanges = arrayOf(3 to 4, 5 to 5))
     }
 }

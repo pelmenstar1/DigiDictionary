@@ -257,14 +257,15 @@ sealed class ComplexMeaning : Parcelable {
             }
         }
 
-        private fun throwInvalidFormat(rawText: String): Nothing {
+        fun throwInvalidFormat(rawText: CharSequence): Nothing {
             throw IllegalArgumentException("Invalid format (rawText=$rawText)")
         }
 
         fun parse(rawText: String): ComplexMeaning {
-            return when (rawText[0]) {
-                'C' -> Common(rawText.substring(1), rawText)
-                'L' -> {
+            return typeSwitch(
+                rawText,
+                onCommon = { Common(rawText.substring(1), rawText) },
+                onList = {
                     // Skip mark character
                     val firstDelimiterIndex = rawText.indexOf('@', 1)
                     if (firstDelimiterIndex < 0) {
@@ -281,7 +282,7 @@ sealed class ComplexMeaning : Parcelable {
                     val contentStart = firstDelimiterIndex + 1
 
                     var prevPos = contentStart
-                    val elements = ArraySet<String>()
+                    val elements = ArraySet<String>(count)
 
                     for (i in 0 until count) {
                         var nextDelimiterIndex = rawText.indexOf('\n', prevPos)
@@ -299,48 +300,54 @@ sealed class ComplexMeaning : Parcelable {
 
                     List(elements, rawText)
                 }
-                else -> throwInvalidFormat(rawText)
+            )
+        }
+
+        inline fun <R> typeSwitch(
+            value: CharSequence,
+            onCommon: () -> R,
+            onList: () -> R
+        ): R {
+            if (value.isEmpty()) {
+                throwInvalidFormat(value)
+            }
+
+            return when (value[0]) {
+                'C', 'c' -> onCommon()
+                'L', 'l' -> onList()
+                else -> throwInvalidFormat(value)
             }
         }
 
-        /**
-         * Determines whether any element of meaning (specified by [rawText]) starts with particular [prefix].
-         *
-         * @param ignoreCase whether to ignore casing of characters.
-         */
-        fun anyElementStartsWith(
-            rawText: String,
-            prefix: String,
-            ignoreCase: Boolean = false
-        ): Boolean {
-            return when (rawText[0]) {
-                'C' -> {
-                    rawText.startsWith(prefix, 1, ignoreCase)
+        inline fun iterateListElementRanges(
+            rawText: CharSequence,
+            block: (start: Int, end: Int) -> Unit
+        ) {
+            val length = rawText.length
+
+            // Skip mark character
+            val firstDelimiterIndex = rawText.indexOf('@', 1)
+            if (firstDelimiterIndex < 0) {
+                throwInvalidFormat(rawText)
+            }
+
+            val count = rawText.parsePositiveInt(1, firstDelimiterIndex)
+            when {
+                count < 0 -> throwInvalidFormat(rawText)
+                count == 0 -> return
+            }
+
+            var i = firstDelimiterIndex + 1
+
+            repeat(count) {
+                var nextDelimiterPos = rawText.indexOf('\n', i)
+                if (nextDelimiterPos < 0) {
+                    nextDelimiterPos = length
                 }
-                'L' -> {
-                    // Skip mark character
-                    val firstDelimiterIndex = rawText.indexOf('@', 1)
-                    if (firstDelimiterIndex < 0) {
-                        throwInvalidFormat(rawText)
-                    }
 
-                    var i = firstDelimiterIndex + 1
-                    while (true) {
-                        if (rawText.startsWith(prefix, i, ignoreCase)) {
-                            return true
-                        }
+                block(i, nextDelimiterPos)
 
-                        val nextDelimiterPos = rawText.indexOf('\n', i)
-                        if (nextDelimiterPos == -1) {
-                            break
-                        }
-
-                        i = nextDelimiterPos + 1
-                    }
-
-                    false
-                }
-                else -> throwInvalidFormat(rawText)
+                i = nextDelimiterPos + 1
             }
         }
     }

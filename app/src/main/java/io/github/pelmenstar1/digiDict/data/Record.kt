@@ -12,7 +12,7 @@ import io.github.pelmenstar1.digiDict.serialization.*
     tableName = "records",
     indices = [Index(RecordTable.expression, unique = true)]
 )
-data class Record(
+open class Record(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = RecordTable.id)
     val id: Int,
@@ -28,12 +28,36 @@ data class Record(
         require(epochSeconds >= 0) { "Epoch seconds can't be negative" }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (other === this) return true
+        if (other == null || javaClass != other.javaClass) return false
+
+        other as Record
+
+        return id == other.id && equalsNoId(other)
+    }
+
     override fun equalsNoId(other: Record): Boolean {
         return expression == other.expression &&
                 rawMeaning == other.rawMeaning &&
                 additionalNotes == other.additionalNotes &&
                 score == other.score &&
                 epochSeconds == other.epochSeconds
+    }
+
+    override fun hashCode(): Int {
+        var result = id
+        result = result * 31 + expression.hashCode()
+        result = result * 31 + rawMeaning.hashCode()
+        result = result * 31 + additionalNotes.hashCode()
+        result = result * 31 + score
+        result = result * 31 + epochSeconds.hashCode()
+
+        return result
+    }
+
+    override fun toString(): String {
+        return "Record(id=$id, expression='$expression', rawMeaning='$rawMeaning', additionalNotes=${additionalNotes}, score=$score, epochSeconds=$epochSeconds)"
     }
 
     companion object {

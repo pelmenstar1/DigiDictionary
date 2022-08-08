@@ -110,8 +110,8 @@ abstract class RecordDao {
     @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
 
-    @Query("SELECT * FROM records")
-    abstract fun getAllRecordsFlow(): Flow<Array<Record>>
+    @Query("SELECT * FROM records LEFT JOIN search_prepared_records AS spr ON records.id=spr.id")
+    abstract fun getAllRecordsWithSearchInfoFlow(): Flow<Array<RecordWithSearchInfo>>
 
     @Query("SELECT * FROM records ORDER BY dateTime DESC LIMIT :limit OFFSET :offset")
     abstract suspend fun getRecordsLimitOffset(
@@ -127,6 +127,9 @@ abstract class RecordDao {
 
     @Query("SELECT * FROM records WHERE expression = :expr")
     abstract suspend fun getRecordByExpression(expr: String): Record?
+
+    @Query("SELECT id FROM records WHERE expression=:expr")
+    abstract suspend fun getRecordIdByExpression(expr: String): Int?
 
     @Query("SELECT id FROM records")
     abstract suspend fun getAllIds(): IntArray

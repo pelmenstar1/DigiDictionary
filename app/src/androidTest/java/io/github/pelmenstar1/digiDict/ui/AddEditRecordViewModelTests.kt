@@ -3,10 +3,7 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
@@ -23,6 +20,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
@@ -37,19 +35,35 @@ class AddEditRecordViewModelTests {
 
     private fun createViewModel(
         recordDao: RecordDao = db.recordDao(),
+        preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
-        currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider
+        currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
+        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT)
     ): AddEditRecordViewModel {
-        return AddEditRecordViewModel(recordDao, appWidgetUpdater, currentEpochSecondsProvider)
+        return AddEditRecordViewModel(
+            recordDao,
+            preparedRecordDao,
+            appWidgetUpdater,
+            currentEpochSecondsProvider,
+            localeProvider
+        )
     }
 
     private inline fun useViewModel(
         recordDao: RecordDao = db.recordDao(),
+        preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
+        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT),
         block: (AddEditRecordViewModel) -> Unit
     ) {
-        createViewModel(recordDao, appWidgetUpdater, currentEpochSecondsProvider).use(block)
+        createViewModel(
+            recordDao,
+            preparedRecordDao,
+            appWidgetUpdater,
+            currentEpochSecondsProvider,
+            localeProvider
+        ).use(block)
     }
 
     private fun createRecord(expression: String): Record {

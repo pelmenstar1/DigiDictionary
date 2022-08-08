@@ -7,10 +7,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.pelmenstar1.digiDict.MessageMapper
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.prefs.DataStoreAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
@@ -21,6 +18,7 @@ import io.github.pelmenstar1.digiDict.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessage
+import io.github.pelmenstar1.digiDict.utils.LocaleProvider
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -28,6 +26,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class AppModule {
+    @Provides
+    fun provideLocaleProvider(@ApplicationContext context: Context): LocaleProvider {
+        return LocaleProvider.fromContext(context)
+    }
+
     @Provides
     @Singleton
     fun provideAppPreferences(@ApplicationContext context: Context): AppPreferences {
@@ -57,6 +60,11 @@ class AppModule {
     @Provides
     fun provideRemoteDictProviderStatsDao(appDatabase: AppDatabase): RemoteDictionaryProviderStatsDao {
         return appDatabase.remoteDictionaryProviderStatsDao()
+    }
+
+    @Provides
+    fun provideSearchPreparedRecordDao(appDatabase: AppDatabase): SearchPreparedRecordDao {
+        return appDatabase.searchPreparedRecordDao()
     }
 
     @Provides

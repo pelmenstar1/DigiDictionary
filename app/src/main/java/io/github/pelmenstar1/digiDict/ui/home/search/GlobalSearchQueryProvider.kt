@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.home.search
 
 import io.github.pelmenstar1.digiDict.utils.trimToString
 import kotlinx.coroutines.flow.MutableStateFlow
