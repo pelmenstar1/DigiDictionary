@@ -14,7 +14,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -206,11 +205,8 @@ class AddEditRecordViewModel @Inject constructor(
                         }
                     }
 
-                    withContext(Dispatchers.Main) {
-                        listAppWidgetUpdater.updateAllWidgets()
-
-                        onRecordSuccessfullyAdded.raise()
-                    }
+                    listAppWidgetUpdater.updateAllWidgets()
+                    onRecordSuccessfullyAdded.raiseOnMainThread()
 
                     // If there's no exception, then isAddJobStarted shouldn't be set to false,
                     // because view-model will be destroyed soon.

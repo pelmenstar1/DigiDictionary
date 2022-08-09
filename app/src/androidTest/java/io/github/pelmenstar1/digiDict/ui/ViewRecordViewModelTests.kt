@@ -136,14 +136,6 @@ class ViewRecordViewModelTests {
         }
     }
 
-    @Test
-    fun updateAllWidgetsCalledOnMainThreadTest() = runTest {
-        assertAppWidgetUpdateCalledOnMainThread(
-            createVm = { updater -> createViewModel(listAppWidgetUpdater = updater) },
-            triggerAction = { delete() }
-        )
-    }
-
     companion object {
         private lateinit var db: AppDatabase
 

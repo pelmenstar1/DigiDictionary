@@ -1,7 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -101,18 +99,14 @@ class SettingsFragment : Fragment() {
                 entry = { remindItemsSize }
             )
 
+            val listAppWidgetUpdater = ListAppWidget.updater(context)
             settingsWidgetListMaxSizeSpinner.initRangeSpinner(
                 start = 10,
                 endInclusive = 40,
                 step = 5,
                 entry = { widgetListMaxSize },
                 onPrefChanged = {
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    val componentName = ComponentName(context, ListAppWidget::class.java)
-
-                    val ids = appWidgetManager.getAppWidgetIds(componentName)
-
-                    ListAppWidget.update(context, appWidgetManager, ids)
+                    listAppWidgetUpdater.updateAllWidgets()
                 }
             )
         }

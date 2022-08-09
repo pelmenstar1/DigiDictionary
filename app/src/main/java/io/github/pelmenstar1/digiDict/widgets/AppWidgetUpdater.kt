@@ -4,41 +4,41 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 
 interface AppWidgetUpdater {
     fun updateAllWidgets()
+    fun updateWidgets(ids: IntArray)
 
-    private class Impl(
-        private val context: Context,
-        private val widgetClass: Class<out AppWidgetProvider>
+    abstract class Base(
+        context: Context,
+        widgetClass: Class<out AppWidgetProvider>
     ) : AppWidgetUpdater {
-        private fun createWidgetManualUpdateIntent(ids: IntArray): Intent {
-            return Intent().apply {
-                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            }
-        }
+        private val appWidgetManager = AppWidgetManager.getInstance(context)
+        private val componentName = ComponentName(context, widgetClass)
 
         override fun updateAllWidgets() {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val componentName = ComponentName(context, widgetClass)
-
             val ids = appWidgetManager.getAppWidgetIds(componentName)
-            val intent = createWidgetManualUpdateIntent(ids)
 
-            context.sendBroadcast(intent)
+            updateWidgets(appWidgetManager, ids)
         }
+
+        override fun updateWidgets(ids: IntArray) {
+            updateWidgets(appWidgetManager, ids)
+        }
+
+        protected abstract fun updateWidgets(appWidgetManager: AppWidgetManager, ids: IntArray)
     }
 
     companion object {
-        fun create(context: Context, widgetClass: Class<out AppWidgetProvider>): AppWidgetUpdater {
-            return Impl(context, widgetClass)
-        }
-
-        inline fun <reified T : AppWidgetProvider> create(context: Context): AppWidgetUpdater {
-            return create(context, T::class.java)
+        inline fun <reified T : AppWidgetProvider> create(
+            context: Context,
+            crossinline update: (appWidgetManager: AppWidgetManager, ids: IntArray) -> Unit
+        ): AppWidgetUpdater {
+            return object : AppWidgetUpdater.Base(context, T::class.java) {
+                override fun updateWidgets(appWidgetManager: AppWidgetManager, ids: IntArray) {
+                    update(appWidgetManager, ids)
+                }
+            }
         }
     }
 }

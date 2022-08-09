@@ -13,13 +13,11 @@ class ListAppWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        update(context, appWidgetManager, appWidgetIds)
+        updater(context).updateWidgets(appWidgetIds)
     }
 
     companion object {
-        fun updater(context: Context) = AppWidgetUpdater.create<ListAppWidget>(context)
-
-        fun update(context: Context, appWidgetManager: AppWidgetManager, ids: IntArray) {
+        fun updater(context: Context) = AppWidgetUpdater.create<ListAppWidget>(context) { appWidgetManager, ids ->
             val intent = Intent(context, ListWidgetRemoteViewsService::class.java)
 
             val rv = RemoteViews(context.packageName, R.layout.widget_list).also {

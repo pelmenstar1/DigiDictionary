@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,11 +47,8 @@ class ViewRecordViewModel @Inject constructor(
                 recordDao.deleteById(id)
                 preparedRecordDao.deleteById(id)
 
-                withContext(Dispatchers.Main) {
-                    listAppWidgetUpdater.updateAllWidgets()
-
-                    onRecordDeleted.raise()
-                }
+                listAppWidgetUpdater.updateAllWidgets()
+                onRecordDeleted.raiseOnMainThread()
             } catch (e: Exception) {
                 Log.e(TAG, "during delete", e)
 

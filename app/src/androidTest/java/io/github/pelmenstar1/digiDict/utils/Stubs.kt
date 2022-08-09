@@ -133,4 +133,7 @@ open class RecordDaoStub : RecordDao() {
 object AppWidgetUpdaterStub : AppWidgetUpdater {
     override fun updateAllWidgets() {
     }
+
+    override fun updateWidgets(ids: IntArray) {
+    }
 }

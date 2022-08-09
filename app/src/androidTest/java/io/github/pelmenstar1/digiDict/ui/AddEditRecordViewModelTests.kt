@@ -284,18 +284,6 @@ class AddEditRecordViewModelTests {
         assertEventHandlerOnMainThread(vm, vm.onAddError) { addOrEditRecord() }
     }
 
-    @Test
-    fun updateAllAppWidgetsCalledOnMainThreadTest() = runTest {
-        assertAppWidgetUpdateCalledOnMainThread(
-            createVm = { updater ->
-                createViewModel(appWidgetUpdater = updater).also { vm ->
-                    vm.getMeaning = { ComplexMeaning.Common("") }
-                }
-            },
-            triggerAction = { addOrEditRecord() }
-        )
-    }
-
     companion object {
         private lateinit var db: AppDatabase
 

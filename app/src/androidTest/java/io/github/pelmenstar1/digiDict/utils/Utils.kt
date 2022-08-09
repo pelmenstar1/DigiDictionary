@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
-import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertEquals
@@ -77,24 +76,6 @@ suspend fun <T : ViewModel> assertEventHandlerOnMainThread(
             it.resume(Unit)
         }
 
-        vm.triggerAction()
-    }
-}
-
-suspend fun <T : ViewModel> assertAppWidgetUpdateCalledOnMainThread(
-    createVm: (AppWidgetUpdater) -> T,
-    triggerAction: T.() -> Unit
-) {
-    suspendCoroutine<Unit> {
-        var vm: T? = null
-        val updater = object : AppWidgetUpdater {
-            override fun updateAllWidgets() {
-                assertOnMainThreadAndClear(vm!!)
-                it.resume(Unit)
-            }
-        }
-
-        vm = createVm(updater)
         vm.triggerAction()
     }
 }
