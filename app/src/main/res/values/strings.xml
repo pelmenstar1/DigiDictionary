@@ -117,59 +117,15 @@
     <string name="settings_importSuccess">Import was successful</string>
     <string name="settings_invalidFile">Invalid file format</string>
 
-    <string-array name="settings_from_1_to_10" translatable="false">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-        <item>10</item>
-    </string-array>
-
-    <string-array name="settings_from_1_to_30" translatable="false">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-        <item>10</item>
-        <item>11</item>
-        <item>12</item>
-        <item>13</item>
-        <item>14</item>
-        <item>15</item>
-        <item>16</item>
-        <item>17</item>
-        <item>18</item>
-        <item>19</item>
-        <item>20</item>
-        <item>21</item>
-        <item>22</item>
-        <item>23</item>
-        <item>24</item>
-        <item>25</item>
-        <item>26</item>
-        <item>27</item>
-        <item>28</item>
-        <item>29</item>
-        <item>10</item>
-    </string-array>
-
     <string name="settings_versionFormat">%1$s (%2$s)</string>
     <string name="settings_backupTitle">Backup</string>
     <string name="settings_openBrowserInApp">Open browser in-app</string>
-    <string name="settings_scorePointsPerCorrectAnswer_prefix">Score points per right answer</string>
-    <string name="settings_scorePointsPerWrongAnswer_prefix">Score points per wrong answer</string>
+    <string name="settings_scorePointsPerCorrectAnswer">Score points per right answer</string>
+    <string name="settings_scorePointsPerWrongAnswer">Score points per wrong answer</string>
     <string name="settings_remindMaxItems">Max items</string>
     <string name="settings_remindShowMeaning">Show meaning</string>
+    <string name="settings_widgetListMaxSize">List size</string>
+    <string name="settings_widgetTitle">Widget</string>
 
     <!-- Resolve import conflicts fragment -->
     <string name="resolveImportConflicts_label">Resolve conflicts</string>

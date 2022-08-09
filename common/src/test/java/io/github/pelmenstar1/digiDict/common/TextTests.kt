@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.common
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class TextTests {
     @Test
@@ -79,5 +80,29 @@ class TextTests {
         testCase(input = ".....;.. Some ???;;..--- ordinal   ... sentence", expected = "Some ordinal sentence")
         testCase(input = "", expected = "")
         testCase(input = ";A;", expected = "A")
+    }
+
+    @Test
+    fun `createNumberRangeList throws when min is greater than max`() {
+        assertFailsWith(IllegalArgumentException::class) {
+            createNumberRangeList(3, 2)
+        }
+
+        assertFailsWith(IllegalArgumentException::class) {
+            createNumberRangeList(0, -1)
+        }
+    }
+
+    @Test
+    fun `createNumberRangeList test`() {
+        fun testCase(start: Int, endInclusive: Int, step: Int, expected: List<String>) {
+            val actual = createNumberRangeList(start, endInclusive, step)
+
+            assertEquals(expected, actual)
+        }
+
+        testCase(start = 0, endInclusive = 5, step = 1, expected = listOf("0", "1", "2", "3", "4", "5"))
+        testCase(start = 5, endInclusive = 20, step = 5, expected = listOf("5", "10", "15", "20"))
+        testCase(start = 3, endInclusive = 13, step = 3, expected = listOf("3", "6", "9", "12"))
     }
 }

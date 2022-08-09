@@ -227,3 +227,25 @@ fun CharSequence.reduceNonLettersOrDigitsReplacedToSpace(): String {
 }
 
 fun String.containsLetterOrDigit() = any { it.isLetterOrDigit() }
+
+fun createNumberRangeList(start: Int, endInclusive: Int, step: Int = 1): List<String> {
+    if (start > endInclusive) {
+        throw IllegalArgumentException("start > endInclusive")
+    }
+
+    var current = start
+
+    // +1 because endInclusive is inclusive.
+    val count = (endInclusive - start) / step + 1
+
+    val list = ArrayList<String>(count)
+
+    while (current <= endInclusive) {
+        // Note: Integer.toString returns cached String instance if the value is within range (-100; 100).
+        // In most cases the method is called with start and endInclusive being within that range.
+        list.add(current.toString())
+        current += step
+    }
+
+    return list
+}

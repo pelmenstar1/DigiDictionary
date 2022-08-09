@@ -7,144 +7,164 @@
     android:layout_height="match_parent"
     app:errorText="@string/settings_failedToLoadSettings">
 
-    <TextView
-        android:id="@+id/settings_version"
-        style="@style/TextAppearance.Material3.LabelMedium"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:textIsSelectable="false"
-        tools:text="1.0 (Debug)" />
-
-    <LinearLayout
-        android:id="@+id/settings_contentContainer"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:layout_height="match_parent">
 
-        <!-- Quiz settings -->
-
-        <TextView
-            android:id="@+id/settings_quizTitle"
-            style="@style/Widget.DigiDictionary.SettingsTitle"
+        <LinearLayout
+            android:id="@+id/settings_contentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/quiz" />
+            android:orientation="vertical">
 
-        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_points_per_correct_answer"
-            app:name="@string/settings_scorePointsPerCorrectAnswer_prefix">
+            <!-- Quiz settings -->
 
-            <Spinner
-                android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
+            <TextView
+                android:id="@+id/settings_quizTitle"
+                style="@style/Widget.DigiDictionary.SettingsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/quiz" />
+
+            <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_points_per_correct_answer"
+                app:name="@string/settings_scorePointsPerCorrectAnswer">
+
+                <Spinner
+                    android:id="@+id/settings_scorePointsPerCorrectAnswer_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+            <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_points_per_wrong_answer"
+                app:name="@string/settings_scorePointsPerWrongAnswer">
+
+                <Spinner
+                    android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+            <!-- Remote dict. provider -->
+
+            <TextView
+                android:id="@+id/settings_remoteDictProviderTitle"
+                style="@style/Widget.DigiDictionary.SettingsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/remoteDictProviderShort" />
+
+            <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_open_browser_in_app"
+                app:name="@string/settings_openBrowserInApp">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/settings_openBrowserInApp_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+            <!-- Remind me! -->
+
+            <TextView
+                android:id="@+id/settings_remindTitle"
+                style="@style/Widget.DigiDictionary.SettingsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/remindRecords_label" />
+
+            <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_list_numbered"
+                app:name="@string/settings_remindMaxItems">
+
+                <Spinner
+                    android:id="@+id/settings_remindMaxItems_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+            <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_remind_show_meaning"
+                app:name="@string/settings_remindShowMeaning">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/settings_remindShowMeaning_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+            <TextView
+                android:id="@+id/settings_widgetTitle"
+                style="@style/Widget.DigiDictionary.SettingsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_widgetTitle" />
+
+            <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_widget_list_max_size"
+                app:name="@string/settings_widgetListMaxSize">
+
+                <Spinner
+                    android:id="@+id/settings_widgetListMaxSizeSpinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
+
+            <!-- Backup -->
+
+            <TextView
+                android:id="@+id/settings_backupTitle"
+                style="@style/Widget.DigiDictionary.SettingsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_backupTitle" />
+
+            <Button
+                android:id="@+id/settings_import"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:entries="@array/settings_from_1_to_10" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="@string/settings_import" />
 
-        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
-
-        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_points_per_wrong_answer"
-            app:name="@string/settings_scorePointsPerWrongAnswer_prefix">
-
-            <Spinner
-                android:id="@+id/settings_scorePointsPerWrongAnswer_spinner"
+            <Button
+                android:id="@+id/settings_export"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:entries="@array/settings_from_1_to_10" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="@string/settings_export" />
 
-        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
-
-        <!-- Remote dict. provider -->
-
-        <TextView
-            android:id="@+id/settings_remoteDictProviderTitle"
-            style="@style/Widget.DigiDictionary.SettingsTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/remoteDictProviderShort" />
-
-        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_open_browser_in_app"
-            app:name="@string/settings_openBrowserInApp">
-
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/settings_openBrowserInApp_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
-
-        <!-- Remind me! -->
-
-        <TextView
-            android:id="@+id/settings_remindTitle"
-            style="@style/Widget.DigiDictionary.SettingsTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/remindRecords_label" />
-
-        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_list_numbered"
-            app:name="@string/settings_remindMaxItems">
-
-            <Spinner
-                android:id="@+id/settings_remindMaxItems_spinner"
+            <TextView
+                android:id="@+id/settings_version"
+                style="@style/TextAppearance.Material3.LabelMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:entries="@array/settings_from_1_to_30" />
+                android:layout_gravity="end"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:textIsSelectable="false"
+                tools:text="1.0 (Debug)" />
 
-        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
-
-        <io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:icon="@drawable/ic_remind_show_meaning"
-            app:name="@string/settings_remindShowMeaning">
-
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/settings_remindShowMeaning_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-        </io.github.pelmenstar1.digiDict.ui.settings.SettingItemContainer>
-
-        <!-- Backup -->
-
-        <TextView
-            android:id="@+id/settings_backupTitle"
-            style="@style/Widget.DigiDictionary.SettingsTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_backupTitle" />
-
-        <Button
-            android:id="@+id/settings_import"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:text="@string/settings_import" />
-
-        <Button
-            android:id="@+id/settings_export"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:text="@string/settings_export" />
-
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </io.github.pelmenstar1.digiDict.common.ui.DataLoadStateContainer>

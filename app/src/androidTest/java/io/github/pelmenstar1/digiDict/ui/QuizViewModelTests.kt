@@ -134,7 +134,8 @@ class QuizViewModelTests {
                 scorePointsPerWrongAnswer = scorePointsPerWrongAnswer.defaultValue,
                 useCustomTabs = useCustomTabs.defaultValue,
                 remindItemsSize = remindItemsSize.defaultValue,
-                remindShowMeaning = remindShowMeaning.defaultValue
+                remindShowMeaning = remindShowMeaning.defaultValue,
+                widgetListMaxSize = widgetListMaxSize.defaultValue
             )
         }
 

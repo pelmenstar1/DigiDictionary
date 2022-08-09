@@ -15,6 +15,7 @@ abstract class AppPreferences {
         val useCustomTabs = Entry(defaultValue = true)
         val remindItemsSize = Entry(defaultValue = 15)
         val remindShowMeaning = Entry(defaultValue = false)
+        val widgetListMaxSize = Entry(defaultValue = 20)
     }
 
     data class Snapshot(
@@ -22,7 +23,8 @@ abstract class AppPreferences {
         val scorePointsPerWrongAnswer: Int,
         val useCustomTabs: Boolean,
         val remindItemsSize: Int,
-        val remindShowMeaning: Boolean
+        val remindShowMeaning: Boolean,
+        val widgetListMaxSize: Int,
     ) {
         @Suppress("UNCHECKED_CAST")
         operator fun <T : Any> get(entry: Entry<T>): T {
@@ -32,6 +34,7 @@ abstract class AppPreferences {
                 entry === Entries.useCustomTabs -> useCustomTabs
                 entry === Entries.remindItemsSize -> remindItemsSize
                 entry === Entries.remindShowMeaning -> remindShowMeaning
+                entry === Entries.widgetListMaxSize -> widgetListMaxSize
                 else -> throw IllegalStateException("Invalid preference entry")
             } as T
         }
