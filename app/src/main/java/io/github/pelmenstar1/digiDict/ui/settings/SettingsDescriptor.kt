@@ -30,9 +30,7 @@ class SettingsDescriptor(val groups: List<Group>) {
     }
 
     object ItemContentBuilder {
-        fun switch(): ItemContent<Boolean> {
-            return SwitchItemContent()
-        }
+        fun switch(): ItemContent<Boolean> = SwitchItemContent
 
         fun rangeSpinner(
             start: Int,
@@ -52,7 +50,14 @@ class SettingsDescriptor(val groups: List<Group>) {
         fun setValue(view: View, value: T)
     }
 
-    private class SwitchItemContent : ItemContent<Boolean> {
+    private object SwitchItemContent : ItemContent<Boolean> {
+        @Suppress("UNCHECKED_CAST")
+        private val onCheckedChangedListener = CompoundButton.OnCheckedChangeListener { view, isChecked ->
+            (view.tag as ItemContentInterface<Boolean>).also {
+                it.onValueChanged(isChecked)
+            }
+        }
+
         override fun createView(
             context: Context,
             itemInterface: ItemContentInterface<Boolean>
@@ -66,15 +71,6 @@ class SettingsDescriptor(val groups: List<Group>) {
 
         override fun setValue(view: View, value: Boolean) {
             (view as SwitchMaterial).isChecked = value
-        }
-
-        companion object {
-            @Suppress("UNCHECKED_CAST")
-            private val onCheckedChangedListener = CompoundButton.OnCheckedChangeListener { view, isChecked ->
-                (view.tag as ItemContentInterface<Boolean>).also {
-                    it.onValueChanged(isChecked)
-                }
-            }
         }
     }
 
