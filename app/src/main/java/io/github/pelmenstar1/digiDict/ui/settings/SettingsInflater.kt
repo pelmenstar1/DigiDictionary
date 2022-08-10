@@ -7,38 +7,28 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.annotation.ColorInt
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import kotlin.math.min
+
+private typealias ItemContentInflaterHashMap = HashMap<
+        Class<out SettingsDescriptor.ItemContent<Any>>,
+        SettingsInflater.ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>>>
 
 class SettingsInflater(private val context: Context) {
-    private class TitleViewInfo(
-        @JvmField @ColorInt val background: Int,
-        @JvmField val typeface: Typeface?,
-        @JvmField val padding: Int,
-    )
-
-    private class ItemContainerViewInfo(
-        @JvmField val padding: Int,
-        @JvmField val iconSize: Int,
-        @JvmField val nameMarginStart: Int
-    )
-
-    private class ActionViewInfo(
-        @JvmField val marginTop: Int
-    )
-
     @Suppress("UNCHECKED_CAST")
     fun inflate(
         descriptor: SettingsDescriptor,
@@ -66,18 +56,7 @@ class SettingsInflater(private val context: Context) {
             when (group) {
                 is SettingsDescriptor.ItemGroup -> {
                     group.items.forEachWithNoIterator { item ->
-                        val itemInterface = object : SettingsDescriptor.ItemContentInterface<Any> {
-                            override fun onValueChanged(value: Any) {
-                                onValueChanged(item.preferenceEntry, value)
-                            }
-                        }
-
-                        val contentView = item.content.createView(context, itemInterface)
-
-                        createItemContainer(item.nameRes, item.iconRes, contentView, itemContainerViewInfo).also {
-                            // Tag is needed for applySnapshot to determine whether the view is 'item container'
-                            it.tag = item
-
+                        createItemContainer(item, onValueChanged, itemContainerViewInfo).also {
                             container.addView(it)
                         }
                     }
@@ -147,17 +126,29 @@ class SettingsInflater(private val context: Context) {
         return ItemContainerViewInfo(padding, iconSize, nameMarginStart)
     }
 
-    private fun createItemContainer(
-        @StringRes nameRes: Int,
-        @DrawableRes iconRes: Int,
-        contentView: View,
+    private fun <T : Any> createItemContainer(
+        item: SettingsDescriptor.Item<T>,
+        onValueChanged: (AppPreferences.Entry<T>, T) -> Unit,
         info: ItemContainerViewInfo
     ): ViewGroup {
+        val content = item.content
+        val inflater = content.getInflater()
+
         return LinearLayout(context).apply {
             layoutParams = ITEM_CONTAINER_LAYOUT_PARAMS
             orientation = LinearLayout.HORIZONTAL
 
-            setPadding(info.padding)
+            // Tag is needed for applySnapshot to determine whether the view is 'item container'
+            tag = item
+
+            info.padding.also {
+                setPadding(
+                    /* left = */ it,
+                    /* top = */ it,
+                    /* right = */ if (inflater.needsRightPadding) it else 0,
+                    /* bottom = */it
+                )
+            }
 
             addView(AppCompatImageView(context).apply {
                 val size = info.iconSize
@@ -166,7 +157,7 @@ class SettingsInflater(private val context: Context) {
                     gravity = Gravity.CENTER_VERTICAL
                 }
 
-                setImageResource(iconRes)
+                setImageResource(item.iconRes)
             })
 
             addView(MaterialTextView(context).apply {
@@ -185,7 +176,12 @@ class SettingsInflater(private val context: Context) {
                     com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
                 )
 
-                setText(nameRes)
+                setText(item.nameRes)
+            })
+
+
+            val contentView = inflater.createView(context, content, onValueChanged = { value ->
+                onValueChanged(item.preferenceEntry, value)
             })
 
             addView(contentView.also {
@@ -214,6 +210,121 @@ class SettingsInflater(private val context: Context) {
         }
     }
 
+    private class TitleViewInfo(
+        @JvmField @ColorInt val background: Int,
+        @JvmField val typeface: Typeface?,
+        @JvmField val padding: Int,
+    )
+
+    private class ItemContainerViewInfo(
+        @JvmField val padding: Int,
+        @JvmField val iconSize: Int,
+        @JvmField val nameMarginStart: Int
+    )
+
+    private class ActionViewInfo(
+        @JvmField val marginTop: Int
+    )
+
+    interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>> {
+        val needsRightPadding: Boolean
+
+        fun createView(context: Context, content: TContent, onValueChanged: (T) -> Unit): View
+        fun setValue(view: View, content: TContent, value: T)
+    }
+
+    private object SwitchContentInflater : ItemContentInflater<Boolean, SettingsDescriptor.SwitchItemContent> {
+        @Suppress("UNCHECKED_CAST")
+        private val onCheckedChangedListener = CompoundButton.OnCheckedChangeListener { view, isChecked ->
+            (view.tag as (Boolean) -> Unit).also {
+                it(isChecked)
+            }
+        }
+
+        override val needsRightPadding: Boolean
+            get() = true
+
+        override fun createView(
+            context: Context,
+            content: SettingsDescriptor.SwitchItemContent,
+            onValueChanged: (Boolean) -> Unit
+        ): View {
+            return SwitchMaterial(context).also {
+                it.tag = onValueChanged
+
+                it.setOnCheckedChangeListener(onCheckedChangedListener)
+            }
+        }
+
+        override fun setValue(view: View, content: SettingsDescriptor.SwitchItemContent, value: Boolean) {
+            (view as SwitchMaterial).isChecked = value
+        }
+    }
+
+    private object RangeSpinnerInflater : ItemContentInflater<Int, SettingsDescriptor.RangeSpinnerItemContent> {
+        private class Tag(
+            @JvmField val start: Int,
+            @JvmField val endInclusive: Int,
+            @JvmField val step: Int,
+            @JvmField val onValueChanged: (Int) -> Unit
+        )
+
+        override val needsRightPadding: Boolean
+            get() = false
+
+        private val rangeSpinnerOnItemSelected = object : AdapterView.OnItemSelectedListener {
+            @Suppress("UNCHECKED_CAST")
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                (parent.tag as Tag).also {
+                    val value = min(it.endInclusive, it.start + position * it.step)
+
+                    it.onValueChanged(value)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+            }
+        }
+
+        override fun createView(
+            context: Context,
+            content: SettingsDescriptor.RangeSpinnerItemContent,
+            onValueChanged: (Int) -> Unit
+        ): View {
+            val start = content.start
+            val end = content.endInclusive
+            val step = content.step
+
+            return AppCompatSpinner(context).also {
+                it.tag = Tag(
+                    start, end, step,
+                    onValueChanged = onValueChanged
+                )
+
+                it.adapter = ArrayAdapter(
+                    context,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    createNumberRangeList(start, end, step)
+                )
+
+                it.onItemSelectedListener = rangeSpinnerOnItemSelected
+            }
+
+        }
+
+        override fun setValue(view: View, content: SettingsDescriptor.RangeSpinnerItemContent, value: Int) {
+            val start = content.start
+            val end = content.endInclusive
+            val step = content.step
+
+            val constrainedValue = value.coerceIn(start, end)
+            val position = (constrainedValue - start) / step
+
+            (view as AppCompatSpinner).setSelection(position)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
     companion object {
         private val ITEM_CONTAINER_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -234,7 +345,21 @@ class SettingsInflater(private val context: Context) {
 
         private const val ITEM_CONTENT_INDEX_IN_CONTAINER = 2
 
-        @Suppress("UNCHECKED_CAST")
+        private val itemInflaters = ItemContentInflaterHashMap().apply {
+            put(SwitchContentInflater)
+            put(RangeSpinnerInflater)
+        }
+
+        private inline fun <TValue : Any, reified TContent : SettingsDescriptor.ItemContent<TValue>> ItemContentInflaterHashMap.put(
+            value: ItemContentInflater<TValue, TContent>
+        ) {
+            put(TContent::class.java, value as ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>>)
+        }
+
+        internal fun <TValue : Any, TContent : SettingsDescriptor.ItemContent<TValue>> TContent.getInflater(): ItemContentInflater<TValue, TContent> {
+            return itemInflaters[javaClass] as ItemContentInflater<TValue, TContent>
+        }
+
         fun applySnapshot(snapshot: AppPreferences.Snapshot, container: LinearLayout) {
             for (i in 0 until container.childCount) {
                 val itemContainer = container.getChildAt(i)
@@ -244,8 +369,11 @@ class SettingsInflater(private val context: Context) {
                     val item = tag as SettingsDescriptor.Item<Any>
                     val value = snapshot[item.preferenceEntry]
                     val contentView = (itemContainer as ViewGroup).getChildAt(ITEM_CONTENT_INDEX_IN_CONTAINER)
+                    val content = item.content
 
-                    item.content.setValue(contentView, value)
+                    val itemInflater = content.getInflater()
+
+                    itemInflater.setValue(contentView, content, value)
                 }
             }
         }
