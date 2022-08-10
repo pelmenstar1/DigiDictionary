@@ -13,6 +13,17 @@ import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import kotlin.math.min
 
+/**
+ * Describes semantics of the settings. The main element of the descriptor is a group.
+ * The group contains items or actions from the same area.
+ * Groups are divided into two types:
+ * - Item groups. Item has an icon, a name and a content. Also the item is connected to
+ *   appropriate [AppPreferences.Entry] which the item represents. [SettingsDescriptor.ItemContent] represents the means to
+ *   create a widget and to set the current value of the [AppPreferences.Entry] to the created widget. The widget must be
+ *   interactive, a user should have a way to change the value and when the value is changed, it's reported through [SettingsDescriptor.ItemContentInterface].
+ *   Also the widget can use [View.getTag]/[View.setTag], it won't be overwritten.
+ * - Action groups. Action has a name and a perform lambda. Action is represented by a button.
+ */
 class SettingsDescriptor(val groups: List<Group>) {
     interface ItemContentInterface<in T : Any> {
         fun onValueChanged(value: T)
