@@ -37,59 +37,46 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private inline fun importExportInternal(
-        successMessage: SettingsMessage,
-        errorMessage: SettingsMessage,
-        actionName: String,
-        crossinline block: suspend () -> Boolean
-    ) {
+    fun exportData(context: Context) {
         viewModelScope.launch {
             try {
-                val showMessage = block()
+                val showMessage = RecordImportExportManager.export(context, recordDao)
 
                 if (showMessage) {
-                    _messageFlow.value = successMessage
+                    _messageFlow.value = SettingsMessage.EXPORT_SUCCESS
                 }
-            } catch (e: NullPointerException) {
-                // it means user has selected no file, so just eat an exception.
             } catch (e: ValidationException) {
                 _messageFlow.value = SettingsMessage.INVALID_FILE
             } catch (e: Exception) {
-                Log.e(TAG, "during $actionName", e)
+                Log.e(TAG, "during export", e)
 
-                _messageFlow.value = errorMessage
+                _messageFlow.value = SettingsMessage.EXPORT_ERROR
             }
         }
     }
 
-    fun exportData(context: Context) {
-        importExportInternal(
-            successMessage = SettingsMessage.EXPORT_SUCCESS,
-            errorMessage = SettingsMessage.EXPORT_ERROR,
-            actionName = "export"
-        ) {
-            RecordImportExportManager.export(context, recordDao)
-
-            true
-        }
-    }
-
     fun importData(context: Context, navController: NavController) {
-        importExportInternal(
-            successMessage = SettingsMessage.IMPORT_SUCCESS,
-            errorMessage = SettingsMessage.IMPORT_ERROR,
-            actionName = "import"
-        ) {
-            val shouldResolveConflicts = RecordImportExportManager.import(
-                context,
-                recordDao
-            )
+        viewModelScope.launch {
+            try {
+                val status = RecordImportExportManager.import(
+                    context,
+                    recordDao
+                )
 
-            if (shouldResolveConflicts) {
-                navController.navigate(SettingsFragmentDirections.actionSettingsToResolveImportConflicts())
-                false
-            } else {
-                true
+                when (status) {
+                    RecordImportExportManager.IMPORT_SUCCESS_NO_RESOLVE -> {
+                        navController.navigate(SettingsFragmentDirections.actionSettingsToResolveImportConflicts())
+                    }
+                    RecordImportExportManager.IMPORT_SUCCESS_RESOLVE -> {
+                        _messageFlow.value = SettingsMessage.IMPORT_SUCCESS
+                    }
+                }
+            } catch (e: ValidationException) {
+                _messageFlow.value = SettingsMessage.INVALID_FILE
+            } catch (e: Exception) {
+                Log.e(TAG, "during export", e)
+
+                _messageFlow.value = SettingsMessage.IMPORT_ERROR
             }
         }
     }
