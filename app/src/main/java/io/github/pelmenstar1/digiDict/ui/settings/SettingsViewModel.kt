@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,71 +31,52 @@ class SettingsViewModel @Inject constructor(
         appPreferences.getSnapshotFlow()
     }
 
-    fun <T : Any> changePreferenceValue(entry: AppPreferences.Entry<T>, value: T, onPrefChanged: (() -> Unit)? = null) {
+    fun <T : Any> changePreferenceValue(entry: AppPreferences.Entry<T>, value: T) {
         viewModelScope.launch(Dispatchers.IO) {
             appPreferences.set(entry, value)
-
-            onPrefChanged?.also {
-                withContext(Dispatchers.Main) {
-                    it.invoke()
-                }
-            }
-        }
-    }
-
-    private inline fun importExportInternal(
-        successMessage: SettingsMessage,
-        errorMessage: SettingsMessage,
-        actionName: String,
-        crossinline block: suspend () -> Boolean
-    ) {
-        viewModelScope.launch {
-            try {
-                val showMessage = block()
-
-                if (showMessage) {
-                    _messageFlow.value = successMessage
-                }
-            } catch (e: NullPointerException) {
-                // it means user has selected no file, so just eat an exception.
-            } catch (e: ValidationException) {
-                _messageFlow.value = SettingsMessage.INVALID_FILE
-            } catch (e: Exception) {
-                Log.e(TAG, "during $actionName", e)
-
-                _messageFlow.value = errorMessage
-            }
         }
     }
 
     fun exportData(context: Context) {
-        importExportInternal(
-            successMessage = SettingsMessage.EXPORT_SUCCESS,
-            errorMessage = SettingsMessage.EXPORT_ERROR,
-            actionName = "export"
-        ) {
-            RecordImportExportManager.export(context, recordDao)
+        viewModelScope.launch {
+            try {
+                val showMessage = RecordImportExportManager.export(context, recordDao)
 
-            true
+                if (showMessage) {
+                    _messageFlow.value = SettingsMessage.EXPORT_SUCCESS
+                }
+            } catch (e: ValidationException) {
+                _messageFlow.value = SettingsMessage.INVALID_FILE
+            } catch (e: Exception) {
+                Log.e(TAG, "during export", e)
+
+                _messageFlow.value = SettingsMessage.EXPORT_ERROR
+            }
         }
     }
 
     fun importData(context: Context, navController: NavController) {
-        importExportInternal(
-            successMessage = SettingsMessage.IMPORT_SUCCESS,
-            errorMessage = SettingsMessage.IMPORT_ERROR,
-            actionName = "import"
-        ) {
-            val shouldResolveConflicts = RecordImportExportManager.import(
-                context,
-                recordDao
-            )
+        viewModelScope.launch {
+            try {
+                val status = RecordImportExportManager.import(
+                    context,
+                    recordDao
+                )
 
-            if (shouldResolveConflicts) {
-                navController.navigate(SettingsFragmentDirections.actionSettingsToResolveImportConflicts())
-                false
-            } else {
-                true
+                when (status) {
+                    RecordImportExportManager.IMPORT_SUCCESS_NO_RESOLVE -> {
+                        navController.navigate(SettingsFragmentDirections.actionSettingsToResolveImportConflicts())
+                    }
+                    RecordImportExportManager.IMPORT_SUCCESS_RESOLVE -> {
+                        _messageFlow.value = SettingsMessage.IMPORT_SUCCESS
+                    }
+                }
+            } catch (e: ValidationException) {
+                _messageFlow.value = SettingsMessage.INVALID_FILE
+            } catch (e: Exception) {
+                Log.e(TAG, "during export", e)
+
+                _messageFlow.value = SettingsMessage.IMPORT_ERROR
             }
         }
     }

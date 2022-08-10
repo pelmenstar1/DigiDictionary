@@ -27,6 +27,10 @@ import java.util.*
 import kotlin.coroutines.resume
 
 object RecordImportExportManager {
+    const val IMPORT_SUCCESS_NO_RESOLVE = 0
+    const val IMPORT_SUCCESS_RESOLVE = 1
+    const val IMPORT_FILE_NOT_CHOSEN = 2
+
     private const val EXTENSION = "dddb"
     private const val MIME_TYPE = "*/*"
 
@@ -100,22 +104,31 @@ object RecordImportExportManager {
         }
     }
 
-    suspend fun export(context: Context, dao: RecordDao) {
+    /**
+     * Returns true if there was an attempt to export data. If an user doesn't choose any file, returns false.
+     */
+    suspend fun export(context: Context, dao: RecordDao): Boolean {
         val fileName = createFileName(context.getLocaleCompat())
         val uri = launchAndGetResult(createDocumentLauncher, fileName)
 
-        withContext(Dispatchers.IO) {
-            uri?.useAsFile(context, mode = "w") { descriptor ->
-                val allRecords = dao.getAllRecordsNoIdIterable()
+        return if (uri != null) {
+            withContext(Dispatchers.IO) {
+                uri.useAsFile(context, mode = "w") { descriptor ->
+                    val allRecords = dao.getAllRecordsNoIdIterable()
 
-                try {
-                    FileOutputStream(descriptor).use {
-                        it.channel.writeValues(allRecords)
+                    try {
+                        FileOutputStream(descriptor).use {
+                            it.channel.writeValues(allRecords)
+                        }
+                    } finally {
+                        allRecords.recycle()
                     }
-                } finally {
-                    allRecords.recycle()
                 }
+
+                true
             }
+        } else {
+            false
         }
     }
 
@@ -128,7 +141,7 @@ object RecordImportExportManager {
     suspend fun import(
         context: Context,
         recordDao: RecordDao
-    ): Boolean {
+    ): Int {
         val uri = launchAndGetResult(openDocumentLauncher, mimeTypeArray)
 
         if (uri != null) {
@@ -199,22 +212,22 @@ object RecordImportExportManager {
                     if (conflicts.isEmpty()) {
                         recordDao.insertAll(importedRecords)
 
-                        false
+                        IMPORT_SUCCESS_NO_RESOLVE
                     } else {
                         TemporaryImportStorage.also { storage ->
                             storage.importedRecords = importedRecords
                             storage.conflictEntries = conflicts
                         }
 
-                        true
+                        IMPORT_SUCCESS_RESOLVE
                     }
                 } else {
-                    false
+                    IMPORT_SUCCESS_NO_RESOLVE
                 }
             }
         }
 
-        return false
+        return IMPORT_FILE_NOT_CHOSEN
     }
 
     private inline fun <R> Uri.useAsFile(

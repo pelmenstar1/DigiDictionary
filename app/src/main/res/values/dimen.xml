@@ -10,6 +10,8 @@
     <dimen name="settingItemContainer_iconSize">32dp</dimen>
     <dimen name="settingItemContainer_padding">8dp</dimen>
     <dimen name="settingItemContainer_nameMarginStart">8dp</dimen>
+    <dimen name="settings_titlePadding">8dp</dimen>
+    <dimen name="settings_actionMarginTop">8dp</dimen>
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
