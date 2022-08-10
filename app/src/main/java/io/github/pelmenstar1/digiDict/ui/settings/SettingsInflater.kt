@@ -56,16 +56,16 @@ class SettingsInflater(private val context: Context) {
             perform(actionArgs)
         }
 
-        descriptor.blocks.forEachWithNoIterator { block ->
+        descriptor.groups.forEachWithNoIterator { group ->
             createTitleView(titleViewInfo).also {
-                it.setText(block.titleRes)
+                it.setText(group.titleRes)
 
                 container.addView(it)
             }
 
-            when (block) {
-                is SettingsDescriptor.ItemBlock -> {
-                    block.items.forEachWithNoIterator { item ->
+            when (group) {
+                is SettingsDescriptor.ItemGroup -> {
+                    group.items.forEachWithNoIterator { item ->
                         val itemInterface = object : SettingsDescriptor.ItemContentInterface<Any> {
                             override fun onValueChanged(value: Any) {
                                 onValueChanged(item.preferenceEntry, value)
@@ -75,16 +75,15 @@ class SettingsInflater(private val context: Context) {
                         val contentView = item.content.createView(context, itemInterface)
 
                         createItemContainer(item.nameRes, item.iconRes, contentView, itemContainerViewInfo).also {
-                            // Tag is needed for applySnapshot to determine whether the view is 'item container' and to retrieve
-                            // item
+                            // Tag is needed for applySnapshot to determine whether the view is 'item container'
                             it.tag = item
 
                             container.addView(it)
                         }
                     }
                 }
-                is SettingsDescriptor.ActionBlock -> {
-                    block.actions.forEachWithNoIterator { action ->
+                is SettingsDescriptor.ActionGroup -> {
+                    group.actions.forEachWithNoIterator { action ->
                         createActionButton(action.nameRes, actionViewInfo).also {
                             it.tag = action.perform
                             it.setOnClickListener(actionOnClickListener)

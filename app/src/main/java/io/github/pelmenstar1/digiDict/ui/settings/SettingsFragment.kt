@@ -83,7 +83,7 @@ class SettingsFragment : Fragment() {
 
     companion object {
         private val descriptor = settingsDescriptor {
-            itemBlock(R.string.quiz) {
+            itemGroup(R.string.quiz) {
                 item(
                     nameRes = R.string.settings_scorePointsPerCorrectAnswer,
                     iconRes = R.drawable.ic_points_per_correct_answer,
@@ -101,7 +101,7 @@ class SettingsFragment : Fragment() {
                 }
             }
 
-            itemBlock(R.string.remoteDictProviderShort) {
+            itemGroup(R.string.remoteDictProviderShort) {
                 item(
                     nameRes = R.string.settings_openBrowserInApp,
                     iconRes = R.drawable.ic_open_browser_in_app,
@@ -111,7 +111,7 @@ class SettingsFragment : Fragment() {
                 }
             }
 
-            itemBlock(R.string.remindRecords_label) {
+            itemGroup(R.string.remindRecords_label) {
                 item(
                     nameRes = R.string.settings_remindMaxItems,
                     iconRes = R.drawable.ic_list_numbered,
@@ -133,7 +133,7 @@ class SettingsFragment : Fragment() {
                 }
             }
 
-            itemBlock(R.string.settings_widgetTitle) {
+            itemGroup(R.string.settings_widgetTitle) {
                 item(
                     nameRes = R.string.settings_widgetListMaxSize,
                     iconRes = R.drawable.ic_widget_list_max_size,
@@ -147,7 +147,7 @@ class SettingsFragment : Fragment() {
                 }
             }
 
-            actionBlock(R.string.settings_backupTitle) {
+            actionGroup(R.string.settings_backupTitle) {
                 action(R.string.settings_export) { args ->
                     val context = args.get<Context>()
                     val vm = args.get<SettingsViewModel>()

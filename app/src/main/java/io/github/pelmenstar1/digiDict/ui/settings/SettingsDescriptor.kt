@@ -13,7 +13,7 @@ import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import kotlin.math.min
 
-class SettingsDescriptor(val blocks: List<Block>) {
+class SettingsDescriptor(val groups: List<Group>) {
     interface ItemContentInterface<in T : Any> {
         fun onValueChanged(value: T)
     }
@@ -135,12 +135,12 @@ class SettingsDescriptor(val blocks: List<Block>) {
         val perform: (args: ActionArgs) -> Unit
     )
 
-    sealed interface Block {
+    sealed interface Group {
         @get:StringRes
         val titleRes: Int
     }
 
-    class ItemBlock(@StringRes override val titleRes: Int, val items: List<Item<*>>) : Block {
+    class ItemGroup(@StringRes override val titleRes: Int, val items: List<Item<*>>) : Group {
         class Builder(@StringRes private val titleRes: Int) {
             private val items = ArrayList<Item<*>>(4)
 
@@ -157,21 +157,21 @@ class SettingsDescriptor(val blocks: List<Block>) {
                 @StringRes nameRes: Int,
                 @DrawableRes iconRes: Int,
                 preferenceEntry: AppPreferences.Entries.() -> AppPreferences.Entry<T>,
-                contentBuilder: ItemContentBuilder.() -> ItemContent<T>,
+                content: ItemContentBuilder.() -> ItemContent<T>,
             ) {
                 item(
                     nameRes,
                     iconRes,
                     AppPreferences.Entries.preferenceEntry(),
-                    ItemContentBuilder.contentBuilder(),
+                    ItemContentBuilder.content(),
                 )
             }
 
-            fun build() = ItemBlock(titleRes, items)
+            fun build() = ItemGroup(titleRes, items)
         }
     }
 
-    class ActionBlock(@StringRes override val titleRes: Int, val actions: List<Action>) : Block {
+    class ActionGroup(@StringRes override val titleRes: Int, val actions: List<Action>) : Group {
         class Builder(@StringRes private val titleRes: Int) {
             private val actions = ArrayList<Action>(4)
 
@@ -182,31 +182,31 @@ class SettingsDescriptor(val blocks: List<Block>) {
                 actions.add(Action(nameRes, perform))
             }
 
-            fun build() = ActionBlock(titleRes, actions)
+            fun build() = ActionGroup(titleRes, actions)
         }
     }
 
     class Builder {
-        private val blocks = ArrayList<Block>(4)
+        private val groups = ArrayList<Group>(4)
 
-        fun block(block: Block) {
-            blocks.add(block)
+        fun group(group: Group) {
+            groups.add(group)
         }
 
-        inline fun itemBlock(@StringRes titleRes: Int, blockBuilder: ItemBlock.Builder.() -> Unit) {
-            val builder = ItemBlock.Builder(titleRes).also(blockBuilder)
+        inline fun itemGroup(@StringRes titleRes: Int, items: ItemGroup.Builder.() -> Unit) {
+            val builder = ItemGroup.Builder(titleRes).also(items)
 
-            block(builder.build())
+            group(builder.build())
         }
 
-        inline fun actionBlock(@StringRes titleRes: Int, blockBuilder: ActionBlock.Builder.() -> Unit) {
-            val builder = ActionBlock.Builder(titleRes).also(blockBuilder)
+        inline fun actionGroup(@StringRes titleRes: Int, actions: ActionGroup.Builder.() -> Unit) {
+            val builder = ActionGroup.Builder(titleRes).also(actions)
 
-            block(builder.build())
+            group(builder.build())
         }
 
         fun build(): SettingsDescriptor {
-            return SettingsDescriptor(blocks)
+            return SettingsDescriptor(groups)
         }
     }
 
@@ -233,8 +233,8 @@ class SettingsDescriptor(val blocks: List<Block>) {
     }
 }
 
-inline fun settingsDescriptor(block: SettingsDescriptor.Builder.() -> Unit): SettingsDescriptor {
-    val builder = SettingsDescriptor.Builder().also(block)
+inline fun settingsDescriptor(groups: SettingsDescriptor.Builder.() -> Unit): SettingsDescriptor {
+    val builder = SettingsDescriptor.Builder().also(groups)
 
     return builder.build()
 }
