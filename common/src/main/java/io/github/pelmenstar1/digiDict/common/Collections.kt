@@ -123,3 +123,9 @@ fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
 
     return result
 }
+
+inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {
+    for (i in 0 until size) {
+        block(this[i])
+    }
+}

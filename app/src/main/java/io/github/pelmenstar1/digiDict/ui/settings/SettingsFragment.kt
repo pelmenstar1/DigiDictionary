@@ -1,31 +1,29 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.CompoundButton
-import android.widget.Spinner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.switchmaterial.SwitchMaterial
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.pelmenstar1.digiDict.BuildConfig
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
+import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.MessageMapper
-import io.github.pelmenstar1.digiDict.common.createNumberRangeList
+import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.AppPreferencesGetEntry
+import io.github.pelmenstar1.digiDict.ui.settings.SettingsDescriptor.Companion.get
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.transform
 import javax.inject.Inject
-import kotlin.math.min
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
@@ -33,25 +31,6 @@ class SettingsFragment : Fragment() {
 
     @Inject
     lateinit var messageMapper: MessageMapper<SettingsMessage>
-
-    private val rangeSpinnerOnItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-        @Suppress("UNCHECKED_CAST")
-        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-            val info = parent.tag as RangeSpinnerInfo
-
-            viewModel.changePreferenceValue(info.entry, info.getAt(position), info.onPrefChanged)
-        }
-
-        override fun onNothingSelected(parent: AdapterView<*>?) {
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private val switchOnCheckChangedListener = CompoundButton.OnCheckedChangeListener { view, isChecked ->
-        val entry = view.tag as AppPreferences.Entry<Boolean>
-
-        viewModel.changePreferenceValue(entry, isChecked)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -66,99 +45,34 @@ class SettingsFragment : Fragment() {
 
         RecordImportExportManager.init(this)
 
-        binding.run {
-            settingsImport.setOnClickListener { vm.importData(context, navController) }
-            settingsExport.setOnClickListener { vm.exportData(context) }
+        val contentContainer = binding.settingsContentContainer
 
-            settingsVersion.text = resources.getString(
-                R.string.settings_versionFormat,
-                BuildConfig.VERSION_NAME, BuildConfig.BUILD_TYPE
-            )
-
-            settingsOpenBrowserInAppSwitch.initSwitch { useCustomTabs }
-            settingsRemindShowMeaningSwitch.initSwitch { remindShowMeaning }
-
-            settingsScorePointsPerCorrectAnswerSpinner.initRangeSpinner(
-                start = 1,
-                endInclusive = 10,
-                step = 1,
-                entry = { scorePointsPerCorrectAnswer }
-            )
-
-            settingsScorePointsPerWrongAnswerSpinner.initRangeSpinner(
-                start = 1,
-                endInclusive = 10,
-                step = 1,
-                entry = { scorePointsPerWrongAnswer }
-            )
-
-            settingsRemindMaxItemsSpinner.initRangeSpinner(
-                start = 10,
-                endInclusive = 30,
-                step = 5,
-                entry = { remindItemsSize }
-            )
-
-            val listAppWidgetUpdater = ListAppWidget.updater(context)
-            settingsWidgetListMaxSizeSpinner.initRangeSpinner(
-                start = 10,
-                endInclusive = 40,
-                step = 5,
-                entry = { widgetListMaxSize },
-                onPrefChanged = {
-                    listAppWidgetUpdater.updateAllWidgets()
-                }
-            )
-        }
+        SettingsInflater(context).inflate(
+            descriptor,
+            onValueChanged = viewModel::changePreferenceValue,
+            actionArgs = SettingsDescriptor.ActionArgs(context, vm, navController),
+            container = contentContainer
+        )
 
         lifecycleScope.run {
             launchMessageFlowCollector(viewModel.messageFlow, messageMapper, container)
 
-            with(binding) {
-                settingsContainer.setupLoadStateFlow(this@run, vm) {
-                    settingsScorePointsPerCorrectAnswerSpinner.setValue(it.scorePointsPerCorrectAnswer)
-                    settingsScorePointsPerWrongAnswerSpinner.setValue(it.scorePointsPerWrongAnswer)
-                    settingsRemindMaxItemsSpinner.setValue(it.remindItemsSize)
-                    settingsWidgetListMaxSizeSpinner.setValue(it.widgetListMaxSize)
-                    settingsOpenBrowserInAppSwitch.isChecked = it.useCustomTabs
-                    settingsRemindShowMeaningSwitch.isChecked = it.remindShowMeaning
-                }
+            binding.settingsContainer.setupLoadStateFlow(this@run, vm) { snapshot ->
+                SettingsInflater.applySnapshot(snapshot, contentContainer)
+            }
+
+            launchFlowCollector(
+                vm.dataStateFlow.transform {
+                    if (it is DataLoadState.Success<AppPreferences.Snapshot>) {
+                        emit(it.value.widgetListMaxSize)
+                    }
+                }.distinctUntilChanged()
+            ) {
+                ListAppWidget.updater(context).updateAllWidgets()
             }
         }
 
         return binding.root
-    }
-
-    private fun Spinner.setValue(value: Int) {
-        val info = tag as RangeSpinnerInfo
-        val index = info.indexOf(value)
-
-        setSelection(index)
-    }
-
-    private inline fun SwitchMaterial.initSwitch(getEntry: AppPreferencesGetEntry<Boolean>) {
-        tag = AppPreferences.Entries.getEntry()
-        setOnCheckedChangeListener(switchOnCheckChangedListener)
-    }
-
-    private fun Spinner.initRangeSpinner(info: RangeSpinnerInfo) {
-        adapter = createSimpleAdapter(info.elements)
-        tag = info
-        onItemSelectedListener = rangeSpinnerOnItemSelectedListener
-    }
-
-    private inline fun Spinner.initRangeSpinner(
-        start: Int,
-        endInclusive: Int,
-        step: Int,
-        entry: AppPreferencesGetEntry<Int>,
-        noinline onPrefChanged: (() -> Unit)? = null
-    ) {
-        initRangeSpinner(RangeSpinnerInfo(start, endInclusive, step, AppPreferences.Entries.entry(), onPrefChanged))
-    }
-
-    private fun createSimpleAdapter(elements: List<String>): ArrayAdapter<String> {
-        return ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, elements)
     }
 
     override fun onDestroy() {
@@ -167,23 +81,88 @@ class SettingsFragment : Fragment() {
         RecordImportExportManager.release()
     }
 
-    class RangeSpinnerInfo(
-        private val start: Int,
-        private val endInclusive: Int,
-        private val step: Int,
-        val entry: AppPreferences.Entry<Int>,
-        val onPrefChanged: (() -> Unit)? = null
-    ) {
-        val elements = createNumberRangeList(start, endInclusive, step)
+    companion object {
+        private val descriptor = settingsDescriptor {
+            itemBlock(R.string.quiz) {
+                item(
+                    nameRes = R.string.settings_scorePointsPerCorrectAnswer,
+                    iconRes = R.drawable.ic_points_per_correct_answer,
+                    preferenceEntry = { scorePointsPerCorrectAnswer }
+                ) {
+                    rangeSpinner(start = 1, endInclusive = 10)
+                }
 
-        fun getAt(position: Int): Int {
-            return min(endInclusive, start + position * step)
-        }
+                item(
+                    nameRes = R.string.settings_scorePointsPerWrongAnswer,
+                    iconRes = R.drawable.ic_points_per_wrong_answer,
+                    preferenceEntry = { scorePointsPerWrongAnswer }
+                ) {
+                    rangeSpinner(start = 1, endInclusive = 10)
+                }
+            }
 
-        fun indexOf(value: Int): Int {
-            val constrainedValue = value.coerceIn(start, endInclusive)
+            itemBlock(R.string.remoteDictProviderShort) {
+                item(
+                    nameRes = R.string.settings_openBrowserInApp,
+                    iconRes = R.drawable.ic_open_browser_in_app,
+                    preferenceEntry = { useCustomTabs }
+                ) {
+                    switch()
+                }
+            }
 
-            return (constrainedValue - start) / step
+            itemBlock(R.string.remindRecords_label) {
+                item(
+                    nameRes = R.string.settings_remindMaxItems,
+                    iconRes = R.drawable.ic_list_numbered,
+                    preferenceEntry = { remindItemsSize },
+                ) {
+                    rangeSpinner(
+                        start = 10,
+                        endInclusive = 30,
+                        step = 5
+                    )
+                }
+
+                item(
+                    nameRes = R.string.settings_remindShowMeaning,
+                    iconRes = R.drawable.ic_remind_show_meaning,
+                    preferenceEntry = { remindShowMeaning }
+                ) {
+                    switch()
+                }
+            }
+
+            itemBlock(R.string.settings_widgetTitle) {
+                item(
+                    nameRes = R.string.settings_widgetListMaxSize,
+                    iconRes = R.drawable.ic_widget_list_max_size,
+                    preferenceEntry = { widgetListMaxSize }
+                ) {
+                    rangeSpinner(
+                        start = 10,
+                        endInclusive = 40,
+                        step = 5
+                    )
+                }
+            }
+
+            actionBlock(R.string.settings_backupTitle) {
+                action(R.string.settings_export) { args ->
+                    val context = args.get<Context>()
+                    val vm = args.get<SettingsViewModel>()
+
+                    vm.exportData(context)
+                }
+
+                action(R.string.settings_import) { args ->
+                    val context = args.get<Context>()
+                    val vm = args.get<SettingsViewModel>()
+                    val navController = args.get<NavController>()
+
+                    vm.importData(context, navController)
+                }
+            }
         }
     }
 }

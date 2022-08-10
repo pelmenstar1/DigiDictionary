@@ -1,17 +1,7 @@
 <resources>
-
     <style name="Widget.DigiDictionary.ListWidget.Container" parent="android:Widget">
         <item name="android:id">@android:id/background</item>
         <item name="android:padding">?attr/listWidgetPadding</item>
         <item name="android:background">@drawable/widget_list_background</item>
-    </style>
-
-    <style name="Widget.DigiDictionary.SettingsTitle" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:background">?attr/colorSurfaceVariant</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:letterSpacing">0.1</item>
-        <item name="android:fontFamily">@font/oswald_regular</item>
-        <item name="fontFamily">@font/oswald_regular</item>
-        <item name="android:padding">8dp</item>
     </style>
 </resources>

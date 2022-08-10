@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.map
 typealias AppPreferencesGetEntry<T> = AppPreferences.Entries.() -> AppPreferences.Entry<T>
 
 abstract class AppPreferences {
-    data class Entry<T : Any>(val defaultValue: T)
+    data class Entry<out T : Any>(val defaultValue: T)
 
     object Entries {
         val scorePointsPerCorrectAnswer = Entry(defaultValue = 1)

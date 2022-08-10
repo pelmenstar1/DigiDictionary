@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,15 +31,9 @@ class SettingsViewModel @Inject constructor(
         appPreferences.getSnapshotFlow()
     }
 
-    fun <T : Any> changePreferenceValue(entry: AppPreferences.Entry<T>, value: T, onPrefChanged: (() -> Unit)? = null) {
+    fun <T : Any> changePreferenceValue(entry: AppPreferences.Entry<T>, value: T) {
         viewModelScope.launch(Dispatchers.IO) {
             appPreferences.set(entry, value)
-
-            onPrefChanged?.also {
-                withContext(Dispatchers.Main) {
-                    it.invoke()
-                }
-            }
         }
     }
 
