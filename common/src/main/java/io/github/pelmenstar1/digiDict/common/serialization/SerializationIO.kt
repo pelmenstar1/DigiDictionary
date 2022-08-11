@@ -14,7 +14,7 @@ private inline fun ioOperation(method: () -> Int) {
     }
 }
 
-private const val BUFFER_SIZE = 2048
+private const val BUFFER_SIZE = 4096
 private const val MAGIC_WORD = 0x00FF00FF_abcdedf00L
 
 fun <T : Any> WritableByteChannel.writeValues(values: Array<out T>, serializer: BinarySerializer<in T>) {
