@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,10 +10,8 @@ import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
-import io.github.pelmenstar1.digiDict.common.DataLoadState
-import io.github.pelmenstar1.digiDict.common.MessageMapper
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import io.github.pelmenstar1.digiDict.common.launchMessageFlowCollector
+import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ui.LoadingIndicatorDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.ui.settings.SettingsDescriptor.Companion.get
@@ -29,6 +26,8 @@ class SettingsFragment : Fragment() {
 
     @Inject
     lateinit var messageMapper: MessageMapper<SettingsMessage>
+
+    private var isLoadingProgressDialogShown = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,9 +46,13 @@ class SettingsFragment : Fragment() {
         SettingsInflater(context).inflate(
             descriptor,
             onValueChanged = viewModel::changePreferenceValue,
-            actionArgs = SettingsDescriptor.ActionArgs(context, vm),
+            actionArgs = SettingsDescriptor.ActionArgs(this),
             container = contentContainer
         )
+
+        vm.onImportExportError.handler = {
+            hideLoadingProgressDialog()
+        }
 
         lifecycleScope.run {
             launchMessageFlowCollector(viewModel.messageFlow, messageMapper, container)
@@ -69,7 +72,61 @@ class SettingsFragment : Fragment() {
             }
         }
 
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getBoolean(STATE_IS_LOADING_PROGRESS_DIALOG_SHOWN, false)) {
+                showLoadingProgressDialog()
+            }
+        }
+
         return binding.root
+    }
+
+    fun showLoadingProgressDialog() {
+        val dialog = LoadingIndicatorDialog()
+
+        lifecycleScope.launchFlowCollector(viewModel.importExportProgressFlow) { progress ->
+            when (progress) {
+                ProgressReporter.UNREPORTED -> {
+                    isLoadingProgressDialogShown = false
+                }
+                100 -> {
+                    isLoadingProgressDialogShown = false
+                    dialog.dismissNow()
+
+                    return@launchFlowCollector
+                }
+                else -> {
+                    if (!isLoadingProgressDialogShown) {
+                        // Hide previous loading-progress-dialog to prevent state when two dialogs are shown
+                        // at the same time and only the last one is dismissed at the end.
+                        hideLoadingProgressDialog()
+
+                        isLoadingProgressDialogShown = true
+
+                        dialog.showNow(childFragmentManager, LOADING_PROGRESS_DIALOG_TAG)
+                    }
+
+                    dialog.setProgress(progress)
+                }
+            }
+        }
+    }
+
+    private fun hideLoadingProgressDialog() {
+        isLoadingProgressDialogShown = false
+
+        val fm = childFragmentManager
+        val prevDialog = fm.findFragmentByTag(LOADING_PROGRESS_DIALOG_TAG)
+
+        prevDialog?.also {
+            fm.beginTransaction().remove(it).commitNow()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putBoolean(STATE_IS_LOADING_PROGRESS_DIALOG_SHOWN, isLoadingProgressDialogShown)
     }
 
     override fun onDestroy() {
@@ -79,6 +136,11 @@ class SettingsFragment : Fragment() {
     }
 
     companion object {
+        private const val STATE_IS_LOADING_PROGRESS_DIALOG_SHOWN =
+            "io.github.pelmenstar1.digiDict.ui.settings.SettingsFragment.isLoadingProgressDialogShown"
+
+        private const val LOADING_PROGRESS_DIALOG_TAG = "LoadingIndicatorDialog"
+
         private val descriptor = settingsDescriptor {
             itemGroup(R.string.quiz) {
                 item(
@@ -146,17 +208,15 @@ class SettingsFragment : Fragment() {
 
             actionGroup(R.string.settings_backupTitle) {
                 action(R.string.settings_export) { args ->
-                    val context = args.get<Context>()
-                    val vm = args.get<SettingsViewModel>()
-
-                    vm.exportData(context)
+                    val fragment = args.get<SettingsFragment>()
+                    fragment.viewModel.exportData(fragment.requireContext())
+                    fragment.showLoadingProgressDialog()
                 }
 
                 action(R.string.settings_import) { args ->
-                    val context = args.get<Context>()
-                    val vm = args.get<SettingsViewModel>()
-
-                    vm.importData(context)
+                    val fragment = args.get<SettingsFragment>()
+                    fragment.viewModel.importData(fragment.requireContext())
+                    fragment.showLoadingProgressDialog()
                 }
             }
         }

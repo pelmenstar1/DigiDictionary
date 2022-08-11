@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.common.serialization
 
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.CharBuffer
@@ -12,12 +13,14 @@ sealed class ValueReader {
     abstract fun stringUtf16(): String
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> array(serializer: BinarySerializer<out T>): Array<T> {
+    fun <T : Any> array(serializer: BinarySerializer<out T>, progressReporter: ProgressReporter? = null): Array<T> {
         val n = int32()
         val result = serializer.newArrayOfNulls(n) as Array<T>
 
         for (i in 0 until n) {
             result[i] = serializer.readFrom(this)
+
+            progressReporter?.onProgress(i, n)
         }
 
         return result

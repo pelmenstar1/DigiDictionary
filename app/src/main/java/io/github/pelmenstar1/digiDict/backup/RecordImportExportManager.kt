@@ -8,11 +8,13 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import io.github.pelmenstar1.digiDict.RecordExpressionDuplicateException
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.appendPaddedFourDigit
 import io.github.pelmenstar1.digiDict.common.appendPaddedTwoDigit
 import io.github.pelmenstar1.digiDict.common.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.serialization.readValuesToArray
 import io.github.pelmenstar1.digiDict.common.serialization.writeValues
+import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import kotlinx.coroutines.CancellableContinuation
@@ -102,7 +104,7 @@ object RecordImportExportManager {
     /**
      * Returns true if there was an attempt to export data. If an user doesn't choose any file, returns false.
      */
-    suspend fun export(context: Context, dao: RecordDao): Boolean {
+    suspend fun export(context: Context, dao: RecordDao, progressReporter: ProgressReporter): Boolean {
         val fileName = createFileName(context.getLocaleCompat())
         val uri = launchAndGetResult(createDocumentLauncher, fileName)
 
@@ -113,7 +115,7 @@ object RecordImportExportManager {
 
                     try {
                         FileOutputStream(descriptor).use {
-                            it.channel.writeValues(allRecords)
+                            it.channel.writeValues(allRecords, progressReporter)
                         }
                     } finally {
                         allRecords.recycle()
@@ -133,7 +135,8 @@ object RecordImportExportManager {
     @Suppress("UNCHECKED_CAST", "ReplaceNotNullAssertionWithElvisReturn")
     suspend fun import(
         context: Context,
-        recordDao: RecordDao
+        appDatabase: AppDatabase,
+        progressReporter: ProgressReporter
     ): Boolean {
         val uri = launchAndGetResult(openDocumentLauncher, mimeTypeArray)
 
@@ -141,11 +144,16 @@ object RecordImportExportManager {
             return withContext(Dispatchers.Default) {
                 val importedRecords = uri.useAsFile(context, mode = "r") { descriptor ->
                     FileInputStream(descriptor).use {
-                        it.channel.readValuesToArray(Record.NO_ID_SERIALIZER_RESOLVER)
+                        val subReporter = progressReporter.subReporter(completed = 0, target = 50)
+                        it.channel.readValuesToArray(Record.NO_ID_SERIALIZER_RESOLVER, subReporter)
                     }
                 }
 
-                import(importedRecords, recordDao)
+                import(
+                    importedRecords,
+                    appDatabase,
+                    progressReporter = progressReporter.subReporter(completed = 50, target = 100)
+                )
 
                 true
             }
@@ -154,7 +162,8 @@ object RecordImportExportManager {
         return true
     }
 
-    suspend fun import(records: Array<Record>, recordDao: RecordDao) {
+    @Suppress("DEPRECATION")
+    fun import(records: Array<Record>, appDatabase: AppDatabase, progressReporter: ProgressReporter? = null): Boolean {
         if (records.isNotEmpty()) {
             Arrays.sort(records, Record.EXPRESSION_COMPARATOR)
 
@@ -173,8 +182,41 @@ object RecordImportExportManager {
                 }
             }
 
-            recordDao.insertAllReplace(records)
+            appDatabase.beginTransaction()
+            try {
+                val importStatement =
+                    appDatabase.compileStatement("INSERT OR REPLACE INTO records (expression,meaning,additionalNotes,score,dateTime) VALUES(?,?,?,?,?)")
+
+                importStatement.use {
+                    for (i in 0 until recordsSize) {
+                        val record = records[i]
+
+                        importStatement.run {
+                            // Binding index is 1-based.
+                            bindString(1, record.expression)
+                            bindString(2, record.rawMeaning)
+                            bindString(3, record.additionalNotes)
+                            bindLong(4, record.score.toLong())
+                            bindLong(5, record.epochSeconds)
+
+                            executeInsert()
+                        }
+
+                        progressReporter?.onProgress(i, recordsSize)
+                    }
+
+                    progressReporter?.onEnd()
+                }
+
+                appDatabase.setTransactionSuccessful()
+            } finally {
+                appDatabase.endTransaction()
+            }
+
+            return true
         }
+
+        return false
     }
 
     private inline fun <R> Uri.useAsFile(

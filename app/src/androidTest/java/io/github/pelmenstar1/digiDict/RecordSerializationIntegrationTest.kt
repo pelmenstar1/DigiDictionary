@@ -30,7 +30,7 @@ class RecordSerializationIntegrationTest {
             val appDb = AppDatabaseUtils.createTestDatabase(context)
             val dao = appDb.recordDao()
 
-            dao.insertAllReplace(originValues)
+            dao.insertAll(originValues.asList())
 
             val allRecordsIterable = dao.getAllRecordsNoIdIterable()
 
