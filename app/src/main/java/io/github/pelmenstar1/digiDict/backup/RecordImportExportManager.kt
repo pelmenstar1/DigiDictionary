@@ -17,6 +17,7 @@ import io.github.pelmenstar1.digiDict.common.serialization.writeValues
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.SearchPreparedRecord
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -152,6 +153,7 @@ object RecordImportExportManager {
                 import(
                     importedRecords,
                     appDatabase,
+                    locale = context.getLocaleCompat(),
                     progressReporter = progressReporter.subReporter(completed = 50, target = 100)
                 )
 
@@ -163,7 +165,12 @@ object RecordImportExportManager {
     }
 
     @Suppress("DEPRECATION")
-    fun import(records: Array<Record>, appDatabase: AppDatabase, progressReporter: ProgressReporter? = null): Boolean {
+    fun import(
+        records: Array<Record>,
+        appDatabase: AppDatabase,
+        locale: Locale,
+        progressReporter: ProgressReporter? = null
+    ): Boolean {
         if (records.isNotEmpty()) {
             Arrays.sort(records, Record.EXPRESSION_COMPARATOR)
 
@@ -184,25 +191,45 @@ object RecordImportExportManager {
 
             appDatabase.beginTransaction()
             try {
-                val importStatement =
+                val insertRecordStatement =
                     appDatabase.compileStatement("INSERT OR REPLACE INTO records (expression,meaning,additionalNotes,score,dateTime) VALUES(?,?,?,?,?)")
 
-                importStatement.use {
-                    for (i in 0 until recordsSize) {
-                        val record = records[i]
+                insertRecordStatement.use {
+                    val insertPreparedSearchStatement =
+                        appDatabase.compileStatement("INSERT INTO search_prepared_records VALUES(?, ?)")
 
-                        importStatement.run {
-                            // Binding index is 1-based.
-                            bindString(1, record.expression)
-                            bindString(2, record.rawMeaning)
-                            bindString(3, record.additionalNotes)
-                            bindLong(4, record.score.toLong())
-                            bindLong(5, record.epochSeconds)
+                    insertPreparedSearchStatement.use {
+                        for (i in 0 until recordsSize) {
+                            val record = records[i]
+                            val recordExpr = record.expression
+                            val recordMeaning = record.rawMeaning
 
-                            executeInsert()
+                            insertRecordStatement.run {
+                                // Binding index is 1-based.
+                                bindString(1, recordExpr)
+                                bindString(2, recordMeaning)
+                                bindString(3, record.additionalNotes)
+                                bindLong(4, record.score.toLong())
+                                bindLong(5, record.epochSeconds)
+                            }
+
+                            val recordId = insertRecordStatement.executeInsert()
+                            val keywords = SearchPreparedRecord.prepareToKeywords(
+                                recordExpr, recordMeaning,
+                                needToLower = true,
+                                locale = locale
+                            )
+
+                            insertPreparedSearchStatement.run {
+                                // Binding index is 1-based.
+                                bindLong(1, recordId)
+                                bindString(2, keywords)
+
+                                executeInsert()
+                            }
+
+                            progressReporter?.onProgress(i, recordsSize)
                         }
-
-                        progressReporter?.onProgress(i, recordsSize)
                     }
 
                     progressReporter?.onEnd()
