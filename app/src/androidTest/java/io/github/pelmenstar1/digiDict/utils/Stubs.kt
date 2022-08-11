@@ -40,6 +40,9 @@ open class RecordDaoStub : RecordDao() {
     override suspend fun insertAll(values: List<Record>) {
     }
 
+    override suspend fun insertAllReplace(values: Array<out Record>) {
+    }
+
     override suspend fun update(
         id: Int,
         newExpression: String,

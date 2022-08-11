@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import io.github.pelmenstar1.digiDict.common.serialization.readValuesToList
+import io.github.pelmenstar1.digiDict.common.serialization.readValuesToArray
 import io.github.pelmenstar1.digiDict.common.serialization.writeValues
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
@@ -28,13 +28,10 @@ class RecordSerializationIntegrationTest {
             file.createNewFile()
 
             val appDb = AppDatabaseUtils.createTestDatabase(context)
-            appDb.clearAllTables()
-
             val dao = appDb.recordDao()
 
-            dao.insertAll(originValues.asList())
+            dao.insertAllReplace(originValues)
 
-            val originValuesFromDb = dao.getAllRecords()
             val allRecordsIterable = dao.getAllRecordsNoIdIterable()
 
             try {
@@ -45,13 +42,13 @@ class RecordSerializationIntegrationTest {
                 allRecordsIterable.recycle()
             }
 
-            val valuesFromFile: List<Record>
+            val valuesFromFile: Array<Record>
 
             FileInputStream(file).use {
-                valuesFromFile = it.channel.readValuesToList(Record.NO_ID_SERIALIZER)
+                valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
             }
 
-            assertContentEqualsNoId(originValuesFromDb, valuesFromFile.toTypedArray())
+            assertContentEqualsNoId(originValues, valuesFromFile)
         }
     }
 
