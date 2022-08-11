@@ -49,11 +49,7 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.settings.SettingsFragment"
-        android:label="@string/settings">
-        <action
-            android:id="@+id/action_settings_to_resolveImportConflicts"
-            app:destination="@id/resolveImportConflictsFragment" />
-    </fragment>
+        android:label="@string/settings" />
 
     <fragment
         android:id="@+id/statsFragment"
@@ -95,11 +91,6 @@
             android:id="@+id/action_viewRecord_to_addEditRecord"
             app:destination="@id/addEditRecordFragment" />
     </fragment>
-
-    <fragment
-        android:id="@+id/resolveImportConflictsFragment"
-        android:name="io.github.pelmenstar1.digiDict.ui.resolveImportConflicts.ResolveImportConflictsFragment"
-        android:label="@string/resolveImportConflicts_label" />
 
     <fragment
         android:id="@+id/manageRemoteDictionaryProvidersFragment"

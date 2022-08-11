@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
@@ -55,21 +54,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun importData(context: Context, navController: NavController) {
+    fun importData(context: Context) {
         viewModelScope.launch {
             try {
-                val status = RecordImportExportManager.import(
+                val showMessage = RecordImportExportManager.import(
                     context,
                     recordDao
                 )
 
-                when (status) {
-                    RecordImportExportManager.IMPORT_SUCCESS_NO_RESOLVE -> {
-                        navController.navigate(SettingsFragmentDirections.actionSettingsToResolveImportConflicts())
-                    }
-                    RecordImportExportManager.IMPORT_SUCCESS_RESOLVE -> {
-                        _messageFlow.value = SettingsMessage.IMPORT_SUCCESS
-                    }
+                if (showMessage) {
+                    _messageFlow.value = SettingsMessage.IMPORT_SUCCESS
                 }
             } catch (e: ValidationException) {
                 _messageFlow.value = SettingsMessage.INVALID_FILE

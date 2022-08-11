@@ -8,8 +8,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
@@ -37,7 +35,6 @@ class SettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val navController = findNavController()
         val vm = viewModel
         val context = requireContext()
 
@@ -50,7 +47,7 @@ class SettingsFragment : Fragment() {
         SettingsInflater(context).inflate(
             descriptor,
             onValueChanged = viewModel::changePreferenceValue,
-            actionArgs = SettingsDescriptor.ActionArgs(context, vm, navController),
+            actionArgs = SettingsDescriptor.ActionArgs(context, vm),
             container = contentContainer
         )
 
@@ -158,9 +155,8 @@ class SettingsFragment : Fragment() {
                 action(R.string.settings_import) { args ->
                     val context = args.get<Context>()
                     val vm = args.get<SettingsViewModel>()
-                    val navController = args.get<NavController>()
 
-                    vm.importData(context, navController)
+                    vm.importData(context)
                 }
             }
         }

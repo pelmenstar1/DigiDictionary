@@ -25,6 +25,9 @@ abstract class RecordDao {
     @Insert
     abstract suspend fun insertAll(values: List<Record>)
 
+    @Insert
+    abstract suspend fun insertAllReplace(values: Array<out Record>)
+
     @Transaction
     open suspend fun insertAll(values: Sequence<Record>) {
         for (value in values) {

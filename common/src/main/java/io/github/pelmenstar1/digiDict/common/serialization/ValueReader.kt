@@ -11,6 +11,18 @@ sealed class ValueReader {
     abstract fun int64(): Long
     abstract fun stringUtf16(): String
 
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> array(serializer: BinarySerializer<out T>): Array<T> {
+        val n = int32()
+        val result = serializer.newArrayOfNulls(n) as Array<T>
+
+        for (i in 0 until n) {
+            result[i] = serializer.readFrom(this)
+        }
+
+        return result
+    }
+
     fun <T : Any> list(serializer: BinarySerializer<out T>): MutableList<T> {
         val n = int32()
         val result = ArrayList<T>(n)

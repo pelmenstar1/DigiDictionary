@@ -66,6 +66,8 @@ open class Record(
         }
 
         val NO_ID_SERIALIZER = object : BinarySerializer<Record> {
+            override fun newArrayOfNulls(size: Int) = arrayOfNulls<Record>(size)
+
             override fun getByteSize(value: Record): Int {
                 return with(BinarySize) {
                     int32 /* score */ +
