@@ -23,19 +23,6 @@ sealed class ValueReader {
         return result
     }
 
-    fun <T : Any> list(serializer: BinarySerializer<out T>): MutableList<T> {
-        val n = int32()
-        val result = ArrayList<T>(n)
-
-        for (i in 0 until n) {
-            val element = serializer.readFrom(this)
-
-            result.add(element)
-        }
-
-        return result
-    }
-
     private class ByteArrayImpl(private val buffer: ByteArray) : ValueReader() {
         override var offset: Int = 0
 

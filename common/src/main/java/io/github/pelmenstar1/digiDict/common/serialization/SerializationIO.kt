@@ -71,15 +71,7 @@ fun WritableByteChannel.writeValues(values: SerializableIterable) {
     }
 }
 
-fun <T : Any> FileChannel.readValuesToList(serializer: BinarySerializer<out T>): MutableList<T> {
-    return readValuesToCollection { it.list(serializer) }
-}
-
 fun <T : Any> FileChannel.readValuesToArray(serializer: BinarySerializer<out T>): Array<T> {
-    return readValuesToCollection { it.array(serializer) }
-}
-
-private fun FileChannel.readValuesInternal(): ByteBuffer {
     val buffer = map(FileChannel.MapMode.READ_ONLY, 0, size()).also {
         it.order(ByteOrder.LITTLE_ENDIAN)
     }
@@ -89,12 +81,5 @@ private fun FileChannel.readValuesInternal(): ByteBuffer {
         throw ValidationException("Magic words are wrong")
     }
 
-    return buffer
-}
-
-private inline fun <T> FileChannel.readValuesToCollection(parse: (ValueReader) -> T): T {
-    val buffer = readValuesInternal()
-    val reader = ValueReader.of(buffer)
-
-    return parse(reader)
+    return ValueReader.of(buffer).array(serializer)
 }
