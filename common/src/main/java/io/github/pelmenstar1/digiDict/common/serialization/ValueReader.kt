@@ -1,8 +1,8 @@
 package io.github.pelmenstar1.digiDict.common.serialization
 
-import io.github.pelmenstar1.digiDict.common.indexOf
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.CharBuffer
 
 sealed class ValueReader {
     abstract var offset: Int
@@ -76,24 +76,26 @@ sealed class ValueReader {
         }
 
         override fun stringUtf16(): String {
-            // Step is 2, because string is encoded as UTF-16
-            val terminatorIndex = buffer.indexOf(0, offset, buffer.size, step = 2)
+            val buf = buffer
+            var o = offset
 
-            // If there's no \0 symbol, then the data is invalid
-            if (terminatorIndex == -1) {
-                throw IllegalStateException("Invalid format")
-            }
-
-            val byteLength = terminatorIndex - offset
+            // Read unsigned int16
+            val strLength = (buf[o].toInt() or (buf[o + 1].toInt() shl 8)) and 0xFFFF
+            o += 2
 
             // Avoids an allocation and a native call.
-            if (byteLength == 0) {
+            if (strLength == 0) {
+                offset = o
+
                 return ""
             }
 
-            return readInternal(byteLength + 1) { buffer, offset ->
-                String(buffer, offset, byteLength, Charsets.UTF_16LE)
-            }
+            val byteLength = strLength * 2
+
+            val result = String(buf, o, byteLength, Charsets.UTF_16LE)
+            offset = o + byteLength
+
+            return result
         }
     }
 
@@ -104,41 +106,56 @@ sealed class ValueReader {
                 buffer.position(value)
             }
 
+        private val charBuffer: CharBuffer
+        private val initialCharBufferPosition: Int
+
         init {
+            val bbPos = buffer.position()
+
+            if (bbPos % 2 != 0) {
+                throw IllegalArgumentException("buffer.position() must be aligned by 2")
+            }
+
             buffer.order(ByteOrder.LITTLE_ENDIAN)
+            charBuffer = buffer.asCharBuffer()
+            initialCharBufferPosition = bbPos / 2
         }
 
         override fun int32() = buffer.int
         override fun int64() = buffer.long
 
         override fun stringUtf16(): String {
-            val oldLimit = buffer.limit()
+            val bb = buffer
 
-            val terminatorIndex = buffer.indexOf(0, step = 2)
+            val strLength = bb.short.toInt() and 0xFFFF
+            val bbPos = bb.position()
 
-            // If there's no \0 symbol, then the data is invalid
-            if (terminatorIndex == -1) {
-                throw IllegalStateException("Invalid format")
+            return if (strLength == 0) {
+                ""
+            } else {
+                val cb = charBuffer
+
+                val tempBuffer = CharArray(strLength)
+
+                cb.position(bbPos / 2 - initialCharBufferPosition)
+                cb.get(tempBuffer, 0, strLength)
+
+                bb.position(bbPos + strLength * 2)
+
+                String(tempBuffer, 0, strLength)
             }
-
-            // Avoids an allocation and a native call.
-            if (terminatorIndex == buffer.position()) {
-                return ""
-            }
-
-            buffer.limit(terminatorIndex)
-
-            val result = buffer.asCharBuffer().toString()
-
-            buffer.limit(oldLimit)
-            buffer.position(terminatorIndex + 1)
-
-            return result
         }
     }
 
     companion object {
         fun of(value: ByteArray): ValueReader = ByteArrayImpl(value)
+
+        /**
+         * Returns [ValueWriter] instance with wrapped [ByteBuffer].
+         *
+         * For this to work correctly, position of the [ByteBuffer] instance must be aligned by 2.
+         * Also, the [ValueReader] instance takes ownership under the buffer, so the position, limit shouldn't be changed.
+         */
         fun of(value: ByteBuffer): ValueReader = ByteBufferImpl(value)
     }
 }

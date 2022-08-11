@@ -2,19 +2,15 @@ package io.github.pelmenstar1.digiDict.common.serialization
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.CharBuffer
 
 sealed class ValueWriter {
     abstract var offset: Int
 
-    abstract fun int16(value: Short)
     abstract fun int32(value: Int)
     abstract fun int64(value: Long)
     abstract fun stringUtf16(value: String)
     abstract fun stringUtf16(chars: CharArray, start: Int, end: Int)
-
-    fun char(c: Char) {
-        int16(c.code.toShort())
-    }
 
     private class ByteArrayImpl(private val buffer: ByteArray) : ValueWriter() {
         override var offset: Int = 0
@@ -29,13 +25,6 @@ sealed class ValueWriter {
             val o = offset
             block(buffer, o)
             offset = o + size
-        }
-
-        override fun int16(value: Short) {
-            writeInternal(2) { buffer, offset ->
-                buffer[offset] = value.toByte()
-                buffer[offset + 1] = (value.toInt() shr 8).toByte()
-            }
         }
 
         override fun int32(value: Int) {
@@ -61,19 +50,31 @@ sealed class ValueWriter {
         }
 
         override fun stringUtf16(value: String) {
-            for (c in value) {
-                char(c)
-            }
-
-            writeInternal(1) { buffer, offset -> buffer[offset] = 0 }
+            writeStringUtf16Internal(value::get, 0, value.length)
         }
 
         override fun stringUtf16(chars: CharArray, start: Int, end: Int) {
-            for (i in start until end) {
-                char(chars[i])
-            }
+            writeStringUtf16Internal(chars::get, start, end)
+        }
 
-            writeInternal(1) { buffer, offset -> buffer[offset] = 0 }
+        private inline fun writeStringUtf16Internal(getChar: (Int) -> Char, start: Int, end: Int) {
+            val length = end - start
+
+            checkStringLength(length)
+            writeInt16(length)
+
+            for (i in start until end) {
+                val value = getChar(i).code
+
+                writeInt16(value)
+            }
+        }
+
+        private fun writeInt16(value: Int) {
+            writeInternal(2) { buffer, offset ->
+                buffer[offset] = value.toByte()
+                buffer[offset + 1] = (value shr 8).toByte()
+            }
         }
     }
 
@@ -84,12 +85,19 @@ sealed class ValueWriter {
                 buffer.position(value)
             }
 
-        init {
-            buffer.order(ByteOrder.LITTLE_ENDIAN)
-        }
+        private val charBuffer: CharBuffer
+        private val initialCharBufferPosition: Int
 
-        override fun int16(value: Short) {
-            buffer.putShort(value)
+        init {
+            val bbPos = buffer.position()
+
+            if (bbPos % 2 != 0) {
+                throw IllegalArgumentException("buffer.position() must be aligned by 2")
+            }
+
+            buffer.order(ByteOrder.LITTLE_ENDIAN)
+            charBuffer = buffer.asCharBuffer()
+            initialCharBufferPosition = bbPos / 2
         }
 
         override fun int32(value: Int) {
@@ -101,24 +109,48 @@ sealed class ValueWriter {
         }
 
         override fun stringUtf16(value: String) {
-            for (c in value) {
-                buffer.putChar(c)
-            }
+            val valueLength = value.length
+            checkStringLength(valueLength)
 
-            buffer.put(0)
+            buffer.also {
+                it.putShort(valueLength.toShort())
+
+                for (i in 0 until valueLength) {
+                    it.putChar(value[i])
+                }
+            }
         }
 
         override fun stringUtf16(chars: CharArray, start: Int, end: Int) {
-            for (i in start until end) {
-                buffer.putChar(chars[i])
-            }
+            val length = end - start
+            checkStringLength(length)
 
-            buffer.put(0)
+            val bb = buffer
+            val cb = charBuffer
+
+            bb.putShort(length.toShort())
+            val bbPos = bb.position()
+
+            cb.position(bbPos / 2 - initialCharBufferPosition)
+            cb.put(chars, start, length)
+
+            bb.position(bbPos + length * 2)
         }
     }
 
     companion object {
         fun of(value: ByteArray): ValueWriter = ByteArrayImpl(value)
+
+        /**
+         * Returns [ValueWriter] instance with wrapped [ByteBuffer]. For this to work correctly,
+         * position of the [ByteBuffer] instance must be aligned by 2.
+         */
         fun of(value: ByteBuffer): ValueWriter = ByteBufferImpl(value)
+
+        internal fun checkStringLength(length: Int) {
+            if (length > 65535) {
+                throw IllegalArgumentException("Length of the string to be written can't be greater than 65535")
+            }
+        }
     }
 }
