@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.common.serialization
 
 interface SerializableIterable {
     val size: Int
+    val version: Int
 
     fun iterator(): SerializableIterator
     fun recycle()
@@ -15,10 +16,17 @@ interface SerializableIterator {
     fun writeCurrentElement(writer: ValueWriter)
 }
 
-fun <T : Any> SerializableIterable(values: Array<out T>, serializer: BinarySerializer<in T>): SerializableIterable {
+fun <T : Any> SerializableIterable(
+    values: Array<out T>,
+    serializer: BinarySerializer<in T>,
+    version: Int = 1
+): SerializableIterable {
     return object : SerializableIterable {
         override val size: Int
             get() = values.size
+
+        override val version: Int
+            get() = version
 
         override fun iterator() = object : SerializableIterator {
             private var index = 0

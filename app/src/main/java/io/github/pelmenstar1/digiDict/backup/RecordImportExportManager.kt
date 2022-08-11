@@ -141,7 +141,7 @@ object RecordImportExportManager {
             return withContext(Dispatchers.Default) {
                 val importedRecords = uri.useAsFile(context, mode = "r") { descriptor ->
                     FileInputStream(descriptor).use {
-                        it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
+                        it.channel.readValuesToArray(Record.NO_ID_SERIALIZER_RESOLVER)
                     }
                 }
 

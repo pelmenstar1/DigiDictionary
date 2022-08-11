@@ -30,6 +30,7 @@ fun WritableByteChannel.writeValues(values: SerializableIterable) {
     buffer.order(ByteOrder.LITTLE_ENDIAN)
 
     buffer.putLong(MAGIC_WORD)
+    buffer.putInt(values.version)
     buffer.putInt(values.size)
 
     val iterator = values.iterator()
@@ -71,7 +72,7 @@ fun WritableByteChannel.writeValues(values: SerializableIterable) {
     }
 }
 
-fun <T : Any> FileChannel.readValuesToArray(serializer: BinarySerializer<out T>): Array<T> {
+fun <T : Any> FileChannel.readValuesToArray(serializerResolver: BinarySerializerResolver<out T>): Array<T> {
     val buffer = map(FileChannel.MapMode.READ_ONLY, 0, size()).also {
         it.order(ByteOrder.LITTLE_ENDIAN)
     }
@@ -80,6 +81,9 @@ fun <T : Any> FileChannel.readValuesToArray(serializer: BinarySerializer<out T>)
     if (magicWord != MAGIC_WORD) {
         throw ValidationException("Magic words are wrong")
     }
+
+    val version = buffer.int
+    val serializer = serializerResolver.getOrLatest(version)
 
     return ValueReader.of(buffer).array(serializer)
 }

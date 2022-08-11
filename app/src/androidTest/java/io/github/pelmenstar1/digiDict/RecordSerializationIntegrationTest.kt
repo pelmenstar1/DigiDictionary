@@ -45,7 +45,7 @@ class RecordSerializationIntegrationTest {
             val valuesFromFile: Array<Record>
 
             FileInputStream(file).use {
-                valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER)
+                valuesFromFile = it.channel.readValuesToArray(Record.NO_ID_SERIALIZER_RESOLVER)
             }
 
             assertContentEqualsNoId(originValues, valuesFromFile)
