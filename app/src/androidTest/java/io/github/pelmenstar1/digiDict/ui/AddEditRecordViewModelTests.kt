@@ -112,7 +112,7 @@ class AddEditRecordViewModelTests {
     fun expressionIsInvalidWhenDbContainsItTest() = runTest {
         val dao = db.recordDao()
         dao.insertAll(
-            listOf(
+            arrayOf(
                 createRecord("Expr1"),
                 createRecord("Expr2"),
                 createRecord("Expr3")
@@ -130,7 +130,7 @@ class AddEditRecordViewModelTests {
     fun expressionIsValidWhenDbDoesNotContainsItTest() = runTest {
         val dao = db.recordDao()
         dao.insertAll(
-            listOf(
+            arrayOf(
                 createRecord("Expr1"),
                 createRecord("Expr2"),
                 createRecord("Expr3")
@@ -148,7 +148,7 @@ class AddEditRecordViewModelTests {
     fun expressionIsValidWhenItEqualsToCurrentRecordExpressionTest() = runTest {
         val dao = db.recordDao()
         dao.insertAll(
-            listOf(
+            arrayOf(
                 createRecord("Expr1"),
                 createRecord("Expr2"),
                 createRecord("Expr3")
@@ -174,7 +174,7 @@ class AddEditRecordViewModelTests {
     fun currentRecordTest() = runTest {
         val dao = db.recordDao()
         dao.insertAll(
-            listOf(
+            arrayOf(
                 createRecord("Expr1"),
                 createRecord("Expr2"),
                 createRecord("Expr3")

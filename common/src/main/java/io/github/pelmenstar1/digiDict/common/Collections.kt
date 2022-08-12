@@ -81,6 +81,7 @@ inline fun <T> Set<T>.forEachFast(action: (T) -> Unit) {
     }
 }
 
+// TODO: Make it inline.
 fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
     val resultSize = size - offset
 
@@ -97,6 +98,16 @@ fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
     }
 
     return result
+}
+
+inline fun <T, reified R> Array<out T>.mapToArray(block: (T) -> R): Array<R> {
+    return Array(size) { block(this[it]) }
+}
+
+inline fun <T, R> Array<out T>.mapToHashSet(block: (T) -> R): HashSet<R> {
+    return HashSet<R>(size).also { set ->
+        forEach { set.add(block(it)) }
+    }
 }
 
 inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {

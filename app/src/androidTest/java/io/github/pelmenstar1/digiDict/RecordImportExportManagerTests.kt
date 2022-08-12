@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
+import io.github.pelmenstar1.digiDict.common.mapToArray
+import io.github.pelmenstar1.digiDict.common.mapToHashSet
 import io.github.pelmenstar1.digiDict.common.serialization.readValuesToArray
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.SearchPreparedRecord
@@ -28,7 +30,7 @@ class RecordImportExportManagerTests {
             val recordDao = db.recordDao()
             val searchPreparedRecordDao = db.searchPreparedRecordDao()
 
-            val noIdRecords = MutableList(size) { i ->
+            val noIdRecords = Array(size) { i ->
                 Record(
                     id = 0,
                     expression = "Expression$i",
@@ -42,7 +44,7 @@ class RecordImportExportManagerTests {
             recordDao.insertAll(noIdRecords)
             val records = recordDao.getAllRecords()
 
-            val searchPreparedRecords = records.map {
+            val searchPreparedRecords = records.mapToArray {
                 SearchPreparedRecord.prepare(it.id, it.expression, it.rawMeaning, Locale.ROOT)
             }
 
@@ -62,11 +64,11 @@ class RecordImportExportManagerTests {
 
             RecordImportExportManager.import(importedRecords, db, Locale.ROOT)
 
-            val importedRecordsInDb = recordDao.getAllRecords().map(RecordNoId::fromRecord).toSet()
-            val importedSearchPreparedRecordInDb = searchPreparedRecordDao.getAllOrderById().map { it.keywords }.toSet()
+            val importedRecordsInDb = recordDao.getAllRecords().mapToHashSet(RecordNoId::fromRecord)
+            val importedSearchPreparedRecordInDb = searchPreparedRecordDao.getAllKeywords().toHashSet()
 
-            assertEquals(searchPreparedRecords.map { it.keywords }.toSet(), importedSearchPreparedRecordInDb)
-            assertEquals(records.map(RecordNoId::fromRecord).toSet(), importedRecordsInDb)
+            assertEquals(searchPreparedRecords.mapToHashSet { it.keywords }, importedSearchPreparedRecordInDb)
+            assertEquals(records.mapToHashSet(RecordNoId::fromRecord), importedRecordsInDb)
         } finally {
             db.close()
         }

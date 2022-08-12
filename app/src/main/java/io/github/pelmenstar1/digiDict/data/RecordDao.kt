@@ -23,7 +23,7 @@ abstract class RecordDao {
     abstract suspend fun insert(value: Record)
 
     @Insert
-    abstract suspend fun insertAll(values: List<Record>)
+    abstract suspend fun insertAll(values: Array<Record>)
 
     @Query(
         """UPDATE records 

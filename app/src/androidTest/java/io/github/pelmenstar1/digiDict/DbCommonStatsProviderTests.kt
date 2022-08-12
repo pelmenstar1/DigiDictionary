@@ -61,7 +61,7 @@ class DbCommonStatsProviderTests {
             val currentEpochSeconds = System.currentTimeMillis() / 1000
             val records = createRecords(currentEpochSeconds)
 
-            dao.insertAll(records.asList())
+            dao.insertAll(records)
 
             val (actualCount, additionStats) = commonStatsProvider.compute(currentEpochSeconds)
 

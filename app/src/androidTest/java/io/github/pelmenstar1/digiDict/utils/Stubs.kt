@@ -37,7 +37,7 @@ open class RecordDaoStub : RecordDao() {
     override suspend fun insert(value: Record) {
     }
 
-    override suspend fun insertAll(values: List<Record>) {
+    override suspend fun insertAll(values: Array<Record>) {
     }
 
     override suspend fun update(

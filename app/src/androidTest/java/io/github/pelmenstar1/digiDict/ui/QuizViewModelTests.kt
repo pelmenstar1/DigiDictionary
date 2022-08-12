@@ -54,7 +54,7 @@ class QuizViewModelTests {
         val dao = db.recordDao()
 
         dao.insertAll(
-            listOf(
+            arrayOf(
                 createRecord("Expr1", 0),
                 createRecord("Expr2", 0),
                 createRecord("Expr3", 0),
