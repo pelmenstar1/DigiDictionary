@@ -17,7 +17,7 @@ import java.io.File
 class RecordSerializationIntegrationTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    private fun testHelper(size: Int) = runTest {
+    private fun testHelper(size: Int) {
         val originValues = Array(size) {
             Record(
                 id = 0,
@@ -29,6 +29,10 @@ class RecordSerializationIntegrationTest {
             )
         }
 
+        testHelper(originValues)
+    }
+
+    private fun testHelper(originValues: Array<Record>) = runTest {
         val filesDir = context.filesDir
         filesDir.mkdir()
 
@@ -73,4 +77,20 @@ class RecordSerializationIntegrationTest {
 
     @Test
     fun test_1024() = testHelper(1024)
+
+    @Test
+    fun testBufferOverflow() {
+        val values = Array(64) { i ->
+            Record(
+                id = 0,
+                expression = "$i".repeat(2000),
+                rawMeaning = "CMeaning$i",
+                additionalNotes = "Notes$i",
+                score = i,
+                epochSeconds = i * 1000L
+            )
+        }
+
+        testHelper(values)
+    }
 }

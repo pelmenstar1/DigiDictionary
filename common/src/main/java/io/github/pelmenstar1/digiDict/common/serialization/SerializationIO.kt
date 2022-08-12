@@ -1,18 +1,21 @@
 package io.github.pelmenstar1.digiDict.common.serialization
 
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.nextPowerOf2
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.channels.WritableByteChannel
 
-private fun WritableByteChannel.writeAllBuffer(buffer: ByteBuffer) {
+private fun WritableByteChannel.writeAllFlippedBuffer(buffer: ByteBuffer) {
+    buffer.flip()
+
     while (buffer.hasRemaining()) {
         write(buffer)
     }
 }
 
-private const val BUFFER_SIZE = 4096
+private const val INITIAL_BUFFER_SIZE = 4096
 private const val MAGIC_WORD = 0x00FF00FF_abcdedf00L
 
 fun <T : Any> WritableByteChannel.writeValues(
@@ -26,8 +29,8 @@ fun <T : Any> WritableByteChannel.writeValues(
 fun WritableByteChannel.writeValues(values: SerializableIterable, progressReporter: ProgressReporter? = null) {
     // FileChannel in Android always create wrapping direct buffer
     // if input buffer is not direct, so create it as a direct one in the first place.
-    val buffer = ByteBuffer.allocateDirect(BUFFER_SIZE)
-    val writer = ValueWriter.of(buffer)
+    var buffer = ByteBuffer.allocateDirect(INITIAL_BUFFER_SIZE)
+    var writer = ValueWriter.of(buffer)
     val valuesSize = values.size
 
     buffer.apply {
@@ -45,19 +48,29 @@ fun WritableByteChannel.writeValues(values: SerializableIterable, progressReport
         iterator.initCurrent()
         val byteSize = iterator.getCurrentElementByteSize()
 
-        if (byteSize >= BUFFER_SIZE) {
-            throw IllegalStateException("Illegal record (Too big)")
+        // If byte-size of single value is bigger than whole buffer capacity, it means
+        // there's no way iterator.writeCurrentElement can write the content to the buffer without
+        // overflow. It can happen extremely rarely. If that's the case, we write what we have
+        // and recreate the buffer to make it possible to contain the current value.
+        if (byteSize >= buffer.capacity()) {
+            writeAllFlippedBuffer(buffer)
+
+            // Presumably, it's faster to allocate a buffer when the capacity is power of 2.
+            buffer = ByteBuffer.allocateDirect(byteSize.nextPowerOf2())
+
+            // Update writer too, it holds old buffer.
+            writer = ValueWriter.of(buffer)
         }
 
-        // Check if we can proceed writing to temporary buffer, if don't, write the buffer to the file.
-        val bufferPos = buffer.position()
-        if (bufferPos + byteSize > BUFFER_SIZE) {
-            buffer.also {
-                it.limit(bufferPos)
-                it.position(0)
-                writeAllBuffer(buffer)
+        val bufCapacity = buffer.capacity()
 
-                it.limit(BUFFER_SIZE)
+        // If the value can't be written to the current position of buffer, write the buffer to the file
+        // and reset buffer's position.
+        if (buffer.position() + byteSize > bufCapacity) {
+            buffer.also {
+                writeAllFlippedBuffer(it)
+
+                it.limit(bufCapacity)
                 it.position(0)
             }
         }
@@ -68,10 +81,7 @@ fun WritableByteChannel.writeValues(values: SerializableIterable, progressReport
         index++
     }
 
-    if (buffer.hasRemaining()) {
-        buffer.flip()
-        writeAllBuffer(buffer)
-    }
+    writeAllFlippedBuffer(buffer)
 
     progressReporter?.onEnd()
 }
