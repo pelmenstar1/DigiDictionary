@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
@@ -50,7 +51,7 @@ class SettingsFragment : Fragment() {
             container = contentContainer
         )
 
-        vm.onImportExportError.handler = {
+        vm.onOperationError.handler = {
             hideLoadingProgressDialog()
         }
 
@@ -79,6 +80,17 @@ class SettingsFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    fun requestDeleteAllRecords() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setMessage(R.string.settings_deleteAllRecordsDialogMessage)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                viewModel.deleteAllRecords()
+                showLoadingProgressDialog()
+            }
+            .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
+            .show()
     }
 
     fun showLoadingProgressDialog() {
@@ -219,6 +231,11 @@ class SettingsFragment : Fragment() {
                     val fragment = args.get<SettingsFragment>()
                     fragment.viewModel.importData(fragment.requireContext())
                     fragment.showLoadingProgressDialog()
+                }
+                action(R.string.settings_deleteAllRecords) { args ->
+                    val fragment = args.get<SettingsFragment>()
+
+                    fragment.requestDeleteAllRecords()
                 }
             }
         }

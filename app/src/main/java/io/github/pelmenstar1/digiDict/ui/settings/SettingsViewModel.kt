@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
@@ -26,6 +27,7 @@ class SettingsViewModel @Inject constructor(
     private val appDatabase: AppDatabase
 ) : SingleDataLoadStateViewModel<AppPreferences.Snapshot>(TAG) {
     private val recordDao = appDatabase.recordDao()
+    private val searchPreparedRecordDao = appDatabase.searchPreparedRecordDao()
 
     private val _messageFlow = MutableStateFlow<SettingsMessage?>(null)
     val messageFlow = _messageFlow.asStateFlow()
@@ -33,7 +35,7 @@ class SettingsViewModel @Inject constructor(
     private val progressReporter = ProgressReporter()
     val importExportProgressFlow = progressReporter.progressFlow
 
-    val onImportExportError = Event()
+    val onOperationError = Event()
 
     override fun DataLoadStateManager.FlowBuilder<AppPreferences.Snapshot>.buildDataFlow() = fromFlow {
         appPreferences.getSnapshotFlow()
@@ -56,13 +58,13 @@ class SettingsViewModel @Inject constructor(
                     _messageFlow.value = SettingsMessage.EXPORT_SUCCESS
                 }
             } catch (e: ValidationException) {
-                onImportExportError.raiseOnMainThread()
+                onOperationError.raiseOnMainThread()
 
                 _messageFlow.value = SettingsMessage.INVALID_FILE
             } catch (e: Exception) {
                 Log.e(TAG, "during export", e)
 
-                onImportExportError.raiseOnMainThreadIfNotCancellation(e)
+                onOperationError.raiseOnMainThreadIfNotCancellation(e)
 
                 _messageFlow.value = SettingsMessage.EXPORT_ERROR
             }
@@ -86,13 +88,35 @@ class SettingsViewModel @Inject constructor(
             } catch (e: ValidationException) {
                 _messageFlow.value = SettingsMessage.INVALID_FILE
 
-                onImportExportError.raiseOnMainThread()
+                onOperationError.raiseOnMainThread()
             } catch (e: Exception) {
                 Log.e(TAG, "during export", e)
 
-                onImportExportError.raiseOnMainThreadIfNotCancellation(e)
+                onOperationError.raiseOnMainThreadIfNotCancellation(e)
 
                 _messageFlow.value = SettingsMessage.IMPORT_ERROR
+            }
+        }
+    }
+
+    fun deleteAllRecords() {
+        progressReporter.reset()
+
+        viewModelScope.launch {
+            try {
+                appDatabase.withTransaction {
+                    recordDao.deleteAll()
+                    progressReporter.onProgress(50, 100)
+                    searchPreparedRecordDao.deleteAll()
+                    progressReporter.onEnd()
+                }
+
+                _messageFlow.value = SettingsMessage.DELETE_ALL_SUCCESS
+            } catch (e: Exception) {
+                Log.e(TAG, "during deleteAllRecords", e)
+
+                onOperationError.raiseOnMainThreadIfNotCancellation(e)
+                _messageFlow.value = SettingsMessage.DB_ERROR
             }
         }
     }

@@ -110,6 +110,9 @@
 
     <string name="settings_export">Export</string>
     <string name="settings_import">Import</string>
+    <string name="settings_deleteAllRecords">Delete all records</string>
+    <string name="settings_deleteAllRecordsDialogMessage">Do you really want to delete all records?\n<b>This operation can\'t be undone.</b></string>
+    <string name="settings_deleteAllSuccess">All records were deleted</string>
     <string name="settings_failedToLoadSettings">Failed to load the settings</string>
     <string name="settings_exportError">Export failed with error</string>
     <string name="settings_importError">Import failed with error</string>

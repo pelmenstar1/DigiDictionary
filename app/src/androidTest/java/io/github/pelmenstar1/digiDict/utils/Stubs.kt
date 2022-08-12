@@ -56,6 +56,9 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
+    override suspend fun deleteAll() {
+    }
+
     override suspend fun getRecordById(id: Int): Record? {
         throw NotImplementedError()
     }

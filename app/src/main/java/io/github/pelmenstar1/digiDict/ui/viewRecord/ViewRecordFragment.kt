@@ -46,8 +46,9 @@ class ViewRecordFragment : Fragment() {
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         viewModel.delete()
                     }
-                    .setNegativeButton(android.R.string.cancel,
-                        io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
+                    .setNegativeButton(
+                        android.R.string.cancel,
+                        io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER // TODO: Fix it.
                     )
                     .show()
             }

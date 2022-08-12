@@ -18,4 +18,7 @@ interface SearchPreparedRecordDao {
 
     @Query("DELETE FROM search_prepared_records WHERE id=:id")
     suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM search_prepared_records")
+    suspend fun deleteAll()
 }

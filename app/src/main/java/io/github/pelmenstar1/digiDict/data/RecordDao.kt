@@ -55,6 +55,9 @@ abstract class RecordDao {
     @Query("DELETE FROM records WHERE id = :id")
     abstract suspend fun deleteById(id: Int): Int
 
+    @Query("DELETE FROM records")
+    abstract suspend fun deleteAll()
+
     @Query("SELECT * FROM records WHERE id=:id")
     abstract suspend fun getRecordById(id: Int): Record?
 
