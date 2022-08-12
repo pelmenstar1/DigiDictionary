@@ -96,7 +96,7 @@ class SettingsFragment : Fragment() {
     fun showLoadingProgressDialog() {
         var dialog: LoadingIndicatorDialog? = null
 
-        lifecycleScope.launchFlowCollector(viewModel.importExportProgressFlow) { progress ->
+        lifecycleScope.launchFlowCollector(viewModel.operationProgressFlow) { progress ->
             when (progress) {
                 ProgressReporter.UNREPORTED -> {
                     isLoadingProgressDialogShown = false

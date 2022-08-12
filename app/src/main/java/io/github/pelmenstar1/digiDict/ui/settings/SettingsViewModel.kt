@@ -33,7 +33,7 @@ class SettingsViewModel @Inject constructor(
     val messageFlow = _messageFlow.asStateFlow()
 
     private val progressReporter = ProgressReporter()
-    val importExportProgressFlow = progressReporter.progressFlow
+    val operationProgressFlow = progressReporter.progressFlow
 
     val onOperationError = Event()
 
@@ -102,6 +102,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 appDatabase.withTransaction {
+                    progressReporter.onProgress(0, 100)
                     recordDao.deleteAll()
                     progressReporter.onProgress(50, 100)
                     searchPreparedRecordDao.deleteAll()
