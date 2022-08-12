@@ -30,7 +30,7 @@ fun WritableByteChannel.writeValues(values: SerializableIterable, progressReport
     // FileChannel in Android always create wrapping direct buffer
     // if input buffer is not direct, so create it as a direct one in the first place.
     var buffer = ByteBuffer.allocateDirect(INITIAL_BUFFER_SIZE)
-    var writer = ValueWriter.of(buffer)
+    var writer = ValueWriter(buffer)
     val valuesSize = values.size
 
     buffer.apply {
@@ -59,7 +59,7 @@ fun WritableByteChannel.writeValues(values: SerializableIterable, progressReport
             buffer = ByteBuffer.allocateDirect(byteSize.nextPowerOf2())
 
             // Update writer too, it holds old buffer.
-            writer = ValueWriter.of(buffer)
+            writer = ValueWriter(buffer)
         }
 
         val bufCapacity = buffer.capacity()
@@ -102,5 +102,5 @@ fun <T : Any> FileChannel.readValuesToArray(
     val version = buffer.int
     val serializer = serializerResolver.getOrLatest(version)
 
-    return ValueReader.of(buffer).array(serializer, progressReporter)
+    return ValueReader(buffer).array(serializer, progressReporter)
 }

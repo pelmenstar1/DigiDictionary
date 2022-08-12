@@ -17,11 +17,10 @@ class BinarySerializingTests {
                 stringUtf16("123")
     }
 
-    private fun readWriteTestInternal(
-        createWriter: () -> ValueWriter,
-        createReader: () -> ValueReader
-    ) {
-        val writer = createWriter()
+    @Test
+    fun readWriteTest() {
+        val buffer = ByteBuffer.allocate(capacity)
+        val writer = ValueWriter(buffer)
 
         writer.run {
             int32(1)
@@ -36,7 +35,8 @@ class BinarySerializingTests {
             stringUtf16(charArrayOf(' ', '1', '2', '3', ' '), 1, 4)
         }
 
-        val reader = createReader()
+        buffer.position(0)
+        val reader = ValueReader(buffer)
 
         assertEquals(1, reader.int32())
         assertEquals(-100, reader.int32())
@@ -48,28 +48,5 @@ class BinarySerializingTests {
         assertEquals("", reader.stringUtf16())
         assertEquals("1", reader.stringUtf16())
         assertEquals("123", reader.stringUtf16())
-    }
-
-    @Test
-    fun `read-write to byte array`() {
-        val buffer = ByteArray(capacity)
-
-        readWriteTestInternal(
-            { ValueWriter.of(buffer) },
-            { ValueReader.of(buffer) }
-        )
-    }
-
-    @Test
-    fun `read-write to byte buffer`() {
-        val buffer = ByteBuffer.allocate(capacity)
-
-        readWriteTestInternal(
-            { ValueWriter.of(buffer) },
-            {
-                buffer.position(0)
-                ValueReader.of(buffer)
-            }
-        )
     }
 }
