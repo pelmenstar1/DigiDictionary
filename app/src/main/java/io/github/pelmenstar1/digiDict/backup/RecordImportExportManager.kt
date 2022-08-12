@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.backup
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -168,6 +169,7 @@ object RecordImportExportManager {
         return true
     }
 
+    @SuppressLint("RestrictedApi", "VisibleForTests")
     @Suppress("DEPRECATION")
     fun import(
         records: Array<Record>,
@@ -243,6 +245,9 @@ object RecordImportExportManager {
             } finally {
                 appDatabase.endTransaction()
             }
+
+            // Looks like data observers aren't notified even when endTransaction() is called. Force it to notify then.
+            appDatabase.invalidationTracker.notifyObserversByTableNames("records", "search_prepared_records")
 
             return true
         }
