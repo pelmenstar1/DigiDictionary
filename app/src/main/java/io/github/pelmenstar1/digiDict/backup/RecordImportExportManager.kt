@@ -112,14 +112,8 @@ object RecordImportExportManager {
         return if (uri != null) {
             withContext(Dispatchers.IO) {
                 uri.useAsFile(context, mode = "w") { descriptor ->
-                    val allRecords = dao.getAllRecordsNoIdIterable()
-
-                    try {
-                        FileOutputStream(descriptor).use {
-                            it.channel.writeValues(allRecords, progressReporter)
-                        }
-                    } finally {
-                        allRecords.recycle()
+                    FileOutputStream(descriptor).use {
+                        export(it, dao, progressReporter)
                     }
                 }
 
@@ -127,6 +121,16 @@ object RecordImportExportManager {
             }
         } else {
             false
+        }
+    }
+
+    fun export(output: FileOutputStream, dao: RecordDao, progressReporter: ProgressReporter?) {
+        val allRecords = dao.getAllRecordsNoIdIterable()
+
+        try {
+            output.channel.writeValues(allRecords, progressReporter)
+        } finally {
+            allRecords.recycle()
         }
     }
 
