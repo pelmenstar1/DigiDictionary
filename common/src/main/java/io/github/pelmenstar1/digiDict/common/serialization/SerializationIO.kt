@@ -6,12 +6,9 @@ import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.channels.WritableByteChannel
 
-private inline fun ioOperation(method: () -> Int) {
-    while (true) {
-        val n = method()
-        if (n <= 0) {
-            break
-        }
+private fun WritableByteChannel.writeAllBuffer(buffer: ByteBuffer) {
+    while (buffer.hasRemaining()) {
+        write(buffer)
     }
 }
 
@@ -28,32 +25,23 @@ fun <T : Any> WritableByteChannel.writeValues(
 
 fun WritableByteChannel.writeValues(values: SerializableIterable, progressReporter: ProgressReporter? = null) {
     // FileChannel in Android always create wrapping direct buffer
-    // if input buffer is not direct, so create it as a direct in the first place.
+    // if input buffer is not direct, so create it as a direct one in the first place.
     val buffer = ByteBuffer.allocateDirect(BUFFER_SIZE)
     val writer = ValueWriter.of(buffer)
     val valuesSize = values.size
 
-    buffer.order(ByteOrder.LITTLE_ENDIAN)
+    buffer.apply {
+        order(ByteOrder.LITTLE_ENDIAN)
 
-    buffer.putLong(MAGIC_WORD)
-    buffer.putInt(values.version)
-    buffer.putInt(valuesSize)
+        putLong(MAGIC_WORD)
+        putInt(values.version)
+        putInt(valuesSize)
+    }
 
     val iterator = values.iterator()
     var index = 0
 
-    while (true) {
-        // If there's no elements next, write current buffer.
-        if (!iterator.moveToNext()) {
-            buffer.also {
-                it.limit(it.position())
-                it.position(0)
-                ioOperation { write(buffer) }
-            }
-
-            break
-        }
-
+    while (iterator.moveToNext()) {
         iterator.initCurrent()
         val byteSize = iterator.getCurrentElementByteSize()
 
@@ -61,24 +49,28 @@ fun WritableByteChannel.writeValues(values: SerializableIterable, progressReport
             throw IllegalStateException("Illegal record (Too big)")
         }
 
-        // Check if we can proceed writing to temporary buffer, if not, write it to the file.
+        // Check if we can proceed writing to temporary buffer, if don't, write the buffer to the file.
         val bufferPos = buffer.position()
         if (bufferPos + byteSize > BUFFER_SIZE) {
             buffer.also {
                 it.limit(bufferPos)
                 it.position(0)
-                ioOperation { write(it) }
+                writeAllBuffer(buffer)
+
                 it.limit(BUFFER_SIZE)
                 it.position(0)
             }
-
-            iterator.writeCurrentElement(writer)
-        } else {
-            iterator.writeCurrentElement(writer)
         }
+
+        iterator.writeCurrentElement(writer)
 
         progressReporter?.onProgress(index, valuesSize)
         index++
+    }
+
+    if (buffer.hasRemaining()) {
+        buffer.flip()
+        writeAllBuffer(buffer)
     }
 
     progressReporter?.onEnd()
