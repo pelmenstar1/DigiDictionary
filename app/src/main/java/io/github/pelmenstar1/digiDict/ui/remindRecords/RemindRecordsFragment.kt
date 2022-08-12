@@ -7,10 +7,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
+import io.github.pelmenstar1.digiDict.common.ui.AdvancedDividerItemDecoration
+import io.github.pelmenstar1.digiDict.common.ui.LastElementVerticalSpaceDecoration
 import io.github.pelmenstar1.digiDict.databinding.FragmentRemindRecordsBinding
 import kotlinx.coroutines.flow.first
 
@@ -30,11 +32,17 @@ class RemindRecordsFragment : Fragment() {
                 remindRecordsAdapter = it
             }
 
+            val lastItemSpaceDecorHeight =
+                context.resources.getDimensionPixelOffset(R.dimen.remindRecords_lastItemBottomPadding)
+            val lastItemSpaceDecor = LastElementVerticalSpaceDecoration(lastItemSpaceDecorHeight)
+
             remindRecordsContentRecyclerView.also {
                 it.adapter = adapter
                 it.layoutManager = LinearLayoutManager(context)
                 it.itemAnimator = null
-                it.addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))
+
+                it.addItemDecoration(lastItemSpaceDecor)
+                it.addItemDecoration(AdvancedDividerItemDecoration(context))
             }
 
             remindRecordsRepeat.setOnClickListener {
