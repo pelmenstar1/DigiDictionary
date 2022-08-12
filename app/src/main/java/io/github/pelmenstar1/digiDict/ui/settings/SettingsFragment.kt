@@ -82,7 +82,7 @@ class SettingsFragment : Fragment() {
     }
 
     fun showLoadingProgressDialog() {
-        val dialog = LoadingIndicatorDialog()
+        var dialog: LoadingIndicatorDialog? = null
 
         lifecycleScope.launchFlowCollector(viewModel.importExportProgressFlow) { progress ->
             when (progress) {
@@ -91,7 +91,7 @@ class SettingsFragment : Fragment() {
                 }
                 100 -> {
                     isLoadingProgressDialogShown = false
-                    dialog.dismissNow()
+                    dialog?.dismissNow()
 
                     return@launchFlowCollector
                 }
@@ -103,10 +103,12 @@ class SettingsFragment : Fragment() {
 
                         isLoadingProgressDialogShown = true
 
-                        dialog.showNow(childFragmentManager, LOADING_PROGRESS_DIALOG_TAG)
+                        dialog = LoadingIndicatorDialog().also {
+                            it.showNow(childFragmentManager, LOADING_PROGRESS_DIALOG_TAG)
+                        }
                     }
 
-                    dialog.setProgress(progress)
+                    dialog?.setProgress(progress)
                 }
             }
         }
