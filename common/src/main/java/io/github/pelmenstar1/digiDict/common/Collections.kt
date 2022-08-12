@@ -81,8 +81,7 @@ inline fun <T> Set<T>.forEachFast(action: (T) -> Unit) {
     }
 }
 
-// TODO: Make it inline.
-fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
+inline fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
     val resultSize = size - offset
 
     when {

@@ -13,6 +13,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
+import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
@@ -46,10 +47,7 @@ class ViewRecordFragment : Fragment() {
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         viewModel.delete()
                     }
-                    .setNegativeButton(
-                        android.R.string.cancel,
-                        io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER // TODO: Fix it.
-                    )
+                    .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
                     .show()
             }
 
