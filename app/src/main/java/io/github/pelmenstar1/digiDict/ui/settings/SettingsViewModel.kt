@@ -26,6 +26,9 @@ class SettingsViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
     private val appDatabase: AppDatabase
 ) : SingleDataLoadStateViewModel<AppPreferences.Snapshot>(TAG) {
+    override val canRefreshAfterSuccess: Boolean
+        get() = false
+
     private val recordDao = appDatabase.recordDao()
     private val searchPreparedRecordDao = appDatabase.searchPreparedRecordDao()
 

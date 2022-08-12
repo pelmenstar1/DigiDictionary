@@ -13,6 +13,9 @@ class StatsViewModel @Inject constructor(
     private val statsProvider: CommonStatsProvider,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : SingleDataLoadStateViewModel<CommonStats>(TAG) {
+    override val canRefreshAfterSuccess: Boolean
+        get() = false
+
     override fun DataLoadStateManager.FlowBuilder<CommonStats>.buildDataFlow() = fromAction {
         val currentEpochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
 

@@ -15,10 +15,12 @@ class RemindRecordsViewModel @Inject constructor(
     private val recordDao: RecordDao,
     appPreferences: AppPreferences
 ) : SingleDataLoadStateViewModel<Array<Record>>(TAG) {
+    override val canRefreshAfterSuccess: Boolean
+        get() = true
+
     private val random = Random(System.currentTimeMillis())
 
     private val preferencesSnapshotFlow = appPreferences.getSnapshotFlow()
-
     val showMeaningFlow = preferencesSnapshotFlow.map { it.remindShowMeaning }
 
     override fun DataLoadStateManager.FlowBuilder<Array<Record>>.buildDataFlow() = fromFlow {

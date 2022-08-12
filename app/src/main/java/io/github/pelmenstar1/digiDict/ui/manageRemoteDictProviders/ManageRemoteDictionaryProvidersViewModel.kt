@@ -18,6 +18,9 @@ class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
     private val remoteDictProviderDao: RemoteDictionaryProviderDao,
     private val remoteDictProviderStatsDao: RemoteDictionaryProviderStatsDao
 ) : SingleDataLoadStateViewModel<Array<RemoteDictionaryProviderInfo>>(TAG) {
+    override val canRefreshAfterSuccess: Boolean
+        get() = false
+
     val onDeleteError = Event()
 
     override fun DataLoadStateManager.FlowBuilder<Array<RemoteDictionaryProviderInfo>>.buildDataFlow() = fromFlow {

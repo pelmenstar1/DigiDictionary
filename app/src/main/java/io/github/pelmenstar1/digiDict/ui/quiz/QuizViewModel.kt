@@ -24,6 +24,9 @@ class QuizViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : SingleDataLoadStateViewModel<Array<Record>>(TAG) {
+    override val canRefreshAfterSuccess: Boolean
+        get() = false
+
     @Volatile
     private var answeredBits: FixedBitSet? = null
 

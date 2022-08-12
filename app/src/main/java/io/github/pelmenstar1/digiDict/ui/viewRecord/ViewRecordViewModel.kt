@@ -23,6 +23,9 @@ class ViewRecordViewModel @Inject constructor(
     private val preparedRecordDao: SearchPreparedRecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater
 ) : SingleDataLoadStateViewModel<Record?>(TAG) {
+    override val canRefreshAfterSuccess: Boolean
+        get() = false
+
     private val idFlow = MutableStateFlow<Int?>(null)
 
     var id: Int = -1
