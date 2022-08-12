@@ -48,53 +48,50 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun exportData(context: Context) {
-        progressReporter.reset()
-
-        viewModelScope.launch {
-            try {
-                val showMessage = RecordImportExportManager.export(context, recordDao, progressReporter)
-
-                if (showMessage) {
-                    _messageFlow.value = SettingsMessage.EXPORT_SUCCESS
-                }
-            } catch (e: ValidationException) {
-                onOperationError.raiseOnMainThread()
-
-                _messageFlow.value = SettingsMessage.INVALID_FILE
-            } catch (e: Exception) {
-                Log.e(TAG, "during export", e)
-
-                onOperationError.raiseOnMainThreadIfNotCancellation(e)
-
-                _messageFlow.value = SettingsMessage.EXPORT_ERROR
-            }
+        importExport(
+            operationName = "export",
+            operationSuccessMsg = SettingsMessage.EXPORT_SUCCESS,
+            operationErrorMsg = SettingsMessage.EXPORT_ERROR,
+        ) {
+            export(context, recordDao, progressReporter)
         }
     }
 
     fun importData(context: Context) {
+        importExport(
+            operationName = "import",
+            operationSuccessMsg = SettingsMessage.IMPORT_SUCCESS,
+            operationErrorMsg = SettingsMessage.IMPORT_ERROR,
+        ) {
+            import(context, appDatabase, progressReporter)
+        }
+    }
+
+    private fun importExport(
+        operationName: String,
+        operationSuccessMsg: SettingsMessage,
+        operationErrorMsg: SettingsMessage,
+        operation: suspend RecordImportExportManager.() -> Boolean
+    ) {
         progressReporter.reset()
 
         viewModelScope.launch {
             try {
-                val showMessage = RecordImportExportManager.import(
-                    context,
-                    appDatabase,
-                    progressReporter
-                )
+                val showMessage = RecordImportExportManager.operation()
 
                 if (showMessage) {
-                    _messageFlow.value = SettingsMessage.IMPORT_SUCCESS
+                    _messageFlow.value = operationSuccessMsg
                 }
             } catch (e: ValidationException) {
                 _messageFlow.value = SettingsMessage.INVALID_FILE
 
                 onOperationError.raiseOnMainThread()
             } catch (e: Exception) {
-                Log.e(TAG, "during export", e)
+                Log.e(TAG, "during $operationName", e)
 
                 onOperationError.raiseOnMainThreadIfNotCancellation(e)
 
-                _messageFlow.value = SettingsMessage.IMPORT_ERROR
+                _messageFlow.value = operationErrorMsg
             }
         }
     }
