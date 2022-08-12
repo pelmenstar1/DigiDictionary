@@ -1,132 +1,68 @@
 package io.github.pelmenstar1.digiDict.common.serialization
 
-import io.github.pelmenstar1.digiDict.common.indexOf
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.CharBuffer
 
-sealed class ValueReader {
-    abstract var offset: Int
+/**
+ * Encapsulates writing primitive types to [ByteBuffer].
+ *
+ * For this to work correctly, position of the [ByteBuffer] instance must be aligned by 2.
+ * Also, the [ValueReader] instance takes ownership under the buffer, so the position, limit shouldn't be changed.
+ */
+class ValueReader(private val buffer: ByteBuffer) {
+    private val charBuffer: CharBuffer
+    private val initialCharBufferPosition: Int
 
-    abstract fun int32(): Int
-    abstract fun int64(): Long
-    abstract fun stringUtf16(): String
+    init {
+        val bbPos = buffer.position()
 
-    fun <T : Any> list(serializer: BinarySerializer<out T>): MutableList<T> {
+        if (bbPos % 2 != 0) {
+            throw IllegalArgumentException("buffer.position() must be aligned by 2")
+        }
+
+        buffer.order(ByteOrder.LITTLE_ENDIAN)
+        charBuffer = buffer.asCharBuffer()
+        initialCharBufferPosition = bbPos / 2
+    }
+
+    fun int32() = buffer.int
+    fun int64() = buffer.long
+
+    fun stringUtf16(): String {
+        val bb = buffer
+
+        val strLength = bb.short.toInt() and 0xFFFF
+        val bbPos = bb.position()
+
+        return if (strLength == 0) {
+            ""
+        } else {
+            val cb = charBuffer
+
+            val tempBuffer = CharArray(strLength)
+
+            cb.position(bbPos / 2 - initialCharBufferPosition)
+            cb.get(tempBuffer, 0, strLength)
+
+            bb.position(bbPos + strLength * 2)
+
+            String(tempBuffer, 0, strLength)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> array(serializer: BinarySerializer<out T>, progressReporter: ProgressReporter? = null): Array<T> {
         val n = int32()
-        val result = ArrayList<T>(n)
+        val result = serializer.newArrayOfNulls(n) as Array<T>
 
         for (i in 0 until n) {
-            val element = serializer.readFrom(this)
+            result[i] = serializer.readFrom(this)
 
-            result.add(element)
+            progressReporter?.onProgress(i, n)
         }
 
         return result
-    }
-
-    private class ByteArrayImpl(private val buffer: ByteArray) : ValueReader() {
-        override var offset: Int = 0
-
-        /**
-         * Convenient method for reading value [T] and moving offset forward for [size] bytes.
-         */
-        private inline fun <T> readInternal(
-            size: Int,
-            block: (buffer: ByteArray, offset: Int) -> T
-        ): T {
-            val o = offset
-            val value = block(buffer, o)
-            offset = o + size
-
-            return value
-        }
-
-        override fun int32(): Int {
-            return readInternal(4) { buffer, offset ->
-                buffer[offset].toInt() and 0xFF or
-                        (buffer[offset + 1].toInt() and 0xFF shl 8) or
-                        (buffer[offset + 2].toInt() and 0xFF shl 16) or
-                        (buffer[offset + 3].toInt() and 0xFF shl 24)
-            }
-        }
-
-        override fun int64(): Long {
-            return readInternal(8) { buffer, offset ->
-                buffer[offset].toLong() and 0xffL or
-                        (buffer[offset + 1].toLong() and 0xffL shl 8) or
-                        (buffer[offset + 2].toLong() and 0xffL shl 16) or
-                        (buffer[offset + 3].toLong() and 0xffL shl 24) or
-                        (buffer[offset + 4].toLong() and 0xffL shl 32) or
-                        (buffer[offset + 5].toLong() and 0xffL shl 40) or
-                        (buffer[offset + 6].toLong() and 0xffL shl 48) or
-                        (buffer[offset + 7].toLong() and 0xffL shl 56)
-            }
-        }
-
-        override fun stringUtf16(): String {
-            // Step is 2, because string is encoded as UTF-16
-            val terminatorIndex = buffer.indexOf(0, offset, buffer.size, step = 2)
-
-            // If there's no \0 symbol, then the data is invalid
-            if (terminatorIndex == -1) {
-                throw IllegalStateException("Invalid format")
-            }
-
-            val byteLength = terminatorIndex - offset
-
-            // Avoids an allocation and a native call.
-            if (byteLength == 0) {
-                return ""
-            }
-
-            return readInternal(byteLength + 1) { buffer, offset ->
-                String(buffer, offset, byteLength, Charsets.UTF_16LE)
-            }
-        }
-    }
-
-    private class ByteBufferImpl(private val buffer: ByteBuffer) : ValueReader() {
-        override var offset: Int
-            get() = buffer.position()
-            set(value) {
-                buffer.position(value)
-            }
-
-        init {
-            buffer.order(ByteOrder.LITTLE_ENDIAN)
-        }
-
-        override fun int32() = buffer.int
-        override fun int64() = buffer.long
-
-        override fun stringUtf16(): String {
-            val oldLimit = buffer.limit()
-
-            val terminatorIndex = buffer.indexOf(0, step = 2)
-
-            // If there's no \0 symbol, then the data is invalid
-            if (terminatorIndex == -1) {
-                throw IllegalStateException("Invalid format")
-            }
-
-            // Avoids an allocation and a native call.
-            if (terminatorIndex == buffer.position()) {
-                return ""
-            }
-
-            buffer.limit(terminatorIndex)
-
-            val result = buffer.asCharBuffer().toString()
-
-            buffer.limit(oldLimit)
-            buffer.position(terminatorIndex + 1)
-
-            return result
-        }
-    }
-
-    companion object {
-        fun of(value: ByteArray): ValueReader = ByteArrayImpl(value)
-        fun of(value: ByteBuffer): ValueReader = ByteBufferImpl(value)
     }
 }

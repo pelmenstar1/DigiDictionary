@@ -10,11 +10,12 @@ object BinarySize {
     const val int64 = 8
 
     fun stringUtf16(value: String): Int {
-        // +1 for \0 terminator
-        return value.length * 2 + 1
+        // +2 for length prefix.
+        return value.length * 2 + 2
     }
 
     fun stringUtf16(buffer: CharArrayBuffer): Int {
-        return buffer.sizeCopied * 2 + 1
+        // +2 for length prefix.
+        return buffer.sizeCopied * 2 + 2
     }
 }

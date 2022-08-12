@@ -65,46 +65,42 @@ open class Record(
             a.expression.compareTo(b.expression)
         }
 
-        val NO_ID_SERIALIZER = object : BinarySerializer<Record> {
-            override fun getByteSize(value: Record): Int {
-                return with(BinarySize) {
-                    int32 /* score */ +
-                            int64 /* epochSeconds */ +
-                            stringUtf16(value.expression) +
+        val NO_ID_SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<Record> {
+            forVersion<Record>(
+                version = 1,
+                getByteSize = { value ->
+                    stringUtf16(value.expression) +
                             stringUtf16(value.rawMeaning) +
-                            stringUtf16(value.additionalNotes)
-                }
-            }
-
-            override fun writeTo(writer: ValueWriter, value: Record) {
-                writer.run {
+                            stringUtf16(value.additionalNotes) +
+                            int32 /* score */ +
+                            int64 /* epochSeconds */
+                },
+                write = { value ->
                     stringUtf16(value.expression)
                     stringUtf16(value.rawMeaning)
                     stringUtf16(value.additionalNotes)
                     int32(value.score)
                     int64(value.epochSeconds)
+                },
+                read = {
+                    val expression = stringUtf16()
+                    val rawMeaning = stringUtf16()
+                    val additionalNotes = stringUtf16()
+                    val score = int32()
+                    val epochSeconds = int64()
+
+                    if (epochSeconds < 0) {
+                        throw ValidationException("Epoch seconds can't be negative")
+                    }
+
+                    Record(
+                        id = 0,
+                        expression, rawMeaning, additionalNotes,
+                        score,
+                        epochSeconds
+                    )
                 }
-            }
-
-            override fun readFrom(reader: ValueReader): Record {
-                val expression = reader.stringUtf16()
-                val rawMeaning = reader.stringUtf16()
-                val additionalNotes = reader.stringUtf16()
-                val score = reader.int32()
-                val epochSeconds = reader.int64()
-
-                if (epochSeconds < 0) {
-                    throw ValidationException("Epoch seconds can't be negative")
-                }
-
-                return Record(
-                    id = 0,
-                    expression, rawMeaning, additionalNotes,
-                    score,
-                    epochSeconds
-                )
-            }
-
+            )
         }
     }
 }
@@ -135,6 +131,9 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
         private val epochSecondsIndex = columnIndex { epochSeconds }
 
         private var isIteratorCreated = false
+
+        override val version: Int
+            get() = 1
 
         private inline fun Cursor.columnIndex(block: RecordTable.() -> String): Int {
             return getColumnIndex(block(RecordTable))

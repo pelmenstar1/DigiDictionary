@@ -9,7 +9,9 @@ enum class SettingsMessage {
     IMPORT_ERROR,
     EXPORT_SUCCESS,
     IMPORT_SUCCESS,
-    INVALID_FILE;
+    INVALID_FILE,
+    DELETE_ALL_SUCCESS,
+    DB_ERROR;
 
     companion object {
         fun defaultMapper(context: Context) = resourcesMessageMapper<SettingsMessage>(context) {
@@ -19,6 +21,8 @@ enum class SettingsMessage {
                 EXPORT_SUCCESS -> R.string.settings_exportSuccess
                 IMPORT_SUCCESS -> R.string.settings_importSuccess
                 INVALID_FILE -> R.string.settings_invalidFile
+                DELETE_ALL_SUCCESS -> R.string.settings_deleteAllSuccess
+                DB_ERROR -> R.string.dbError
             }
         }
     }

@@ -68,7 +68,7 @@ class DuplicateRecordFileGenerator {
 
             descriptor.use {
                 FileOutputStream(descriptor.fileDescriptor).use {
-                    it.channel.writeValues(records, Record.NO_ID_SERIALIZER)
+                    it.channel.writeValues(records, Record.NO_ID_SERIALIZER_RESOLVER.latest)
                 }
             }
         } catch (e: Exception) {

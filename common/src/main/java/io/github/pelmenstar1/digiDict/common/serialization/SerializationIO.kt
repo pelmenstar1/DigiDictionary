@@ -1,77 +1,95 @@
 package io.github.pelmenstar1.digiDict.common.serialization
 
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.nextPowerOf2
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.channels.WritableByteChannel
 
-private inline fun ioOperation(method: () -> Int) {
-    while (true) {
-        val n = method()
-        if (n <= 0) {
-            break
-        }
+private fun WritableByteChannel.writeAllFlippedBuffer(buffer: ByteBuffer) {
+    buffer.flip()
+
+    while (buffer.hasRemaining()) {
+        write(buffer)
     }
 }
 
-private const val BUFFER_SIZE = 2048
+private const val INITIAL_BUFFER_SIZE = 4096
 private const val MAGIC_WORD = 0x00FF00FF_abcdedf00L
 
-fun <T : Any> WritableByteChannel.writeValues(values: Array<out T>, serializer: BinarySerializer<in T>) {
-    writeValues(SerializableIterable(values, serializer))
+fun <T : Any> WritableByteChannel.writeValues(
+    values: Array<out T>,
+    serializer: BinarySerializer<in T>,
+    progressReporter: ProgressReporter? = null
+) {
+    writeValues(SerializableIterable(values, serializer), progressReporter)
 }
 
-fun WritableByteChannel.writeValues(values: SerializableIterable) {
+fun WritableByteChannel.writeValues(values: SerializableIterable, progressReporter: ProgressReporter? = null) {
     // FileChannel in Android always create wrapping direct buffer
-    // if input buffer is not direct, so create it as a direct in the first place.
-    val buffer = ByteBuffer.allocateDirect(BUFFER_SIZE)
-    val writer = ValueWriter.of(buffer)
+    // if input buffer is not direct, so create it as a direct one in the first place.
+    var buffer = ByteBuffer.allocateDirect(INITIAL_BUFFER_SIZE)
+    var writer = ValueWriter(buffer)
+    val valuesSize = values.size
 
-    buffer.order(ByteOrder.LITTLE_ENDIAN)
+    buffer.apply {
+        order(ByteOrder.LITTLE_ENDIAN)
 
-    buffer.putLong(MAGIC_WORD)
-    buffer.putInt(values.size)
+        putLong(MAGIC_WORD)
+        putInt(values.version)
+        putInt(valuesSize)
+    }
 
     val iterator = values.iterator()
+    var index = 0
 
-    while (true) {
-        // If there's no elements next, write current buffer.
-        if (!iterator.moveToNext()) {
-            buffer.also {
-                it.limit(it.position())
-                it.position(0)
-                ioOperation { write(buffer) }
-            }
-
-            break
-        }
-
+    while (iterator.moveToNext()) {
         iterator.initCurrent()
         val byteSize = iterator.getCurrentElementByteSize()
 
-        if (byteSize >= BUFFER_SIZE) {
-            throw IllegalStateException("Illegal record (Too big)")
+        // If byte-size of single value is bigger than whole buffer capacity, it means
+        // there's no way iterator.writeCurrentElement can write the content to the buffer without
+        // overflow. It can happen extremely rarely. If that's the case, we write what we have
+        // and recreate the buffer to make it possible to contain the current value.
+        if (byteSize >= buffer.capacity()) {
+            writeAllFlippedBuffer(buffer)
+
+            // Presumably, it's faster to allocate a buffer when the capacity is power of 2.
+            buffer = ByteBuffer.allocateDirect(byteSize.nextPowerOf2())
+
+            // Update writer too, it holds old buffer.
+            writer = ValueWriter(buffer)
         }
 
-        // Check if we can proceed writing to temporary buffer, if not, write it to the file.
-        val bufferPos = buffer.position()
-        if (bufferPos + byteSize > BUFFER_SIZE) {
+        val bufCapacity = buffer.capacity()
+
+        // If the value can't be written to the current position of buffer, write the buffer to the file
+        // and reset buffer's position.
+        if (buffer.position() + byteSize > bufCapacity) {
             buffer.also {
-                it.limit(bufferPos)
-                it.position(0)
-                ioOperation { write(it) }
-                it.limit(BUFFER_SIZE)
+                writeAllFlippedBuffer(it)
+
+                it.limit(bufCapacity)
                 it.position(0)
             }
-
-            iterator.writeCurrentElement(writer)
-        } else {
-            iterator.writeCurrentElement(writer)
         }
+
+        iterator.writeCurrentElement(writer)
+
+        progressReporter?.onProgress(index, valuesSize)
+        index++
     }
+
+    writeAllFlippedBuffer(buffer)
+
+    progressReporter?.onEnd()
 }
 
-fun <T : Any> FileChannel.readValuesToList(serializer: BinarySerializer<out T>): MutableList<T> {
+fun <T : Any> FileChannel.readValuesToArray(
+    serializerResolver: BinarySerializerResolver<T>,
+    progressReporter: ProgressReporter? = null
+): Array<T> {
     val buffer = map(FileChannel.MapMode.READ_ONLY, 0, size()).also {
         it.order(ByteOrder.LITTLE_ENDIAN)
     }
@@ -81,5 +99,8 @@ fun <T : Any> FileChannel.readValuesToList(serializer: BinarySerializer<out T>):
         throw ValidationException("Magic words are wrong")
     }
 
-    return ValueReader.of(buffer).list(serializer)
+    val version = buffer.int
+    val serializer = serializerResolver.getOrLatest(version)
+
+    return ValueReader(buffer).array(serializer, progressReporter)
 }

@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
 import androidx.collection.ArraySet
-import java.nio.ByteBuffer
 
 interface SizedIterable<out T> : Iterable<T> {
     val size: Int
@@ -49,30 +48,6 @@ fun IntArray.contains(element: Int, start: Int, end: Int): Boolean {
     return false
 }
 
-fun ByteArray.indexOf(element: Byte, start: Int, end: Int, step: Int = 1): Int {
-    var i = start
-    while (i < end) {
-        if (this[i] == element) return i
-
-        i += step
-    }
-
-    return -1
-}
-
-fun ByteBuffer.indexOf(element: Byte, step: Int = 1): Int {
-    var i = position()
-    val end = limit()
-
-    while (i < end) {
-        if (get(i) == element) return i
-
-        i += step
-    }
-
-    return -1
-}
-
 fun <T> newArraySetFrom(set: Set<T>, capacity: Int): ArraySet<T> {
     return ArraySet<T>(capacity).also {
         it.addAllSet(set)
@@ -106,6 +81,7 @@ inline fun <T> Set<T>.forEachFast(action: (T) -> Unit) {
     }
 }
 
+// TODO: Make it inline.
 fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
     val resultSize = size - offset
 
@@ -122,6 +98,16 @@ fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
     }
 
     return result
+}
+
+inline fun <T, reified R> Array<out T>.mapToArray(block: (T) -> R): Array<R> {
+    return Array(size) { block(this[it]) }
+}
+
+inline fun <T, R> Array<out T>.mapToHashSet(block: (T) -> R): HashSet<R> {
+    return HashSet<R>(size).also { set ->
+        forEach { set.add(block(it)) }
+    }
 }
 
 inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {

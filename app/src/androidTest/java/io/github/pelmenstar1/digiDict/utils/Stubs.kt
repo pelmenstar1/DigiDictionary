@@ -37,7 +37,7 @@ open class RecordDaoStub : RecordDao() {
     override suspend fun insert(value: Record) {
     }
 
-    override suspend fun insertAll(values: List<Record>) {
+    override suspend fun insertAll(values: Array<Record>) {
     }
 
     override suspend fun update(
@@ -49,20 +49,14 @@ open class RecordDaoStub : RecordDao() {
     ) {
     }
 
-    override suspend fun updateAsResolveConflict(
-        id: Int,
-        newMeaning: String,
-        newAdditionalNotes: String,
-        newDateTimeEpochSeconds: Long,
-        newScore: Int
-    ) {
-    }
-
     override suspend fun updateScore(id: Int, newScore: Int) {
     }
 
     override suspend fun deleteById(id: Int): Int {
         throw NotImplementedError()
+    }
+
+    override suspend fun deleteAll() {
     }
 
     override suspend fun getRecordById(id: Int): Record? {
@@ -74,10 +68,6 @@ open class RecordDaoStub : RecordDao() {
     }
 
     override suspend fun getRecordsByIds(ids: IntArray): Array<Record> {
-        throw NotImplementedError()
-    }
-
-    override suspend fun getAllRecordsOrderByDateTime(): Array<Record> {
         throw NotImplementedError()
     }
 

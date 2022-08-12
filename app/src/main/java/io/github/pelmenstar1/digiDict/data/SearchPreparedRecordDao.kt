@@ -7,8 +7,8 @@ import androidx.room.Update
 
 @Dao
 interface SearchPreparedRecordDao {
-    @Query("SELECT * FROM search_prepared_records ORDER BY id DESC")
-    suspend fun getAllOrderById(): Array<SearchPreparedRecord>
+    @Query("SELECT keywords FROM search_prepared_records")
+    suspend fun getAllKeywords(): Array<String>
 
     @Insert
     suspend fun insert(value: SearchPreparedRecord)
@@ -18,4 +18,7 @@ interface SearchPreparedRecordDao {
 
     @Query("DELETE FROM search_prepared_records WHERE id=:id")
     suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM search_prepared_records")
+    suspend fun deleteAll()
 }

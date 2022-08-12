@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 @Dao
 abstract class RecordDao {
-    data class IdExpressionMeaningRecord(
+    class IdExpressionMeaningRecord(
         val id: Int,
         val expression: String,
         val meaning: String
@@ -23,14 +23,7 @@ abstract class RecordDao {
     abstract suspend fun insert(value: Record)
 
     @Insert
-    abstract suspend fun insertAll(values: List<Record>)
-
-    @Transaction
-    open suspend fun insertAll(values: Sequence<Record>) {
-        for (value in values) {
-            insert(value)
-        }
-    }
+    abstract suspend fun insertAll(values: Array<Record>)
 
     @Query(
         """UPDATE records 
@@ -49,36 +42,6 @@ abstract class RecordDao {
         newDateTimeEpochSeconds: Long
     )
 
-    @Query(
-        """UPDATE records 
-        SET meaning=:newMeaning,
-            additionalNotes=:newAdditionalNotes,
-            dateTime=:newDateTimeEpochSeconds,
-            score=:newScore
-        WHERE id=:id
-        """
-    )
-    abstract suspend fun updateAsResolveConflict(
-        id: Int,
-        newMeaning: String,
-        newAdditionalNotes: String,
-        newDateTimeEpochSeconds: Long,
-        newScore: Int
-    )
-
-    @Transaction
-    open suspend fun updateAsResolveConflictAll(sequence: Sequence<Record>) {
-        sequence.forEach {
-            updateAsResolveConflict(
-                it.id,
-                it.rawMeaning,
-                it.additionalNotes,
-                it.epochSeconds,
-                it.score
-            )
-        }
-    }
-
     @Query("UPDATE records SET score=:newScore WHERE id=:id")
     abstract suspend fun updateScore(id: Int, newScore: Int)
 
@@ -92,6 +55,9 @@ abstract class RecordDao {
     @Query("DELETE FROM records WHERE id = :id")
     abstract suspend fun deleteById(id: Int): Int
 
+    @Query("DELETE FROM records")
+    abstract suspend fun deleteAll()
+
     @Query("SELECT * FROM records WHERE id=:id")
     abstract suspend fun getRecordById(id: Int): Record?
 
@@ -100,9 +66,6 @@ abstract class RecordDao {
 
     @Query("SELECT * FROM records WHERE id IN (:ids)")
     abstract suspend fun getRecordsByIds(ids: IntArray): Array<Record>
-
-    @Query("SELECT * FROM records ORDER BY dateTime DESC")
-    abstract suspend fun getAllRecordsOrderByDateTime(): Array<Record>
 
     @Query("SELECT expression, meaning, additionalNotes, dateTime, score FROM records")
     abstract fun getAllRecordsNoIdRaw(): Cursor
