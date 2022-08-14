@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
@@ -25,13 +26,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     lateinit var appDatabase: AppDatabase
 
     private lateinit var toolbar: MaterialToolbar
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.main_container_view) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
         val appBarConfiguration = AppBarConfiguration(
             navController.graph,
             fallbackOnNavigateUpListener = ::onSupportNavigateUp
@@ -73,10 +75,27 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
     }
 
+    override fun onBackPressed() {
+        if (navController.currentDestination?.id == R.id.homeFragment) {
+            // For user screen where all the records are shown and screen where the user can search,
+            // are two conceptually different screens but logically in the code they are both in HomeFragment.
+            // So, when back button is pressed during the search, search is expected to become inactive.
+            // Make that happen.
+            if (GlobalSearchQueryProvider.isActive) {
+                GlobalSearchQueryProvider.isActive = false
+
+                findSearchItem()?.collapseActionView()
+                return
+            }
+        }
+
+        super.onBackPressed()
+    }
+
     override fun onStop() {
         super.onStop()
 
-        val searchItem = toolbar.menu.findItem(R.id.homeMenu_search)
+        val searchItem = findSearchItem()
 
         if (searchItem == null || !searchItem.isActionViewExpanded) {
             // If the activity is stopped, action view in the toolbar is collapsed but for some reason,
@@ -86,6 +105,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             GlobalSearchQueryProvider.isActive = false
         }
     }
+
+    private fun findSearchItem() = toolbar.menu.findItem(R.id.homeMenu_search)
 
     private fun initMenu(menu: Menu) {
         val item = menu.findItem(R.id.homeMenu_search)
