@@ -15,22 +15,30 @@ import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
         Record::class,
         RemoteDictionaryProviderInfo::class,
         RemoteDictionaryProviderStats::class,
-        SearchPreparedRecord::class
+        SearchPreparedRecord::class,
+        RecordBadgeInfo::class
     ],
     exportSchema = true,
-    version = 6,
+    version = 7,
     autoMigrations = [
         AutoMigration(
             from = 1,
             to = 2,
             spec = AppDatabase.Migration_1_2::class
         ),
+        AutoMigration(
+            from = 6,
+            to = 7,
+            spec = AppDatabase.Migration_6_7::class
+        )
     ]
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     @DeleteColumn(tableName = "records", columnName = "origin")
     class Migration_1_2 : AutoMigrationSpec
+
+    class Migration_6_7 : AutoMigrationSpec
 
     object Migration_2_3 : Migration(2, 3) {
         override fun migrate(database: SupportSQLiteDatabase) {
@@ -110,6 +118,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
     abstract fun searchPreparedRecordDao(): SearchPreparedRecordDao
+    abstract fun recordBadgeDao(): RecordBadgeDao
 
     companion object {
         private var singleton: AppDatabase? = null

@@ -22,6 +22,7 @@ open class Record(
     @ColumnInfo(name = RecordTable.score) val score: Int,
     // in UTC
     @ColumnInfo(name = RecordTable.epochSeconds) val epochSeconds: Long,
+    @ColumnInfo(name = RecordTable.badges, defaultValue = "") var rawBadges: String = ""
 ) : EntityWithPrimaryKeyId<Record> {
     init {
         require(id >= 0) { "Id can't be negative" }
@@ -42,7 +43,8 @@ open class Record(
                 rawMeaning == other.rawMeaning &&
                 additionalNotes == other.additionalNotes &&
                 score == other.score &&
-                epochSeconds == other.epochSeconds
+                epochSeconds == other.epochSeconds &&
+                rawBadges == other.rawBadges
     }
 
     override fun hashCode(): Int {
@@ -52,12 +54,13 @@ open class Record(
         result = result * 31 + additionalNotes.hashCode()
         result = result * 31 + score
         result = result * 31 + epochSeconds.hashCode()
+        result = result * 31 + rawBadges.hashCode()
 
         return result
     }
 
     override fun toString(): String {
-        return "Record(id=$id, expression='$expression', rawMeaning='$rawMeaning', additionalNotes=${additionalNotes}, score=$score, epochSeconds=$epochSeconds)"
+        return "Record(id=$id, expression='$expression', rawMeaning='$rawMeaning', additionalNotes=${additionalNotes}, score=$score, epochSeconds=$epochSeconds, badges=$rawBadges)"
     }
 
     companion object {
@@ -97,7 +100,48 @@ open class Record(
                         id = 0,
                         expression, rawMeaning, additionalNotes,
                         score,
-                        epochSeconds
+                        epochSeconds,
+                        rawBadges = ""
+                    )
+                }
+            )
+
+            forVersion<Record>(
+                version = 2,
+                getByteSize = { value ->
+                    stringUtf16(value.expression) +
+                            stringUtf16(value.rawMeaning) +
+                            stringUtf16(value.additionalNotes) +
+                            stringUtf16(value.rawBadges)
+                    int32 /* score */ +
+                            int64 /* epochSeconds */
+                },
+                write = { value ->
+                    stringUtf16(value.expression)
+                    stringUtf16(value.rawMeaning)
+                    stringUtf16(value.additionalNotes)
+                    stringUtf16(value.rawBadges)
+                    int32(value.score)
+                    int64(value.epochSeconds)
+                },
+                read = {
+                    val expression = stringUtf16()
+                    val rawMeaning = stringUtf16()
+                    val additionalNotes = stringUtf16()
+                    val rawBadges = stringUtf16()
+                    val score = int32()
+                    val epochSeconds = int64()
+
+                    if (epochSeconds < 0) {
+                        throw ValidationException("Epoch seconds can't be negative")
+                    }
+
+                    Record(
+                        id = 0,
+                        expression, rawMeaning, additionalNotes,
+                        score,
+                        epochSeconds,
+                        rawBadges
                     )
                 }
             )
@@ -114,6 +158,7 @@ object RecordTable {
     const val additionalNotes = "additionalNotes"
     const val score = "score"
     const val epochSeconds = "dateTime"
+    const val badges = "badges"
 }
 
 fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
@@ -129,11 +174,12 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
         private val additionalNotesIndex = columnIndex { additionalNotes }
         private val scoreIndex = columnIndex { score }
         private val epochSecondsIndex = columnIndex { epochSeconds }
+        private val badgesIndex = columnIndex { badges }
 
         private var isIteratorCreated = false
 
         override val version: Int
-            get() = 1
+            get() = 2
 
         private inline fun Cursor.columnIndex(block: RecordTable.() -> String): Int {
             return getColumnIndex(block(RecordTable))
@@ -156,6 +202,7 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                 private val expressionBuffer = CharArrayBuffer(32)
                 private val meaningBuffer = CharArrayBuffer(64)
                 private val additionalNotesBuffer = CharArrayBuffer(16)
+                private val badgesBuffer = CharArrayBuffer(32)
 
                 init {
                     // Make the iterator reusable
@@ -172,6 +219,7 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                         copyStringToBuffer(exprIndex, expressionBuffer)
                         copyStringToBuffer(meaningIndex, meaningBuffer)
                         copyStringToBuffer(additionalNotesIndex, additionalNotesBuffer)
+                        copyStringToBuffer(badgesIndex, badgesBuffer)
                     }
                 }
 
@@ -181,7 +229,8 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                                 int64 /* epochSeconds */ +
                                 stringUtf16(expressionBuffer) +
                                 stringUtf16(meaningBuffer) +
-                                stringUtf16(additionalNotesBuffer)
+                                stringUtf16(additionalNotesBuffer) +
+                                stringUtf16(badgesBuffer)
                     }
                 }
 
@@ -190,6 +239,7 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                         stringUtf16(expressionBuffer)
                         stringUtf16(meaningBuffer)
                         stringUtf16(additionalNotesBuffer)
+                        stringUtf16(badgesBuffer)
                         int32(currentScore)
                         int64(currentEpochSeconds)
                     }

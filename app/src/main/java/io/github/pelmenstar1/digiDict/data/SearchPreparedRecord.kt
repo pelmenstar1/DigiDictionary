@@ -92,5 +92,6 @@ class RecordWithSearchInfo(
     additionalNotes: String,
     score: Int,
     epochSeconds: Long,
+    rawBadges: String,
     val keywords: String?
-) : Record(id, expression, rawMeaning, additionalNotes, score, epochSeconds)
+) : Record(id, expression, rawMeaning, additionalNotes, score, epochSeconds, rawBadges)

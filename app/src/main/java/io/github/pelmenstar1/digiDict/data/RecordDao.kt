@@ -67,7 +67,7 @@ abstract class RecordDao {
     @Query("SELECT * FROM records WHERE id IN (:ids)")
     abstract suspend fun getRecordsByIds(ids: IntArray): Array<Record>
 
-    @Query("SELECT expression, meaning, additionalNotes, dateTime, score FROM records")
+    @Query("SELECT expression, meaning, additionalNotes, dateTime, score,badges FROM records")
     abstract fun getAllRecordsNoIdRaw(): Cursor
 
     @Query("SELECT * FROM records")

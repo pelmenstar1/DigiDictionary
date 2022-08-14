@@ -193,7 +193,8 @@ class AddEditRecordViewModel @Inject constructor(
                                     id = 0,
                                     expr, rawMeaning, additionalNotes,
                                     score = 0,
-                                    epochSeconds = epochSeconds
+                                    epochSeconds = epochSeconds,
+                                    rawBadges = ""
                                 )
                             )
 
