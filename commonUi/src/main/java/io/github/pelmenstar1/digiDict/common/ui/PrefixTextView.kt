@@ -20,6 +20,9 @@ class PrefixTextView @JvmOverloads constructor(
             updateText()
         }
 
+    private var textValue: String? = ""
+    private var numberValue: Int = 0
+
     init {
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.PrefixTextView, defStyleAttr, defStyleRes)
@@ -33,9 +36,6 @@ class PrefixTextView @JvmOverloads constructor(
             }
         }
     }
-
-    private var textValue: String? = ""
-    private var numberValue: Int = 0
 
     fun setValue(text: String) {
         if (textValue == null || text != textValue) {
