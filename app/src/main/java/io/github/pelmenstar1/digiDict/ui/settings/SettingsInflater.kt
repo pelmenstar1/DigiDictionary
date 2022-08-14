@@ -30,20 +30,16 @@ private typealias ItemContentInflaterHashMap = HashMap<
 
 class SettingsInflater(private val context: Context) {
     @Suppress("UNCHECKED_CAST")
-    fun inflate(
-        descriptor: SettingsDescriptor,
-        onValueChanged: (AppPreferences.Entry<Any>, Any) -> Unit,
-        actionArgs: SettingsDescriptor.ActionArgs,
-        container: LinearLayout,
-    ) {
+    fun inflate(descriptor: SettingsDescriptor, container: LinearLayout): SettingsController {
+        val controller = SettingsController()
+
         val titleViewInfo = createTitleViewInfo()
         val itemContainerViewInfo = createItemContainerViewInfo()
         val actionViewInfo = createActionViewInfo()
 
         val actionOnClickListener = View.OnClickListener {
-            val perform = it.tag as ((SettingsDescriptor.ActionArgs) -> Unit)
-
-            perform(actionArgs)
+            val actionId = it.tag as Int
+            controller.performAction(actionId)
         }
 
         descriptor.groups.forEachWithNoIterator { group ->
@@ -56,7 +52,7 @@ class SettingsInflater(private val context: Context) {
             when (group) {
                 is SettingsDescriptor.ItemGroup -> {
                     group.items.forEachWithNoIterator { item ->
-                        createItemContainer(item, onValueChanged, itemContainerViewInfo).also {
+                        createItemContainer(controller, item, itemContainerViewInfo).also {
                             container.addView(it)
                         }
                     }
@@ -64,7 +60,7 @@ class SettingsInflater(private val context: Context) {
                 is SettingsDescriptor.ActionGroup -> {
                     group.actions.forEachWithNoIterator { action ->
                         createActionButton(action.nameRes, actionViewInfo).also {
-                            it.tag = action.perform
+                            it.tag = action.id
                             it.setOnClickListener(actionOnClickListener)
 
                             container.addView(it)
@@ -73,6 +69,8 @@ class SettingsInflater(private val context: Context) {
                 }
             }
         }
+
+        return controller
     }
 
     @ColorInt
@@ -127,8 +125,8 @@ class SettingsInflater(private val context: Context) {
     }
 
     private fun <T : Any> createItemContainer(
+        controller: SettingsController,
         item: SettingsDescriptor.Item<T>,
-        onValueChanged: (AppPreferences.Entry<T>, T) -> Unit,
         info: ItemContainerViewInfo
     ): ViewGroup {
         val content = item.content
@@ -179,9 +177,8 @@ class SettingsInflater(private val context: Context) {
                 setText(item.nameRes)
             })
 
-
             val contentView = inflater.createView(context, content, onValueChanged = { value ->
-                onValueChanged(item.preferenceEntry, value)
+                controller.onValueChanged(item.preferenceEntry, value)
             })
 
             addView(contentView.also {
@@ -350,8 +347,8 @@ class SettingsInflater(private val context: Context) {
             put(RangeSpinnerInflater)
         }
 
-        private inline fun <TValue : Any, reified TContent : SettingsDescriptor.ItemContent<TValue>> ItemContentInflaterHashMap.put(
-            value: ItemContentInflater<TValue, TContent>
+        private inline fun <reified TContent : SettingsDescriptor.ItemContent<*>> ItemContentInflaterHashMap.put(
+            value: ItemContentInflater<*, TContent>
         ) {
             put(TContent::class.java, value as ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>>)
         }

@@ -45,13 +45,9 @@ class SettingsDescriptor(val groups: List<Group>) {
         val content: ItemContent<T>
     )
 
-    interface ActionArgs {
-        fun <T> get(valueClass: Class<T>): T
-    }
-
     class Action(
-        @StringRes val nameRes: Int,
-        val perform: (args: ActionArgs) -> Unit
+        val id: Int,
+        @StringRes val nameRes: Int
     )
 
     sealed interface Group {
@@ -94,11 +90,8 @@ class SettingsDescriptor(val groups: List<Group>) {
         class Builder(@StringRes private val titleRes: Int) {
             private val actions = ArrayList<Action>(4)
 
-            fun action(
-                @StringRes nameRes: Int,
-                perform: (args: ActionArgs) -> Unit
-            ) {
-                actions.add(Action(nameRes, perform))
+            fun action(id: Int, @StringRes nameRes: Int) {
+                actions.add(Action(id, nameRes))
             }
 
             fun build() = ActionGroup(titleRes, actions)
@@ -126,28 +119,6 @@ class SettingsDescriptor(val groups: List<Group>) {
 
         fun build(): SettingsDescriptor {
             return SettingsDescriptor(groups)
-        }
-    }
-
-    companion object {
-        inline fun <reified T> ActionArgs.get(): T {
-            return get(T::class.java)
-        }
-
-        fun ActionArgs(vararg values: Any): ActionArgs {
-            return object : ActionArgs {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T> get(valueClass: Class<T>): T {
-                    for (value in values) {
-                        // isInstance is required here to allow subtypes of valueClass to be found.
-                        if (valueClass.isInstance(value)) {
-                            return value as T
-                        }
-                    }
-
-                    throw IllegalArgumentException("No value found with class $valueClass")
-                }
-            }
         }
     }
 }

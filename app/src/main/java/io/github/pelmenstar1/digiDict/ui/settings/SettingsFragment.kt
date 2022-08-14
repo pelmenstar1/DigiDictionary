@@ -15,7 +15,6 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.LoadingIndicatorDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.ui.settings.SettingsDescriptor.Companion.get
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.transform
@@ -44,12 +43,23 @@ class SettingsFragment : Fragment() {
 
         val contentContainer = binding.settingsContentContainer
 
-        SettingsInflater(context).inflate(
-            descriptor,
-            onValueChanged = viewModel::changePreferenceValue,
-            actionArgs = SettingsDescriptor.ActionArgs(this),
-            container = contentContainer
-        )
+        SettingsInflater(context).inflate(descriptor, container = contentContainer).also {
+            it.onValueChangedHandler = viewModel::changePreferenceValue
+
+            it.bindActionHandler(ACTION_IMPORT) {
+                vm.importData(context)
+                showLoadingProgressDialog()
+            }
+
+            it.bindActionHandler(ACTION_EXPORT) {
+                vm.exportData(context)
+                showLoadingProgressDialog()
+            }
+
+            it.bindActionHandler(ACTION_DELETE_ALL_RECORDS) {
+                requestDeleteAllRecords()
+            }
+        }
 
         vm.onOperationError.handler = {
             hideLoadingProgressDialog()
@@ -82,7 +92,7 @@ class SettingsFragment : Fragment() {
         return binding.root
     }
 
-    fun requestDeleteAllRecords() {
+    private fun requestDeleteAllRecords() {
         MaterialAlertDialogBuilder(requireContext())
             .setMessage(R.string.settings_deleteAllRecordsDialogMessage)
             .setPositiveButton(android.R.string.ok) { _, _ ->
@@ -93,7 +103,7 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
-    fun showLoadingProgressDialog() {
+    private fun showLoadingProgressDialog() {
         var dialog: LoadingIndicatorDialog? = null
 
         lifecycleScope.launchFlowCollector(viewModel.operationProgressFlow) { progress ->
@@ -154,6 +164,10 @@ class SettingsFragment : Fragment() {
             "io.github.pelmenstar1.digiDict.ui.settings.SettingsFragment.isLoadingProgressDialogShown"
 
         private const val LOADING_PROGRESS_DIALOG_TAG = "LoadingIndicatorDialog"
+
+        private const val ACTION_IMPORT = 0
+        private const val ACTION_EXPORT = 1
+        private const val ACTION_DELETE_ALL_RECORDS = 2
 
         private val descriptor = settingsDescriptor {
             itemGroup(R.string.quiz) {
@@ -221,22 +235,9 @@ class SettingsFragment : Fragment() {
             }
 
             actionGroup(R.string.settings_backupTitle) {
-                action(R.string.settings_export) { args ->
-                    val fragment = args.get<SettingsFragment>()
-                    fragment.viewModel.exportData(fragment.requireContext())
-                    fragment.showLoadingProgressDialog()
-                }
-
-                action(R.string.settings_import) { args ->
-                    val fragment = args.get<SettingsFragment>()
-                    fragment.viewModel.importData(fragment.requireContext())
-                    fragment.showLoadingProgressDialog()
-                }
-                action(R.string.settings_deleteAllRecords) { args ->
-                    val fragment = args.get<SettingsFragment>()
-
-                    fragment.requestDeleteAllRecords()
-                }
+                action(ACTION_EXPORT, R.string.settings_export)
+                action(ACTION_IMPORT, R.string.settings_import)
+                action(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
             }
         }
     }
