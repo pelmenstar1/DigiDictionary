@@ -85,6 +85,21 @@
             app:layout_constraintTop_toBottomOf="@id/viewRecord_score"
             tools:text="Date" />
 
+        <HorizontalScrollView
+            android:id="@+id/viewRecord_badgeScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTimeView">
+
+            <LinearLayout
+                android:id="@+id/viewRecord_badgeContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
         <Button
             android:id="@+id/viewRecord_edit"
             android:layout_width="wrap_content"
@@ -92,7 +107,7 @@
             android:layout_marginTop="16dp"
             android:text="@string/edit"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/viewRecord_dateTimeView" />
+            app:layout_constraintTop_toBottomOf="@id/viewRecord_badgeScrollView" />
 
         <Button
             android:id="@+id/viewRecord_delete"

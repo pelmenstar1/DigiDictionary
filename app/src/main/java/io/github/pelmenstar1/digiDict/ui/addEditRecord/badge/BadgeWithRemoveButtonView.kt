@@ -13,7 +13,7 @@ import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 
 // Instantiated only from the code.
-class BadgeView(context: Context) : LinearLayout(context) {
+class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
     private val textView: TextView
     private val removeButton: Button
 

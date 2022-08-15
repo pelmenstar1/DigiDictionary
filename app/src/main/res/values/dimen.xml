@@ -22,14 +22,14 @@
     <dimen name="itemRemoteDictProvider_schemaTopMargin">8dp</dimen>
     <dimen name="itemRemoteDictProvider_padding">8dp</dimen>
 
-    <dimen name="badge_paddingHorizontal">10dp</dimen>
+    <dimen name="badge_paddingHorizontal">12dp</dimen>
     <dimen name="badge_paddingVertical">8dp</dimen>
     <dimen name="badge_removeButton_size">24dp</dimen>
     <dimen name="badge_removeButton_startMargin">10dp</dimen>
+    <dimen name="badge_startMargin">8dp</dimen>
 
     <dimen name="badgeInteraction_addButton_size">40dp</dimen>
     <dimen name="badgeInteraction_addButton_startMargin">8dp</dimen>
-    <dimen name="badgeInteraction_badge_startMargin">8dp</dimen>
 
     <dimen name="badgeSelectorDialog_listHeight">300dp</dimen>
     <dimen name="badgeSelectorDialog_listElementPadding">8dp</dimen>

@@ -1,9 +1,12 @@
 package io.github.pelmenstar1.digiDict.ui.viewRecord
 
+import android.content.Context
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -16,7 +19,9 @@ import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.data.RecordBadgeUtil
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
+import io.github.pelmenstar1.digiDict.ui.BadgeView
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 
 @AndroidEntryPoint
@@ -66,8 +71,15 @@ class ViewRecordFragment : Fragment() {
 
                     viewRecordAdditionalNotesView.setValue(record.additionalNotes)
                     viewRecordScore.setValue(record.score)
-
                     viewRecordDateTimeView.text = dateTimeFormatter.format(record.epochSeconds)
+
+                    viewRecordBadgeContainer.also {
+                        it.removeAllViews()
+
+                        RecordBadgeUtil.decodeArray(record.rawBadges).forEachIndexed { index, name ->
+                            it.addView(createBadgeView(context, index, name))
+                        }
+                    }
                 }
             }
         }
@@ -78,6 +90,25 @@ class ViewRecordFragment : Fragment() {
         vm.onDeleteError.handler = showSnackbarEventHandler(container, R.string.dbError)
 
         return binding.root
+    }
+
+    private fun createBadgeView(context: Context, index: Int, name: String): BadgeView {
+        val res = resources
+
+        return BadgeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER_VERTICAL
+
+                if (index > 0) {
+                    marginStart = res.getDimensionPixelOffset(R.dimen.badge_startMargin)
+                }
+            }
+
+            text = name
+        }
     }
 
     companion object {

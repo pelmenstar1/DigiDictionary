@@ -9,8 +9,8 @@ import android.view.Gravity
 import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import androidx.annotation.AttrRes
 import androidx.core.view.setPadding
 import androidx.fragment.app.FragmentManager
@@ -18,7 +18,7 @@ import com.google.android.material.button.MaterialButton
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.EmptyArray
 
-class BadgeListInteractionView : ScrollView {
+class BadgeListInteractionView : HorizontalScrollView {
     private class SavedState : AbsSavedState {
         var badges: Array<String> = EmptyArray.STRING
 
@@ -60,7 +60,7 @@ class BadgeListInteractionView : ScrollView {
     private lateinit var addButton: Button
 
     private val badgeRemoveListener = OnClickListener {
-        val name = (it.parent as BadgeView).text
+        val name = (it.parent as BadgeWithRemoveButtonView).text
 
         removeBadgeByName(name)
     }
@@ -134,16 +134,16 @@ class BadgeListInteractionView : ScrollView {
         }
     }
 
-    private fun createBadgeView(): BadgeView {
+    private fun createBadgeView(): BadgeWithRemoveButtonView {
         val res = resources
 
-        return BadgeView(context).apply {
+        return BadgeWithRemoveButtonView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.CENTER_VERTICAL
-                marginStart = res.getDimensionPixelOffset(R.dimen.badgeInteraction_badge_startMargin)
+                marginStart = res.getDimensionPixelOffset(R.dimen.badge_startMargin)
             }
 
             setOnRemoveListener(badgeRemoveListener)
@@ -216,7 +216,7 @@ class BadgeListInteractionView : ScrollView {
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun LinearLayout.getBadgeViewAt(index: Int) = getChildAt(index) as BadgeView
+    private inline fun LinearLayout.getBadgeViewAt(index: Int) = getChildAt(index) as BadgeWithRemoveButtonView
 
     private fun getFragmentManager() =
         onGetFragmentManager?.invoke() ?: throw IllegalStateException("onGetFragmentManager == null")
