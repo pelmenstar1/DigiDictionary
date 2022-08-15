@@ -76,6 +76,12 @@
     <string name="addEditRecord_exprNoLetterOrDigit">Expression should contain at least one letter or digit</string>
     <string name="addEditRecord_meaningNoLetterOrDigit">Meaning should contain at least one letter or digit</string>
 
+    <string name="badgeInteraction_badge">Badge</string>
+
+    <!-- Badge selector dialog -->
+    <string name="badgeSelector_badgeExistsError">Badge with such name is already added</string>
+    <string name="badgeSelector_name">Name</string>
+
     <!-- View record fragment -->
     <string name="viewRecord_label">View</string>
     <string name="viewRecord_deleteMessage">Do you really want to delete this record?</string>

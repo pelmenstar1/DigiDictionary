@@ -27,19 +27,21 @@ abstract class RecordDao {
 
     @Query(
         """UPDATE records 
-        SET expression=:newExpression, 
-            meaning=:newMeaning,
-            additionalNotes=:newAdditionalNotes,
-            dateTime=:newDateTimeEpochSeconds
+        SET expression=:expr, 
+            meaning=:meaning,
+            additionalNotes=:additionalNotes,
+            dateTime=:epochSeconds,
+            badges=:badges
         WHERE id=:id
         """
     )
     abstract suspend fun update(
         id: Int,
-        newExpression: String,
-        newMeaning: String,
-        newAdditionalNotes: String,
-        newDateTimeEpochSeconds: Long
+        expr: String,
+        meaning: String,
+        additionalNotes: String,
+        epochSeconds: Long,
+        badges: String
     )
 
     @Query("UPDATE records SET score=:newScore WHERE id=:id")

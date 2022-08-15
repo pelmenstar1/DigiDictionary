@@ -1,0 +1,227 @@
+package io.github.pelmenstar1.digiDict.ui.addEditRecord.badge
+
+import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
+import android.util.AttributeSet
+import android.view.AbsSavedState
+import android.view.Gravity
+import android.view.View.OnClickListener
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import androidx.annotation.AttrRes
+import androidx.core.view.setPadding
+import androidx.fragment.app.FragmentManager
+import com.google.android.material.button.MaterialButton
+import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.EmptyArray
+
+class BadgeListInteractionView : ScrollView {
+    private class SavedState : AbsSavedState {
+        var badges: Array<String> = EmptyArray.STRING
+
+        constructor(superState: Parcelable?) : super(superState)
+
+        constructor(parcel: Parcel) : super(parcel) {
+            badges = parcel.createStringArray() ?: EmptyArray.STRING
+        }
+
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(source: Parcel) = SavedState(source)
+            override fun newArray(size: Int) = arrayOfNulls<SavedState>(size)
+        }
+    }
+
+    var badges: Array<String>
+        get() {
+            val c = container
+            val badgeCount = c.childCount - 1
+
+            return if (badgeCount == 0) {
+                EmptyArray.STRING
+            } else {
+                Array(badgeCount) { i -> c.getBadgeViewAt(i).text }
+            }
+        }
+        set(value) {
+            adjustInputCount(value.size)
+
+            val c = container
+            for (i in 0 until (c.childCount - 1)) {
+                c.getBadgeViewAt(i).text = value[i]
+            }
+        }
+
+    var onGetFragmentManager: (() -> FragmentManager)? = null
+
+    private lateinit var container: LinearLayout
+    private lateinit var addButton: Button
+
+    private val badgeRemoveListener = OnClickListener {
+        val name = (it.parent as BadgeView).text
+
+        removeBadgeByName(name)
+    }
+
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+    constructor(
+        context: Context,
+        attrs: AttributeSet?,
+        @AttrRes defStyleAttr: Int
+    ) : super(context, attrs, defStyleAttr)
+
+    init {
+        init()
+    }
+
+    private fun init() {
+        addView(createContainer().also { container = it })
+    }
+
+    private fun adjustInputCount(newCount: Int) {
+        val c = container
+        val currentCount = c.childCount - 1
+
+        when {
+            currentCount > newCount -> {
+                c.removeViews(currentCount, newCount - currentCount)
+            }
+            currentCount < newCount -> {
+                repeat(newCount - currentCount) {
+                    c.addView(createBadgeView(), 0)
+                }
+            }
+        }
+    }
+
+    private fun createContainer(): LinearLayout {
+        return LinearLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+
+            orientation = LinearLayout.HORIZONTAL
+
+            addView(createAddButton().also { addButton = it })
+        }
+    }
+
+    private fun createAddButton(): Button {
+        val res = resources
+
+        return MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER_VERTICAL
+
+                marginStart = res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_startMargin)
+            }
+
+            setPadding(0)
+
+            iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+            setIconResource(R.drawable.ic_add)
+            setText(R.string.badgeInteraction_badge)
+
+            setOnClickListener { showBadgeSelectorDialog() }
+        }
+    }
+
+    private fun createBadgeView(): BadgeView {
+        val res = resources
+
+        return BadgeView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                marginStart = res.getDimensionPixelOffset(R.dimen.badgeInteraction_badge_startMargin)
+            }
+
+            setOnRemoveListener(badgeRemoveListener)
+        }
+    }
+
+    private fun addBadge(name: String) {
+        val c = container
+        val index = c.childCount - 1
+
+        c.addView(createBadgeView().apply {
+            text = name
+        }, index)
+    }
+
+    private fun removeBadgeByName(name: String) {
+        val c = container
+
+        for (i in 0 until (c.childCount - 1)) {
+            val view = c.getBadgeViewAt(i)
+
+            if (view.text == name) {
+                c.removeViewAt(i)
+                break
+            }
+        }
+    }
+
+    private fun showBadgeSelectorDialog() {
+        val fm = getFragmentManager()
+        val dialog = BadgeSelectorDialog().also {
+            it.arguments = BadgeSelectorDialog.args(badges)
+        }
+
+        initBadgeSelectorDialog(dialog)
+
+        dialog.show(fm, SELECTOR_DIALOG_TAG)
+    }
+
+    private fun initBadgeSelectorDialog(dialog: BadgeSelectorDialog) {
+        dialog.onSelected = { name ->
+            addBadge(name)
+        }
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+
+        addButton.isEnabled = enabled
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        return SavedState(super.onSaveInstanceState()).also {
+            it.badges = badges
+        }
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state is SavedState) {
+            badges = state.badges
+
+            super.onRestoreInstanceState(state.superState)
+        }
+
+        getFragmentManager().also { fm ->
+            fm.findFragmentByTag(SELECTOR_DIALOG_TAG)?.also { dialog ->
+                initBadgeSelectorDialog(dialog as BadgeSelectorDialog)
+            }
+        }
+    }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun LinearLayout.getBadgeViewAt(index: Int) = getChildAt(index) as BadgeView
+
+    private fun getFragmentManager() =
+        onGetFragmentManager?.invoke() ?: throw IllegalStateException("onGetFragmentManager == null")
+
+    companion object {
+        private const val SELECTOR_DIALOG_TAG = "BadgeSelectorDialog"
+    }
+}

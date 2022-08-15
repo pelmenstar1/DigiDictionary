@@ -42,10 +42,11 @@ open class RecordDaoStub : RecordDao() {
 
     override suspend fun update(
         id: Int,
-        newExpression: String,
-        newMeaning: String,
-        newAdditionalNotes: String,
-        newDateTimeEpochSeconds: Long
+        expr: String,
+        meaning: String,
+        additionalNotes: String,
+        epochSeconds: Long,
+        badges: String
     ) {
     }
 

@@ -172,7 +172,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         com.google.android.material.R.attr.materialButtonOutlinedStyle
     ).apply {
         val res = resources
-        val size = res.getDimensionPixelSize(R.dimen.addExpression_meaningAddButtonSize)
+        val size = res.getDimensionPixelSize(R.dimen.addRecord_meaningAddButtonSize)
 
         layoutParams = LayoutParams(size, size).apply {
             gravity = Gravity.CENTER_HORIZONTAL
@@ -424,9 +424,9 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
             refreshHintsAndEndButtons()
             refreshErrorState()
-        }
 
-        super.onRestoreInstanceState(state)
+            super.onRestoreInstanceState(state.superState)
+        }
     }
 
     override fun onSaveInstanceState(): Parcelable {

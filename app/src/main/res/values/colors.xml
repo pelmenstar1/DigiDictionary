@@ -18,4 +18,6 @@
 
     <color name="record_quiz_item_correct_answer">@color/green_700</color>
     <color name="record_quiz_item_wrong_answer">@color/red_700</color>
+
+    <color name="badge_icon_tint">#ffffff</color>
 </resources>

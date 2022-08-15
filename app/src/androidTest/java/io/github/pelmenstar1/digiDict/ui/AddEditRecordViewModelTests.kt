@@ -37,13 +37,17 @@ class AddEditRecordViewModelTests {
     private fun createViewModel(
         recordDao: RecordDao = db.recordDao(),
         preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
+        recordBadgeDao: RecordBadgeDao = db.recordBadgeDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(Locale.ROOT)
+        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(
+            Locale.ROOT
+        )
     ): AddEditRecordViewModel {
         return AddEditRecordViewModel(
             recordDao,
             preparedRecordDao,
+            recordBadgeDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
             localeProvider
@@ -53,14 +57,18 @@ class AddEditRecordViewModelTests {
     private inline fun useViewModel(
         recordDao: RecordDao = db.recordDao(),
         preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
+        recordBadgeDao: RecordBadgeDao = db.recordBadgeDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(Locale.ROOT),
+        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(
+            Locale.ROOT
+        ),
         block: (AddEditRecordViewModel) -> Unit
     ) {
         createViewModel(
             recordDao,
             preparedRecordDao,
+            recordBadgeDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
             localeProvider

@@ -22,7 +22,7 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
+                android:layout_marginTop="5dp"
                 android:hint="@string/addRemoteDictProvider_name"
                 app:errorEnabled="true">
 
@@ -39,7 +39,7 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
+                android:layout_marginTop="5dp"
                 android:hint="@string/addRemoteDictProvider_schema"
                 app:errorEnabled="true">
 

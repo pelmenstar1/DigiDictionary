@@ -21,6 +21,7 @@ import javax.inject.Inject
 class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val searchPreparedRecordDao: SearchPreparedRecordDao,
+    private val recordBadgeDao: RecordBadgeDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
     private val localeProvider: LocaleProvider
@@ -77,6 +78,7 @@ class AddEditRecordViewModel @Inject constructor(
         }
 
     var getMeaning: (() -> ComplexMeaning)? = null
+    var getBadges: (() -> Array<String>)? = null
 
     var additionalNotes: CharSequence = ""
 
@@ -166,26 +168,29 @@ class AddEditRecordViewModel @Inject constructor(
             //
             // Also, make sure additionalNotes is formatted properly.
             // (If a string does not have any trailing or leading whitespaces, then trimToString won't allocate at all)
-            val expr = _expression
+            val expr = _expression.trimToString()
             val additionalNotes = additionalNotes.trimToString()
-            val rawMeaning = requireNotNull(getMeaning).invoke().rawText
+            val rawMeaning = getMeaning.invokeNullable().rawText
+            val badges = getBadges.invokeNullable()
 
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
+                    val rawBadges = RecordBadgeUtil.encodeArray(badges)
 
-                    currentRecordId.let { id ->
+                    currentRecordId.let { currentId ->
                         val locale = localeProvider.get()
 
-                        if (id >= 0) {
+                        if (currentId >= 0) {
                             recordDao.update(
-                                currentRecordId,
+                                currentId,
                                 expr, rawMeaning, additionalNotes,
-                                epochSeconds
+                                epochSeconds,
+                                rawBadges
                             )
 
                             searchPreparedRecordDao.update(
-                                SearchPreparedRecord.prepare(id, expr, rawMeaning, locale)
+                                SearchPreparedRecord.prepare(currentId, expr, rawMeaning, locale)
                             )
                         } else {
                             recordDao.insert(
@@ -193,8 +198,8 @@ class AddEditRecordViewModel @Inject constructor(
                                     id = 0,
                                     expr, rawMeaning, additionalNotes,
                                     score = 0,
-                                    epochSeconds = epochSeconds,
-                                    rawBadges = ""
+                                    epochSeconds,
+                                    rawBadges
                                 )
                             )
 
@@ -204,6 +209,8 @@ class AddEditRecordViewModel @Inject constructor(
                                 )
                             }
                         }
+
+                        recordBadgeDao.insertAll(badges.mapToArray { RecordBadgeInfo(it) })
                     }
 
                     listAppWidgetUpdater.updateAllWidgets()
@@ -229,5 +236,9 @@ class AddEditRecordViewModel @Inject constructor(
         const val MEANING_VALIDITY_BIT = 1 shl 1
 
         const val ALL_VALID_MASK = EXPRESSION_VALIDITY_BIT or MEANING_VALIDITY_BIT
+
+        internal fun <T> (() -> T)?.invokeNullable(): T {
+            return requireNotNull(this).invoke()
+        }
     }
 }

@@ -94,7 +94,11 @@ fun CharSequence.subSequenceToString(start: Int, end: Int): String {
 /**
  * Trims receiver [CharSequence] from both start and end, returns result as a [String] instance.
  */
-fun CharSequence.trimToString(): String {
+fun CharSequence?.trimToString(): String {
+    if (this == null) {
+        return ""
+    }
+
     val length = length
     if (length == 0) {
         return ""
