@@ -19,7 +19,7 @@ import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
-import io.github.pelmenstar1.digiDict.data.RecordBadgeUtil
+import io.github.pelmenstar1.digiDict.data.RecordBadgeNameUtil
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.BadgeView
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
@@ -76,7 +76,7 @@ class ViewRecordFragment : Fragment() {
                     viewRecordBadgeContainer.also {
                         it.removeAllViews()
 
-                        RecordBadgeUtil.decodeArray(record.rawBadges).forEachIndexed { index, name ->
+                        RecordBadgeNameUtil.decodeArray(record.rawBadges).forEachIndexed { index, name ->
                             it.addView(createBadgeView(context, index, name))
                         }
                     }

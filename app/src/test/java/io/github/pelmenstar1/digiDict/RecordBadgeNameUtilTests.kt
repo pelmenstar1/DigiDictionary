@@ -1,23 +1,23 @@
 package io.github.pelmenstar1.digiDict
 
-import io.github.pelmenstar1.digiDict.data.RecordBadgeUtil
+import io.github.pelmenstar1.digiDict.data.RecordBadgeNameUtil
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class RecordBadgeUtilTests {
+class RecordBadgeNameUtilTests {
     @Test
     fun encodeThrowsWhenTextIsEmpty() {
         assertFailsWith(IllegalStateException::class) {
-            RecordBadgeUtil.encode("")
+            RecordBadgeNameUtil.encode("")
         }
     }
 
     @Test
     fun encodeTest() {
         fun testCase(input: String, expected: String) {
-            val actual = RecordBadgeUtil.encode(input)
+            val actual = RecordBadgeNameUtil.encode(input)
 
             assertEquals(expected, actual)
         }
@@ -36,7 +36,7 @@ class RecordBadgeUtilTests {
     @Test
     fun encodeArrayTest() {
         fun testCase(input: Array<out String>, expected: String) {
-            val actual = RecordBadgeUtil.encodeArray(input)
+            val actual = RecordBadgeNameUtil.encodeArray(input)
 
             assertEquals(expected, actual)
         }
@@ -52,25 +52,25 @@ class RecordBadgeUtilTests {
     @Test
     fun decodeThrowsWhenTextIsEmpty() {
         assertFailsWith(IllegalStateException::class) {
-            RecordBadgeUtil.decode("")
+            RecordBadgeNameUtil.decode("")
         }
     }
 
     @Test
     fun decodeThrowsWhenCommaIsUnescaped() {
         assertFailsWith(IllegalStateException::class) {
-            RecordBadgeUtil.decode(",")
+            RecordBadgeNameUtil.decode(",")
         }
 
         assertFailsWith(IllegalStateException::class) {
-            RecordBadgeUtil.decode("11,")
+            RecordBadgeNameUtil.decode("11,")
         }
     }
 
     @Test
     fun decodeTest() {
         fun testCase(input: String, expected: String) {
-            val actual = RecordBadgeUtil.decode(input)
+            val actual = RecordBadgeNameUtil.decode(input)
 
             assertEquals(expected, actual)
         }
@@ -89,7 +89,7 @@ class RecordBadgeUtilTests {
     @Test
     fun decodeArrayTest() {
         fun testCase(input: String, expected: Array<String>) {
-            val actual = RecordBadgeUtil.decodeArray(input)
+            val actual = RecordBadgeNameUtil.decodeArray(input)
 
             assertContentEquals(expected, actual)
         }
@@ -109,7 +109,7 @@ class RecordBadgeUtilTests {
     fun decodeArrayThrowsWhenNameIsEmpty() {
         fun testCase(input: String) {
             assertFailsWith(IllegalStateException::class) {
-                RecordBadgeUtil.decodeArray(input)
+                RecordBadgeNameUtil.decodeArray(input)
             }
         }
 
@@ -122,7 +122,7 @@ class RecordBadgeUtilTests {
     fun decodeArrayThrowsWhenDuplicate() {
         fun testCase(input: String) {
             assertFailsWith(IllegalStateException::class) {
-                RecordBadgeUtil.decodeArray(input)
+                RecordBadgeNameUtil.decodeArray(input)
             }
         }
 

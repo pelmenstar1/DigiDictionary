@@ -17,8 +17,8 @@ import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
-import io.github.pelmenstar1.digiDict.ui.addEditRecord.badge.BadgeSelectorInputMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
+import io.github.pelmenstar1.digiDict.ui.manageRecordBadges.AddBadgeInputMessage
 import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessage
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
@@ -105,7 +105,7 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideBadgeSelectorInputMessageMapper(@ApplicationContext context: Context): MessageMapper<BadgeSelectorInputMessage> {
-        return BadgeSelectorInputMessage.defaultMapper(context)
+    fun provideBadgeSelectorInputMessageMapper(@ApplicationContext context: Context): MessageMapper<AddBadgeInputMessage> {
+        return AddBadgeInputMessage.defaultMapper(context)
     }
 }

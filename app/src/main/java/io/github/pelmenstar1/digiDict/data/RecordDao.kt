@@ -47,6 +47,9 @@ abstract class RecordDao {
     @Query("UPDATE records SET score=:newScore WHERE id=:id")
     abstract suspend fun updateScore(id: Int, newScore: Int)
 
+    @Query("UPDATE records SET badges=:encodedBadges WHERE id=:id")
+    abstract suspend fun updateBadges(id: Int, encodedBadges: String)
+
     @Transaction
     open suspend fun updateScores(records: Array<Record>, newScores: IntArray) {
         for (i in records.indices) {
@@ -68,6 +71,9 @@ abstract class RecordDao {
 
     @Query("SELECT * FROM records WHERE id IN (:ids)")
     abstract suspend fun getRecordsByIds(ids: IntArray): Array<Record>
+
+    @Query("SELECT * FROM records WHERE INSTR(badges, :encodedName) > 0")
+    abstract suspend fun getRecordsByBadgeName(encodedName: String): Array<Record>
 
     @Query("SELECT expression, meaning, additionalNotes, dateTime, score,badges FROM records")
     abstract fun getAllRecordsNoIdRaw(): Cursor

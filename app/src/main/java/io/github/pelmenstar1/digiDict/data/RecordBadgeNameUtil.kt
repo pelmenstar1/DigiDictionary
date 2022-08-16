@@ -9,7 +9,7 @@ import io.github.pelmenstar1.digiDict.common.indexOf
  * An array of the names is encoded simply by joining using comma. If comma appears in the name, it should be preceded by backslash.
  * Then if comma isn't preceded by backslash, it's comma which splits elements of the array.
  */
-object RecordBadgeUtil {
+object RecordBadgeNameUtil {
     /**
      * Encodes text to format acceptable to be record badge name. The only special character is comma, which replaced
      * to sequence `\,`

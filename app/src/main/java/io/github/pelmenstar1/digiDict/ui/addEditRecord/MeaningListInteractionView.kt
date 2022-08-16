@@ -23,6 +23,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.theme.overlay.MaterialThemeOverlay
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import java.util.*
@@ -194,17 +195,8 @@ class MeaningListInteractionView @JvmOverloads constructor(
     }
 
     private fun adjustInputCount(newCount: Int) {
-        val currentCount = childCount - 1
-
-        when {
-            currentCount > newCount -> {
-                removeViews(currentCount, newCount - currentCount)
-            }
-            currentCount < newCount -> {
-                repeat(newCount - currentCount) {
-                    addNewItem(isUserInteraction = false)
-                }
-            }
+        adjustViewCount(newCount, lastViewsCount = 1) {
+            addNewItem(isUserInteraction = false)
         }
     }
 

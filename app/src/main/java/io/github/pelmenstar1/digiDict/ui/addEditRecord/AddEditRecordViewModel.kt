@@ -21,7 +21,6 @@ import javax.inject.Inject
 class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val searchPreparedRecordDao: SearchPreparedRecordDao,
-    private val recordBadgeDao: RecordBadgeDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
     private val localeProvider: LocaleProvider
@@ -176,7 +175,7 @@ class AddEditRecordViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
-                    val rawBadges = RecordBadgeUtil.encodeArray(badges)
+                    val rawBadges = RecordBadgeNameUtil.encodeArray(badges)
 
                     currentRecordId.let { currentId ->
                         val locale = localeProvider.get()
@@ -209,8 +208,6 @@ class AddEditRecordViewModel @Inject constructor(
                                 )
                             }
                         }
-
-                        recordBadgeDao.insertAll(badges.mapToArray { RecordBadgeInfo(it) })
                     }
 
                     listAppWidgetUpdater.updateAllWidgets()

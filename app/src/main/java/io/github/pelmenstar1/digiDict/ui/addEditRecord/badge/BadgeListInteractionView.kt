@@ -17,6 +17,7 @@ import androidx.fragment.app.FragmentManager
 import com.google.android.material.button.MaterialButton
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.EmptyArray
+import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
 
 class BadgeListInteractionView : HorizontalScrollView {
     private class SavedState : AbsSavedState {
@@ -26,6 +27,12 @@ class BadgeListInteractionView : HorizontalScrollView {
 
         constructor(parcel: Parcel) : super(parcel) {
             badges = parcel.createStringArray() ?: EmptyArray.STRING
+        }
+
+        override fun writeToParcel(dest: Parcel, flags: Int) {
+            super.writeToParcel(dest, flags)
+
+            dest.writeStringArray(badges)
         }
 
         companion object CREATOR : Parcelable.Creator<SavedState> {
@@ -84,17 +91,8 @@ class BadgeListInteractionView : HorizontalScrollView {
 
     private fun adjustInputCount(newCount: Int) {
         val c = container
-        val currentCount = c.childCount - 1
-
-        when {
-            currentCount > newCount -> {
-                c.removeViews(currentCount, newCount - currentCount)
-            }
-            currentCount < newCount -> {
-                repeat(newCount - currentCount) {
-                    c.addView(createBadgeView(), 0)
-                }
-            }
+        c.adjustViewCount(newCount, lastViewsCount = 1) {
+            c.addView(createBadgeView(), 0)
         }
     }
 

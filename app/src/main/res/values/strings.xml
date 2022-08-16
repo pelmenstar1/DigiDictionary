@@ -77,10 +77,18 @@
     <string name="addEditRecord_meaningNoLetterOrDigit">Meaning should contain at least one letter or digit</string>
 
     <string name="badgeInteraction_badge">Badge</string>
+    <string name="badgeSelector_manage">Manage</string>
 
-    <!-- Badge selector dialog -->
-    <string name="badgeSelector_badgeExistsError">Badge with such name is already added</string>
-    <string name="badgeSelector_name">Name</string>
+    <!-- Manage record badges -->
+    <string name="manageRecordBadges_title">Record badges</string>
+    <string name="manageRecordBadges_addContentDescription">Add a new record badge</string>
+    <string name="manageRecordBadges_removeWarning">Do you really want to remove the badge? This will remove the badge from all the records.</string>
+    <string name="manageRecordBadges_removeError">Failed to remove the badge</string>
+    <string name="manageRecordBadges_addError">Failed to add the badge</string>
+
+    <!-- Add badge dialog -->
+    <string name="addBadge_badgeExistsError">Badge with such name is already added</string>
+    <string name="addBadge_name">Name</string>
 
     <!-- View record fragment -->
     <string name="viewRecord_label">View</string>

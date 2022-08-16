@@ -1,20 +1,20 @@
-package io.github.pelmenstar1.digiDict.ui.addEditRecord.badge
+package io.github.pelmenstar1.digiDict.ui.manageRecordBadges
 
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.setPadding
-import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.EmptyArray
+import io.github.pelmenstar1.digiDict.common.getLazyValue
 
-class BadgeSelectorDialogAdapter(
-    private val onItemClickListener: (String) -> Unit
-) : RecyclerView.Adapter<BadgeSelectorDialogAdapter.ViewHolder>() {
+class ManageRecordBadgesAdapter(
+    private val onRemove: (String) -> Unit
+) : RecyclerView.Adapter<ManageRecordBadgesAdapter.ViewHolder>() {
     private class Callback(
         private val old: Array<out String>,
         private val new: Array<out String>
@@ -31,23 +31,29 @@ class BadgeSelectorDialogAdapter(
         }
     }
 
-    inner class ViewHolder(private val textView: TextView) : RecyclerView.ViewHolder(textView) {
+    inner class ViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
+        private val nameView = container.findViewById<TextView>(R.id.itemManageRecordBadges_nameView)
+        private val removeButton = container.findViewById<Button>(R.id.itemManageRecordBadges_removeButton)
+
         init {
-            textView.setOnClickListener(containerOnItemClickListener)
+            removeButton.setOnClickListener(removeButtonOnClickListener)
         }
 
         fun bind(name: String) {
-            textView.text = name
+            container.tag = name
+            nameView.text = name
         }
     }
 
-    private val containerOnItemClickListener = View.OnClickListener {
-        val text = (it as TextView).text.toString()
+    private val removeButtonOnClickListener = View.OnClickListener {
+        val name = ((it.parent as ViewGroup).tag as String)
 
-        onItemClickListener(text)
+        onRemove(name)
     }
 
     private var elements: Array<out String> = EmptyArray.STRING
+
+    private var layoutInflaterHolder: LayoutInflater? = null
 
     fun submitData(elements: Array<out String>) {
         val result = DiffUtil.calculateDiff(Callback(this.elements, elements))
@@ -59,20 +65,15 @@ class BadgeSelectorDialogAdapter(
     override fun getItemCount() = elements.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val context = parent.context
+        val layoutInflater = getLazyValue(
+            layoutInflaterHolder,
+            { LayoutInflater.from(parent.context) }
+        ) { layoutInflaterHolder = it }
 
-        val padding = context.resources.getDimensionPixelOffset(R.dimen.badgeSelectorDialog_listElementPadding)
-        val textView = MaterialTextView(context).apply {
-            layoutParams = ITEM_LAYOUT_PARAMS
+        val container = layoutInflater.inflate(R.layout.item_manage_record_badges, parent, false)
+        container.layoutParams = ITEM_LAYOUT_PARAMS
 
-            setPadding(padding)
-            TextViewCompat.setTextAppearance(
-                this,
-                com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-            )
-        }
-
-        return ViewHolder(textView)
+        return ViewHolder(container as ViewGroup)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

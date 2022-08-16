@@ -44,6 +44,10 @@
         <action
             android:id="@+id/action_addEditRecord_to_chooseRemoteDictionaryProvider"
             app:destination="@id/chooseRemoteDictionaryProviderFragment" />
+
+        <action
+            android:id="@+id/action_addEditRecord_to_manageRecordBadges"
+            app:destination="@id/manageRecordBadgesFragment" />
     </fragment>
 
     <fragment
@@ -120,4 +124,9 @@
         android:id="@+id/remindRecordsFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.remindRecords.RemindRecordsFragment"
         android:label="@string/remindRecords_labelInFragment" />
+
+    <fragment
+        android:id="@+id/manageRecordBadgesFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.manageRecordBadges.ManageRecordBadgesFragment"
+        android:label="@string/manageRecordBadges_title" />
 </navigation>
