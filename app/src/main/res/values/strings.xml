@@ -85,6 +85,7 @@
     <string name="manageRecordBadges_removeWarning">Do you really want to remove the badge? This will remove the badge from all the records.</string>
     <string name="manageRecordBadges_removeError">Failed to remove the badge</string>
     <string name="manageRecordBadges_addError">Failed to add the badge</string>
+    <string name="manageRecordBadges_editError">Failed to edit the badge</string>
 
     <!-- Add badge dialog -->
     <string name="addBadge_badgeExistsError">Badge with such name is already added</string>

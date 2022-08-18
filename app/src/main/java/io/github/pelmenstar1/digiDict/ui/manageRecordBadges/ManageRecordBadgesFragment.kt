@@ -40,6 +40,7 @@ class ManageRecordBadgesFragment : Fragment() {
 
         vm.onRemoveError.handler = showSnackbarEventHandler(container, R.string.manageRecordBadges_removeError)
         vm.onAddError.handler = showSnackbarEventHandler(container, R.string.manageRecordBadges_addError)
+        vm.onEditError.handler = showSnackbarEventHandler(container, R.string.manageRecordBadges_editError)
 
         binding.manageRecordBadgesRecyclerView.also {
             it.adapter = adapter
