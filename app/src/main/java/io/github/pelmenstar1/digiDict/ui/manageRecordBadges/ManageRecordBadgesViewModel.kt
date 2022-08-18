@@ -6,10 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
-import io.github.pelmenstar1.digiDict.common.withRemovedElementAt
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
-import io.github.pelmenstar1.digiDict.data.RecordBadgeNameUtil
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,18 +31,7 @@ class ManageRecordBadgesViewModel @Inject constructor(
     fun edit(fromName: String, toName: String) {
         viewModelScope.launch {
             try {
-                val records = recordDao.getRecordsByBadgeName(RecordBadgeNameUtil.encode(fromName))
-                for (record in records) {
-                    val badges = RecordBadgeNameUtil.decodeArray(record.rawBadges)
-                    badges.indexOf(fromName).also {
-                        if (it >= 0) {
-                            badges[it] = toName
-                        }
-                    }
-
-                    recordDao.updateBadges(record.id, RecordBadgeNameUtil.encodeArray(badges))
-                }
-
+                recordDao.changeRecordBadgeName(fromName, toName)
                 badgeDao.updateName(fromName, toName)
             } catch (e: Exception) {
                 Log.e(TAG, "", e)
@@ -69,22 +56,7 @@ class ManageRecordBadgesViewModel @Inject constructor(
     fun remove(name: String) {
         viewModelScope.launch {
             try {
-                val encodedName = RecordBadgeNameUtil.encode(name)
-                val records = recordDao.getRecordsByBadgeName(encodedName)
-
-                for (record in records) {
-                    val oldBadges = RecordBadgeNameUtil.decodeArray(record.rawBadges)
-                    val badgeToDeleteIndex = oldBadges.indexOf(name)
-
-                    val newBadges = if (badgeToDeleteIndex >= 0) {
-                        oldBadges.withRemovedElementAt(badgeToDeleteIndex)
-                    } else {
-                        oldBadges
-                    }
-
-                    recordDao.updateBadges(record.id, RecordBadgeNameUtil.encodeArray(newBadges))
-                }
-
+                recordDao.deleteBadgeFromAllRecords(name)
                 badgeDao.delete(name)
             } catch (e: Exception) {
                 Log.e(TAG, "", e)

@@ -4,6 +4,7 @@ import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.common.generateUniqueRandomNumbers
 import io.github.pelmenstar1.digiDict.common.serialization.SerializableIterable
+import io.github.pelmenstar1.digiDict.common.withRemovedElementAt
 import kotlinx.coroutines.flow.Flow
 import kotlin.math.min
 import kotlin.random.Random
@@ -14,6 +15,11 @@ abstract class RecordDao {
         val id: Int,
         val expression: String,
         val meaning: String
+    )
+
+    class IdBadgesRecord(
+        val id: Int,
+        val badges: String
     )
 
     @Query("SELECT count(*) FROM records")
@@ -72,8 +78,41 @@ abstract class RecordDao {
     @Query("SELECT * FROM records WHERE id IN (:ids)")
     abstract suspend fun getRecordsByIds(ids: IntArray): Array<Record>
 
-    @Query("SELECT * FROM records WHERE INSTR(badges, :encodedName) > 0")
-    abstract suspend fun getRecordsByBadgeName(encodedName: String): Array<Record>
+    @Query("SELECT id, badges FROM records WHERE INSTR(badges, :encodedName) > 0")
+    abstract suspend fun getRecordsByBadgeName(encodedName: String): Array<IdBadgesRecord>
+
+    @Transaction
+    open suspend fun changeRecordBadgeName(fromName: String, toName: String) {
+        val records = getRecordsByBadgeName(RecordBadgeNameUtil.encode(fromName))
+        for (record in records) {
+            val badges = RecordBadgeNameUtil.decodeArray(record.badges)
+            badges.indexOf(fromName).also {
+                if (it >= 0) {
+                    badges[it] = toName
+                }
+            }
+
+            updateBadges(record.id, RecordBadgeNameUtil.encodeArray(badges))
+        }
+    }
+
+    @Transaction
+    open suspend fun deleteBadgeFromAllRecords(name: String) {
+        val records = getRecordsByBadgeName(RecordBadgeNameUtil.encode(name))
+
+        for (record in records) {
+            val oldBadges = RecordBadgeNameUtil.decodeArray(record.badges)
+            val badgeToDeleteIndex = oldBadges.indexOf(name)
+
+            val newBadges = if (badgeToDeleteIndex >= 0) {
+                oldBadges.withRemovedElementAt(badgeToDeleteIndex)
+            } else {
+                oldBadges
+            }
+
+            updateBadges(record.id, RecordBadgeNameUtil.encodeArray(newBadges))
+        }
+    }
 
     @Query("SELECT expression, meaning, additionalNotes, dateTime, score,badges FROM records")
     abstract fun getAllRecordsNoIdRaw(): Cursor
