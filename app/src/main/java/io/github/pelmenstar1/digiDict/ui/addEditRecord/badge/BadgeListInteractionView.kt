@@ -7,19 +7,24 @@ import android.util.AttributeSet
 import android.view.AbsSavedState
 import android.view.Gravity
 import android.view.View.OnClickListener
-import android.view.ViewGroup
 import android.widget.Button
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes
-import androidx.core.view.setPadding
+import androidx.annotation.StyleRes
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.button.MaterialButton
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.EmptyArray
+import io.github.pelmenstar1.digiDict.common.ui.MultilineHorizontalLinearLayout
 import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
+import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 
-class BadgeListInteractionView : HorizontalScrollView {
+class BadgeListInteractionView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    @AttrRes defStyleAttr: Int = 0,
+    @StyleRes defStyleRes: Int = 0
+) : MultilineHorizontalLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
     private class SavedState : AbsSavedState {
         var badges: Array<String> = EmptyArray.STRING
 
@@ -43,28 +48,25 @@ class BadgeListInteractionView : HorizontalScrollView {
 
     var badges: Array<String>
         get() {
-            val c = container
-            val badgeCount = c.childCount - 1
+            val badgeCount = childCount - 1
 
             return if (badgeCount == 0) {
                 EmptyArray.STRING
             } else {
-                Array(badgeCount) { i -> c.getBadgeViewAt(i).text }
+                Array(badgeCount) { i -> getBadgeViewAt(i).text }
             }
         }
         set(value) {
             adjustInputCount(value.size)
 
-            val c = container
-            for (i in 0 until (c.childCount - 1)) {
-                c.getBadgeViewAt(i).text = value[i]
+            for (i in 0 until (childCount - 1)) {
+                getBadgeViewAt(i).text = value[i]
             }
         }
 
     var onGetFragmentManager: (() -> FragmentManager)? = null
 
-    private lateinit var container: LinearLayout
-    private lateinit var addButton: Button
+    private val addButton: Button
 
     private val badgeRemoveListener = OnClickListener {
         val name = (it.parent as BadgeWithRemoveButtonView).text
@@ -72,39 +74,13 @@ class BadgeListInteractionView : HorizontalScrollView {
         removeBadgeByName(name)
     }
 
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-
-    constructor(
-        context: Context,
-        attrs: AttributeSet?,
-        @AttrRes defStyleAttr: Int
-    ) : super(context, attrs, defStyleAttr)
-
     init {
-        init()
-    }
-
-    private fun init() {
-        addView(createContainer().also { container = it })
+        addView(createAddButton().also { addButton = it })
     }
 
     private fun adjustInputCount(newCount: Int) {
-        container.adjustViewCount(newCount, lastViewsCount = 1) {
+        adjustViewCount(newCount, lastViewsCount = 1) {
             addView(createBadgeView(), 0)
-        }
-    }
-
-    private fun createContainer(): LinearLayout {
-        return LinearLayout(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-
-            orientation = LinearLayout.HORIZONTAL
-
-            addView(createAddButton().also { addButton = it })
         }
     }
 
@@ -118,10 +94,14 @@ class BadgeListInteractionView : HorizontalScrollView {
             ).apply {
                 gravity = Gravity.CENTER_VERTICAL
 
-                marginStart = res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_startMargin)
+                // Add button should be in one line with badges.
+                topMargin = res.getDimensionPixelOffset(R.dimen.badge_topMargin)
+                //marginStart = res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_startMargin)
             }
 
-            setPadding(0)
+            res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_rightPadding).also {
+                setPadding(0, 0, it, 0)
+            }
 
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
             setIconResource(R.drawable.ic_add)
@@ -140,7 +120,9 @@ class BadgeListInteractionView : HorizontalScrollView {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.CENTER_VERTICAL
-                marginStart = res.getDimensionPixelOffset(R.dimen.badge_startMargin)
+
+                topMargin = res.getDimensionPixelOffset(R.dimen.badge_topMargin)
+                marginEnd = res.getDimensionPixelOffset(R.dimen.badge_endMargin)
             }
 
             setOnRemoveListener(badgeRemoveListener)
@@ -148,22 +130,17 @@ class BadgeListInteractionView : HorizontalScrollView {
     }
 
     private fun addBadge(name: String) {
-        val c = container
-        val index = c.childCount - 1
+        val index = childCount - 1
 
-        c.addView(createBadgeView().apply {
-            text = name
-        }, index)
+        addView(createBadgeView().apply { text = name }, index)
     }
 
     private fun removeBadgeByName(name: String) {
-        val c = container
-
-        for (i in 0 until (c.childCount - 1)) {
-            val view = c.getBadgeViewAt(i)
+        for (i in 0 until (childCount - 1)) {
+            val view = getBadgeViewAt(i)
 
             if (view.text == name) {
-                c.removeViewAt(i)
+                removeViewAt(i)
                 break
             }
         }
@@ -212,11 +189,11 @@ class BadgeListInteractionView : HorizontalScrollView {
         }
     }
 
-    @Suppress("NOTHING_TO_INLINE")
-    private inline fun LinearLayout.getBadgeViewAt(index: Int) = getChildAt(index) as BadgeWithRemoveButtonView
+    private fun getBadgeViewAt(index: Int) = getTypedViewAt<BadgeWithRemoveButtonView>(index)
 
-    private fun getFragmentManager() =
-        onGetFragmentManager?.invoke() ?: throw IllegalStateException("onGetFragmentManager == null")
+    private fun getFragmentManager() = requireNotNull(onGetFragmentManager?.invoke()) {
+        "Fragment manager getter shouldn't bet null"
+    }
 
     companion object {
         private const val SELECTOR_DIALOG_TAG = "BadgeSelectorDialog"

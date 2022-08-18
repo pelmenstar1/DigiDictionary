@@ -15,7 +15,7 @@
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
-    <dimen name="itemRecord_badgeTopMargin">8dp</dimen>
+    <dimen name="itemRecord_badgeContainerHorizontalPadding">5dp</dimen>
 
     <dimen name="remindRecords_lastItemBottomPadding">60dp</dimen>
 
@@ -27,10 +27,12 @@
     <dimen name="badge_paddingVertical">8dp</dimen>
     <dimen name="badge_removeButton_size">24dp</dimen>
     <dimen name="badge_removeButton_startMargin">10dp</dimen>
-    <dimen name="badge_startMargin">8dp</dimen>
+    <dimen name="badge_endMargin">8dp</dimen>
+    <dimen name="badge_topMargin">8dp</dimen>
 
     <dimen name="badgeInteraction_addButton_size">40dp</dimen>
     <dimen name="badgeInteraction_addButton_startMargin">8dp</dimen>
+    <dimen name="badgeInteraction_addButton_rightPadding">4dp</dimen>
 
     <dimen name="badgeSelectorDialog_listHeight">300dp</dimen>
     <dimen name="badgeSelectorDialog_listElementPadding">8dp</dimen>

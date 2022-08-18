@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui
+package io.github.pelmenstar1.digiDict.ui.badge
 
 import android.content.Context
 import androidx.core.content.res.ResourcesCompat

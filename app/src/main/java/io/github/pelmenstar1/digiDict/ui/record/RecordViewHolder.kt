@@ -14,13 +14,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLazyValue
-import io.github.pelmenstar1.digiDict.common.ui.MultilineHorizontalLinearLayout
-import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordBadgeNameUtil
-import io.github.pelmenstar1.digiDict.ui.BadgeView
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
 
 open class RecordViewHolder private constructor(
     val container: ViewGroup
@@ -28,7 +25,7 @@ open class RecordViewHolder private constructor(
     private val expressionView: TextView
     val meaningView: TextView
     val scoreView: TextView
-    private val badgesContainer = container.getTypedViewAt<ViewGroup>(BADGES_CONTAINER_INDEX)
+    private val badgeContainer = container.getTypedViewAt<BadgeContainer>(BADGE_CONTAINER_INDEX)
 
     constructor(context: Context) : this(createContainer(context))
 
@@ -85,7 +82,7 @@ open class RecordViewHolder private constructor(
                 text = score.toString()
             }
 
-            bindBadges(record.rawBadges)
+            badgeContainer.setBadges(record.rawBadges)
             container.setOnClickListener(onContainerClickListener)
         } else {
             container.setOnClickListener(null)
@@ -93,22 +90,6 @@ open class RecordViewHolder private constructor(
             expressionView.text = ""
             meaningView.text = ""
             scoreView.text = ""
-        }
-    }
-
-    private fun bindBadges(rawBadges: String) {
-        if (rawBadges.isNotEmpty()) {
-            val decodedBadges = RecordBadgeNameUtil.decodeArray(rawBadges)
-
-            badgesContainer.adjustViewCount(decodedBadges.size) {
-                addView(createBadgeView(context))
-            }
-
-            decodedBadges.forEachIndexed { index, badge ->
-                badgesContainer.getTypedViewAt<BadgeView>(index).also {
-                    it.text = badge
-                }
-            }
         }
     }
 
@@ -131,7 +112,7 @@ open class RecordViewHolder private constructor(
         }
 
         private const val MAIN_CONTENT_INDEX = 0
-        private const val BADGES_CONTAINER_INDEX = 1
+        private const val BADGE_CONTAINER_INDEX = 1
 
         private const val SCORE_VIEW_INDEX = 0
         private const val EXPRESSION_VIEW_INDEX = 1
@@ -142,16 +123,21 @@ open class RecordViewHolder private constructor(
         }
 
         internal fun createContainer(context: Context): ViewGroup {
-            val padding = context.resources.getDimensionPixelOffset(R.dimen.itemRecord_padding)
+            val res = context.resources
 
             return LinearLayout(context).apply {
                 layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+
                 orientation = LinearLayout.VERTICAL
-                setPadding(padding)
+                setPadding(res.getDimensionPixelOffset(R.dimen.itemRecord_padding))
 
                 addView(createMainContentContainer(context))
-                addView(MultilineHorizontalLinearLayout(context).apply {
+                addView(BadgeContainer(context).apply {
                     layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+
+                    res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding).also {
+                        setPadding(it, 0, it, 0)
+                    }
                 })
             }
         }
@@ -204,20 +190,6 @@ open class RecordViewHolder private constructor(
                     initMultilineTextView()
                     isClickable = false
                 })
-            }
-        }
-
-        internal fun createBadgeView(context: Context): BadgeView {
-            val res = context.resources
-
-            return BadgeView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = res.getDimensionPixelOffset(R.dimen.itemRecord_badgeTopMargin)
-                    marginStart = res.getDimensionPixelOffset(R.dimen.badge_startMargin)
-                }
             }
         }
 

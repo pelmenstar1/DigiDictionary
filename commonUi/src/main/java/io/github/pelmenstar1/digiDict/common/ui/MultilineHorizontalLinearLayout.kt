@@ -5,15 +5,16 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
+import io.github.pelmenstar1.digiDict.common.debugLog
 import kotlin.math.max
 
 /**
  * Represents a special version of linear-layout which orientation is horizontal.
  * If there's no space for the view, the view is moved to the next row (or line).
  *
- * The layout doesn't have its own [ViewGroup.LayoutParams] and utilizes [ViewGroup.MarginLayoutParams].
+ * The layout doesn't have its own layout params and utilizes [ViewGroup.MarginLayoutParams].
  */
-class MultilineHorizontalLinearLayout @JvmOverloads constructor(
+open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     @AttrRes defStyleAttr: Int = 0,
@@ -36,7 +37,7 @@ class MultilineHorizontalLinearLayout @JvmOverloads constructor(
             MeasureSpec.getSize(widthMeasureSpec)
         } else {
             // As widthMode is MeasureSpec.UNSPECIFIED, there's no limitation for width and therefore there should be only
-            // one row. To make that happen, totalWidth should be max 32-bit integer.
+            // one row.
             Int.MAX_VALUE
         }
 
@@ -69,24 +70,22 @@ class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                 val requiredChildWidth = childWidth + lp.leftMargin + lp.rightMargin
                 val requiredChildHeight = childHeight + lp.topMargin + lp.bottomMargin
 
+                rowHeight = max(rowHeight, requiredChildHeight)
                 childState = combineMeasuredStates(childState, child.measuredState)
 
                 val nextWidth = consumedWidthInRow + requiredChildWidth
 
                 // If there's no space for the current view, allocate space for the next row.
-                if (nextWidth > totalWidthWithoutRightPadding) {
+                if (nextWidth >= totalWidthWithoutRightPadding) {
                     requiredWidth = max(requiredWidth, consumedWidthInRow)
                     requiredHeight += rowHeight
 
-                    // Reset the counters.
-                    consumedWidthInRow = pLeft
-                    rowHeight = 0
+                    consumedWidthInRow = pLeft + requiredChildWidth
+                    rowHeight = requiredHeight
                 } else {
                     consumedWidthInRow = nextWidth
                     requiredWidth = max(requiredWidth, consumedWidthInRow)
                 }
-
-                rowHeight = max(rowHeight, requiredChildHeight)
             }
         }
 
@@ -116,6 +115,10 @@ class MultilineHorizontalLinearLayout @JvmOverloads constructor(
             val child = getChildAt(i)
 
             if (child.visibility != GONE) {
+                debugLog(TAG) {
+                    info("Processing view at index $i")
+                }
+
                 val childParams = child.layoutParams as MarginLayoutParams
                 val childLeftMargin = childParams.leftMargin
                 val childTopMargin = childParams.topMargin
@@ -124,9 +127,16 @@ class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                 val childHeight = child.measuredHeight
 
                 val requiredWidth = childWidth + childLeftMargin + childParams.rightMargin
+                val requiredHeight = childHeight + childTopMargin + childParams.bottomMargin
+
+                rowHeight = max(rowHeight, requiredHeight)
                 var nextLeft = currentLeft + requiredWidth
 
                 if (nextLeft > totalWidthWithoutRightPadding) {
+                    debugLog(TAG) {
+                        info("Moving to the new row")
+                    }
+
                     currentTop += rowHeight
                     currentLeft = pLeft
                     nextLeft = pLeft + requiredWidth
@@ -134,15 +144,20 @@ class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                     rowHeight = 0
                 }
 
-                val requiredHeight = childHeight + childTopMargin + childParams.bottomMargin
-                rowHeight = max(rowHeight, requiredHeight)
+                debugLog(TAG) {
+                    info("currentLeft: $currentLeft; currentTop: $currentTop; nextLeft: $nextLeft")
+                }
 
-                val leftWithMargin = currentLeft + childLeftMargin
-                val topWithMargin = currentTop + childTopMargin
+                val viewLeft = currentLeft + childLeftMargin
+                val viewTop = currentTop + childTopMargin
 
-                child.layout(leftWithMargin, topWithMargin, leftWithMargin + childWidth, topWithMargin + childHeight)
+                child.layout(viewLeft, viewTop, viewLeft + childWidth, viewTop + childHeight)
                 currentLeft = nextLeft
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "MHLinearLayout"
     }
 }
