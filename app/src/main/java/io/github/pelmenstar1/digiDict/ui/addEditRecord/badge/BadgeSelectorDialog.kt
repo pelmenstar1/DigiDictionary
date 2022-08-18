@@ -20,8 +20,6 @@ import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordFragmentDire
 class BadgeSelectorDialog : MaterialDialogFragment() {
     private val viewModel by viewModels<BadgeSelectorDialogViewModel>()
 
-    private lateinit var binding: DialogBadgeSelectorBinding
-
     var onSelected: ((String) -> Unit)? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -30,7 +28,7 @@ class BadgeSelectorDialog : MaterialDialogFragment() {
         val ls = lifecycleScope
         val navController = findNavController()
 
-        binding = DialogBadgeSelectorBinding.inflate(inflater, container, false)
+        val binding = DialogBadgeSelectorBinding.inflate(inflater, container, false)
         vm.usedBadges = arguments?.getStringArray(KEY_USED_BADGES) ?: EmptyArray.STRING
 
         binding.badgeSelectorDialogRecyclerView.also {

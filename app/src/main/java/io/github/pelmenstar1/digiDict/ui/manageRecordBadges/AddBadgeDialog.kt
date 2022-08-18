@@ -47,9 +47,7 @@ class AddBadgeDialog : MaterialDialogFragment() {
         }
 
         binding.addBadgeDialogAddButton.also {
-            ls.launchFlowCollector(vm.inputErrorFlow) { msg ->
-                it.isEnabled = msg == null
-            }
+            ls.launchSetEnabledIfEquals(it, value = null, vm.inputErrorFlow)
 
             it.setOnClickListener {
                 notifySubmit(binding.addBadgeDialogNameInput.text.trimToString())
