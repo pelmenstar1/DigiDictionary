@@ -9,19 +9,29 @@ import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 @HiltViewModel
-class AddBadgeDialogViewModel @Inject constructor(
+class AddEditBadgeDialogViewModel @Inject constructor(
     badgeDao: RecordBadgeDao
 ) : ViewModel() {
     private val allBadges = badgeDao.getAllFlow()
     private val inputFlow = MutableStateFlow("")
 
+    var currentBadgeName: String? = null
+        set(value) {
+            field = value
+            value?.let { input = it }
+        }
+
     val inputErrorFlow = allBadges.combine(inputFlow) { badges, input ->
+        val curBadgeName = currentBadgeName
+
         when {
-            input.isBlank() -> AddBadgeInputMessage.EMPTY_TEXT
-            badges.contains(input) -> AddBadgeInputMessage.EXISTS
+            input.isBlank() ->
+                AddEditBadgeInputMessage.EMPTY_TEXT
+            (curBadgeName == null || curBadgeName != input) && badges.contains(input) ->
+                AddEditBadgeInputMessage.EXISTS
             else -> null
         }
-    }.onStart { emit(AddBadgeInputMessage.EMPTY_TEXT) }
+    }.onStart { emit(AddEditBadgeInputMessage.EMPTY_TEXT) }
 
     var input: String
         get() = inputFlow.value

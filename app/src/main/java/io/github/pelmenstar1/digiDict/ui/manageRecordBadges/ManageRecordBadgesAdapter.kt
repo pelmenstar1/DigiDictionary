@@ -3,9 +3,9 @@ package io.github.pelmenstar1.digiDict.ui.manageRecordBadges
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.IdRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.R
@@ -13,7 +13,7 @@ import io.github.pelmenstar1.digiDict.common.EmptyArray
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 
 class ManageRecordBadgesAdapter(
-    private val onRemove: (String) -> Unit
+    private val onAction: (actionId: Int, badgeName: String) -> Unit
 ) : RecyclerView.Adapter<ManageRecordBadgesAdapter.ViewHolder>() {
     private class Callback(
         private val old: Array<out String>,
@@ -33,22 +33,35 @@ class ManageRecordBadgesAdapter(
 
     inner class ViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
         private val nameView = container.findViewById<TextView>(R.id.itemManageRecordBadges_nameView)
-        private val removeButton = container.findViewById<Button>(R.id.itemManageRecordBadges_removeButton)
 
         init {
-            removeButton.setOnClickListener(removeButtonOnClickListener)
+            initActionButton(R.id.itemManageRecordBadges_removeButton)
+            initActionButton(R.id.itemManageRecordBadges_editButton)
         }
 
         fun bind(name: String) {
             container.tag = name
             nameView.text = name
         }
+
+        private fun initActionButton(@IdRes id: Int) {
+            container.findViewById<View>(id).also {
+                it.setOnClickListener(actionButtonOnClickListener)
+            }
+        }
     }
 
-    private val removeButtonOnClickListener = View.OnClickListener {
-        val name = ((it.parent as ViewGroup).tag as String)
+    private val actionButtonOnClickListener = View.OnClickListener {
+        val parent = it.parent as ViewGroup
+        val name = parent.tag as String
 
-        onRemove(name)
+        val actionId = when (it.id) {
+            R.id.itemManageRecordBadges_removeButton -> ACTION_REMOVE
+            R.id.itemManageRecordBadges_editButton -> ACTION_EDIT
+            else -> throw IllegalStateException("Illegal id of action button")
+        }
+
+        onAction(actionId, name)
     }
 
     private var elements: Array<out String> = EmptyArray.STRING
@@ -87,5 +100,8 @@ class ManageRecordBadgesAdapter(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
+
+        const val ACTION_REMOVE = 0
+        const val ACTION_EDIT = 1
     }
 }

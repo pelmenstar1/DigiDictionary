@@ -21,12 +21,37 @@ class ManageRecordBadgesViewModel @Inject constructor(
 ) : SingleDataLoadStateViewModel<Array<String>>(TAG) {
     val onRemoveError = Event()
     val onAddError = Event()
+    val onEditError = Event()
 
     override val canRefreshAfterSuccess: Boolean
         get() = true
 
     override fun DataLoadStateManager.FlowBuilder<Array<String>>.buildDataFlow() = fromFlow {
         badgeDao.getAllFlow()
+    }
+
+    fun edit(fromName: String, toName: String) {
+        viewModelScope.launch {
+            try {
+                val records = recordDao.getRecordsByBadgeName(RecordBadgeNameUtil.encode(fromName))
+                for (record in records) {
+                    val badges = RecordBadgeNameUtil.decodeArray(record.rawBadges)
+                    badges.indexOf(fromName).also {
+                        if (it >= 0) {
+                            badges[it] = toName
+                        }
+                    }
+
+                    recordDao.updateBadges(record.id, RecordBadgeNameUtil.encodeArray(badges))
+                }
+
+                badgeDao.updateName(fromName, toName)
+            } catch (e: Exception) {
+                Log.e(TAG, "", e)
+
+                onEditError.raiseOnMainThreadIfNotCancellation(e)
+            }
+        }
     }
 
     fun add(name: String) {

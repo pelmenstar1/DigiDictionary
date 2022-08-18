@@ -14,6 +14,9 @@ interface RecordBadgeDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(values: Array<out RecordBadgeInfo>)
 
+    @Query("UPDATE record_badges SET name=:toName WHERE name=:fromName")
+    suspend fun updateName(fromName: String, toName: String)
+
     @Query("DELETE FROM record_badges WHERE name=:name")
     suspend fun delete(name: String)
 

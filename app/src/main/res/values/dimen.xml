@@ -37,5 +37,5 @@
     <dimen name="badgeSelectorDialog_listHeight">300dp</dimen>
     <dimen name="badgeSelectorDialog_listElementPadding">8dp</dimen>
 
-    <dimen name="itemManageRecordBadges_removeButtonSize">48dp</dimen>
+    <dimen name="itemManageRecordBadges_actionButtonSize">48dp</dimen>
 </resources>

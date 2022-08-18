@@ -6,7 +6,7 @@
     <string name="delete">Delete</string>
     <string name="remove">Remove</string>
     <string name="edit">Edit</string>
-
+    <string name="applyChanges">Apply</string>
     <string name="empty">Empty</string>
     <string name="emptyTextError">Text can\'t be empty</string>
 
