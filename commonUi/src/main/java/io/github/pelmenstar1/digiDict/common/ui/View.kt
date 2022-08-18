@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.common.ui
 
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputLayout
@@ -20,7 +21,11 @@ inline fun TextInputLayout.addTextChangedListener(crossinline block: (CharSequen
     }
 }
 
-inline fun ViewGroup.adjustViewCount(targetCount: Int, lastViewsCount: Int, addView: () -> Unit) {
+inline fun <TGroup : ViewGroup> TGroup.adjustViewCount(
+    targetCount: Int,
+    lastViewsCount: Int = 0,
+    addNewView: TGroup.() -> Unit
+) {
     val currentCount = childCount - lastViewsCount
 
     when {
@@ -28,7 +33,11 @@ inline fun ViewGroup.adjustViewCount(targetCount: Int, lastViewsCount: Int, addV
             removeViews(currentCount, targetCount - currentCount)
         }
         currentCount < targetCount -> {
-            repeat(targetCount - currentCount) { addView() }
+            repeat(targetCount - currentCount) { addNewView() }
         }
     }
 }
+
+// TODO: Use it in more places.
+@Suppress("UNCHECKED_CAST")
+fun <T : View> ViewGroup.getTypedViewAt(index: Int) = getChildAt(index) as T

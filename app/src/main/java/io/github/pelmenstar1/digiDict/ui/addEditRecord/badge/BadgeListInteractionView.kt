@@ -90,9 +90,8 @@ class BadgeListInteractionView : HorizontalScrollView {
     }
 
     private fun adjustInputCount(newCount: Int) {
-        val c = container
-        c.adjustViewCount(newCount, lastViewsCount = 1) {
-            c.addView(createBadgeView(), 0)
+        container.adjustViewCount(newCount, lastViewsCount = 1) {
+            addView(createBadgeView(), 0)
         }
     }
 

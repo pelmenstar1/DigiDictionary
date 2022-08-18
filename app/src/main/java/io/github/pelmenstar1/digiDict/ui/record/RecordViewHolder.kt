@@ -14,17 +14,31 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.ui.MultilineHorizontalLinearLayout
+import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
+import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordBadgeNameUtil
+import io.github.pelmenstar1.digiDict.ui.BadgeView
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 
 open class RecordViewHolder private constructor(
     val container: ViewGroup
 ) : RecyclerView.ViewHolder(container) {
-    val expressionView = container.getTextViewAt(EXPRESSION_VIEW_INDEX)
-    val meaningView = container.getTextViewAt(MEANING_VIEW_INDEX)
-    val scoreView = container.getTextViewAt(SCORE_VIEW_INDEX)
+    private val expressionView: TextView
+    val meaningView: TextView
+    val scoreView: TextView
+    private val badgesContainer = container.getTypedViewAt<ViewGroup>(BADGES_CONTAINER_INDEX)
 
     constructor(context: Context) : this(createContainer(context))
+
+    init {
+        with(container.getTypedViewAt<ViewGroup>(MAIN_CONTENT_INDEX)) {
+            expressionView = getTypedViewAt(EXPRESSION_VIEW_INDEX)
+            meaningView = getTypedViewAt(MEANING_VIEW_INDEX)
+            scoreView = getTypedViewAt(SCORE_VIEW_INDEX)
+        }
+    }
 
     private var positiveScoreColorList: ColorStateList? = null
     private var negativeScoreColorList: ColorStateList? = null
@@ -52,6 +66,7 @@ open class RecordViewHolder private constructor(
             meaningView.text = MeaningTextHelper.parseToFormatted(record.rawMeaning)
 
             scoreView.run {
+                val context = context
                 val score = record.score
 
                 val textColorList = if (score >= 0) {
@@ -70,6 +85,7 @@ open class RecordViewHolder private constructor(
                 text = score.toString()
             }
 
+            bindBadges(record.rawBadges)
             container.setOnClickListener(onContainerClickListener)
         } else {
             container.setOnClickListener(null)
@@ -80,13 +96,29 @@ open class RecordViewHolder private constructor(
         }
     }
 
+    private fun bindBadges(rawBadges: String) {
+        if (rawBadges.isNotEmpty()) {
+            val decodedBadges = RecordBadgeNameUtil.decodeArray(rawBadges)
+
+            badgesContainer.adjustViewCount(decodedBadges.size) {
+                addView(createBadgeView(context))
+            }
+
+            decodedBadges.forEachIndexed { index, badge ->
+                badgesContainer.getTypedViewAt<BadgeView>(index).also {
+                    it.text = badge
+                }
+            }
+        }
+    }
+
     companion object {
-        private val CONTAINER_LAYOUT_PARAMS = LinearLayout.LayoutParams(
+        private val MATCH_WRAP_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        private val SCORE_LAYOUT_PARAMS = LinearLayout.LayoutParams(
+        private val WRAP_WRAP_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
@@ -98,6 +130,9 @@ open class RecordViewHolder private constructor(
             weight = 0.5f
         }
 
+        private const val MAIN_CONTENT_INDEX = 0
+        private const val BADGES_CONTAINER_INDEX = 1
+
         private const val SCORE_VIEW_INDEX = 0
         private const val EXPRESSION_VIEW_INDEX = 1
         private const val MEANING_VIEW_INDEX = 2
@@ -107,16 +142,28 @@ open class RecordViewHolder private constructor(
         }
 
         internal fun createContainer(context: Context): ViewGroup {
+            val padding = context.resources.getDimensionPixelOffset(R.dimen.itemRecord_padding)
+
+            return LinearLayout(context).apply {
+                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+                orientation = LinearLayout.VERTICAL
+                setPadding(padding)
+
+                addView(createMainContentContainer(context))
+                addView(MultilineHorizontalLinearLayout(context).apply {
+                    layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+                })
+            }
+        }
+
+        private fun createMainContentContainer(context: Context): LinearLayout {
+            val res = context.resources
+
             return LinearLayout(context).also { container ->
-                container.layoutParams = CONTAINER_LAYOUT_PARAMS
-
-                val res = context.resources
-                val padding = res.getDimensionPixelOffset(R.dimen.itemRecord_padding)
-
-                container.setPadding(padding)
+                container.layoutParams = MATCH_WRAP_LAYOUT_PARAMS
 
                 container.addView(MaterialTextView(context).apply {
-                    layoutParams = SCORE_LAYOUT_PARAMS
+                    layoutParams = WRAP_WRAP_LAYOUT_PARAMS
 
                     TextViewCompat.setTextAppearance(
                         this,
@@ -160,7 +207,19 @@ open class RecordViewHolder private constructor(
             }
         }
 
-        internal fun ViewGroup.getTextViewAt(index: Int) = getChildAt(index) as TextView
+        internal fun createBadgeView(context: Context): BadgeView {
+            val res = context.resources
+
+            return BadgeView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = res.getDimensionPixelOffset(R.dimen.itemRecord_badgeTopMargin)
+                    marginStart = res.getDimensionPixelOffset(R.dimen.badge_startMargin)
+                }
+            }
+        }
 
         private fun TextView.initMultilineTextView() {
             maxLines = 100
