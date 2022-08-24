@@ -16,8 +16,12 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
+import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,6 +33,9 @@ class AddEditRecordFragment : Fragment() {
 
     @Inject
     lateinit var messageMapper: MessageMapper<AddEditRecordMessage>
+
+    @Inject
+    lateinit var recordBadgeDao: RecordBadgeDao
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -89,6 +96,22 @@ class AddEditRecordFragment : Fragment() {
         initViews()
 
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // When the fragment is resumed, selected badges can be different, so update them.
+        val badgeInteraction = binding.addRecordBadgeInteraction
+        val badgeIds = badgeInteraction.badges.mapToIntArray { it.id }
+
+        lifecycleScope.launch {
+            val updatedBadges = recordBadgeDao.getByIds(badgeIds)
+
+            withContext(Dispatchers.Main) {
+                badgeInteraction.badges = updatedBadges
+            }
+        }
     }
 
     private fun setInputsEnabled(value: Boolean) {
@@ -173,10 +196,9 @@ class AddEditRecordFragment : Fragment() {
     private fun initBadgeInteraction() {
         val vm = viewModel
 
-        binding.addRecordBadgeInteraction.also {
-            it.onGetFragmentManager = { childFragmentManager }
-
-            vm.getBadges = { it.badges }
+        binding.addRecordBadgeInteraction.also { badgeInteraction ->
+            badgeInteraction.onGetFragmentManager = { childFragmentManager }
+            vm.getBadges = { badgeInteraction.badges }
         }
     }
 }

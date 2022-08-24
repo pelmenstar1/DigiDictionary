@@ -10,28 +10,27 @@ import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 class BadgeView(context: Context) : MaterialTextView(context) {
     private val outlineHelper = BadgeOutlineHelper(context)
 
-    var badge: RecordBadgeInfo? = null
+    private var _badge: RecordBadgeInfo? = null
+    var badge: RecordBadgeInfo
+        get() = requireNotNull(_badge)
         set(value) {
-            field = value
+            if (_badge != value) {
+                _badge = value
 
-            if (value != null) {
                 text = value.name
                 outlineHelper.setOutlineColor(value.outlineColor)
+
+                invalidate()
             }
         }
 
     init {
-        val res = context.resources
+        with(context.resources) {
+            val horizontalPadding = getDimensionPixelOffset(R.dimen.badge_paddingHorizontal)
+            val verticalPadding = getDimensionPixelOffset(R.dimen.badge_paddingVertical)
 
-        val horizontalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingHorizontal)
-        val verticalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingVertical)
-
-        setPadding(
-            horizontalPadding,
-            verticalPadding,
-            horizontalPadding,
-            verticalPadding
-        )
+            setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+        }
 
         ellipsize = null
     }

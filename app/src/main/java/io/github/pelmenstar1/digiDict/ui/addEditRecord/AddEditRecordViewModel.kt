@@ -79,7 +79,6 @@ class AddEditRecordViewModel @Inject constructor(
 
     var getMeaning: (() -> ComplexMeaning)? = null
     var getBadges: (() -> Array<RecordBadgeInfo>)? = null
-
     var additionalNotes: CharSequence = ""
 
     fun retryLoadCurrentRecord() {

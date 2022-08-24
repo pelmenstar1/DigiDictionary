@@ -19,11 +19,14 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
     private val removeButton: Button
 
     private val outlineHelper = BadgeOutlineHelper(context)
-    var badge: RecordBadgeInfo? = null
-        set(value) {
-            field = value
+    private var _badge: RecordBadgeInfo? = null
 
-            if (value != null) {
+    var badge: RecordBadgeInfo
+        get() = requireNotNull(_badge)
+        set(value) {
+            if (_badge != value) {
+                _badge = value
+
                 textView.text = value.name
                 outlineHelper.setOutlineColor(value.outlineColor)
 

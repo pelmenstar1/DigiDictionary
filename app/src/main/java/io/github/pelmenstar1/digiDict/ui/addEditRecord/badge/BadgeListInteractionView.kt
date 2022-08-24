@@ -54,7 +54,7 @@ class BadgeListInteractionView @JvmOverloads constructor(
         get() {
             val badgeCount = childCount - 1
 
-            return Array(badgeCount) { i -> getBadgeViewAt(i).badge!! }
+            return Array(badgeCount) { i -> getBadgeViewAt(i).badge }
         }
         set(values) {
             adjustInputCount(values.size)
@@ -67,11 +67,8 @@ class BadgeListInteractionView @JvmOverloads constructor(
     var onGetFragmentManager: (() -> FragmentManager)? = null
 
     private val addButton: Button
-
     private val badgeRemoveListener = OnClickListener { view ->
-        (view.parent as BadgeWithRemoveButtonView).badge?.let {
-            removeBadge(it)
-        }
+        removeBadge((view.parent as BadgeWithRemoveButtonView).badge)
     }
 
     init {
@@ -98,8 +95,8 @@ class BadgeListInteractionView @JvmOverloads constructor(
                 topMargin = res.getDimensionPixelOffset(R.dimen.badge_topMargin)
             }
 
-            res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_rightPadding).also {
-                setPadding(0, 0, it, 0)
+            res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_rightPadding).also { rightPadding ->
+                setPadding(0, 0, rightPadding, 0)
             }
 
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
@@ -158,9 +155,7 @@ class BadgeListInteractionView @JvmOverloads constructor(
     }
 
     private fun initBadgeSelectorDialog(dialog: BadgeSelectorDialog) {
-        dialog.onSelected = { name ->
-            addBadge(name)
-        }
+        dialog.onSelected = { addBadge(it) }
     }
 
     override fun setEnabled(enabled: Boolean) {
@@ -182,10 +177,8 @@ class BadgeListInteractionView @JvmOverloads constructor(
             super.onRestoreInstanceState(state.superState)
         }
 
-        getFragmentManager().also { fm ->
-            fm.findFragmentByTag(SELECTOR_DIALOG_TAG)?.also { dialog ->
-                initBadgeSelectorDialog(dialog as BadgeSelectorDialog)
-            }
+        getFragmentManager().findFragmentByTag(SELECTOR_DIALOG_TAG)?.also { dialog ->
+            initBadgeSelectorDialog(dialog as BadgeSelectorDialog)
         }
     }
 
