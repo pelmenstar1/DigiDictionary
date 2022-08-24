@@ -30,7 +30,7 @@ inline fun <TGroup : ViewGroup> TGroup.adjustViewCount(
 
     when {
         currentCount > targetCount -> {
-            removeViews(currentCount, targetCount - currentCount)
+            removeViews(targetCount, currentCount - targetCount)
         }
         currentCount < targetCount -> {
             repeat(targetCount - currentCount) { addNewView() }
