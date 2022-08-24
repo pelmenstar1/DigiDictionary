@@ -20,4 +20,7 @@ interface RecordToBadgeRelationDao {
 
     @Query("DELETE FROM record_to_badge_relations WHERE recordId=:recordId")
     suspend fun deleteAllByRecordId(recordId: Int)
+
+    @Query("SELECT * FROM record_to_badge_relations WHERE badgeId=:badgeId")
+    suspend fun getByBadgeId(badgeId: Int): Array<RecordToBadgeRelation>
 }

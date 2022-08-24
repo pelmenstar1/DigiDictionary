@@ -19,7 +19,7 @@ class ManageRecordBadgesViewModel @Inject constructor(
 ) : SingleDataLoadStateViewModel<Array<RecordBadgeInfo>>(TAG) {
     val onRemoveError = Event()
     val onAddError = Event()
-    val onEditError = Event()
+    val onUpdateError = Event()
 
     override val canRefreshAfterSuccess: Boolean
         get() = true
@@ -36,7 +36,7 @@ class ManageRecordBadgesViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "", e)
 
-                onEditError.raiseOnMainThreadIfNotCancellation(e)
+                onUpdateError.raiseOnMainThreadIfNotCancellation(e)
             }
         }
     }

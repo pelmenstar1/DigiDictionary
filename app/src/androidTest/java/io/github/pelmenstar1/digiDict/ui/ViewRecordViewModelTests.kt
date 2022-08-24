@@ -43,7 +43,7 @@ class ViewRecordViewModelTests {
     fun deleteTest() = runTest {
         val dao = db.recordDao()
 
-        dao.insert(Record(0, "Expr1", "CMeaning1", "", 0, 0))
+        dao.insert(Record(1, "Expr1", "CMeaning1", "", 0, 0))
         val expectedToDeleteRecord = dao.getRecordByExpression("Expr1")!!
 
         val vm = createViewModel()
@@ -82,11 +82,11 @@ class ViewRecordViewModelTests {
         }
 
         testCase(badges = emptyArray())
-        testCase(badges = arrayOf(RecordBadgeInfo(0, "Badge1", 1)))
+        testCase(badges = arrayOf(RecordBadgeInfo(1, "Badge1", 1)))
         testCase(
             badges = arrayOf(
-                RecordBadgeInfo(0, "Badge1", 1),
-                RecordBadgeInfo(1, "Badge2", 2)
+                RecordBadgeInfo(1, "Badge1", 1),
+                RecordBadgeInfo(2, "Badge2", 2)
             )
         )
     }
@@ -137,11 +137,11 @@ class ViewRecordViewModelTests {
         }
 
         testCase(badges = emptyArray())
-        testCase(badges = arrayOf(RecordBadgeInfo(0, "Badge1", 1)))
+        testCase(badges = arrayOf(RecordBadgeInfo(1, "Badge1", 1)))
         testCase(
             badges = arrayOf(
-                RecordBadgeInfo(0, "Badge1", 1),
-                RecordBadgeInfo(1, "Badge2", 2)
+                RecordBadgeInfo(1, "Badge1", 1),
+                RecordBadgeInfo(2, "Badge2", 2)
             )
         )
     }

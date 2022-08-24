@@ -5,7 +5,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,7 +30,7 @@ class AddEditBadgeDialogViewModel @Inject constructor(
                 AddEditBadgeInputMessage.EXISTS
             else -> null
         }
-    }.onStart { emit(AddEditBadgeInputMessage.EMPTY_TEXT) }
+    }
 
     var input: String
         get() = inputFlow.value

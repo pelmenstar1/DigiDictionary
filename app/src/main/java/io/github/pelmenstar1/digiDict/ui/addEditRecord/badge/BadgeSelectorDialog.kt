@@ -40,7 +40,7 @@ class BadgeSelectorDialog : MaterialDialogFragment() {
             it.layoutManager = LinearLayoutManager(context)
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
 
-            ls.launchFlowCollector(vm.validBadgeNamesFlow) { data ->
+            ls.launchFlowCollector(vm.validBadgesFlow) { data ->
                 if (data.isEmpty()) {
                     it.visibility = View.GONE
                 } else {

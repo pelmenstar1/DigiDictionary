@@ -6,7 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders.ManageRemoteDictionaryProvidersViewModel
 import io.github.pelmenstar1.digiDict.utils.*
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
@@ -53,7 +52,7 @@ class ManageRemoteDictionaryProvidersViewModelTests {
         vm.onDeleteError.handler = { fail() }
 
         vm.delete(provider)
-        delay(1000)
+        Thread.sleep(1000L)
 
         assertNull(providerDao.getByName("Name"))
         assertNull(statsDao.getById(provider.id))

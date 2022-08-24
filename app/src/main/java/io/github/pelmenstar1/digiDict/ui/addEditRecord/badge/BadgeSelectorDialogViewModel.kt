@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -23,16 +22,15 @@ class BadgeSelectorDialogViewModel @Inject constructor(
             usedBadgeIdsFlow.value = value
         }
 
-    val validBadgeNamesFlow: Flow<List<RecordBadgeInfo>> =
-        allBadgesFlow.combine(usedBadgeIdsFlow.filterNotNull()) { all, used ->
-            val result = ArrayList<RecordBadgeInfo>(all.size)
+    val validBadgesFlow = allBadgesFlow.combine(usedBadgeIdsFlow.filterNotNull()) { all, used ->
+        val result = ArrayList<RecordBadgeInfo>(all.size)
 
-            all.forEach { badge ->
-                if (!used.contains(badge.id)) {
-                    result.add(badge)
-                }
+        all.forEach { badge ->
+            if (!used.contains(badge.id)) {
+                result.add(badge)
             }
-
-            result
         }
+
+        result
+    }
 }

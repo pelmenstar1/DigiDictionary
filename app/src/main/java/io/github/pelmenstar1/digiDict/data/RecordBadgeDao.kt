@@ -20,9 +20,16 @@ interface RecordBadgeDao {
     @Query("SELECT * FROM record_badges")
     fun getAllFlow(): Flow<Array<RecordBadgeInfo>>
 
-    @Query("SELECT * FROM record_badges WHERE id=:id")
+    @Query(GET_BY_ID_QUERY)
+    suspend fun getById(id: Int): RecordBadgeInfo?
+
+    @Query(GET_BY_ID_QUERY)
     fun getByIdFlow(id: Int): Flow<RecordBadgeInfo>
 
     @Query("SELECT * FROM record_badges WHERE id IN (:ids)")
     suspend fun getByIds(ids: IntArray): Array<RecordBadgeInfo>
+
+    companion object {
+        const val GET_BY_ID_QUERY = "SELECT * FROM record_badges WHERE id=:id"
+    }
 }
