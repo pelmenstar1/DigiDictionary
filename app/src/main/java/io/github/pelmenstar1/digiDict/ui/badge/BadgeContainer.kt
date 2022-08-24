@@ -30,15 +30,19 @@ class BadgeContainer @JvmOverloads constructor(
     }
 
     fun setBadges(values: Array<out RecordBadgeInfo>) {
-        val ctx = context
+        val context = context
         adjustViewCount(values.size) {
-            addView(BadgeView(ctx).apply {
-                layoutParams = badgeLayoutParams
-            })
+            addBadgeView(context)
         }
 
         values.forEachIndexed { index, value ->
             getTypedViewAt<BadgeView>(index).badge = value
         }
+    }
+
+    private fun addBadgeView(context: Context) {
+        addView(BadgeView(context).apply {
+            layoutParams = badgeLayoutParams
+        })
     }
 }

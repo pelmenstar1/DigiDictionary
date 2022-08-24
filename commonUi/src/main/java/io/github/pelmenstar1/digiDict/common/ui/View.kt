@@ -21,13 +21,31 @@ inline fun TextInputLayout.addTextChangedListener(crossinline block: (CharSequen
     }
 }
 
-inline fun <TGroup : ViewGroup> TGroup.adjustViewCount(
+inline fun <TGroup : ViewGroup> TGroup.adjustViewCountWithoutLast(
     targetCount: Int,
-    lastViewsCount: Int = 0,
+    lastViewsCount: Int,
     addNewView: TGroup.() -> Unit
 ) {
-    val currentCount = childCount - lastViewsCount
+    adjustViewCountInternal(targetCount, childCount - lastViewsCount, addNewView)
+}
 
+inline fun <TGroup : ViewGroup> TGroup.adjustViewCount(
+    targetCount: Int,
+    addNewView: TGroup.() -> Unit
+) {
+    val childCount = childCount
+    if (childCount == 0) {
+        removeAllViews()
+    }
+
+    adjustViewCountInternal(targetCount, childCount, addNewView)
+}
+
+inline fun <TGroup : ViewGroup> TGroup.adjustViewCountInternal(
+    targetCount: Int,
+    currentCount: Int,
+    addNewView: TGroup.() -> Unit
+) {
     when {
         currentCount > targetCount -> {
             removeViews(targetCount, currentCount - targetCount)

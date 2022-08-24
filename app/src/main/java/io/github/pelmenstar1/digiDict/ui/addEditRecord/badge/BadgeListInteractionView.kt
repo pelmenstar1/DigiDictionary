@@ -16,7 +16,7 @@ import com.google.android.material.button.MaterialButton
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.mapToIntArray
 import io.github.pelmenstar1.digiDict.common.ui.MultilineHorizontalLinearLayout
-import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
+import io.github.pelmenstar1.digiDict.common.ui.adjustViewCountWithoutLast
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.ui.badge.BadgeWithRemoveButtonView
@@ -76,9 +76,7 @@ class BadgeListInteractionView @JvmOverloads constructor(
     }
 
     private fun adjustInputCount(newCount: Int) {
-        adjustViewCount(newCount, lastViewsCount = 1) {
-            addView(createBadgeView(), 0)
-        }
+        adjustViewCountWithoutLast(newCount, lastViewsCount = 1) { addBadgeViewInStart() }
     }
 
     private fun createAddButton(): Button {
@@ -108,6 +106,10 @@ class BadgeListInteractionView @JvmOverloads constructor(
 
             setOnClickListener { showBadgeSelectorDialog() }
         }
+    }
+
+    private fun addBadgeViewInStart() {
+        addView(createBadgeView(), 0)
     }
 
     private fun createBadgeView(): BadgeWithRemoveButtonView {

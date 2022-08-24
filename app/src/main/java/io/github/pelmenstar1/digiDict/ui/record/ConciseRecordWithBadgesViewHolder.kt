@@ -25,7 +25,8 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
     private val expressionView: TextView
     val meaningView: TextView
     val scoreView: TextView
-    private val badgeContainer = container.getTypedViewAt<BadgeContainer>(BADGE_CONTAINER_INDEX)
+
+    private var badgeContainer: BadgeContainer? = null
 
     constructor(context: Context) : this(createContainer(context))
 
@@ -57,13 +58,15 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
 
     fun bind(record: ConciseRecordWithBadges?, onContainerClickListener: View.OnClickListener) {
         if (record != null) {
+            val context = container.context
+
             container.tag = record
+            container.setOnClickListener(onContainerClickListener)
 
             expressionView.text = record.expression
             meaningView.text = MeaningTextHelper.parseToFormatted(record.meaning)
 
             scoreView.run {
-                val context = context
                 val score = record.score
 
                 val textColorList = if (score >= 0) {
@@ -82,8 +85,19 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                 text = score.toString()
             }
 
-            badgeContainer.setBadges(record.badges)
-            container.setOnClickListener(onContainerClickListener)
+            val badges = record.badges
+            var bc = badgeContainer
+
+            if (badges.isEmpty()) {
+                bc?.removeAllViews()
+            } else {
+                if (bc == null) {
+                    bc = createBadgeContainer(context)
+                    container.addView(bc)
+                }
+
+                bc.setBadges(record.badges)
+            }
         } else {
             container.setOnClickListener(null)
             container.tag = null
@@ -113,7 +127,6 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
         }
 
         private const val MAIN_CONTENT_INDEX = 0
-        private const val BADGE_CONTAINER_INDEX = 1
 
         private const val SCORE_VIEW_INDEX = 0
         private const val EXPRESSION_VIEW_INDEX = 1
@@ -128,18 +141,22 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
 
             return LinearLayout(context).apply {
                 layoutParams = MATCH_WRAP_LAYOUT_PARAMS
-
                 orientation = LinearLayout.VERTICAL
                 setPadding(res.getDimensionPixelOffset(R.dimen.itemRecord_padding))
 
                 addView(createMainContentContainer(context))
-                addView(BadgeContainer(context).apply {
-                    layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+            }
+        }
 
-                    res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding).also {
-                        setPadding(it, 0, it, 0)
-                    }
-                })
+        internal fun createBadgeContainer(context: Context): BadgeContainer {
+            val res = context.resources
+
+            return BadgeContainer(context).apply {
+                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+
+                res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding).also {
+                    setPadding(it, 0, it, 0)
+                }
             }
         }
 
@@ -157,7 +174,6 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                         com.google.android.material.R.style.TextAppearance_Material3_BodyMedium
                     )
                     setTextIsSelectable(false)
-                    //isClickable = false
                 })
 
                 container.addView(MaterialTextView(context).apply {
@@ -174,7 +190,6 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                         this,
                         com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
                     )
-                    //isClickable = false
 
                     initMultilineTextView()
                 })
@@ -189,7 +204,6 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                     textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
 
                     initMultilineTextView()
-                    //isClickable = false
                 })
             }
         }
