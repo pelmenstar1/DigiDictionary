@@ -36,7 +36,7 @@ class DuplicateRecordFileGenerator {
             Record(
                 id = 0,
                 expression = "Expression$ordinal",
-                rawMeaning = ComplexMeaning.Common("Meaning${ordinal}_dup").rawText,
+                meaning = ComplexMeaning.Common("Meaning${ordinal}_dup").rawText,
                 additionalNotes = "Notes$ordinal",
                 score = 0,
                 epochSeconds = epochSeconds

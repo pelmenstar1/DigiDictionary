@@ -16,7 +16,8 @@ import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
         RemoteDictionaryProviderInfo::class,
         RemoteDictionaryProviderStats::class,
         SearchPreparedRecord::class,
-        RecordBadgeInfo::class
+        RecordBadgeInfo::class,
+        RecordToBadgeRelation::class
     ],
     exportSchema = true,
     version = 7,
@@ -119,6 +120,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
     abstract fun searchPreparedRecordDao(): SearchPreparedRecordDao
     abstract fun recordBadgeDao(): RecordBadgeDao
+    abstract fun recordToBadgeRelationDao(): RecordToBadgeRelationDao
 
     companion object {
         private var singleton: AppDatabase? = null

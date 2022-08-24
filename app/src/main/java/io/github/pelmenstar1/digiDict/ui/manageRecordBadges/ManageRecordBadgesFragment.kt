@@ -14,6 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRecordBadgesBinding
 
 @AndroidEntryPoint
@@ -26,13 +27,13 @@ class ManageRecordBadgesFragment : Fragment() {
 
         val binding = FragmentManageRecordBadgesBinding.inflate(inflater, container, false)
         val adapter = ManageRecordBadgesAdapter(
-            onAction = { actionId, name ->
+            onAction = { actionId, badge ->
                 when (actionId) {
                     ManageRecordBadgesAdapter.ACTION_REMOVE -> {
-                        showDeleteWarningDialog(name)
+                        showDeleteWarningDialog(badge)
                     }
                     ManageRecordBadgesAdapter.ACTION_EDIT -> {
-                        showAddEditBadgeDialog(currentBadgeName = name)
+                        showAddEditBadgeDialog(currentBadge = badge)
                     }
                 }
             }
@@ -53,7 +54,7 @@ class ManageRecordBadgesFragment : Fragment() {
         }
 
         binding.manageRecordBadgesAdd.also {
-            it.setOnClickListener { showAddEditBadgeDialog(currentBadgeName = null) }
+            it.setOnClickListener { showAddEditBadgeDialog(currentBadge = null) }
         }
 
         initAddBadgeDialogIfShown()
@@ -61,19 +62,20 @@ class ManageRecordBadgesFragment : Fragment() {
         return binding.root
     }
 
-    private fun showDeleteWarningDialog(name: String) {
+    private fun showDeleteWarningDialog(badge: RecordBadgeInfo) {
+        // TODO: Generalize showing of the alert dialog.
         MaterialAlertDialogBuilder(requireContext())
             .setMessage(R.string.manageRecordBadges_removeWarning)
-            .setPositiveButton(android.R.string.ok) { _, _ -> viewModel.remove(name) }
+            .setPositiveButton(android.R.string.ok) { _, _ -> viewModel.remove(badge) }
             .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
             .show()
     }
 
-    private fun showAddEditBadgeDialog(currentBadgeName: String?) {
+    private fun showAddEditBadgeDialog(currentBadge: RecordBadgeInfo?) {
         AddEditBadgeDialog().also {
             initAddEditBadgeDialog(it)
 
-            it.arguments = AddEditBadgeDialog.args(currentBadgeName)
+            it.arguments = AddEditBadgeDialog.args(currentBadge)
             it.show(childFragmentManager, ADD_BADGE_DIALOG_TAG)
         }
     }
@@ -87,13 +89,11 @@ class ManageRecordBadgesFragment : Fragment() {
     }
 
     private fun initAddEditBadgeDialog(dialog: AddEditBadgeDialog) {
-        dialog.onSubmit = { name ->
-            val currentBadgeName = dialog.currentBadgeName
-
-            if (currentBadgeName != null) {
-                viewModel.edit(currentBadgeName, name)
+        dialog.onSubmit = { badge ->
+            if (dialog.currentBadge != null) {
+                viewModel.update(badge)
             } else {
-                viewModel.add(name)
+                viewModel.add(badge)
             }
         }
     }

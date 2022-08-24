@@ -17,32 +17,40 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.launchSetEnabledFlowCollector
 import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
-import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
 
 @AndroidEntryPoint
 class QuizFragment : Fragment() {
     private inner class ItemViewHolder(val container: ViewGroup) {
-        private val expressionView =
-            container.findViewById<TextView>(R.id.itemQuizRecord_expression)
-        private val meaningView =
-            container.findViewById<TextView>(R.id.itemQuizRecord_meaning)
-        private val correctButton =
-            container.findViewById<Button>(R.id.itemQuizRecord_correctAnswer)
-        private val wrongButton =
-            container.findViewById<Button>(R.id.itemQuizRecord_wrongAnswer)
+        private val expressionView: TextView
+        private val meaningView: TextView
+        private val correctButton: Button
+        private val wrongButton: Button
+        private val badgeContainer: BadgeContainer
 
         private var index = 0
 
-        fun bind(value: Record, index: Int, state: Int) {
+        init {
+            with(container) {
+                expressionView = findViewById(R.id.itemQuizRecord_expression)
+                meaningView = findViewById(R.id.itemQuizRecord_meaning)
+                correctButton = findViewById(R.id.itemQuizRecord_correctAnswer)
+                wrongButton = findViewById(R.id.itemQuizRecord_wrongAnswer)
+                badgeContainer = findViewById(R.id.itemQuizRecord_badgeContainer)
+            }
+        }
+
+        fun bind(value: ConciseRecordWithBadges, index: Int, state: Int) {
             this.index = index
 
             expressionView.text = value.expression
-
+            badgeContainer.setBadges(value.badges)
             meaningView.apply {
                 visibility = View.INVISIBLE
-                text = MeaningTextHelper.parseToFormatted(value.rawMeaning)
+                text = MeaningTextHelper.parseToFormatted(value.meaning)
             }
 
             correctButton.initActionButton(isCorrect = true)
@@ -151,7 +159,7 @@ class QuizFragment : Fragment() {
         return binding.root
     }
 
-    private fun submitItemsToContainer(container: LinearLayout, items: Array<out Record>) {
+    private fun submitItemsToContainer(container: LinearLayout, items: Array<out ConciseRecordWithBadges>) {
         container.removeAllViews()
 
         for (i in items.indices) {

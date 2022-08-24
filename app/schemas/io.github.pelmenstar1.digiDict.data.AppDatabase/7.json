@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 7,
-    "identityHash": "94093c5158c004ab0a4c7c703772dd3c",
+    "identityHash": "ed2a7a0e89324350b337c32a10d94fba",
     "entities": [
       {
         "tableName": "records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `expression` TEXT NOT NULL, `meaning` TEXT NOT NULL, `additionalNotes` TEXT NOT NULL, `score` INTEGER NOT NULL, `dateTime` INTEGER NOT NULL, `badges` TEXT NOT NULL DEFAULT '')",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `expression` TEXT NOT NULL, `meaning` TEXT NOT NULL, `additionalNotes` TEXT NOT NULL, `score` INTEGER NOT NULL, `dateTime` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -43,13 +43,6 @@
             "columnName": "dateTime",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "rawBadges",
-            "columnName": "badges",
-            "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "''"
           }
         ],
         "primaryKey": {
@@ -163,20 +156,64 @@
       },
       {
         "tableName": "record_badges",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, PRIMARY KEY(`name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `outlineColor` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
           {
             "fieldPath": "name",
             "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "outlineColor",
+            "columnName": "outlineColor",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
           "columnNames": [
-            "name"
+            "id"
           ],
           "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "record_to_badge_relations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`relationId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `recordId` INTEGER NOT NULL, `badgeId` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "relationId",
+            "columnName": "relationId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordId",
+            "columnName": "recordId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "badgeId",
+            "columnName": "badgeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "relationId"
+          ],
+          "autoGenerate": true
         },
         "indices": [],
         "foreignKeys": []
@@ -185,7 +222,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '94093c5158c004ab0a4c7c703772dd3c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ed2a7a0e89324350b337c32a10d94fba')"
     ]
   }
 }

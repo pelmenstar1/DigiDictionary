@@ -15,11 +15,11 @@ import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
-import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
 
-open class RecordViewHolder private constructor(
+open class ConciseRecordWithBadgesViewHolder private constructor(
     val container: ViewGroup
 ) : RecyclerView.ViewHolder(container) {
     private val expressionView: TextView
@@ -55,12 +55,12 @@ open class RecordViewHolder private constructor(
         )
     }
 
-    fun bind(record: Record?, onContainerClickListener: View.OnClickListener) {
+    fun bind(record: ConciseRecordWithBadges?, onContainerClickListener: View.OnClickListener) {
         if (record != null) {
             container.tag = record
 
             expressionView.text = record.expression
-            meaningView.text = MeaningTextHelper.parseToFormatted(record.rawMeaning)
+            meaningView.text = MeaningTextHelper.parseToFormatted(record.meaning)
 
             scoreView.run {
                 val context = context
@@ -82,10 +82,11 @@ open class RecordViewHolder private constructor(
                 text = score.toString()
             }
 
-            badgeContainer.setBadges(record.rawBadges)
+            badgeContainer.setBadges(record.badges)
             container.setOnClickListener(onContainerClickListener)
         } else {
             container.setOnClickListener(null)
+            container.tag = null
 
             expressionView.text = ""
             meaningView.text = ""
@@ -119,7 +120,7 @@ open class RecordViewHolder private constructor(
         private const val MEANING_VIEW_INDEX = 2
 
         inline fun createOnItemClickListener(crossinline block: (id: Int) -> Unit) = View.OnClickListener {
-            (it.tag as? Record?)?.also { record -> block(record.id) }
+            (it.tag as ConciseRecordWithBadges?)?.also { record -> block(record.id) }
         }
 
         internal fun createContainer(context: Context): ViewGroup {
@@ -156,7 +157,7 @@ open class RecordViewHolder private constructor(
                         com.google.android.material.R.style.TextAppearance_Material3_BodyMedium
                     )
                     setTextIsSelectable(false)
-                    isClickable = false
+                    //isClickable = false
                 })
 
                 container.addView(MaterialTextView(context).apply {
@@ -173,7 +174,7 @@ open class RecordViewHolder private constructor(
                         this,
                         com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
                     )
-                    isClickable = false
+                    //isClickable = false
 
                     initMultilineTextView()
                 })
@@ -188,7 +189,7 @@ open class RecordViewHolder private constructor(
                     textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
 
                     initMultilineTextView()
-                    isClickable = false
+                    //isClickable = false
                 })
             }
         }

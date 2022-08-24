@@ -3,9 +3,10 @@ package io.github.pelmenstar1.digiDict.data
 import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.common.generateUniqueRandomNumbers
+import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.common.serialization.SerializableIterable
-import io.github.pelmenstar1.digiDict.common.withRemovedElementAt
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -15,11 +16,6 @@ abstract class RecordDao {
         val id: Int,
         val expression: String,
         val meaning: String
-    )
-
-    class IdBadgesRecord(
-        val id: Int,
-        val badges: String
     )
 
     @Query("SELECT count(*) FROM records")
@@ -36,8 +32,7 @@ abstract class RecordDao {
         SET expression=:expr, 
             meaning=:meaning,
             additionalNotes=:additionalNotes,
-            dateTime=:epochSeconds,
-            badges=:badges
+            dateTime=:epochSeconds
         WHERE id=:id
         """
     )
@@ -46,18 +41,14 @@ abstract class RecordDao {
         expr: String,
         meaning: String,
         additionalNotes: String,
-        epochSeconds: Long,
-        badges: String
+        epochSeconds: Long
     )
 
     @Query("UPDATE records SET score=:newScore WHERE id=:id")
     abstract suspend fun updateScore(id: Int, newScore: Int)
 
-    @Query("UPDATE records SET badges=:encodedBadges WHERE id=:id")
-    abstract suspend fun updateBadges(id: Int, encodedBadges: String)
-
     @Transaction
-    open suspend fun updateScores(records: Array<Record>, newScores: IntArray) {
+    open suspend fun updateScores(records: Array<out EntityWithPrimaryKeyId>, newScores: IntArray) {
         for (i in records.indices) {
             updateScore(records[i].id, newScores[i])
         }
@@ -69,65 +60,100 @@ abstract class RecordDao {
     @Query("DELETE FROM records")
     abstract suspend fun deleteAll()
 
-    @Query("SELECT * FROM records WHERE id=:id")
+    @Query(GET_RECORD_BADGES_BY_RECORD_ID_QUERY)
+    abstract suspend fun getRecordBadgesByRecordId(id: Int): Array<RecordBadgeInfo>
+
+    @Query(GET_RECORD_BADGES_BY_RECORD_ID_QUERY)
+    abstract fun getRecordBadgesFlowByRecordId(id: Int): Flow<Array<RecordBadgeInfo>>
+
+    @Query(GET_RECORD_BY_ID_QUERY)
     abstract suspend fun getRecordById(id: Int): Record?
 
-    @Query("SELECT * FROM records WHERE id=:id")
+    suspend fun getRecordWithBadgesById(id: Int): RecordWithBadges? {
+        val record = getRecordById(id)
+
+        return record?.let {
+            val badges = getRecordBadgesByRecordId(id)
+
+            RecordWithBadges.create(record, badges)
+        }
+    }
+
+    @Query(GET_RECORD_BY_ID_QUERY)
     abstract fun getRecordFlowById(id: Int): Flow<Record?>
 
-    @Query("SELECT * FROM records WHERE id IN (:ids)")
-    abstract suspend fun getRecordsByIds(ids: IntArray): Array<Record>
+    fun getRecordWithBadgesFlowById(id: Int): Flow<RecordWithBadges?> {
+        val recordFlow = getRecordFlowById(id)
+        val badgesFlow = getRecordBadgesFlowByRecordId(id)
 
-    @Query("SELECT id, badges FROM records WHERE INSTR(badges, :encodedName) > 0")
-    abstract suspend fun getRecordsByBadgeName(encodedName: String): Array<IdBadgesRecord>
-
-    @Transaction
-    open suspend fun changeRecordBadgeName(fromName: String, toName: String) {
-        val records = getRecordsByBadgeName(RecordBadgeNameUtil.encode(fromName))
-        for (record in records) {
-            val badges = RecordBadgeNameUtil.decodeArray(record.badges)
-            badges.indexOf(fromName).also {
-                if (it >= 0) {
-                    badges[it] = toName
-                }
-            }
-
-            updateBadges(record.id, RecordBadgeNameUtil.encodeArray(badges))
+        return recordFlow.combine(badgesFlow) { record, badges ->
+            record?.let { RecordWithBadges.create(it, badges) }
         }
     }
 
-    @Transaction
-    open suspend fun deleteBadgeFromAllRecords(name: String) {
-        val records = getRecordsByBadgeName(RecordBadgeNameUtil.encode(name))
+    @Query("SELECT id, expression, meaning, score FROM records WHERE id IN (:ids)")
+    abstract suspend fun getConciseRecordsByIds(ids: IntArray): Array<ConciseRecord>
 
-        for (record in records) {
-            val oldBadges = RecordBadgeNameUtil.decodeArray(record.badges)
-            val badgeToDeleteIndex = oldBadges.indexOf(name)
+    suspend fun getConciseRecordsWithBadgesByIds(ids: IntArray): Array<ConciseRecordWithBadges> {
+        val records = getConciseRecordsByIds(ids)
 
-            val newBadges = if (badgeToDeleteIndex >= 0) {
-                oldBadges.withRemovedElementAt(badgeToDeleteIndex)
-            } else {
-                oldBadges
-            }
+        return records.mapToArray {
+            val badges = getRecordBadgesByRecordId(it.id)
 
-            updateBadges(record.id, RecordBadgeNameUtil.encodeArray(newBadges))
+            ConciseRecordWithBadges.create(it, badges)
         }
     }
 
-    @Query("SELECT expression, meaning, additionalNotes, dateTime, score,badges FROM records")
+    @Query("SELECT expression, meaning, additionalNotes, dateTime, score FROM records")
     abstract fun getAllRecordsNoIdRaw(): Cursor
 
     @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
 
-    @Query("SELECT * FROM records LEFT JOIN search_prepared_records AS spr ON records.id=spr.id")
-    abstract fun getAllRecordsWithSearchInfoFlow(): Flow<Array<RecordWithSearchInfo>>
+    @Query(
+        """
+        SELECT r.id as id, r.expression as expression, r.meaning as meaning, r.score as score, spr.keywords
+        FROM records AS r 
+        LEFT JOIN search_prepared_records AS spr ON r.id=spr.id
+        """
+    )
+    abstract suspend fun getAllConciseRecordsWithSearchInfo(): Array<ConciseRecordWithSearchInfo>
 
-    @Query("SELECT * FROM records ORDER BY dateTime DESC LIMIT :limit OFFSET :offset")
-    abstract suspend fun getRecordsLimitOffset(
+    suspend fun getAllConciseRecordsWithSearchInfoAndBadges(): Array<ConciseRecordWithSearchInfoAndBadges> {
+        val records = getAllConciseRecordsWithSearchInfo()
+
+        return records.mapToArray {
+            val badges = getRecordBadgesByRecordId(it.id)
+
+            ConciseRecordWithSearchInfoAndBadges.create(it, badges)
+        }
+    }
+
+    @Query(
+        """
+        SELECT id, expression, meaning, score 
+        FROM records
+        ORDER BY dateTime DESC 
+        LIMIT :limit OFFSET :offset
+        """
+    )
+    abstract suspend fun getConciseRecordsLimitOffset(
         limit: Int,
         offset: Int,
-    ): List<Record>
+    ): Array<ConciseRecord>
+
+    suspend fun getConciseRecordsWithBadgesLimitOffset(
+        limit: Int,
+        offset: Int
+    ): List<ConciseRecordWithBadges> {
+        val records = getConciseRecordsLimitOffset(limit, offset)
+
+        return records.map {
+            val badges = getRecordBadgesByRecordId(it.id)
+
+            ConciseRecordWithBadges.create(it, badges)
+        }
+    }
 
     @Query("SELECT expression FROM records")
     abstract suspend fun getAllExpressions(): Array<String>
@@ -137,6 +163,14 @@ abstract class RecordDao {
 
     @Query("SELECT * FROM records WHERE expression = :expr")
     abstract suspend fun getRecordByExpression(expr: String): Record?
+
+    suspend fun getRecordWithBadgesByExpression(expr: String): RecordWithBadges? {
+        return getRecordByExpression(expr)?.let {
+            val badges = getRecordBadgesByRecordId(it.id)
+
+            RecordWithBadges.create(it, badges)
+        }
+    }
 
     @Query("SELECT id FROM records WHERE expression=:expr")
     abstract suspend fun getRecordIdByExpression(expr: String): Int?
@@ -153,8 +187,10 @@ abstract class RecordDao {
     @Query("SELECT id FROM records WHERE dateTime >= :epochSeconds")
     abstract suspend fun getIdsAfter(epochSeconds: Long): IntArray
 
-    @Transaction
-    open suspend fun getRandomRecordsRegardlessScore(random: Random, requestedSize: Int): Array<Record> {
+    suspend fun getRandomConciseRecordsWithBadgesRegardlessScore(
+        random: Random,
+        requestedSize: Int
+    ): Array<ConciseRecordWithBadges> {
         val totalSize = count()
         val resolvedSize = min(requestedSize, totalSize)
 
@@ -163,11 +199,11 @@ abstract class RecordDao {
 
         val resultIds = IntArray(indices.size) { allIds[indices[it]] }
 
-        return getRecordsByIds(resultIds)
+        return getConciseRecordsWithBadgesByIds(resultIds)
     }
 
     @Transaction
-    open suspend fun getRandomRecords(random: Random, size: Int): Array<Record> {
+    open suspend fun getRandomConciseRecordsWithBadges(random: Random, size: Int): Array<ConciseRecordWithBadges> {
         val halfSize = size / 2
         if (halfSize * 2 != size) {
             throw IllegalArgumentException("Size must be even")
@@ -201,23 +237,37 @@ abstract class RecordDao {
 
         ids.shuffle(random)
 
-        return getRecordsByIds(ids)
+        return getConciseRecordsWithBadgesByIds(ids)
     }
 
     @Transaction
-    open suspend fun getRandomRecordsAfter(random: Random, maxSize: Int, afterEpochSeconds: Long): Array<Record> {
+    open suspend fun getRandomConciseRecordsWithBadgesAfter(
+        random: Random,
+        maxSize: Int,
+        afterEpochSeconds: Long
+    ): Array<ConciseRecordWithBadges> {
         val ids = getIdsAfter(afterEpochSeconds)
         ids.shuffle(random)
 
         val narrowedIds = IntArray(min(ids.size, maxSize))
         ids.copyInto(narrowedIds, endIndex = narrowedIds.size)
 
-        return getRecordsByIds(narrowedIds)
+        return getConciseRecordsWithBadgesByIds(narrowedIds)
     }
 
     fun getAllRecordsNoIdIterable(): SerializableIterable {
         val cursor = getAllRecordsNoIdRaw()
 
         return cursor.asRecordSerializableIterableNoId()
+    }
+
+    companion object {
+        private const val GET_RECORD_BADGES_BY_RECORD_ID_QUERY = """
+        SELECT rb.id as id, rb.name as name, rb.outlineColor as outlineColor 
+        FROM record_badges AS rb 
+        WHERE rb.id IN (SELECT rbr.badgeId FROM record_to_badge_relations AS rbr WHERE rbr.recordId=:id) 
+        """
+
+        private const val GET_RECORD_BY_ID_QUERY = "SELECT * FROM records WHERE id=:id"
     }
 }

@@ -14,10 +14,12 @@ import androidx.annotation.StyleRes
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.button.MaterialButton
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.EmptyArray
+import io.github.pelmenstar1.digiDict.common.mapToIntArray
 import io.github.pelmenstar1.digiDict.common.ui.MultilineHorizontalLinearLayout
 import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.ui.badge.BadgeWithRemoveButtonView
 
 class BadgeListInteractionView @JvmOverloads constructor(
     context: Context,
@@ -26,18 +28,20 @@ class BadgeListInteractionView @JvmOverloads constructor(
     @StyleRes defStyleRes: Int = 0
 ) : MultilineHorizontalLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
     private class SavedState : AbsSavedState {
-        var badges: Array<String> = EmptyArray.STRING
+        var badges = emptyArray<RecordBadgeInfo>()
 
         constructor(superState: Parcelable?) : super(superState)
 
         constructor(parcel: Parcel) : super(parcel) {
-            badges = parcel.createStringArray() ?: EmptyArray.STRING
+            parcel.createTypedArray(RecordBadgeInfo.CREATOR)?.let {
+                badges = it
+            }
         }
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
             super.writeToParcel(dest, flags)
 
-            dest.writeStringArray(badges)
+            dest.writeParcelableArray(badges, 0)
         }
 
         companion object CREATOR : Parcelable.Creator<SavedState> {
@@ -46,21 +50,17 @@ class BadgeListInteractionView @JvmOverloads constructor(
         }
     }
 
-    var badges: Array<String>
+    var badges: Array<RecordBadgeInfo>
         get() {
             val badgeCount = childCount - 1
 
-            return if (badgeCount == 0) {
-                EmptyArray.STRING
-            } else {
-                Array(badgeCount) { i -> getBadgeViewAt(i).text }
-            }
+            return Array(badgeCount) { i -> getBadgeViewAt(i).badge!! }
         }
-        set(value) {
-            adjustInputCount(value.size)
+        set(values) {
+            adjustInputCount(values.size)
 
             for (i in 0 until (childCount - 1)) {
-                getBadgeViewAt(i).text = value[i]
+                getBadgeViewAt(i).badge = values[i]
             }
         }
 
@@ -68,10 +68,10 @@ class BadgeListInteractionView @JvmOverloads constructor(
 
     private val addButton: Button
 
-    private val badgeRemoveListener = OnClickListener {
-        val name = (it.parent as BadgeWithRemoveButtonView).text
-
-        removeBadgeByName(name)
+    private val badgeRemoveListener = OnClickListener { view ->
+        (view.parent as BadgeWithRemoveButtonView).badge?.let {
+            removeBadge(it)
+        }
     }
 
     init {
@@ -96,7 +96,6 @@ class BadgeListInteractionView @JvmOverloads constructor(
 
                 // Add button should be in one line with badges.
                 topMargin = res.getDimensionPixelOffset(R.dimen.badge_topMargin)
-                //marginStart = res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_startMargin)
             }
 
             res.getDimensionPixelOffset(R.dimen.badgeInteraction_addButton_rightPadding).also {
@@ -104,6 +103,9 @@ class BadgeListInteractionView @JvmOverloads constructor(
             }
 
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+            insetTop = 0
+            insetBottom = 0
+
             setIconResource(R.drawable.ic_add)
             setText(R.string.badgeInteraction_badge)
 
@@ -129,17 +131,17 @@ class BadgeListInteractionView @JvmOverloads constructor(
         }
     }
 
-    private fun addBadge(name: String) {
+    private fun addBadge(value: RecordBadgeInfo) {
         val index = childCount - 1
 
-        addView(createBadgeView().apply { text = name }, index)
+        addView(createBadgeView().apply { badge = value }, index)
     }
 
-    private fun removeBadgeByName(name: String) {
+    private fun removeBadge(badge: RecordBadgeInfo) {
         for (i in 0 until (childCount - 1)) {
             val view = getBadgeViewAt(i)
 
-            if (view.text == name) {
+            if (view.badge == badge) {
                 removeViewAt(i)
                 break
             }
@@ -147,14 +149,12 @@ class BadgeListInteractionView @JvmOverloads constructor(
     }
 
     private fun showBadgeSelectorDialog() {
-        val fm = getFragmentManager()
-        val dialog = BadgeSelectorDialog().also {
-            it.arguments = BadgeSelectorDialog.args(badges)
+        BadgeSelectorDialog().also {
+            it.arguments = BadgeSelectorDialog.args(badges.mapToIntArray { badge -> badge.id })
+
+            initBadgeSelectorDialog(it)
+            it.show(getFragmentManager(), SELECTOR_DIALOG_TAG)
         }
-
-        initBadgeSelectorDialog(dialog)
-
-        dialog.show(fm, SELECTOR_DIALOG_TAG)
     }
 
     private fun initBadgeSelectorDialog(dialog: BadgeSelectorDialog) {

@@ -27,7 +27,7 @@ class AddEditBadgeDialogViewModel @Inject constructor(
         when {
             input.isBlank() ->
                 AddEditBadgeInputMessage.EMPTY_TEXT
-            (curBadgeName == null || curBadgeName != input) && badges.contains(input) ->
+            (curBadgeName == null || curBadgeName != input) && badges.indexOfFirst { it.name == input } >= 0 ->
                 AddEditBadgeInputMessage.EXISTS
             else -> null
         }

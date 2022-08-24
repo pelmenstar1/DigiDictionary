@@ -20,4 +20,17 @@
     <color name="record_quiz_item_wrong_answer">@color/red_700</color>
 
     <color name="badge_icon_tint">#ffffff</color>
+
+    <color name="add_edit_badge_dialog_color_palette_stroke_color">#FFFFFF</color>
+    <array name="add_edit_badge_dialog_outline_colors">
+        <item>#D50000</item>
+        <item>#DD2C00</item>
+        <item>#FFD600</item>
+        <item>#5FF800</item>
+        <item>#00C853</item>
+        <item>#2962FF</item>
+        <item>#00B8D4</item>
+        <item>#2F105A</item>
+        <item>#C51162</item>
+    </array>
 </resources>

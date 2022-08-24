@@ -9,39 +9,32 @@ import androidx.annotation.IdRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.EmptyArray
 import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.ui.ColorCircleView
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.ui.ArrayDiffCallback
 
 class ManageRecordBadgesAdapter(
-    private val onAction: (actionId: Int, badgeName: String) -> Unit
+    private val onAction: (actionId: Int, badge: RecordBadgeInfo) -> Unit
 ) : RecyclerView.Adapter<ManageRecordBadgesAdapter.ViewHolder>() {
-    private class Callback(
-        private val old: Array<out String>,
-        private val new: Array<out String>
-    ) : DiffUtil.Callback() {
-        override fun getOldListSize() = old.size
-        override fun getNewListSize() = new.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return old[oldItemPosition] == new[newItemPosition]
-        }
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return areItemsTheSame(oldItemPosition, newItemPosition)
-        }
-    }
-
     inner class ViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
-        private val nameView = container.findViewById<TextView>(R.id.itemManageRecordBadges_nameView)
+        private val nameView: TextView
+        private val colorCircleView: ColorCircleView
 
         init {
+            with(container) {
+                nameView = findViewById(R.id.itemManageRecordBadges_nameView)
+                colorCircleView = findViewById(R.id.itemManageRecordBadges_colorCircleView)
+            }
+
             initActionButton(R.id.itemManageRecordBadges_removeButton)
             initActionButton(R.id.itemManageRecordBadges_editButton)
         }
 
-        fun bind(name: String) {
-            container.tag = name
-            nameView.text = name
+        fun bind(value: RecordBadgeInfo) {
+            container.tag = value
+            nameView.text = value.name
+            colorCircleView.color = value.outlineColor
         }
 
         private fun initActionButton(@IdRes id: Int) {
@@ -53,7 +46,7 @@ class ManageRecordBadgesAdapter(
 
     private val actionButtonOnClickListener = View.OnClickListener {
         val parent = it.parent as ViewGroup
-        val name = parent.tag as String
+        val badge = parent.tag as RecordBadgeInfo
 
         val actionId = when (it.id) {
             R.id.itemManageRecordBadges_removeButton -> ACTION_REMOVE
@@ -61,15 +54,14 @@ class ManageRecordBadgesAdapter(
             else -> throw IllegalStateException("Illegal id of action button")
         }
 
-        onAction(actionId, name)
+        onAction(actionId, badge)
     }
 
-    private var elements: Array<out String> = EmptyArray.STRING
-
+    private var elements: Array<out RecordBadgeInfo> = emptyArray()
     private var layoutInflaterHolder: LayoutInflater? = null
 
-    fun submitData(elements: Array<out String>) {
-        val result = DiffUtil.calculateDiff(Callback(this.elements, elements))
+    fun submitData(elements: Array<out RecordBadgeInfo>) {
+        val result = DiffUtil.calculateDiff(ArrayDiffCallback(this.elements, elements))
         this.elements = elements
 
         result.dispatchUpdatesTo(this)
@@ -90,9 +82,7 @@ class ManageRecordBadgesAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val element = elements[position]
-
-        holder.bind(element)
+        holder.bind(elements[position])
     }
 
     companion object {

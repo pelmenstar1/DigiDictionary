@@ -5,6 +5,13 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal">
 
+    <io.github.pelmenstar1.digiDict.common.ui.ColorCircleView
+        android:id="@+id/itemManageRecordBadges_colorCircleView"
+        android:layout_width="@dimen/itemManageRecordBadges_colorCircleSize"
+        android:layout_height="@dimen/itemManageRecordBadges_colorCircleSize"
+        android:layout_gravity="center_vertical"
+        android:layout_marginHorizontal="5dp" />
+
     <TextView
         android:id="@+id/itemManageRecordBadges_nameView"
         style="@style/TextAppearance.Material3.BodyLarge"

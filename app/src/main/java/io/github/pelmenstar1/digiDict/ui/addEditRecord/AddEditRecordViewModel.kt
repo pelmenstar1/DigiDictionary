@@ -21,6 +21,7 @@ import javax.inject.Inject
 class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val searchPreparedRecordDao: SearchPreparedRecordDao,
+    private val recordToBadgeRelationDao: RecordToBadgeRelationDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
     private val localeProvider: LocaleProvider
@@ -42,11 +43,11 @@ class AddEditRecordViewModel @Inject constructor(
             }
         }
 
-    private val currentRecordStateManager = DataLoadStateManager<Record?>(TAG)
+    private val currentRecordStateManager = DataLoadStateManager<RecordWithBadges?>(TAG)
     val currentRecordStateFlow = currentRecordStateManager.buildFlow(viewModelScope) {
         fromFlow {
             currentRecordIdFlow.filterNotNull().map { id ->
-                recordDao.getRecordById(id).also {
+                recordDao.getRecordWithBadgesById(id).also {
                     validity.updateNullable {
                         it.withBit(EXPRESSION_VALIDITY_BIT, true).withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, false)
                     }
@@ -77,7 +78,7 @@ class AddEditRecordViewModel @Inject constructor(
         }
 
     var getMeaning: (() -> ComplexMeaning)? = null
-    var getBadges: (() -> Array<String>)? = null
+    var getBadges: (() -> Array<RecordBadgeInfo>)? = null
 
     var additionalNotes: CharSequence = ""
 
@@ -169,46 +170,49 @@ class AddEditRecordViewModel @Inject constructor(
             // (If a string does not have any trailing or leading whitespaces, then trimToString won't allocate at all)
             val expr = _expression.trimToString()
             val additionalNotes = additionalNotes.trimToString()
-            val rawMeaning = getMeaning.invokeNullable().rawText
-            val badges = getBadges.invokeNullable()
+            val rawMeaning = getMeaning.invokeOrThrow().rawText
+            val badges = getBadges.invokeOrThrow()
 
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
-                    val rawBadges = RecordBadgeNameUtil.encodeArray(badges)
+                    val locale = localeProvider.get()
 
-                    currentRecordId.let { currentId ->
-                        val locale = localeProvider.get()
+                    val recordId: Int
+                    if (currentRecordId >= 0) {
+                        recordDao.update(
+                            currentRecordId,
+                            expr, rawMeaning, additionalNotes,
+                            epochSeconds
+                        )
 
-                        if (currentId >= 0) {
-                            recordDao.update(
-                                currentId,
+                        recordId = currentRecordId
+                    } else {
+                        recordDao.insert(
+                            Record(
+                                id = 0,
                                 expr, rawMeaning, additionalNotes,
-                                epochSeconds,
-                                rawBadges
+                                score = 0,
+                                epochSeconds
                             )
+                        )
 
-                            searchPreparedRecordDao.update(
-                                SearchPreparedRecord.prepare(currentId, expr, rawMeaning, locale)
-                            )
-                        } else {
-                            recordDao.insert(
-                                Record(
-                                    id = 0,
-                                    expr, rawMeaning, additionalNotes,
-                                    score = 0,
-                                    epochSeconds,
-                                    rawBadges
-                                )
-                            )
-
-                            recordDao.getRecordIdByExpression(expr)?.let {
-                                searchPreparedRecordDao.insert(
-                                    SearchPreparedRecord.prepare(it, expr, rawMeaning, locale)
-                                )
-                            }
-                        }
+                        recordId = recordDao.getRecordIdByExpression(expr)!!
                     }
+
+                    val spr = SearchPreparedRecord.prepare(recordId, expr, rawMeaning, locale)
+                    if (currentRecordId >= 0) {
+                        searchPreparedRecordDao.update(spr)
+                    } else {
+                        searchPreparedRecordDao.insert(spr)
+                    }
+
+                    recordToBadgeRelationDao.deleteAllByRecordId(recordId)
+                    recordToBadgeRelationDao.insertAll(
+                        badges.mapToArray {
+                            RecordToBadgeRelation(0, recordId, it.id)
+                        }
+                    )
 
                     listAppWidgetUpdater.updateAllWidgets()
                     onRecordSuccessfullyAdded.raiseOnMainThread()
@@ -234,7 +238,7 @@ class AddEditRecordViewModel @Inject constructor(
 
         const val ALL_VALID_MASK = EXPRESSION_VALIDITY_BIT or MEANING_VALIDITY_BIT
 
-        internal fun <T> (() -> T)?.invokeNullable(): T {
+        internal fun <T> (() -> T)?.invokeOrThrow(): T {
             return requireNotNull(this).invoke()
         }
     }

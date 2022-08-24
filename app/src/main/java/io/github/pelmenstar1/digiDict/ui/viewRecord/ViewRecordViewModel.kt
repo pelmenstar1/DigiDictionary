@@ -6,8 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
-import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.RecordWithBadges
 import io.github.pelmenstar1.digiDict.data.SearchPreparedRecordDao
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ class ViewRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val preparedRecordDao: SearchPreparedRecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater
-) : SingleDataLoadStateViewModel<Record?>(TAG) {
+) : SingleDataLoadStateViewModel<RecordWithBadges?>(TAG) {
     override val canRefreshAfterSuccess: Boolean
         get() = false
 
@@ -38,9 +38,9 @@ class ViewRecordViewModel @Inject constructor(
     val onDeleteError = Event()
     val onRecordDeleted = Event()
 
-    override fun DataLoadStateManager.FlowBuilder<Record?>.buildDataFlow() = fromFlow {
+    override fun DataLoadStateManager.FlowBuilder<RecordWithBadges?>.buildDataFlow() = fromFlow {
         idFlow.filterNotNull().flatMapMerge { id ->
-            recordDao.getRecordFlowById(id)
+            recordDao.getRecordWithBadgesFlowById(id)
         }
     }
 

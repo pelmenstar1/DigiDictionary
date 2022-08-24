@@ -12,7 +12,7 @@ data class RecordNoId(
     companion object {
         fun fromRecord(value: Record) = RecordNoId(
             value.expression,
-            value.rawMeaning,
+            value.meaning,
             value.additionalNotes,
             value.score,
             value.epochSeconds

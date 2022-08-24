@@ -1,8 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
 import io.github.pelmenstar1.digiDict.common.*
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordWithSearchInfo
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithSearchInfoAndBadges
 import io.github.pelmenstar1.digiDict.data.SearchPreparedRecord
 import org.jetbrains.annotations.TestOnly
 import java.util.*
@@ -13,10 +12,10 @@ object RecordSearchUtil {
      * [locale] is used to convert [query] to lowercase.
      */
     fun filter(
-        recordsWithSearchInfo: Array<out RecordWithSearchInfo>,
+        recordsWithSearchInfo: Array<out ConciseRecordWithSearchInfoAndBadges>,
         query: String,
         locale: Locale
-    ): FilteredArray<Record> {
+    ): FilteredArray<ConciseRecordWithSearchInfoAndBadges> {
         val preparedQuery = query.lowercase(locale).reduceNonLettersOrDigitsReplacedToSpace()
 
         return recordsWithSearchInfo.filterFast {
@@ -24,7 +23,7 @@ object RecordSearchUtil {
             if (keywords == null) {
                 keywords = SearchPreparedRecord.prepareToKeywords(
                     it.expression,
-                    it.rawMeaning,
+                    it.meaning,
                     needToLower = true,
                     locale = locale
                 )

@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.ui.addEditRecord.badge
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -13,25 +14,25 @@ import javax.inject.Inject
 class BadgeSelectorDialogViewModel @Inject constructor(
     badgeDao: RecordBadgeDao
 ) : ViewModel() {
-    private val usedBadgesFlow = MutableStateFlow<Array<String>?>(null)
+    private val usedBadgeIdsFlow = MutableStateFlow<IntArray?>(null)
     private val allBadgesFlow = badgeDao.getAllFlow()
 
-    var usedBadges: Array<String>?
-        get() = usedBadgesFlow.value
+    var usedBadgeIds: IntArray?
+        get() = usedBadgeIdsFlow.value
         set(value) {
-            usedBadgesFlow.value = value
+            usedBadgeIdsFlow.value = value
         }
 
-    val validBadgesFlow: Flow<Array<String>> = allBadgesFlow.combine(usedBadgesFlow.filterNotNull()) { all, used ->
-        val result = ArrayList<String>(all.size)
+    val validBadgeNamesFlow: Flow<List<RecordBadgeInfo>> =
+        allBadgesFlow.combine(usedBadgeIdsFlow.filterNotNull()) { all, used ->
+            val result = ArrayList<RecordBadgeInfo>(all.size)
 
-        all.forEach {
-            if (!used.contains(it)) {
-                result.add(it)
+            all.forEach { badge ->
+                if (!used.contains(badge.id)) {
+                    result.add(badge)
+                }
             }
-        }
 
-        result.sort()
-        result.toTypedArray()
-    }
+            result
+        }
 }

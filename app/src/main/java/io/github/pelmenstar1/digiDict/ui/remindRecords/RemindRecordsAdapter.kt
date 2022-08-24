@@ -5,11 +5,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.ui.record.RecordViewHolder
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
 
 class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolder>() {
-    class ViewHolder(context: Context) : RecordViewHolder(context) {
+    class ViewHolder(context: Context) : ConciseRecordWithBadgesViewHolder(context) {
         fun setRevealed(state: Boolean) {
             // Use INVISIBLE instead of GONE to reduce jumps on revealing.
             val visibility = if (state) View.VISIBLE else View.INVISIBLE
@@ -20,7 +20,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     }
 
     private val onContainerClickListener = View.OnClickListener {
-        val record = it.tag as Record
+        val record = it.tag as ConciseRecordWithBadges
         val index = items.indexOf(record)
 
         if (index >= 0) {
@@ -28,7 +28,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
         }
     }
 
-    private var items = emptyArray<Record>()
+    private var items = emptyArray<ConciseRecordWithBadges>()
 
     private var _revealedStates = FixedBitSet.EMPTY
     var revealedStates: FixedBitSet
@@ -43,7 +43,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
             notifyItemRangeChanged(0, items.size, updateRevealStatePayload)
         }
 
-    fun submitItems(newItems: Array<Record>, defaultRevealState: Boolean) {
+    fun submitItems(newItems: Array<ConciseRecordWithBadges>, defaultRevealState: Boolean) {
         val newSize = newItems.size
         val revStates = _revealedStates
 

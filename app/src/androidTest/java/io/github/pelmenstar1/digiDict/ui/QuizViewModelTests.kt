@@ -7,6 +7,8 @@ import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.ConciseRecord.Companion.toConciseRecord
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
@@ -42,7 +44,7 @@ class QuizViewModelTests {
         return Record(
             id = 0,
             expression = expression,
-            rawMeaning = "CMeaning",
+            meaning = "CMeaning",
             additionalNotes = "AdditionalNotes",
             score = score,
             epochSeconds = 0
@@ -91,8 +93,16 @@ class QuizViewModelTests {
     @Test
     fun onResultSavedCalledOnMainThread() = runTest {
         val dao = object : RecordDaoStub() {
-            override suspend fun getRandomRecords(random: Random, size: Int): Array<Record> {
-                return arrayOf(createRecord("Expr", 1))
+            override suspend fun updateScore(id: Int, newScore: Int) {
+            }
+
+            override suspend fun getRandomConciseRecordsWithBadges(
+                random: Random,
+                size: Int
+            ): Array<ConciseRecordWithBadges> {
+                return arrayOf(
+                    ConciseRecordWithBadges.create(createRecord("Expr", 1).toConciseRecord(), emptyArray())
+                )
             }
         }
 
@@ -109,8 +119,13 @@ class QuizViewModelTests {
     @Test
     fun onSaveErrorCalledOnMainThread() = runTest {
         val dao = object : RecordDaoStub() {
-            override suspend fun getRandomRecords(random: Random, size: Int): Array<Record> {
-                return arrayOf(createRecord("Expr1", 1))
+            override suspend fun getRandomConciseRecordsWithBadges(
+                random: Random,
+                size: Int
+            ): Array<ConciseRecordWithBadges> {
+                return arrayOf(
+                    ConciseRecordWithBadges.create(createRecord("Expr", 1).toConciseRecord(), emptyArray())
+                )
             }
 
             override suspend fun updateScore(id: Int, newScore: Int) {

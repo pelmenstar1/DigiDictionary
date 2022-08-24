@@ -74,6 +74,11 @@ class AppModule {
     }
 
     @Provides
+    fun provideRecordToBadgeRelationDao(appDatabase: AppDatabase): RecordToBadgeRelationDao {
+        return appDatabase.recordToBadgeRelationDao()
+    }
+
+    @Provides
     fun provideCommonStatsProvider(
         appDatabase: AppDatabase
     ): CommonStatsProvider {

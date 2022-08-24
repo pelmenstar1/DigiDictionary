@@ -16,8 +16,7 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordBadgeNameUtil
+import io.github.pelmenstar1.digiDict.data.RecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
 import javax.inject.Inject
 
@@ -101,12 +100,12 @@ class AddEditRecordFragment : Fragment() {
         }
     }
 
-    private fun setRecord(value: Record) {
+    private fun setRecord(value: RecordWithBadges) {
         binding.run {
             addRecordExpressionInputLayout.setText(value.expression)
             addRecordAdditionalNotesInputLayout.setText(value.additionalNotes)
-            addRecordMeaningListInteraction.meaning = ComplexMeaning.parse(value.rawMeaning)
-            addRecordBadgeInteraction.badges = RecordBadgeNameUtil.decodeArray(value.rawBadges)
+            addRecordMeaningListInteraction.meaning = ComplexMeaning.parse(value.meaning)
+            addRecordBadgeInteraction.badges = value.badges
         }
     }
 

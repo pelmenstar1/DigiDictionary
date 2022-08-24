@@ -35,22 +35,19 @@ open class RecordDaoStub : RecordDao() {
     }
 
     override suspend fun insert(value: Record) {
+        throw NotImplementedError()
     }
 
     override suspend fun insertAll(values: Array<Record>) {
+        throw NotImplementedError()
     }
 
-    override suspend fun update(
-        id: Int,
-        expr: String,
-        meaning: String,
-        additionalNotes: String,
-        epochSeconds: Long,
-        badges: String
-    ) {
+    override suspend fun update(id: Int, expr: String, meaning: String, additionalNotes: String, epochSeconds: Long) {
+        throw NotImplementedError()
     }
 
     override suspend fun updateScore(id: Int, newScore: Int) {
+        throw NotImplementedError()
     }
 
     override suspend fun deleteById(id: Int): Int {
@@ -58,6 +55,14 @@ open class RecordDaoStub : RecordDao() {
     }
 
     override suspend fun deleteAll() {
+    }
+
+    override suspend fun getRecordBadgesByRecordId(id: Int): Array<RecordBadgeInfo> {
+        throw NotImplementedError()
+    }
+
+    override fun getRecordBadgesFlowByRecordId(id: Int): Flow<Array<RecordBadgeInfo>> {
+        throw NotImplementedError()
     }
 
     override suspend fun getRecordById(id: Int): Record? {
@@ -68,7 +73,7 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override suspend fun getRecordsByIds(ids: IntArray): Array<Record> {
+    override suspend fun getConciseRecordsByIds(ids: IntArray): Array<ConciseRecord> {
         throw NotImplementedError()
     }
 
@@ -80,11 +85,11 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override fun getAllRecordsWithSearchInfoFlow(): Flow<Array<RecordWithSearchInfo>> {
+    override suspend fun getAllConciseRecordsWithSearchInfo(): Array<ConciseRecordWithSearchInfo> {
         throw NotImplementedError()
     }
 
-    override suspend fun getRecordsLimitOffset(limit: Int, offset: Int): List<Record> {
+    override suspend fun getConciseRecordsLimitOffset(limit: Int, offset: Int): Array<ConciseRecord> {
         throw NotImplementedError()
     }
 

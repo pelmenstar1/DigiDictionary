@@ -253,3 +253,20 @@ fun createNumberRangeList(start: Int, endInclusive: Int, step: Int = 1): List<St
 
     return list
 }
+
+inline fun String.lazySplitToRanges(delimiter: Char, onRange: (start: Int, end: Int) -> Unit) {
+    var prevIndex = 0
+    val length = length
+
+    while (prevIndex < length) {
+        var nextIndex = indexOf(delimiter, prevIndex)
+        if (nextIndex == -1) {
+            nextIndex = length
+        }
+
+        onRange(prevIndex, nextIndex)
+
+        prevIndex = nextIndex + 1
+    }
+
+}

@@ -5,6 +5,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.pelmenstar1.digiDict.common.equalsPattern
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
 import org.junit.Rule
@@ -18,10 +19,10 @@ import kotlin.test.assertFails
 class AppDatabaseMigrationTests {
     // Matches structure of RemoteDictionaryProvider when latest DB version was 4
     data class RemoteDictionaryProvider_4(
-        val id: Int = 0, val name: String, val schema: String
-    ) : EntityWithPrimaryKeyId<RemoteDictionaryProvider_4> {
-        override fun equalsNoId(other: RemoteDictionaryProvider_4): Boolean {
-            return name == other.name && schema == other.schema
+        override val id: Int = 0, val name: String, val schema: String
+    ) : EntityWithPrimaryKeyId {
+        override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+            return name == o.name && schema == o.schema
         }
     }
 

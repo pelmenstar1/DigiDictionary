@@ -3,14 +3,16 @@ package io.github.pelmenstar1.digiDict.data
 import android.net.Uri
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import io.github.pelmenstar1.digiDict.common.equalsPattern
 
 @Entity(tableName = "remote_dict_providers")
 data class RemoteDictionaryProviderInfo(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true)
+    override val id: Int = 0,
     val name: String,
     val schema: String,
     val urlEncodingRules: UrlEncodingRules
-) : EntityWithPrimaryKeyId<RemoteDictionaryProviderInfo> {
+) : EntityWithPrimaryKeyId {
     class UrlEncodingRules {
         val raw: String
         val spaceReplacement: Char
@@ -57,8 +59,8 @@ data class RemoteDictionaryProviderInfo(
         return schema.replace("\$query$", encodedQuery)
     }
 
-    override fun equalsNoId(other: RemoteDictionaryProviderInfo): Boolean {
-        return name == other.name && schema == other.schema && urlEncodingRules == other.urlEncodingRules
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        return name == o.name && schema == o.schema && urlEncodingRules == o.urlEncodingRules
     }
 
     companion object {

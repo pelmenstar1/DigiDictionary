@@ -37,7 +37,7 @@ class DbCommonStatsProviderTests {
         return Record(
             id = 0,
             expression = expression,
-            rawMeaning = "CMeaning",
+            meaning = "CMeaning",
             additionalNotes = "AdditionalNotes",
             score = 0,
             epochSeconds = epochSeconds

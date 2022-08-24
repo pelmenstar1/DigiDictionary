@@ -8,15 +8,15 @@ import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
-import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelationDao
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ManageRecordBadgesViewModel @Inject constructor(
-    private val recordDao: RecordDao,
+    private val recordToBadgeRelationDao: RecordToBadgeRelationDao,
     private val badgeDao: RecordBadgeDao
-) : SingleDataLoadStateViewModel<Array<String>>(TAG) {
+) : SingleDataLoadStateViewModel<Array<RecordBadgeInfo>>(TAG) {
     val onRemoveError = Event()
     val onAddError = Event()
     val onEditError = Event()
@@ -24,15 +24,15 @@ class ManageRecordBadgesViewModel @Inject constructor(
     override val canRefreshAfterSuccess: Boolean
         get() = true
 
-    override fun DataLoadStateManager.FlowBuilder<Array<String>>.buildDataFlow() = fromFlow {
+    override fun DataLoadStateManager.FlowBuilder<Array<RecordBadgeInfo>>.buildDataFlow() = fromFlow {
         badgeDao.getAllFlow()
     }
 
-    fun edit(fromName: String, toName: String) {
+    fun update(value: RecordBadgeInfo) {
+        // TODO: Add helper to generalize viewModelScope.launch { try { ... } catch(e: Exception) { ... } }
         viewModelScope.launch {
             try {
-                recordDao.changeRecordBadgeName(fromName, toName)
-                badgeDao.updateName(fromName, toName)
+                badgeDao.update(value)
             } catch (e: Exception) {
                 Log.e(TAG, "", e)
 
@@ -41,10 +41,10 @@ class ManageRecordBadgesViewModel @Inject constructor(
         }
     }
 
-    fun add(name: String) {
+    fun add(value: RecordBadgeInfo) {
         viewModelScope.launch {
             try {
-                badgeDao.insert(RecordBadgeInfo(name))
+                badgeDao.insert(value)
             } catch (e: Exception) {
                 Log.e(TAG, "", e)
 
@@ -53,11 +53,11 @@ class ManageRecordBadgesViewModel @Inject constructor(
         }
     }
 
-    fun remove(name: String) {
+    fun remove(badge: RecordBadgeInfo) {
         viewModelScope.launch {
             try {
-                recordDao.deleteBadgeFromAllRecords(name)
-                badgeDao.delete(name)
+                recordToBadgeRelationDao.deleteAllBadgeRelations(badge.id)
+                badgeDao.delete(badge)
             } catch (e: Exception) {
                 Log.e(TAG, "", e)
 

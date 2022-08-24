@@ -1,36 +1,41 @@
-package io.github.pelmenstar1.digiDict.ui.addEditRecord.badge
+package io.github.pelmenstar1.digiDict.ui.badge
 
 import android.content.Context
+import android.graphics.Canvas
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 // Instantiated only from the code.
 class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
     private val textView: TextView
     private val removeButton: Button
 
-    var text: String = ""
+    private val outlineHelper = BadgeOutlineHelper(context)
+    var badge: RecordBadgeInfo? = null
         set(value) {
             field = value
 
-            textView.text = value
+            if (value != null) {
+                textView.text = value.name
+                outlineHelper.setOutlineColor(value.outlineColor)
+
+                invalidate()
+            }
         }
 
     init {
-        val res = context.resources
-        val theme = context.theme
-
         orientation = HORIZONTAL
-        background = ResourcesCompat.getDrawable(res, R.drawable.badge_view_bg, theme)
+        setWillNotDraw(false)
 
+        val res = context.resources
         val horizontalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingHorizontal)
         val verticalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingVertical)
 
@@ -46,11 +51,13 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
                 gravity = Gravity.CENTER_VERTICAL
             }
 
+            // TODO: Generalize TextViewCompat.setTextAppearance(..., _BodyLarge)
             TextViewCompat.setTextAppearance(
                 this,
                 com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
             )
 
+            ellipsize = null
             textView = this
         })
 
@@ -78,5 +85,17 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
 
     fun setOnRemoveListener(listener: OnClickListener) {
         removeButton.setOnClickListener(listener)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+
+        outlineHelper.onSizeChanged(w, h)
+    }
+
+    override fun onDraw(c: Canvas) {
+        super.onDraw(c)
+
+        outlineHelper.draw(c)
     }
 }

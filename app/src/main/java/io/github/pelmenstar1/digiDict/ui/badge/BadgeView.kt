@@ -1,17 +1,27 @@
 package io.github.pelmenstar1.digiDict.ui.badge
 
 import android.content.Context
-import androidx.core.content.res.ResourcesCompat
+import android.graphics.Canvas
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 // Instantiated only from the code.
 class BadgeView(context: Context) : MaterialTextView(context) {
+    private val outlineHelper = BadgeOutlineHelper(context)
+
+    var badge: RecordBadgeInfo? = null
+        set(value) {
+            field = value
+
+            if (value != null) {
+                text = value.name
+                outlineHelper.setOutlineColor(value.outlineColor)
+            }
+        }
+
     init {
         val res = context.resources
-        val theme = context.theme
-
-        background = ResourcesCompat.getDrawable(res, R.drawable.badge_view_bg, theme)
 
         val horizontalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingHorizontal)
         val verticalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingVertical)
@@ -22,5 +32,17 @@ class BadgeView(context: Context) : MaterialTextView(context) {
             horizontalPadding,
             verticalPadding
         )
+
+        ellipsize = null
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        outlineHelper.onSizeChanged(w, h)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        outlineHelper.draw(canvas)
     }
 }

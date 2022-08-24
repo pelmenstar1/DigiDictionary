@@ -1,9 +1,6 @@
 package io.github.pelmenstar1.digiDict.data
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -14,12 +11,15 @@ interface RecordBadgeDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(values: Array<out RecordBadgeInfo>)
 
-    @Query("UPDATE record_badges SET name=:toName WHERE name=:fromName")
-    suspend fun updateName(fromName: String, toName: String)
+    @Update
+    suspend fun update(value: RecordBadgeInfo)
 
-    @Query("DELETE FROM record_badges WHERE name=:name")
-    suspend fun delete(name: String)
+    @Delete
+    suspend fun delete(value: RecordBadgeInfo)
 
     @Query("SELECT * FROM record_badges")
-    fun getAllFlow(): Flow<Array<String>>
+    fun getAllFlow(): Flow<Array<RecordBadgeInfo>>
+
+    @Query("SELECT * FROM record_badges WHERE id=:id")
+    fun getByIdFlow(id: Int): Flow<RecordBadgeInfo>
 }

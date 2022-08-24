@@ -5,14 +5,14 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.firstSuccess
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.data.SearchPreparedRecordDao
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -61,59 +61,89 @@ class ViewRecordViewModelTests {
             }
         }
 
-        vm.onDeleteError.handler = {
-            fail()
-        }
+        vm.onDeleteError.handler = { fail() }
     }
 
     @Test
     fun loadRecordTest() = runTest {
-        val expectedId = 4
-        val expectedRecord = Record(expectedId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2)
-        val vm = createViewModel(recordDao = object : RecordDaoStub() {
-            override fun getRecordFlowById(id: Int): Flow<Record?> {
-                assertEquals(expectedId, id)
+        suspend fun testCase(badges: Array<RecordBadgeInfo>) {
+            val expectedRecordId = 4
+            val expectedRecordWithBadges = db.addRecordAndBadges(
+                record = Record(expectedRecordId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2),
+                badges = badges
+            )
 
-                return flowOf(expectedRecord)
-            }
-        })
+            val vm = createViewModel()
+            vm.id = expectedRecordId
 
-        vm.id = expectedId
+            val actualRecord = vm.dataStateFlow.firstSuccess()
+            assertEquals(expectedRecordWithBadges, actualRecord)
+            db.reset()
+        }
 
-        val actualRecord = vm.dataStateFlow.filterIsInstance<DataLoadState.Success<Record?>>().first().value
-
-        assertEquals(expectedRecord, actualRecord)
+        testCase(badges = emptyArray())
+        testCase(badges = arrayOf(RecordBadgeInfo(0, "Badge1", 1)))
+        testCase(
+            badges = arrayOf(
+                RecordBadgeInfo(0, "Badge1", 1),
+                RecordBadgeInfo(1, "Badge2", 2)
+            )
+        )
     }
 
     @Test
-    fun refreshRecordTest() = runTest {
-        val expectedId = 4
-        val expectedRecord = Record(expectedId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2)
+    fun refreshRecordTest() = runTest(dispatchTimeoutMs = 10_000) {
+        suspend fun testCase(badges: Array<RecordBadgeInfo>) {
+            val expectedRecordId = 4
+            val expectedRecordWithBadges = db.addRecordAndBadges(
+                record = Record(expectedRecordId, "Expr1", "CMeaning1", "AdditionalNotes", 1, 2),
+                badges = badges
+            )
 
-        var isFirstCall = true
-        val vm = createViewModel(recordDao = object : RecordDaoStub() {
-            override fun getRecordFlowById(id: Int): Flow<Record?> {
-                assertEquals(expectedId, id)
+            val recordDao = db.recordDao()
 
-                return if (isFirstCall) {
-                    isFirstCall = false
-
-                    flow { throw RuntimeException() }
-                } else {
-                    flowOf(expectedRecord)
+            var isFirstCall = true
+            val vm = createViewModel(recordDao = object : RecordDaoStub() {
+                override fun getRecordBadgesFlowByRecordId(id: Int): Flow<Array<RecordBadgeInfo>> {
+                    return recordDao.getRecordBadgesFlowByRecordId(id)
                 }
-            }
-        })
 
-        vm.id = expectedId
+                override suspend fun getRecordBadgesByRecordId(id: Int): Array<RecordBadgeInfo> {
+                    return recordDao.getRecordBadgesByRecordId(id)
+                }
 
-        // There should be error state, if there are not, test will time out.
-        vm.dataStateFlow.filterIsInstance<DataLoadState.Error<Record?>>().first()
+                override fun getRecordFlowById(id: Int): Flow<Record?> {
+                    return if (isFirstCall) {
+                        isFirstCall = false
 
-        vm.retryLoadData()
+                        flow { throw RuntimeException() }
+                    } else {
+                        recordDao.getRecordFlowById(id)
+                    }
+                }
+            })
 
-        val actualRecord = vm.dataStateFlow.firstSuccess()
-        assertEquals(expectedRecord, actualRecord)
+            vm.id = expectedRecordId
+
+            // There should be error state, if there are not, test will time out.
+            vm.dataStateFlow.filterIsInstance<DataLoadState.Error<Record?>>().first()
+
+            vm.retryLoadData()
+
+            val actualRecord = vm.dataStateFlow.firstSuccess()
+            assertEquals(expectedRecordWithBadges, actualRecord)
+
+            db.reset()
+        }
+
+        testCase(badges = emptyArray())
+        testCase(badges = arrayOf(RecordBadgeInfo(0, "Badge1", 1)))
+        testCase(
+            badges = arrayOf(
+                RecordBadgeInfo(0, "Badge1", 1),
+                RecordBadgeInfo(1, "Badge2", 2)
+            )
+        )
     }
 
     @Test

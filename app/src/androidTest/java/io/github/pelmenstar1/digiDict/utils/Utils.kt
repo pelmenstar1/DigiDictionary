@@ -3,14 +3,14 @@ package io.github.pelmenstar1.digiDict.utils
 import android.os.Looper
 import androidx.lifecycle.ViewModel
 import io.github.pelmenstar1.digiDict.common.Event
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
+import io.github.pelmenstar1.digiDict.common.mapToArray
+import io.github.pelmenstar1.digiDict.data.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
-fun <T : EntityWithPrimaryKeyId<T>> assertContentEqualsNoId(expected: Array<T>, actual: Array<T>) {
+fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<T>, actual: Array<T>) {
     val expectedSize = expected.size
     val actualSize = actual.size
 
@@ -64,6 +64,10 @@ suspend fun Event.setHandlerAndWait(block: () -> Unit) {
     }
 }
 
+suspend fun Event.waitUntilHandlerCalled() {
+    setHandlerAndWait { }
+}
+
 suspend fun <T : ViewModel> assertEventHandlerOnMainThread(
     vm: T,
     event: Event,
@@ -84,4 +88,23 @@ fun AppDatabase.reset() {
     clearAllTables()
 
     query("DELETE FROM sqlite_sequence", null)
+}
+
+suspend fun AppDatabase.addRecordAndBadges(
+    record: Record,
+    badges: Array<RecordBadgeInfo>
+): RecordWithBadges {
+    val recordDao = recordDao()
+    val recordBadgeDao = recordBadgeDao()
+    val recordToBadgeRelationDao = recordToBadgeRelationDao()
+
+    val recordWithBadges = RecordWithBadges.create(record, badges)
+
+    recordDao.insert(record)
+    recordBadgeDao.insertAll(badges)
+    recordToBadgeRelationDao.insertAll(
+        badges.mapToArray { RecordToBadgeRelation(0, record.id, it.id) }
+    )
+
+    return recordWithBadges
 }

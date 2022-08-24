@@ -10,7 +10,7 @@ import io.github.pelmenstar1.digiDict.common.FixedBitSet
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
-import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import kotlinx.coroutines.flow.*
@@ -23,7 +23,7 @@ class QuizViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val appPreferences: AppPreferences,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
-) : SingleDataLoadStateViewModel<Array<Record>>(TAG) {
+) : SingleDataLoadStateViewModel<Array<ConciseRecordWithBadges>>(TAG) {
     override val canRefreshAfterSuccess: Boolean
         get() = false
 
@@ -48,10 +48,10 @@ class QuizViewModel @Inject constructor(
     val onSaveError = Event()
     val onResultSaved = Event()
 
-    override fun DataLoadStateManager.FlowBuilder<Array<Record>>.buildDataFlow() = fromFlow {
+    override fun DataLoadStateManager.FlowBuilder<Array<ConciseRecordWithBadges>>.buildDataFlow() = fromFlow {
         modeFlow.filterNotNull().map { selectedMode ->
             val records = if (selectedMode == QuizMode.ALL) {
-                recordDao.getRandomRecords(random, RECORDS_MAX_SIZE)
+                recordDao.getRandomConciseRecordsWithBadges(random, RECORDS_MAX_SIZE)
             } else {
                 val duration = when (selectedMode) {
                     QuizMode.LAST_24_HOURS -> SECONDS_IN_DAY
@@ -62,7 +62,7 @@ class QuizViewModel @Inject constructor(
 
                 val currentEpochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
 
-                recordDao.getRandomRecordsAfter(
+                recordDao.getRandomConciseRecordsWithBadgesAfter(
                     random,
                     RECORDS_MAX_SIZE,
                     currentEpochSeconds - duration
@@ -94,7 +94,7 @@ class QuizViewModel @Inject constructor(
                 // Relies on the fact that user can't answer if result is null
                 val inputState = dataStateFlow.first()
 
-                if (inputState !is DataLoadState.Success<Array<Record>>) {
+                if (inputState !is DataLoadState.Success<Array<ConciseRecordWithBadges>>) {
                     throw IllegalStateException("Input is expected to be successful")
                 }
 

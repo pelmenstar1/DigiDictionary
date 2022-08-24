@@ -10,24 +10,24 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.EmptyArray
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 class BadgeSelectorDialogAdapter(
-    private val onItemClickListener: (String) -> Unit
+    private val onItemClickListener: (RecordBadgeInfo) -> Unit
 ) : RecyclerView.Adapter<BadgeSelectorDialogAdapter.ViewHolder>() {
     private class Callback(
-        private val old: Array<out String>,
-        private val new: Array<out String>
+        private val old: List<RecordBadgeInfo>,
+        private val new: List<RecordBadgeInfo>
     ) : DiffUtil.Callback() {
         override fun getOldListSize() = old.size
         override fun getNewListSize() = new.size
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return old[oldItemPosition] == new[newItemPosition]
+            return old[oldItemPosition].id == new[newItemPosition].id
         }
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return areItemsTheSame(oldItemPosition, newItemPosition)
+            return old[oldItemPosition] == new[newItemPosition]
         }
     }
 
@@ -36,20 +36,21 @@ class BadgeSelectorDialogAdapter(
             textView.setOnClickListener(containerOnItemClickListener)
         }
 
-        fun bind(name: String) {
-            textView.text = name
+        fun bind(value: RecordBadgeInfo) {
+            textView.tag = value
+            textView.text = value.name
         }
     }
 
     private val containerOnItemClickListener = View.OnClickListener {
-        val text = (it as TextView).text.toString()
+        val badge = ((it as TextView).tag as RecordBadgeInfo)
 
-        onItemClickListener(text)
+        onItemClickListener(badge)
     }
 
-    private var elements: Array<out String> = EmptyArray.STRING
+    private var elements = emptyList<RecordBadgeInfo>()
 
-    fun submitData(elements: Array<out String>) {
+    fun submitData(elements: List<RecordBadgeInfo>) {
         val result = DiffUtil.calculateDiff(Callback(this.elements, elements))
         this.elements = elements
 
@@ -76,9 +77,7 @@ class BadgeSelectorDialogAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val element = elements[position]
-
-        holder.bind(element)
+        holder.bind(elements[position])
     }
 
     companion object {

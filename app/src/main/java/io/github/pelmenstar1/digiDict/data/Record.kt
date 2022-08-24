@@ -6,6 +6,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import io.github.pelmenstar1.digiDict.common.equalsPattern
 import io.github.pelmenstar1.digiDict.common.serialization.*
 
 @Entity(
@@ -15,52 +16,44 @@ import io.github.pelmenstar1.digiDict.common.serialization.*
 open class Record(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = RecordTable.id)
-    val id: Int,
+    final override val id: Int,
     @ColumnInfo(name = RecordTable.expression) val expression: String,
-    @ColumnInfo(name = RecordTable.meaning) val rawMeaning: String,
+    @ColumnInfo(name = RecordTable.meaning) val meaning: String,
     @ColumnInfo(name = RecordTable.additionalNotes) val additionalNotes: String,
     @ColumnInfo(name = RecordTable.score) val score: Int,
     // in UTC
     @ColumnInfo(name = RecordTable.epochSeconds) val epochSeconds: Long,
-    @ColumnInfo(name = RecordTable.badges, defaultValue = "") var rawBadges: String = ""
-) : EntityWithPrimaryKeyId<Record> {
+) : EntityWithPrimaryKeyId {
     init {
         require(id >= 0) { "Id can't be negative" }
         require(epochSeconds >= 0) { "Epoch seconds can't be negative" }
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (other === this) return true
-        if (other == null || javaClass != other.javaClass) return false
-
-        other as Record
-
-        return id == other.id && equalsNoId(other)
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        return id == o.id && equalsNoId(other)
     }
 
-    override fun equalsNoId(other: Record): Boolean {
-        return expression == other.expression &&
-                rawMeaning == other.rawMeaning &&
-                additionalNotes == other.additionalNotes &&
-                score == other.score &&
-                epochSeconds == other.epochSeconds &&
-                rawBadges == other.rawBadges
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        return expression == o.expression &&
+                meaning == o.meaning &&
+                additionalNotes == o.additionalNotes &&
+                score == o.score &&
+                epochSeconds == o.epochSeconds
     }
 
     override fun hashCode(): Int {
         var result = id
         result = result * 31 + expression.hashCode()
-        result = result * 31 + rawMeaning.hashCode()
+        result = result * 31 + meaning.hashCode()
         result = result * 31 + additionalNotes.hashCode()
         result = result * 31 + score
         result = result * 31 + epochSeconds.hashCode()
-        result = result * 31 + rawBadges.hashCode()
 
         return result
     }
 
     override fun toString(): String {
-        return "Record(id=$id, expression='$expression', rawMeaning='$rawMeaning', additionalNotes=${additionalNotes}, score=$score, epochSeconds=$epochSeconds, badges=$rawBadges)"
+        return "Record(id=$id, expression='$expression', meaning='$meaning', additionalNotes=${additionalNotes}, score=$score, epochSeconds=$epochSeconds)"
     }
 
     companion object {
@@ -73,14 +66,14 @@ open class Record(
                 version = 1,
                 getByteSize = { value ->
                     stringUtf16(value.expression) +
-                            stringUtf16(value.rawMeaning) +
+                            stringUtf16(value.meaning) +
                             stringUtf16(value.additionalNotes) +
                             int32 /* score */ +
                             int64 /* epochSeconds */
                 },
                 write = { value ->
                     stringUtf16(value.expression)
-                    stringUtf16(value.rawMeaning)
+                    stringUtf16(value.meaning)
                     stringUtf16(value.additionalNotes)
                     int32(value.score)
                     int64(value.epochSeconds)
@@ -100,8 +93,7 @@ open class Record(
                         id = 0,
                         expression, rawMeaning, additionalNotes,
                         score,
-                        epochSeconds,
-                        rawBadges = ""
+                        epochSeconds
                     )
                 }
             )
@@ -110,17 +102,15 @@ open class Record(
                 version = 2,
                 getByteSize = { value ->
                     stringUtf16(value.expression) +
-                            stringUtf16(value.rawMeaning) +
+                            stringUtf16(value.meaning) +
                             stringUtf16(value.additionalNotes) +
-                            stringUtf16(value.rawBadges)
-                    int32 /* score */ +
+                            int32 /* score */ +
                             int64 /* epochSeconds */
                 },
                 write = { value ->
                     stringUtf16(value.expression)
-                    stringUtf16(value.rawMeaning)
+                    stringUtf16(value.meaning)
                     stringUtf16(value.additionalNotes)
-                    stringUtf16(value.rawBadges)
                     int32(value.score)
                     int64(value.epochSeconds)
                 },
@@ -128,7 +118,6 @@ open class Record(
                     val expression = stringUtf16()
                     val rawMeaning = stringUtf16()
                     val additionalNotes = stringUtf16()
-                    val rawBadges = stringUtf16()
                     val score = int32()
                     val epochSeconds = int64()
 
@@ -139,13 +128,185 @@ open class Record(
                     Record(
                         id = 0,
                         expression, rawMeaning, additionalNotes,
-                        score,
-                        epochSeconds,
-                        rawBadges
+                        score, epochSeconds
                     )
                 }
             )
         }
+    }
+}
+
+open class ConciseRecord(
+    override val id: Int,
+    val expression: String,
+    val meaning: String,
+    val score: Int
+) : EntityWithPrimaryKeyId {
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        id == o.id && equalsNoId(other)
+    }
+
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        expression == o.expression && meaning == o.meaning && score == o.score
+    }
+
+    override fun hashCode(): Int {
+        var result = id
+        result = 31 * result + expression.hashCode()
+        result = 31 * result + meaning.hashCode()
+        result = 31 * result + score
+
+        return result
+    }
+
+    override fun toString(): String {
+        return "ConciseRecord(id=$id, expression=$expression, meaning=$meaning, score=$score)"
+    }
+
+    companion object {
+        fun Record.toConciseRecord() = ConciseRecord(id, expression, meaning, score)
+    }
+}
+
+open class ConciseRecordWithBadges(
+    id: Int,
+    expression: String,
+    meaning: String,
+    score: Int,
+    val badges: Array<RecordBadgeInfo>
+) : ConciseRecord(id, expression, meaning, score) {
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        id == o.id && equalsNoId(o)
+    }
+
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        return expression == o.expression && meaning == o.meaning && score == o.score && badges.contentEquals(o.badges)
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = result * 31 + badges.contentHashCode()
+
+        return result
+    }
+
+    override fun toString(): String {
+        return "ConciseRecordWithBadges(id=$id, expression=$expression, meaning=$meaning, score=$score, badges=${badges.contentToString()})"
+    }
+
+    companion object {
+        fun create(record: ConciseRecord, badges: Array<RecordBadgeInfo>) = ConciseRecordWithBadges(
+            record.id, record.expression, record.meaning, record.score, badges
+        )
+    }
+}
+
+@Suppress("EqualsOrHashCode") // ConciseRecord defines equals()
+class ConciseRecordWithSearchInfo(
+    id: Int,
+    expression: String,
+    meaning: String,
+    score: Int,
+    val keywords: String?
+) : ConciseRecord(id, expression, meaning, score) {
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        id == o.id && equalsNoId(o)
+    }
+
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        expression == o.expression && meaning == o.meaning && score == o.score && keywords == o.keywords
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = result * 31 + keywords.hashCode()
+
+        return result
+    }
+
+    override fun toString(): String {
+        return "ConciseRecordWithSearchInfoAndBadges(id=$id, expression=$expression, meaning=$meaning, score=$score, keywords=$keywords)"
+    }
+}
+
+class ConciseRecordWithSearchInfoAndBadges(
+    id: Int,
+    expression: String,
+    meaning: String,
+    score: Int,
+    badges: Array<RecordBadgeInfo>,
+    val keywords: String?
+) : ConciseRecordWithBadges(id, expression, meaning, score, badges) {
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        id == o.id && equalsNoId(o)
+    }
+
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        expression == o.expression &&
+                meaning == o.meaning &&
+                score == o.score &&
+                badges.contentEquals(o.badges) &&
+                keywords == o.keywords
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = result * 31 + keywords.hashCode()
+
+        return result
+    }
+
+    override fun toString(): String {
+        return "ConciseRecordWithSearchInfoAndBadges(id=$id, expression=$expression, meaning=$meaning, score=$score, badges=${badges.contentToString()}, keywords=$keywords)"
+    }
+
+    companion object {
+        fun create(record: ConciseRecordWithSearchInfo, badges: Array<RecordBadgeInfo>) =
+            ConciseRecordWithSearchInfoAndBadges(
+                record.id, record.expression, record.meaning, record.score, badges, record.keywords
+            )
+    }
+}
+
+@Suppress("EqualsOrHashCode") // equals() is declared in Record
+open class RecordWithBadges(
+    id: Int,
+    expression: String,
+    meaning: String,
+    additionalNotes: String,
+    score: Int,
+    epochSeconds: Long,
+    val badges: Array<RecordBadgeInfo>
+) : Record(id, expression, meaning, additionalNotes, score, epochSeconds) {
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        id == o.id && equalsNoId(other)
+    }
+
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        expression == o.expression &&
+                meaning == o.meaning &&
+                additionalNotes == o.additionalNotes &&
+                score == o.score &&
+                epochSeconds == o.epochSeconds &&
+                badges.contentEquals(o.badges)
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = result * 31 + badges.contentHashCode()
+
+        return result
+    }
+
+    override fun toString(): String {
+        return "Record(id=$id, expression='$expression', meaning='$meaning', additionalNotes='$additionalNotes', score=$score, epochSeconds=$epochSeconds, badges=${badges.contentToString()}"
+    }
+
+    companion object {
+        fun create(record: Record, badges: Array<RecordBadgeInfo>) = RecordWithBadges(
+            record.id, record.expression, record.meaning, record.additionalNotes, record.score, record.epochSeconds,
+            badges
+        )
     }
 }
 
@@ -158,7 +319,6 @@ object RecordTable {
     const val additionalNotes = "additionalNotes"
     const val score = "score"
     const val epochSeconds = "dateTime"
-    const val badges = "badges"
 }
 
 fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
@@ -174,7 +334,6 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
         private val additionalNotesIndex = columnIndex { additionalNotes }
         private val scoreIndex = columnIndex { score }
         private val epochSecondsIndex = columnIndex { epochSeconds }
-        private val badgesIndex = columnIndex { badges }
 
         private var isIteratorCreated = false
 
@@ -202,7 +361,6 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                 private val expressionBuffer = CharArrayBuffer(32)
                 private val meaningBuffer = CharArrayBuffer(64)
                 private val additionalNotesBuffer = CharArrayBuffer(16)
-                private val badgesBuffer = CharArrayBuffer(32)
 
                 init {
                     // Make the iterator reusable
@@ -219,7 +377,6 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                         copyStringToBuffer(exprIndex, expressionBuffer)
                         copyStringToBuffer(meaningIndex, meaningBuffer)
                         copyStringToBuffer(additionalNotesIndex, additionalNotesBuffer)
-                        copyStringToBuffer(badgesIndex, badgesBuffer)
                     }
                 }
 
@@ -229,8 +386,7 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                                 int64 /* epochSeconds */ +
                                 stringUtf16(expressionBuffer) +
                                 stringUtf16(meaningBuffer) +
-                                stringUtf16(additionalNotesBuffer) +
-                                stringUtf16(badgesBuffer)
+                                stringUtf16(additionalNotesBuffer)
                     }
                 }
 
@@ -239,7 +395,6 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
                         stringUtf16(expressionBuffer)
                         stringUtf16(meaningBuffer)
                         stringUtf16(additionalNotesBuffer)
-                        stringUtf16(badgesBuffer)
                         int32(currentScore)
                         int64(currentEpochSeconds)
                     }

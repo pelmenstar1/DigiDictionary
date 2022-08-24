@@ -208,7 +208,7 @@ object RecordImportExportManager {
                         for (i in 0 until recordsSize) {
                             val record = records[i]
                             val recordExpr = record.expression
-                            val recordMeaning = record.rawMeaning
+                            val recordMeaning = record.meaning
 
                             insertRecordStatement.run {
                                 // Binding index is 1-based.

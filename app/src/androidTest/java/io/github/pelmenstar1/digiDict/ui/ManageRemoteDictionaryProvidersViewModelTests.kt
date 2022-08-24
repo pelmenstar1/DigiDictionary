@@ -50,12 +50,10 @@ class ManageRemoteDictionaryProvidersViewModelTests {
         val provider = providerDao.getByName("Name")!!
         statsDao.insert(RemoteDictionaryProviderStats(provider.id, visitCount = 1))
 
-        vm.onDeleteError.handler = {
-            fail()
-        }
+        vm.onDeleteError.handler = { fail() }
 
         vm.delete(provider)
-        delay(500)
+        delay(1000)
 
         assertNull(providerDao.getByName("Name"))
         assertNull(statsDao.getById(provider.id))

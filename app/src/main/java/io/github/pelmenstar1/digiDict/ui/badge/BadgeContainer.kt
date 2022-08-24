@@ -8,7 +8,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.ui.MultilineHorizontalLinearLayout
 import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
-import io.github.pelmenstar1.digiDict.data.RecordBadgeNameUtil
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 class BadgeContainer @JvmOverloads constructor(
     context: Context,
@@ -19,8 +19,6 @@ class BadgeContainer @JvmOverloads constructor(
     private val badgeLayoutParams: MarginLayoutParams
 
     init {
-        //useMarginLeftOnRowFirstItem = false
-
         val res = context.resources
         val badgeEndMargin = res.getDimensionPixelOffset(R.dimen.badge_endMargin)
         val badgeTopMargin = res.getDimensionPixelOffset(R.dimen.badge_topMargin)
@@ -31,11 +29,7 @@ class BadgeContainer @JvmOverloads constructor(
         }
     }
 
-    fun setBadges(rawBadges: String) {
-        setBadges(RecordBadgeNameUtil.decodeArray(rawBadges))
-    }
-
-    fun setBadges(values: Array<out String>) {
+    fun setBadges(values: Array<out RecordBadgeInfo>) {
         val ctx = context
         adjustViewCount(values.size) {
             addView(BadgeView(ctx).apply {
@@ -43,8 +37,8 @@ class BadgeContainer @JvmOverloads constructor(
             })
         }
 
-        values.forEachIndexed { index, name ->
-            getTypedViewAt<BadgeView>(index).text = name
+        values.forEachIndexed { index, value ->
+            getTypedViewAt<BadgeView>(index).badge = value
         }
     }
 }
