@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 7,
-    "identityHash": "ed2a7a0e89324350b337c32a10d94fba",
+    "identityHash": "1953f2e34e49e8b2a6e8bf8c83f21066",
     "entities": [
       {
         "tableName": "records",
@@ -21,7 +21,7 @@
             "notNull": true
           },
           {
-            "fieldPath": "rawMeaning",
+            "fieldPath": "meaning",
             "columnName": "meaning",
             "affinity": "TEXT",
             "notNull": true
@@ -156,7 +156,7 @@
       },
       {
         "tableName": "record_badges",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `outlineColor` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `outlineColor` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -181,7 +181,7 @@
           "columnNames": [
             "id"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
         "indices": [],
         "foreignKeys": []
@@ -222,7 +222,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ed2a7a0e89324350b337c32a10d94fba')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1953f2e34e49e8b2a6e8bf8c83f21066')"
     ]
   }
 }

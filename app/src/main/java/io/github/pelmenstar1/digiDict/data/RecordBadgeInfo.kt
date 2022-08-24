@@ -9,7 +9,7 @@ import io.github.pelmenstar1.digiDict.common.readStringOrThrow
 
 @Entity(tableName = "record_badges")
 class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     override val id: Int
     val name: String
     val outlineColor: Int
@@ -20,14 +20,14 @@ class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
         this.outlineColor = outlineColor
     }
 
-    constructor(parcel: Parcel) {
-        id = parcel.readInt()
-        name = parcel.readStringOrThrow()
-        outlineColor = parcel.readInt()
+    constructor(source: Parcel) {
+        id = source.readInt()
+        name = source.readStringOrThrow()
+        outlineColor = source.readInt()
     }
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.run {
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.run {
             writeInt(id)
             writeString(name)
             writeInt(outlineColor)
