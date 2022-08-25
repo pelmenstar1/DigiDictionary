@@ -56,6 +56,5 @@ inline fun <TGroup : ViewGroup> TGroup.adjustViewCountInternal(
     }
 }
 
-// TODO: Use it in more places.
 @Suppress("UNCHECKED_CAST")
 fun <T : View> ViewGroup.getTypedViewAt(index: Int) = getChildAt(index) as T

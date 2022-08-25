@@ -24,6 +24,7 @@ import com.google.android.material.theme.overlay.MaterialThemeOverlay
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.adjustViewCountWithoutLast
+import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import java.util.*
@@ -381,8 +382,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
     private inline fun iterateInputs(block: (TextInputLayout) -> Unit) =
         iterateInputsIndexed { it, _ -> block(it) }
 
-    @Suppress("NOTHING_TO_INLINE")
-    private inline fun getTextInputLayoutAt(index: Int) = getChildAt(index) as TextInputLayout
+    private fun getTextInputLayoutAt(index: Int) = getTypedViewAt<TextInputLayout>(index)
 
     private inline fun withTextInputWatcherIgnored(block: () -> Unit) {
         ignoreTextInputWatcher = true

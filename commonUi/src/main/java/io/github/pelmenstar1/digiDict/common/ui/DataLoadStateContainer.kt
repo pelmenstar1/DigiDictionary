@@ -10,7 +10,6 @@ import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.github.pelmenstar1.digiDict.common.DataLoadState
-import io.github.pelmenstar1.digiDict.common.debugLog
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import kotlinx.coroutines.CoroutineScope
 
@@ -72,11 +71,6 @@ class DataLoadStateContainer @JvmOverloads constructor(
         onSuccess: suspend (T) -> Unit
     ) {
         scope.launchFlowCollector(stateHolder.dataStateFlow) {
-            // TODO: Delete it.
-            debugLog("DataLoadStateContainer") {
-                info("state: $it")
-            }
-
             when (it) {
                 is DataLoadState.Loading -> {
                     var li = loadingIndicator
