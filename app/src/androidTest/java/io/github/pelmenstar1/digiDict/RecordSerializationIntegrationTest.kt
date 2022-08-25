@@ -22,7 +22,7 @@ class RecordSerializationIntegrationTest {
             Record(
                 id = 0,
                 expression = "Expression$it",
-                rawMeaning = "Meaning",
+                meaning = "Meaning",
                 additionalNotes = "Notes",
                 score = it,
                 epochSeconds = it.toLong()
@@ -84,7 +84,7 @@ class RecordSerializationIntegrationTest {
             Record(
                 id = 0,
                 expression = "$i".repeat(2000),
-                rawMeaning = "CMeaning$i",
+                meaning = "CMeaning$i",
                 additionalNotes = "Notes$i",
                 score = i,
                 epochSeconds = i * 1000L

@@ -34,7 +34,7 @@ class RecordImportExportManagerTests {
                 Record(
                     id = 0,
                     expression = "Expression$i",
-                    rawMeaning = "CMeaning$i",
+                    meaning = "CMeaning$i",
                     additionalNotes = "Notes$i",
                     score = i,
                     epochSeconds = i * 1000L
@@ -45,7 +45,7 @@ class RecordImportExportManagerTests {
             val records = recordDao.getAllRecords()
 
             val searchPreparedRecords = records.mapToArray {
-                SearchPreparedRecord.prepare(it.id, it.expression, it.rawMeaning, Locale.ROOT)
+                SearchPreparedRecord.prepare(it.id, it.expression, it.meaning, Locale.ROOT)
             }
 
             searchPreparedRecords.forEach {

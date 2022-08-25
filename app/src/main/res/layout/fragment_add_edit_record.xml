@@ -17,28 +17,28 @@
             android:layout_height="wrap_content">
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/addExpression_expressionInputLayout"
+                android:id="@+id/addRecord_expressionInputLayout"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/addExpression_horizontalMargin"
-                android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
+                android:layout_marginStart="@dimen/addRecord_horizontalMargin"
+                android:layout_marginTop="@dimen/addRecord_elementTopMargin"
                 android:layout_marginEnd="5dp"
                 android:hint="@string/expression"
-                app:layout_constraintEnd_toStartOf="@id/addExpression_searchExpression"
+                app:layout_constraintEnd_toStartOf="@id/addRecord_searchExpression"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/addRecord_expressionInput"
                     style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
-                    android:id="@+id/addExpression_expressionInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/addExpression_searchExpression"
+                android:id="@+id/addRecord_searchExpression"
                 style="@style/Widget.Material3.Button.IconButton"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
@@ -46,50 +46,60 @@
                 app:icon="@drawable/ic_search"
                 app:iconSize="24dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/addExpression_expressionInputLayout" />
+                app:layout_constraintTop_toTopOf="@id/addRecord_expressionInputLayout" />
 
             <io.github.pelmenstar1.digiDict.ui.addEditRecord.MeaningListInteractionView
-                android:id="@+id/addExpression_meaningListInteraction"
+                android:id="@+id/addRecord_meaningListInteraction"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/addExpression_horizontalMargin"
+                android:layout_marginStart="@dimen/addRecord_horizontalMargin"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
+                android:layout_marginEnd="@dimen/addRecord_horizontalMargin"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/addExpression_expressionInputLayout" />
+                app:layout_constraintTop_toBottomOf="@id/addRecord_expressionInputLayout" />
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/addExpression_additionalNotesInputLayout"
+                android:id="@+id/addRecord_additionalNotesInputLayout"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/addExpression_horizontalMargin"
-                android:layout_marginTop="@dimen/addExpression_textInputTopMargin"
-                android:layout_marginEnd="@dimen/addExpression_horizontalMargin"
+                android:layout_marginStart="@dimen/addRecord_horizontalMargin"
+                android:layout_marginTop="@dimen/addRecord_elementTopMargin"
+                android:layout_marginEnd="@dimen/addRecord_horizontalMargin"
                 android:hint="@string/additionalNotes"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/addExpression_meaningListInteraction">
+                app:layout_constraintTop_toBottomOf="@id/addRecord_meaningListInteraction">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/addRecord_additionalNotesInput"
                     style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
-                    android:id="@+id/addExpression_additionalNotesInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <io.github.pelmenstar1.digiDict.ui.addEditRecord.badge.BadgeListInteractionView
+                android:id="@+id/addRecord_badgeInteraction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/addRecord_horizontalMargin"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="@dimen/addRecord_horizontalMargin"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/addRecord_additionalNotesInputLayout" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
     <Button
-        android:id="@+id/addExpression_addButton"
+        android:id="@+id/addRecord_addButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom"
         android:layout_marginBottom="8dp"
         android:elevation="5dp"
-        tools:text="Add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Add" />
 
 </FrameLayout>

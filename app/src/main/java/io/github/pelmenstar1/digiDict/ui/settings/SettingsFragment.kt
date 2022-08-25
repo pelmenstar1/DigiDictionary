@@ -136,6 +136,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    // TODO: Do not recreate the dialog, init existing one
     private fun hideLoadingProgressDialog() {
         isLoadingProgressDialogShown = false
 

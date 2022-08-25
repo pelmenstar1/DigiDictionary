@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <io.github.pelmenstar1.digiDict.common.ui.ColorCircleView
+        android:id="@+id/itemManageRecordBadges_colorCircleView"
+        android:layout_width="@dimen/itemManageRecordBadges_colorCircleSize"
+        android:layout_height="@dimen/itemManageRecordBadges_colorCircleSize"
+        android:layout_gravity="center_vertical"
+        android:layout_marginHorizontal="5dp" />
+
+    <TextView
+        android:id="@+id/itemManageRecordBadges_nameView"
+        style="@style/TextAppearance.Material3.BodyLarge"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginVertical="8dp"
+        android:textIsSelectable="false"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/itemManageRecordBadges_editButton"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="@dimen/itemManageRecordBadges_actionButtonSize"
+        android:layout_height="@dimen/itemManageRecordBadges_actionButtonSize"
+        android:layout_marginEnd="5dp"
+        app:icon="@drawable/ic_edit"
+        app:iconTint="?attr/colorControlNormal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/itemManageRecordBadges_removeButton"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="@dimen/itemManageRecordBadges_actionButtonSize"
+        android:layout_height="@dimen/itemManageRecordBadges_actionButtonSize"
+        android:layout_marginEnd="5dp"
+        app:icon="@drawable/ic_remove"
+        app:iconTint="?attr/colorControlNormal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</LinearLayout>

@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import io.github.pelmenstar1.digiDict.common.NULL_CHAR
 import io.github.pelmenstar1.digiDict.common.appendReducedNonLettersOrDigitsReplacedToSpace
+import io.github.pelmenstar1.digiDict.common.equalsPattern
 import java.util.*
 
 /**
@@ -25,11 +26,11 @@ import java.util.*
 @Entity(tableName = "search_prepared_records")
 data class SearchPreparedRecord(
     @PrimaryKey
-    val id: Int,
+    override val id: Int,
     val keywords: String
-) : EntityWithPrimaryKeyId<SearchPreparedRecord> {
-    override fun equalsNoId(other: SearchPreparedRecord): Boolean {
-        return keywords == other.keywords
+) : EntityWithPrimaryKeyId {
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        keywords == o.keywords
     }
 
     companion object {
@@ -84,13 +85,3 @@ data class SearchPreparedRecord(
         }
     }
 }
-
-class RecordWithSearchInfo(
-    id: Int,
-    expression: String,
-    rawMeaning: String,
-    additionalNotes: String,
-    score: Int,
-    epochSeconds: Long,
-    val keywords: String?
-) : Record(id, expression, rawMeaning, additionalNotes, score, epochSeconds)

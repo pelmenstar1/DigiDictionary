@@ -7,64 +7,81 @@
     android:padding="8dp">
 
     <TextView
-        style="@style/TextAppearance.Material3.BodyLarge"
         android:id="@+id/itemQuizRecord_expression"
+        style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="5dp"
-        app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Expression"
         android:ellipsize="none"
         android:maxLines="100"
-        android:textIsSelectable="false"/>
+        android:textIsSelectable="false"
+        app:layout_constraintEnd_toStartOf="@+id/itemQuizRecord_centerGuide"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Expression" />
 
     <TextView
-        style="@style/TextAppearance.Material3.BodyLarge"
         android:id="@+id/itemQuizRecord_meaning"
+        style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/quiz_centerGuide"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Meaning"
         android:ellipsize="none"
-        android:maxLines="100"
         android:gravity="end"
-        android:textIsSelectable="false"/>
+        android:maxLines="100"
+        android:textIsSelectable="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/itemQuizRecord_centerGuide"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Meaning" />
 
     <Button
-        style="@style/Widget.Material3.Button.OutlinedButton"
         android:id="@+id/itemQuizRecord_correctAnswer"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/itemQuizRecord_actionButtonHeight"
         android:layout_marginTop="16dp"
-        android:textColor="@color/record_quiz_item_correct_answer"
-        app:strokeColor="@color/record_quiz_item_correct_answer"
         android:text="@string/quiz_correctAnswer"
-        app:layout_constraintEnd_toStartOf="@+id/quiz_centerGuide"
+        android:textColor="@color/record_quiz_item_correct_answer"
+        app:layout_constraintEnd_toStartOf="@+id/itemQuizRecord_centerGuide"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/itemQuizRecord_meaning" />
+        app:layout_constraintTop_toBottomOf="@id/itemQuizRecord_meaning"
+        app:strokeColor="@color/record_quiz_item_correct_answer" />
 
     <Button
-        style="@style/Widget.Material3.Button.OutlinedButton"
         android:id="@+id/itemQuizRecord_wrongAnswer"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/itemQuizRecord_actionButtonHeight"
-        android:textColor="@color/record_quiz_item_wrong_answer"
-        app:strokeColor="@color/record_quiz_item_wrong_answer"
         android:text="@string/quiz_wrongAnswer"
+        android:textColor="@color/record_quiz_item_wrong_answer"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/quiz_centerGuide"
-        app:layout_constraintTop_toTopOf="@id/itemQuizRecord_correctAnswer" />
+        app:layout_constraintStart_toEndOf="@+id/itemQuizRecord_centerGuide"
+        app:layout_constraintTop_toTopOf="@id/itemQuizRecord_correctAnswer"
+        app:strokeColor="@color/record_quiz_item_wrong_answer" />
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/quiz_centerGuide"
+        android:id="@+id/itemQuizRecord_centerGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.5" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/itemQuizRecord_actionBarrier"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="itemQuizRecord_correctAnswer,itemQuizRecord_wrongAnswer" />
+
+    <io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
+        android:id="@+id/itemQuizRecord_badgeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginTop="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/itemQuizRecord_actionBarrier" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

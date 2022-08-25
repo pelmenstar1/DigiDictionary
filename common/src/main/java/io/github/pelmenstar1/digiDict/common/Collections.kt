@@ -22,22 +22,64 @@ inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
     return arrayOfNulls<T>(size) as Array<T>
 }
 
-@Suppress("UNCHECKED_CAST")
-inline fun <reified T> Array<out T>.withAddedElement(element: T): Array<T> {
-    val newArray = unsafeNewArray<T>(size + 1)
-    System.arraycopy(this, 0, newArray, 0, size)
-    newArray[size] = element
+inline fun <TArray : Any, TOut : TArray> TArray.withAddedElementInternal(
+    currentSize: Int,
+    createNewArray: (size: Int) -> TOut,
+    set: TOut.(index: Int) -> Unit
+): TOut {
+    val newArray = createNewArray(currentSize + 1)
+    System.arraycopy(this, 0, newArray, 0, currentSize)
+    newArray.set(currentSize)
 
     return newArray
 }
 
-@Suppress("UNCHECKED_CAST")
-inline fun <reified T> Array<out T>.withRemovedElementAt(index: Int): Array<T> {
-    val newArray = unsafeNewArray<T>(size - 1)
+inline fun <TArray : Any, TOut : TArray> TArray.withAddedElementsInternal(
+    elementsToAdd: TArray,
+    createNewArray: (size: Int) -> TOut,
+    getSize: TArray.() -> Int,
+): TOut {
+    val currentSize = getSize()
+    val elementsSize = elementsToAdd.getSize()
+
+    val newArray = createNewArray(currentSize + elementsSize)
+    System.arraycopy(this, 0, newArray, 0, currentSize)
+    System.arraycopy(elementsToAdd, 0, newArray, currentSize, elementsSize)
+
+    return newArray
+}
+
+inline fun <TArray : Any, TOut : TArray> TArray.withRemovedElementAtInternal(
+    index: Int,
+    createNewArray: (size: Int) -> TOut,
+    getSize: TArray.() -> Int
+): TOut {
+    val size = getSize()
+    val newArray = createNewArray(size - 1)
     System.arraycopy(this, 0, newArray, 0, index)
     System.arraycopy(this, index + 1, newArray, index, size - (index + 1))
 
     return newArray
+}
+
+inline fun <reified T> Array<out T>.withAddedElement(element: T): Array<T> {
+    return withAddedElementInternal(size, ::unsafeNewArray) { this[it] = element }
+}
+
+fun IntArray.withAddedElement(element: Int): IntArray {
+    return withAddedElementInternal(size, ::IntArray) { this[it] = element }
+}
+
+fun IntArray.withAddedElements(elements: IntArray): IntArray {
+    return withAddedElementsInternal(elements, ::IntArray, IntArray::size)
+}
+
+inline fun <reified T> Array<out T>.withRemovedElementAt(index: Int): Array<T> {
+    return withRemovedElementAtInternal(index, ::unsafeNewArray, Array<out T>::size)
+}
+
+fun IntArray.withRemovedElementAt(index: Int): IntArray {
+    return withRemovedElementAtInternal(index, ::IntArray, IntArray::size)
 }
 
 fun IntArray.contains(element: Int, start: Int, end: Int): Boolean {
@@ -99,8 +141,13 @@ inline fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> 
     return result
 }
 
+
 inline fun <T, reified R> Array<out T>.mapToArray(block: (T) -> R): Array<R> {
     return Array(size) { block(this[it]) }
+}
+
+inline fun <T> Array<out T>.mapToIntArray(block: (T) -> Int): IntArray {
+    return IntArray(size) { block(this[it]) }
 }
 
 inline fun <T, R> Array<out T>.mapToHashSet(block: (T) -> R): HashSet<R> {
@@ -113,4 +160,33 @@ inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {
     for (i in 0 until size) {
         block(this[i])
     }
+}
+
+class IntList {
+    private var elements: IntArray
+    private var size = 0
+
+    constructor() {
+        elements = EmptyArray.INT
+    }
+
+    constructor(capacity: Int) {
+        elements = IntArray(capacity)
+    }
+
+    fun add(element: Int) {
+        val capacity = elements.size
+        if (size >= capacity) {
+            elements[size++] = element
+        } else {
+            val newCapacity = (capacity * 3) / 2
+            val newElements = IntArray(newCapacity)
+            System.arraycopy(elements, 0, newElements, 0, capacity)
+            newElements[size++] = element
+
+            elements = newElements
+        }
+    }
+
+    fun array() = elements
 }

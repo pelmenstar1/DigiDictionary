@@ -2,4 +2,9 @@
 <resources>
     <dimen name="errorContainer_textHorizontalMargin">8dp</dimen>
     <dimen name="errorContainer_retryTopMargin">16dp</dimen>
+
+    <dimen name="colorPalette_spacing">4dp</dimen>
+    <dimen name="colorPalette_cellSize">40dp</dimen>
+    <dimen name="colorPalette_strokeWidth">1.5dp</dimen>
+    <dimen name="colorPalette_cellRoundRadius">2dp</dimen>
 </resources>

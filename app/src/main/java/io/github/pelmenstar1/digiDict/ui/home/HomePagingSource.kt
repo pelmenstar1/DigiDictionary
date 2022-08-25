@@ -6,10 +6,10 @@ import androidx.paging.PagingState
 import androidx.room.InvalidationTracker
 import androidx.room.withTransaction
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordTable
 
-class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int, Record>() {
+class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int, ConciseRecordWithBadges>() {
     private val observer = object : InvalidationTracker.Observer(TABLE_NAME_ARRAY) {
         override fun onInvalidated(tables: MutableSet<String>) {
             invalidate()
@@ -20,7 +20,12 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
     private val recordDao = appDatabase.recordDao()
 
     init {
-        appDatabase.invalidationTracker.addWeakObserver(observer)
+        val invalidationTracker = appDatabase.invalidationTracker
+        invalidationTracker.addObserver(observer)
+
+        registerInvalidatedCallback {
+            invalidationTracker.removeObserver(observer)
+        }
     }
 
     private fun queryItemCount(): Int {
@@ -31,14 +36,14 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, Record>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, ConciseRecordWithBadges>): Int? {
         return when (val anchorPosition = state.anchorPosition) {
             null -> null
             else -> maxOf(0, anchorPosition - (state.config.initialLoadSize / 2))
         }
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Record> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ConciseRecordWithBadges> {
         return try {
             if (itemCount >= 0) {
                 load(params, itemCount)
@@ -56,7 +61,7 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
         }
     }
 
-    private suspend fun load(params: LoadParams<Int>, count: Int): LoadResult.Page<Int, Record> {
+    private suspend fun load(params: LoadParams<Int>, count: Int): LoadResult.Page<Int, ConciseRecordWithBadges> {
         val key = params.key ?: 0
         val limit = when (params) {
             is LoadParams.Prepend ->
@@ -84,7 +89,7 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
                 }
         }
 
-        val data = recordDao.getRecordsLimitOffset(limit, offset)
+        val data = recordDao.getConciseRecordsWithBadgesLimitOffset(limit, offset)
         val dataSize = data.size
 
         val nextPosToLoad = offset + dataSize

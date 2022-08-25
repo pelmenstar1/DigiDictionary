@@ -23,6 +23,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.theme.overlay.MaterialThemeOverlay
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ui.adjustViewCountWithoutLast
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import java.util.*
@@ -172,7 +173,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         com.google.android.material.R.attr.materialButtonOutlinedStyle
     ).apply {
         val res = resources
-        val size = res.getDimensionPixelSize(R.dimen.addExpression_meaningAddButtonSize)
+        val size = res.getDimensionPixelSize(R.dimen.addRecord_meaningAddButtonSize)
 
         layoutParams = LayoutParams(size, size).apply {
             gravity = Gravity.CENTER_HORIZONTAL
@@ -194,17 +195,8 @@ class MeaningListInteractionView @JvmOverloads constructor(
     }
 
     private fun adjustInputCount(newCount: Int) {
-        val currentCount = childCount - 1
-
-        when {
-            currentCount > newCount -> {
-                removeViews(currentCount, newCount - currentCount)
-            }
-            currentCount < newCount -> {
-                repeat(newCount - currentCount) {
-                    addNewItem(isUserInteraction = false)
-                }
-            }
+        adjustViewCountWithoutLast(newCount, lastViewsCount = 1) {
+            addNewItem(isUserInteraction = false)
         }
     }
 
@@ -424,9 +416,9 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
             refreshHintsAndEndButtons()
             refreshErrorState()
-        }
 
-        super.onRestoreInstanceState(state)
+            super.onRestoreInstanceState(state.superState)
+        }
     }
 
     override fun onSaveInstanceState(): Parcelable {

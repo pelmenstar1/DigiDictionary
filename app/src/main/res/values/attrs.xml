@@ -1,16 +1,14 @@
 <resources>
+    <attr name="materialButtonIconStyle" format="reference" />
+
     <declare-styleable name="AppWidgetAttrs">
         <attr name="listWidgetPadding" format="dimension" />
         <attr name="listWidgetInnerRadius" format="dimension" />
         <attr name="listWidgetRadius" format="dimension" />
     </declare-styleable>
 
-
-
     <declare-styleable name="SettingItemContainer">
         <attr name="icon" />
         <attr name="name" format="string" />
     </declare-styleable>
-
-
 </resources>

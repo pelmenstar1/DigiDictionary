@@ -6,7 +6,7 @@
     <string name="delete">Delete</string>
     <string name="remove">Remove</string>
     <string name="edit">Edit</string>
-
+    <string name="applyChanges">Apply</string>
     <string name="empty">Empty</string>
     <string name="emptyTextError">Text can\'t be empty</string>
 
@@ -75,6 +75,22 @@
     <string name="addEditRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
     <string name="addEditRecord_exprNoLetterOrDigit">Expression should contain at least one letter or digit</string>
     <string name="addEditRecord_meaningNoLetterOrDigit">Meaning should contain at least one letter or digit</string>
+    <string name="addEditRecord_outlineColorPrefix">Outline color: </string>
+
+    <string name="badgeInteraction_badge">Badge</string>
+    <string name="badgeSelector_manage">Manage</string>
+
+    <!-- Manage record badges -->
+    <string name="manageRecordBadges_title">Record badges</string>
+    <string name="manageRecordBadges_addContentDescription">Add a new record badge</string>
+    <string name="manageRecordBadges_removeWarning">Do you really want to remove the badge? This will remove the badge from all the records.</string>
+    <string name="manageRecordBadges_removeError">Failed to remove the badge</string>
+    <string name="manageRecordBadges_addError">Failed to add the badge</string>
+    <string name="manageRecordBadges_editError">Failed to edit the badge</string>
+
+    <!-- Add badge dialog -->
+    <string name="addBadge_badgeExistsError">Badge with such name is already added</string>
+    <string name="addBadge_name">Name</string>
 
     <!-- View record fragment -->
     <string name="viewRecord_label">View</string>

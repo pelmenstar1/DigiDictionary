@@ -61,13 +61,13 @@ class ViewRecordFragment : Fragment() {
                 if (record != null) {
                     viewRecordExpressionView.setValue(record.expression)
                     viewRecordMeaningView.text = MeaningTextHelper.parseToFormatted(
-                        record.rawMeaning
+                        record.meaning
                     )
 
                     viewRecordAdditionalNotesView.setValue(record.additionalNotes)
                     viewRecordScore.setValue(record.score)
-
                     viewRecordDateTimeView.text = dateTimeFormatter.format(record.epochSeconds)
+                    viewRecordBadgeContainer.setBadges(record.badges)
                 }
             }
         }

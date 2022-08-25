@@ -14,17 +14,29 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLazyValue
-import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
 
-open class RecordViewHolder private constructor(
+open class ConciseRecordWithBadgesViewHolder private constructor(
     val container: ViewGroup
 ) : RecyclerView.ViewHolder(container) {
-    val expressionView = container.getTextViewAt(EXPRESSION_VIEW_INDEX)
-    val meaningView = container.getTextViewAt(MEANING_VIEW_INDEX)
-    val scoreView = container.getTextViewAt(SCORE_VIEW_INDEX)
+    private val expressionView: TextView
+    val meaningView: TextView
+    val scoreView: TextView
+
+    private var badgeContainer: BadgeContainer? = null
 
     constructor(context: Context) : this(createContainer(context))
+
+    init {
+        with(container.getTypedViewAt<ViewGroup>(MAIN_CONTENT_INDEX)) {
+            expressionView = getTypedViewAt(EXPRESSION_VIEW_INDEX)
+            meaningView = getTypedViewAt(MEANING_VIEW_INDEX)
+            scoreView = getTypedViewAt(SCORE_VIEW_INDEX)
+        }
+    }
 
     private var positiveScoreColorList: ColorStateList? = null
     private var negativeScoreColorList: ColorStateList? = null
@@ -44,12 +56,15 @@ open class RecordViewHolder private constructor(
         )
     }
 
-    fun bind(record: Record?, onContainerClickListener: View.OnClickListener) {
+    fun bind(record: ConciseRecordWithBadges?, onContainerClickListener: View.OnClickListener) {
         if (record != null) {
+            val context = container.context
+
             container.tag = record
+            container.setOnClickListener(onContainerClickListener)
 
             expressionView.text = record.expression
-            meaningView.text = MeaningTextHelper.parseToFormatted(record.rawMeaning)
+            meaningView.text = MeaningTextHelper.parseToFormatted(record.meaning)
 
             scoreView.run {
                 val score = record.score
@@ -70,9 +85,22 @@ open class RecordViewHolder private constructor(
                 text = score.toString()
             }
 
-            container.setOnClickListener(onContainerClickListener)
+            val badges = record.badges
+            var bc = badgeContainer
+
+            if (badges.isEmpty()) {
+                bc?.removeAllViews()
+            } else {
+                if (bc == null) {
+                    bc = createBadgeContainer(context)
+                    container.addView(bc)
+                }
+
+                bc.setBadges(record.badges)
+            }
         } else {
             container.setOnClickListener(null)
+            container.tag = null
 
             expressionView.text = ""
             meaningView.text = ""
@@ -81,12 +109,12 @@ open class RecordViewHolder private constructor(
     }
 
     companion object {
-        private val CONTAINER_LAYOUT_PARAMS = LinearLayout.LayoutParams(
+        private val MATCH_WRAP_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        private val SCORE_LAYOUT_PARAMS = LinearLayout.LayoutParams(
+        private val WRAP_WRAP_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
@@ -98,32 +126,54 @@ open class RecordViewHolder private constructor(
             weight = 0.5f
         }
 
+        private const val MAIN_CONTENT_INDEX = 0
+
         private const val SCORE_VIEW_INDEX = 0
         private const val EXPRESSION_VIEW_INDEX = 1
         private const val MEANING_VIEW_INDEX = 2
 
         inline fun createOnItemClickListener(crossinline block: (id: Int) -> Unit) = View.OnClickListener {
-            (it.tag as? Record?)?.also { record -> block(record.id) }
+            (it.tag as ConciseRecordWithBadges?)?.also { record -> block(record.id) }
         }
 
         internal fun createContainer(context: Context): ViewGroup {
+            val res = context.resources
+
+            return LinearLayout(context).apply {
+                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+                orientation = LinearLayout.VERTICAL
+                setPadding(res.getDimensionPixelOffset(R.dimen.itemRecord_padding))
+
+                addView(createMainContentContainer(context))
+            }
+        }
+
+        internal fun createBadgeContainer(context: Context): BadgeContainer {
+            val res = context.resources
+
+            return BadgeContainer(context).apply {
+                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+
+                res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding).also {
+                    setPadding(it, 0, it, 0)
+                }
+            }
+        }
+
+        private fun createMainContentContainer(context: Context): LinearLayout {
+            val res = context.resources
+
             return LinearLayout(context).also { container ->
-                container.layoutParams = CONTAINER_LAYOUT_PARAMS
-
-                val res = context.resources
-                val padding = res.getDimensionPixelOffset(R.dimen.itemRecord_padding)
-
-                container.setPadding(padding)
+                container.layoutParams = MATCH_WRAP_LAYOUT_PARAMS
 
                 container.addView(MaterialTextView(context).apply {
-                    layoutParams = SCORE_LAYOUT_PARAMS
+                    layoutParams = WRAP_WRAP_LAYOUT_PARAMS
 
                     TextViewCompat.setTextAppearance(
                         this,
                         com.google.android.material.R.style.TextAppearance_Material3_BodyMedium
                     )
                     setTextIsSelectable(false)
-                    isClickable = false
                 })
 
                 container.addView(MaterialTextView(context).apply {
@@ -140,7 +190,6 @@ open class RecordViewHolder private constructor(
                         this,
                         com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
                     )
-                    isClickable = false
 
                     initMultilineTextView()
                 })
@@ -155,12 +204,9 @@ open class RecordViewHolder private constructor(
                     textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
 
                     initMultilineTextView()
-                    isClickable = false
                 })
             }
         }
-
-        internal fun ViewGroup.getTextViewAt(index: Int) = getChildAt(index) as TextView
 
         private fun TextView.initMultilineTextView() {
             maxLines = 100

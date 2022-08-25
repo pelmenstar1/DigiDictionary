@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.LocaleProvider
 import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
@@ -14,7 +15,6 @@ import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
 import org.junit.Before
@@ -22,10 +22,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNull
-import kotlin.test.fail
+import kotlin.test.*
 
 @RunWith(AndroidJUnit4::class)
 class AddEditRecordViewModelTests {
@@ -37,13 +34,15 @@ class AddEditRecordViewModelTests {
     private fun createViewModel(
         recordDao: RecordDao = db.recordDao(),
         preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
+        recordToBadgeRelationDao: RecordToBadgeRelationDao = db.recordToBadgeRelationDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(Locale.ROOT)
+        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT)
     ): AddEditRecordViewModel {
         return AddEditRecordViewModel(
             recordDao,
             preparedRecordDao,
+            recordToBadgeRelationDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
             localeProvider
@@ -53,14 +52,16 @@ class AddEditRecordViewModelTests {
     private inline fun useViewModel(
         recordDao: RecordDao = db.recordDao(),
         preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
+        recordToBadgeRelationDao: RecordToBadgeRelationDao = db.recordToBadgeRelationDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: io.github.pelmenstar1.digiDict.common.LocaleProvider = io.github.pelmenstar1.digiDict.common.LocaleProvider.fromValue(Locale.ROOT),
+        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT),
         block: (AddEditRecordViewModel) -> Unit
     ) {
         createViewModel(
             recordDao,
             preparedRecordDao,
+            recordToBadgeRelationDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
             localeProvider
@@ -71,7 +72,7 @@ class AddEditRecordViewModelTests {
         return Record(
             id = 0,
             expression = expression,
-            rawMeaning = "C123",
+            meaning = "C123",
             additionalNotes = "",
             score = 0, epochSeconds = 0
         )
@@ -119,7 +120,7 @@ class AddEditRecordViewModelTests {
             )
         )
 
-        useViewModel(recordDao = dao) { vm ->
+        useViewModel { vm ->
             vm.expression = "Expr2"
 
             assertExpressionInvalid(vm, AddEditRecordMessage.EXISTING_EXPRESSION)
@@ -128,8 +129,8 @@ class AddEditRecordViewModelTests {
 
     @Test
     fun expressionIsValidWhenDbDoesNotContainsItTest() = runTest {
-        val dao = db.recordDao()
-        dao.insertAll(
+        val recordDao = db.recordDao()
+        recordDao.insertAll(
             arrayOf(
                 createRecord("Expr1"),
                 createRecord("Expr2"),
@@ -137,7 +138,7 @@ class AddEditRecordViewModelTests {
             )
         )
 
-        useViewModel(recordDao = dao) { vm ->
+        useViewModel { vm ->
             vm.expression = "Expr4"
 
             assertExpressionValid(vm)
@@ -146,8 +147,8 @@ class AddEditRecordViewModelTests {
 
     @Test
     fun expressionIsValidWhenItEqualsToCurrentRecordExpressionTest() = runTest {
-        val dao = db.recordDao()
-        dao.insertAll(
+        val recordDao = db.recordDao()
+        recordDao.insertAll(
             arrayOf(
                 createRecord("Expr1"),
                 createRecord("Expr2"),
@@ -155,13 +156,11 @@ class AddEditRecordViewModelTests {
             )
         )
 
-        useViewModel(recordDao = dao) { vm ->
-            val expectedCurrentRecord = dao.getRecordByExpression("Expr2")!!
-
+        useViewModel { vm ->
+            val expectedCurrentRecord = recordDao.getRecordWithBadgesByExpression("Expr2")!!
             vm.currentRecordId = expectedCurrentRecord.id
 
             val actualCurrentRecord = vm.currentRecordStateFlow.firstSuccess()
-
             assertEquals(expectedCurrentRecord, actualCurrentRecord)
 
             vm.expression = "Expr2"
@@ -183,7 +182,7 @@ class AddEditRecordViewModelTests {
 
         val expectedRecord = dao.getRecordById(1)
 
-        useViewModel(recordDao = dao) { vm ->
+        useViewModel { vm ->
             vm.currentRecordId = 1
 
             val actualRecord = vm.currentRecordStateFlow.firstSuccess()
@@ -194,80 +193,145 @@ class AddEditRecordViewModelTests {
 
     @Test
     fun addRecordTest() = runTest {
-        val dao = db.recordDao()
-        val vm = createViewModel(recordDao = dao)
+        suspend fun testCase(expectedMeaning: ComplexMeaning, expectedBadges: Array<RecordBadgeInfo>) {
+            val recordDao = db.recordDao()
+            val recordBadgeDao = db.recordBadgeDao()
+            val vm = createViewModel()
 
-        vm.expression = "Expr1"
-        vm.additionalNotes = "Notes1"
-        vm.getMeaning = { ComplexMeaning.Common("Meaning") }
+            val expectedExpr = "Expr1"
+            val expectedNotes = "Notes"
 
-        vm.addOrEditRecord()
+            vm.expression = expectedExpr
+            vm.additionalNotes = expectedNotes
+            vm.getMeaning = { expectedMeaning }
+            vm.getBadges = { expectedBadges }
 
-        vm.onAddError.handler = {
-            fail()
+            recordBadgeDao.insertAll(expectedBadges)
+            vm.addOrEditRecord()
+
+            vm.onAddError.handler = { fail() }
+            vm.onRecordSuccessfullyAdded.waitUntilHandlerCalled()
+
+            val actualRecord = recordDao.getRecordWithBadgesByExpression(expectedExpr)!!
+
+            assertEquals(expectedExpr, actualRecord.expression)
+            assertEquals(expectedMeaning, ComplexMeaning.parse(actualRecord.meaning))
+            assertEquals(expectedNotes, actualRecord.additionalNotes)
+            assertContentEquals(expectedBadges, actualRecord.badges)
+            assertEquals(0, actualRecord.score)
+
+            db.reset()
+            vm.clearThroughReflection()
         }
 
-        vm.onRecordSuccessfullyAdded.setHandlerAndWait {
-            launch {
-                val actualRecord = dao.getRecordByExpression("Expr1")!!
-
-                assertEquals("CMeaning", actualRecord.rawMeaning)
-                assertEquals("Notes1", actualRecord.additionalNotes)
-                assertEquals(0, actualRecord.score)
-
-                vm.clearThroughReflection()
-            }
+        suspend fun testCase(expectedBadges: Array<RecordBadgeInfo>) {
+            testCase(ComplexMeaning.Common("Meaning"), expectedBadges)
+            testCase(ComplexMeaning.List("M1", "M2", "M3"), expectedBadges)
+            testCase(ComplexMeaning.List("M1", "M2"), expectedBadges)
         }
+
+        testCase(expectedBadges = emptyArray())
+        testCase(expectedBadges = arrayOf(RecordBadgeInfo(id = 1, name = "Badge1", outlineColor = 1)))
+        testCase(
+            expectedBadges = arrayOf(
+                RecordBadgeInfo(id = 1, name = "Badge1", outlineColor = 1),
+                RecordBadgeInfo(id = 2, name = "Badge2", outlineColor = 2)
+            )
+        )
     }
 
     @Test
     fun editRecordTest() = runTest {
-        val dao = db.recordDao()
-        val vm = createViewModel(recordDao = dao)
+        suspend fun testCase(oldBadges: Array<RecordBadgeInfo>, newBadges: Array<RecordBadgeInfo>) {
+            val recordDao = db.recordDao()
+            val recordBadgeDao = db.recordBadgeDao()
 
-        dao.insert(
-            Record(
-                0,
-                "Expr1_Old",
-                "CMeaning1_Old",
-                "Notes1_Old",
-                1, 0
+            val expectedNewEpochSeconds = 100L
+            val vm = createViewModel(
+                currentEpochSecondsProvider = FakeCurrentEpochSecondsProvider(expectedNewEpochSeconds)
             )
+
+            val recordId = 1
+            val oldRecord = db.addRecordAndBadges(
+                Record(
+                    recordId,
+                    "Expr1_Old",
+                    "CMeaning1_Old",
+                    "Notes1_Old",
+                    1,
+                    0
+                ),
+                badges = oldBadges
+            )
+
+            vm.currentRecordId = recordId
+
+            // Wait until current record is loaded
+            vm.currentRecordStateFlow.firstSuccess()
+
+            val expectedNewRecord = RecordWithBadges(
+                recordId,
+                "Expr1_New",
+                "CMeaning1_New",
+                "Notes1_New",
+                oldRecord.score,
+                expectedNewEpochSeconds,
+                badges = newBadges
+            )
+
+            for (newBadge in newBadges) {
+                if (oldBadges.indexOfFirst { it.id == newBadge.id } >= 0) {
+                    recordBadgeDao.update(newBadge)
+                } else {
+                    recordBadgeDao.insert(newBadge)
+                }
+            }
+
+            vm.expression = expectedNewRecord.expression
+            vm.additionalNotes = expectedNewRecord.additionalNotes
+            vm.getMeaning = { ComplexMeaning.parse(expectedNewRecord.meaning) }
+            vm.getBadges = { newBadges }
+
+            vm.addOrEditRecord()
+
+            vm.onAddError.handler = { fail() }
+            vm.onRecordSuccessfullyAdded.waitUntilHandlerCalled()
+
+            val actualRecord = recordDao.getRecordWithBadgesById(recordId)
+            assertEquals(expectedNewRecord, actualRecord)
+
+            db.reset()
+            vm.clearThroughReflection()
+        }
+
+        testCase(
+            oldBadges = emptyArray(),
+            newBadges = arrayOf(RecordBadgeInfo(1, "Badge1", 1))
         )
 
-        vm.currentRecordId = 1
+        testCase(
+            oldBadges = arrayOf(RecordBadgeInfo(1, "Badge1_Old", 2)),
+            newBadges = arrayOf(RecordBadgeInfo(1, "Badge1_New", 1))
+        )
 
-        // Wait until current record is loaded
-        vm.currentRecordStateFlow.filterNotNull().first()
-
-        vm.expression = "Expr1_New"
-        vm.additionalNotes = "Notes1_New"
-        vm.getMeaning = { ComplexMeaning.Common("Meaning1_New") }
-
-        vm.addOrEditRecord()
-
-        vm.onAddError.handler = {
-            fail()
-        }
-
-        vm.onRecordSuccessfullyAdded.setHandlerAndWait {
-            launch {
-                val actualRecord = dao.getRecordById(1)!!
-
-                assertEquals("Expr1_New", actualRecord.expression)
-                assertEquals("CMeaning1_New", actualRecord.rawMeaning)
-                assertEquals("Notes1_New", actualRecord.additionalNotes)
-                assertEquals(1, actualRecord.score)
-
-                vm.clearThroughReflection()
-            }
-        }
+        testCase(
+            oldBadges = arrayOf(RecordBadgeInfo(1, "Badge1_Old", 2)),
+            newBadges = arrayOf(
+                RecordBadgeInfo(1, "Badge1_New", 1),
+                RecordBadgeInfo(2, "Badge2_New", 3)
+            ),
+        )
+        testCase(
+            oldBadges = arrayOf(RecordBadgeInfo(1, "Badge1", 1)),
+            newBadges = emptyArray()
+        )
     }
 
     @Test
     fun onRecordSuccessfullyAddedCalledOnMainThreadTest() = runTest {
         val vm = createViewModel()
         vm.getMeaning = { ComplexMeaning.Common("") }
+        vm.getBadges = { emptyArray() }
 
         assertEventHandlerOnMainThread(vm, vm.onRecordSuccessfullyAdded) { addOrEditRecord() }
     }
@@ -280,6 +344,7 @@ class AddEditRecordViewModelTests {
             }
         })
         vm.getMeaning = { ComplexMeaning.Common("") }
+        vm.getBadges = { emptyArray() }
 
         assertEventHandlerOnMainThread(vm, vm.onAddError) { addOrEditRecord() }
     }

@@ -16,8 +16,12 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
+import io.github.pelmenstar1.digiDict.data.RecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,6 +33,9 @@ class AddEditRecordFragment : Fragment() {
 
     @Inject
     lateinit var messageMapper: MessageMapper<AddEditRecordMessage>
+
+    @Inject
+    lateinit var recordBadgeDao: RecordBadgeDao
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,63 +91,67 @@ class AddEditRecordFragment : Fragment() {
             }
         }
 
-        initMeaning()
+        initMeaningInteraction()
+        initBadgeInteraction()
         initViews()
 
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        // When the fragment is resumed, selected badges can be different, so update them.
+        val badgeInteraction = binding.addRecordBadgeInteraction
+        val badgeIds = badgeInteraction.badges.mapToIntArray { it.id }
+
+        lifecycleScope.launch {
+            val updatedBadges = recordBadgeDao.getByIds(badgeIds)
+
+            withContext(Dispatchers.Main) {
+                badgeInteraction.badges = updatedBadges
+            }
+        }
+    }
+
     private fun setInputsEnabled(value: Boolean) {
         binding.run {
-            addExpressionExpressionInputLayout.isEnabled = value
-            addExpressionMeaningListInteraction.isEnabled = value
-            addExpressionAdditionalNotesInputLayout.isEnabled = value
+            addRecordExpressionInputLayout.isEnabled = value
+            addRecordMeaningListInteraction.isEnabled = value
+            addRecordAdditionalNotesInputLayout.isEnabled = value
+            addRecordBadgeInteraction.isEnabled = value
         }
     }
 
-    private fun setRecord(value: Record) {
-        setRecord(
-            value.expression,
-            ComplexMeaning.parse(value.rawMeaning),
-            value.additionalNotes
-        )
-    }
-
-    private fun setRecord(
-        expression: String,
-        meaning: ComplexMeaning,
-        notes: String
-    ) {
+    private fun setRecord(value: RecordWithBadges) {
         binding.run {
-            addExpressionExpressionInputLayout.setText(expression)
-            addExpressionAdditionalNotesInputLayout.setText(notes)
+            addRecordExpressionInputLayout.setText(value.expression)
+            addRecordAdditionalNotesInputLayout.setText(value.additionalNotes)
+            addRecordMeaningListInteraction.meaning = ComplexMeaning.parse(value.meaning)
+            addRecordBadgeInteraction.badges = value.badges
         }
-
-        binding.addExpressionMeaningListInteraction.meaning = meaning
     }
 
     private fun initViews() {
         binding.run {
             val vm = viewModel
 
-            addExpressionExpressionInputLayout.addTextChangedListener {
+            addRecordExpressionInputLayout.addTextChangedListener {
                 vm.expression = it
             }
 
-            addExpressionAdditionalNotesInputLayout.addTextChangedListener {
+            addRecordAdditionalNotesInputLayout.addTextChangedListener {
                 vm.additionalNotes = it
             }
 
-            addExpressionAddButton.run {
+            addRecordAddButton.run {
                 val textId = if (args.recordId >= 0) R.string.edit else R.string.addRecord
                 text = resources.getString(textId)
 
-                setOnClickListener {
-                    vm.addOrEditRecord()
-                }
+                setOnClickListener { vm.addOrEditRecord() }
             }
 
-            addExpressionSearchExpression.setOnClickListener {
+            addRecordSearchExpression.setOnClickListener {
                 val directions = AddEditRecordFragmentDirections.actionAddEditRecordToChooseRemoteDictionaryProvider(
                     vm.expression.toString()
                 )
@@ -150,35 +161,44 @@ class AddEditRecordFragment : Fragment() {
 
             lifecycleScope.run {
                 launchFlowCollector(vm.expressionErrorFlow) {
-                    addExpressionExpressionInputLayout.error = it?.let(messageMapper::map)
-                    addExpressionSearchExpression.isEnabled = it == null
+                    addRecordExpressionInputLayout.error = it?.let(messageMapper::map)
+                    addRecordSearchExpression.isEnabled = it == null
                 }
 
-                launchErrorFlowCollector(addExpressionExpressionInputLayout, vm.expressionErrorFlow, messageMapper)
-                launchSetEnabledIfEquals(addExpressionAddButton, AddEditRecordViewModel.ALL_VALID_MASK, vm.validity)
+                launchErrorFlowCollector(addRecordExpressionInputLayout, vm.expressionErrorFlow, messageMapper)
+                launchSetEnabledIfEquals(addRecordAddButton, AddEditRecordViewModel.ALL_VALID_MASK, vm.validity)
             }
         }
     }
 
-    private fun initMeaning() {
+    private fun initMeaningInteraction() {
         val vm = viewModel
 
-        val listInteractionView = binding.addExpressionMeaningListInteraction.also {
+        binding.addRecordMeaningListInteraction.also {
             it.onErrorStateChanged = { isError ->
                 vm.validity.withBitNullable(
                     AddEditRecordViewModel.MEANING_VALIDITY_BIT,
                     !isError
                 )
             }
-        }
 
-        // Only if there's no 'current record', specify error state for meaning list.
-        // Otherwise, wait until 'current record' is set.
-        // This will work, because meaning of 'current record' can't be empty.
-        if (vm.currentRecordId < 0) {
-            listInteractionView.refreshErrorState()
-        }
+            // Only if there's no 'current record', specify error state for meaning list.
+            // Otherwise, wait until 'current record' is set.
+            // This will work, because meaning of 'current record' can't be empty.
+            if (vm.currentRecordId < 0) {
+                it.refreshErrorState()
+            }
 
-        vm.getMeaning = { listInteractionView.meaning }
+            vm.getMeaning = { it.meaning }
+        }
+    }
+
+    private fun initBadgeInteraction() {
+        val vm = viewModel
+
+        binding.addRecordBadgeInteraction.also { badgeInteraction ->
+            badgeInteraction.onGetFragmentManager = { childFragmentManager }
+            vm.getBadges = { badgeInteraction.badges }
+        }
     }
 }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="addExpression_horizontalMargin">10dp</dimen>
-    <dimen name="addExpression_textInputTopMargin">5dp</dimen>
-    <dimen name="addExpression_meaningAddButtonSize">48dp</dimen>
+    <dimen name="addRecord_horizontalMargin">10dp</dimen>
+    <dimen name="addRecord_elementTopMargin">5dp</dimen>
+    <dimen name="addRecord_meaningAddButtonSize">48dp</dimen>
 
     <dimen name="home_stateContainerMarginTop">5dp</dimen>
     <dimen name="home_stateContainerMarginBottom">80dp</dimen>
@@ -15,10 +15,29 @@
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
+    <dimen name="itemRecord_badgeContainerHorizontalPadding">5dp</dimen>
 
     <dimen name="remindRecords_lastItemBottomPadding">60dp</dimen>
 
     <dimen name="itemQuizRecord_actionButtonHeight">50dp</dimen>
     <dimen name="itemRemoteDictProvider_schemaTopMargin">8dp</dimen>
     <dimen name="itemRemoteDictProvider_padding">8dp</dimen>
+
+    <dimen name="badge_paddingHorizontal">12dp</dimen>
+    <dimen name="badge_paddingVertical">8dp</dimen>
+    <dimen name="badge_removeButton_size">24dp</dimen>
+    <dimen name="badge_removeButton_startMargin">10dp</dimen>
+    <dimen name="badge_endMargin">8dp</dimen>
+    <dimen name="badge_topMargin">8dp</dimen>
+    <dimen name="badge_strokeWidth">1.75dp</dimen>
+
+    <dimen name="badgeInteraction_addButton_size">40dp</dimen>
+    <dimen name="badgeInteraction_addButton_startMargin">8dp</dimen>
+    <dimen name="badgeInteraction_addButton_rightPadding">4dp</dimen>
+
+    <dimen name="badgeSelectorDialog_listHeight">300dp</dimen>
+    <dimen name="badgeSelectorDialog_listElementPadding">8dp</dimen>
+
+    <dimen name="itemManageRecordBadges_actionButtonSize">48dp</dimen>
+    <dimen name="itemManageRecordBadges_colorCircleSize">32dp</dimen>
 </resources>

@@ -18,6 +18,7 @@ import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
+import io.github.pelmenstar1.digiDict.ui.manageRecordBadges.AddEditBadgeInputMessage
 import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessage
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
@@ -68,6 +69,16 @@ class AppModule {
     }
 
     @Provides
+    fun provideRecordBadgeDao(appDatabase: AppDatabase): RecordBadgeDao {
+        return appDatabase.recordBadgeDao()
+    }
+
+    @Provides
+    fun provideRecordToBadgeRelationDao(appDatabase: AppDatabase): RecordToBadgeRelationDao {
+        return appDatabase.recordToBadgeRelationDao()
+    }
+
+    @Provides
     fun provideCommonStatsProvider(
         appDatabase: AppDatabase
     ): CommonStatsProvider {
@@ -95,5 +106,11 @@ class AppModule {
     @Singleton
     fun provideAddRemoteDictProviderMessageMapper(@ApplicationContext context: Context): MessageMapper<AddRemoteDictionaryProviderMessage> {
         return AddRemoteDictionaryProviderMessage.defaultMapper(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBadgeSelectorInputMessageMapper(@ApplicationContext context: Context): MessageMapper<AddEditBadgeInputMessage> {
+        return AddEditBadgeInputMessage.defaultMapper(context)
     }
 }

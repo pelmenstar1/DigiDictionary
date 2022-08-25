@@ -11,4 +11,10 @@
     <declare-styleable name="DataLoadStateContainer">
         <attr name="errorText" />
     </declare-styleable>
+
+    <declare-styleable name="ColorPaletteView">
+        <attr name="colors" format="reference" />
+        <attr name="strokeColor" format="color" />
+        <attr name="android:numColumns" />
+    </declare-styleable>
 </resources>
