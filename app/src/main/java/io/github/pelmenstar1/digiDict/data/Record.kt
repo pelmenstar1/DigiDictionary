@@ -97,41 +97,6 @@ open class Record(
                     )
                 }
             )
-
-            forVersion<Record>(
-                version = 2,
-                getByteSize = { value ->
-                    stringUtf16(value.expression) +
-                            stringUtf16(value.meaning) +
-                            stringUtf16(value.additionalNotes) +
-                            int32 /* score */ +
-                            int64 /* epochSeconds */
-                },
-                write = { value ->
-                    stringUtf16(value.expression)
-                    stringUtf16(value.meaning)
-                    stringUtf16(value.additionalNotes)
-                    int32(value.score)
-                    int64(value.epochSeconds)
-                },
-                read = {
-                    val expression = stringUtf16()
-                    val rawMeaning = stringUtf16()
-                    val additionalNotes = stringUtf16()
-                    val score = int32()
-                    val epochSeconds = int64()
-
-                    if (epochSeconds < 0) {
-                        throw ValidationException("Epoch seconds can't be negative")
-                    }
-
-                    Record(
-                        id = 0,
-                        expression, rawMeaning, additionalNotes,
-                        score, epochSeconds
-                    )
-                }
-            )
         }
     }
 }
@@ -338,7 +303,7 @@ fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
         private var isIteratorCreated = false
 
         override val version: Int
-            get() = 2
+            get() = 1
 
         private inline fun Cursor.columnIndex(block: RecordTable.() -> String): Int {
             return getColumnIndex(block(RecordTable))
