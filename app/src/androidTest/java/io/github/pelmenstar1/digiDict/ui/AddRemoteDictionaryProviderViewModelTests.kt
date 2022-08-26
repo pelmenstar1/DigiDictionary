@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
 import org.junit.Before
@@ -22,8 +21,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.fail
 
 @RunWith(AndroidJUnit4::class)
 class AddRemoteDictionaryProviderViewModelTests {
@@ -221,45 +220,18 @@ class AddRemoteDictionaryProviderViewModelTests {
         vm.schema = "https://a.com/\$query$"
         vm.spaceReplacement = '_'
 
-        vm.add()
+        vm.addAction.runAndWaitForResult()
 
-        vm.onAdditionError.handler = {
-            fail()
-        }
+        val info = db.remoteDictionaryProviderDao().getByName("Provider1")!!
 
-        vm.onSuccessfulAddition.setHandlerAndWait {
-            launch {
-                val info = db.remoteDictionaryProviderDao().getByName("Provider1")!!
+        assertEquals("https://a.com/\$query$", info.schema)
+        assertEquals('_', info.urlEncodingRules.spaceReplacement)
 
-                assertEquals("https://a.com/\$query$", info.schema)
-                assertEquals('_', info.urlEncodingRules.spaceReplacement)
-
-                vm.clearThroughReflection()
-            }
-        }
+        vm.clearThroughReflection()
     }
 
     @Test
-    fun onAdditionErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
-            override suspend fun insert(value: RemoteDictionaryProviderInfo) {
-                // Simulate DB error.
-                throw RuntimeException()
-            }
-        })
-
-        assertEventHandlerOnMainThread(vm, vm.onAdditionError, triggerAction = { add() })
-    }
-
-    @Test
-    fun onSuccessfulAdditionCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel()
-
-        assertEventHandlerOnMainThread(vm, vm.onSuccessfulAddition, triggerAction = { add() })
-    }
-
-    @Test
-    fun onValidityCheckErrorCalledOnMainThreadTest() = runTest {
+    fun validityCheckErrorTest() = runTest {
         val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
             override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
                 // Simulate DB error.
@@ -267,7 +239,8 @@ class AddRemoteDictionaryProviderViewModelTests {
             }
         })
 
-        assertEventHandlerOnMainThread(vm, vm.onValidityCheckError, triggerAction = { schema = "123" })
+        vm.schema = "123"
+        assertNotNull(vm.validityCheckErrorFlow.first())
     }
 
     companion object {

@@ -53,8 +53,8 @@ class AddEditRecordFragment : Fragment() {
 
         // Init errors only after currentRecordId is set.
         vm.initErrors()
-        vm.onRecordSuccessfullyAdded.handler = navController.popBackStackEventHandler()
-        vm.onAddError.handler = showSnackbarEventHandler(container, R.string.dbError)
+        popBackStackOnSuccess(vm.addOrEditAction, navController)
+        showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
 
         // If there's no 'current record', currentRecordStateFlow shouldn't be collect at all
         // because as there's no record to load, state of currentRecordStateFlow will always be Loading

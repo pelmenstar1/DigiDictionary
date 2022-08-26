@@ -7,6 +7,7 @@ import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.ui.manageRecordBadges.ManageRecordBadgesViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset
+import io.github.pelmenstar1.digiDict.utils.runAndWaitForResult
 import io.github.pelmenstar1.digiDict.utils.use
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -16,7 +17,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.fail
 
 @RunWith(AndroidJUnit4::class)
 class ManageRecordBadgesViewModelTests {
@@ -42,9 +42,7 @@ class ManageRecordBadgesViewModelTests {
             val newBadge = RecordBadgeInfo(1, "New", 2)
 
             recordBadgeDao.insert(oldBadge)
-            vm.update(newBadge)
-            vm.onUpdateError.handler = { fail() }
-            Thread.sleep(500L)
+            vm.updateAction.runAndWaitForResult(newBadge)
 
             val actualBadge = recordBadgeDao.getById(1)
             assertEquals(newBadge, actualBadge)
@@ -57,9 +55,7 @@ class ManageRecordBadgesViewModelTests {
 
         useViewModel { vm ->
             val expectedBadge = RecordBadgeInfo(1, "Badge", 2)
-            vm.add(expectedBadge)
-            vm.onAddError.handler = { fail() }
-            Thread.sleep(500L)
+            vm.addAction.runAndWaitForResult(expectedBadge)
 
             val actualBadge = recordBadgeDao.getById(1)
             assertEquals(expectedBadge, actualBadge)
@@ -81,9 +77,7 @@ class ManageRecordBadgesViewModelTests {
         )
 
         useViewModel { vm ->
-            vm.remove(badge)
-            vm.onRemoveError.handler = { fail() }
-            Thread.sleep(500L)
+            vm.removeAction.runAndWaitForResult(badge)
 
             val currentBadge = recordBadgeDao.getById(badge.id)
             val relations = recordToBadgeRelationDao.getByBadgeId(badge.id)

@@ -19,6 +19,7 @@ import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.transform
 import javax.inject.Inject
 
@@ -60,18 +61,14 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        vm.onOperationError.handler = {
-            hideLoadingProgressDialog()
-
-            // Cancel the job, it's no longer needed.
-            loadingProgressCollectionJob?.cancel()
-        }
-
         lifecycleScope.also { ls ->
             launchMessageFlowCollector(vm.messageFlow, messageMapper, container)
 
-            binding.settingsContainer.setupLoadStateFlow(ls, vm) { snapshot ->
-                SettingsInflater.applySnapshot(snapshot, contentContainer)
+            ls.launchFlowCollector(vm.operationErrorFlow.filterNotNull()) {
+                hideLoadingProgressDialog()
+
+                // Cancel the job, it's no longer needed.
+                loadingProgressCollectionJob?.cancel()
             }
 
             ls.launchFlowCollector(
@@ -82,6 +79,10 @@ class SettingsFragment : Fragment() {
                 }.distinctUntilChanged()
             ) {
                 ListAppWidget.updater(context).updateAllWidgets()
+            }
+
+            binding.settingsContainer.setupLoadStateFlow(ls, vm) { snapshot ->
+                SettingsInflater.applySnapshot(snapshot, contentContainer)
             }
         }
 

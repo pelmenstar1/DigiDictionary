@@ -1,19 +1,20 @@
 package io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider
 
-import android.util.Log
 import android.util.Patterns
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.common.updateNullable
+import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.common.withBit
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
@@ -33,6 +34,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     private val _schemaErrorFlow =
         MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
 
+    // TODO: Reduce count of flows.
     private val _isNameEnabledFlow = MutableStateFlow(true)
     private val _isSchemaEnabledFlow = MutableStateFlow(true)
 
@@ -48,9 +50,17 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     val isSchemaEnabledFlow = _isNameEnabledFlow.asStateFlow()
     val validityFlow = _validityFlow.asStateFlow()
 
-    val onAdditionError = Event()
-    val onValidityCheckError = Event()
-    val onSuccessfulAddition = Event()
+    val addAction = viewModelAction(TAG) {
+        val newProvider = RemoteDictionaryProviderInfo(
+            name = name,
+            schema = schema,
+            urlEncodingRules = RemoteDictionaryProviderInfo.UrlEncodingRules(spaceReplacement)
+        )
+
+        remoteDictProviderDao.insert(newProvider)
+    }
+
+    val validityCheckErrorFlow = MutableSharedFlow<Throwable?>(replay = 1)
 
     var name: String = ""
         set(value) {
@@ -84,29 +94,12 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         checkValueChannel.trySendBlocking(Message(type, value))
     }
 
-    fun add() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val newProvider = RemoteDictionaryProviderInfo(
-                name = name,
-                schema = schema,
-                urlEncodingRules = RemoteDictionaryProviderInfo.UrlEncodingRules(spaceReplacement)
-            )
-
-            try {
-                remoteDictProviderDao.insert(newProvider)
-
-                onSuccessfulAddition.raiseOnMainThread()
-            } catch (e: Exception) {
-                Log.e(TAG, "during addition", e)
-
-                onAdditionError.raiseOnMainThreadIfNotCancellation(e)
-            }
-        }
-    }
+    fun add() = addAction.run()
 
     private fun startCheckValueJobIfNecessary() {
         if (isCheckValueJobStarted.compareAndSet(false, true)) {
             viewModelScope.launch(Dispatchers.Default) {
+                validityCheckErrorFlow.emit(null)
                 val allProviders: Array<RemoteDictionaryProviderInfo>
 
                 try {
@@ -125,7 +118,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                     // Unset all validity bits in order to disable "Add" button
                     _validityFlow.value = 0
 
-                    onValidityCheckError.raiseOnMainThreadIfNotCancellation(e)
+                    if (e !is CancellationException) {
+                        validityCheckErrorFlow.emit(e)
+                    }
 
                     return@launch
                 }

@@ -16,6 +16,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListenerToString
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddRemoteDictProviderBinding
+import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -25,8 +26,6 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
     @Inject
     lateinit var messageMapper: MessageMapper<AddRemoteDictionaryProviderMessage>
 
-    private lateinit var binding: FragmentAddRemoteDictProviderBinding
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val navController = findNavController()
         val vm = viewModel
@@ -35,17 +34,9 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         val binding = FragmentAddRemoteDictProviderBinding.inflate(inflater, container, false)
 
         vm.apply {
-            onSuccessfulAddition.handler = navController.popBackStackEventHandler()
-
-            onValidityCheckError.handler = showSnackbarEventHandler(
-                container,
-                msgId = R.string.dbError,
-                duration = Snackbar.LENGTH_INDEFINITE,
-                actionText = io.github.pelmenstar1.digiDict.common.ui.R.string.retry,
-                action = { vm.restartValidityCheck() }
-            )
-
-            onAdditionError.handler = showSnackbarEventHandler(
+            popBackStackOnSuccess(addAction, navController)
+            showSnackbarEventHandlerOnError(
+                addAction,
                 container,
                 msgId = R.string.dbError,
                 anchorView = binding.addRemoteDictProviderAdd
@@ -67,6 +58,16 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
 
             launchSetEnabledFlowCollector(nameInputLayout, vm.isNameEnabledFlow)
             launchSetEnabledFlowCollector(schemaInputLayout, vm.isSchemaEnabledFlow)
+
+            launchFlowCollector(vm.validityCheckErrorFlow.filterNotNull()) {
+                container?.let {
+                    Snackbar.make(container, R.string.dbError, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(io.github.pelmenstar1.digiDict.common.ui.R.string.retry) {
+                            vm.restartValidityCheck()
+                        }
+                        .showLifecycleAwareSnackbar(lifecycle)
+                }
+            }
         }
 
         binding.run {
@@ -99,8 +100,6 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
                 }
             }
         }
-
-        this.binding = binding
 
         return binding.root
     }

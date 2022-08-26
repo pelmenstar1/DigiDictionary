@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -26,24 +27,20 @@ fun Snackbar.showLifecycleAwareSnackbar(lifecycle: Lifecycle) {
     })
 }
 
-fun LifecycleOwner.showSnackbarEventHandler(
+fun LifecycleOwner.showSnackbarEventHandlerOnError(
+    vmAction: ViewModelAction,
     container: ViewGroup?,
     @StringRes msgId: Int,
     duration: Int = Snackbar.LENGTH_LONG,
     anchorView: View? = null,
     actionText: Int = -1,
-    action: View.OnClickListener? = null
-): () -> Unit {
-    return {
-        if (container != null) {
+    snackbarAction: View.OnClickListener? = null
+) {
+    if (container != null) {
+        lifecycleScope.launchFlowCollector(vmAction.errorFlow) {
             Snackbar.make(container, msgId, duration).apply {
-                if (anchorView != null) {
-                    setAnchorView(anchorView)
-                }
-
-                if (action != null) {
-                    setAction(actionText, action)
-                }
+                anchorView?.let { setAnchorView(it) }
+                snackbarAction?.let { setAction(actionText, snackbarAction) }
             }.showLifecycleAwareSnackbar(lifecycle)
         }
     }

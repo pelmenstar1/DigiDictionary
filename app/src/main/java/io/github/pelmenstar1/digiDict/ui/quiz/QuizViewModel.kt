@@ -1,20 +1,17 @@
 package io.github.pelmenstar1.digiDict.ui.quiz
 
-import android.util.Log
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
-import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
+import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -45,8 +42,41 @@ class QuizViewModel @Inject constructor(
             modeFlow.value = value
         }
 
-    val onSaveError = Event()
-    val onResultSaved = Event()
+    val saveAction = viewModelAction(TAG) {
+        // Relies on the fact that user can't answer if result is null
+        val inputState = dataStateFlow.first()
+
+        if (inputState !is DataLoadState.Success<Array<ConciseRecordWithBadges>>) {
+            throw IllegalStateException("Input is expected to be successful")
+        }
+
+        val (input) = inputState
+
+        // Results can be saved only when all questions are answered, user can't re-answer, which means
+        // by time of executing saveResults() correctAnsweredBits can't be changed.
+        //
+        // Also, if result is not null, it means correctAnsweredBits is not null as well.
+        val correctAnsweredBits = requireNotNull(correctAnsweredBits)
+
+        val snapshot = appPreferences.getSnapshotFlow().first()
+
+        val scorePointsPerCorrectAnswer = snapshot.scorePointsPerCorrectAnswer
+        val scorePointsPerWrongAnswer = snapshot.scorePointsPerWrongAnswer
+
+        val newScores = IntArray(input.size)
+        for (i in input.indices) {
+            val currentScore = input[i].score
+
+            val newScore = currentScore + if (correctAnsweredBits[i])
+                scorePointsPerCorrectAnswer
+            else
+                -scorePointsPerWrongAnswer
+
+            newScores[i] = newScore
+        }
+
+        recordDao.updateScores(input, newScores)
+    }
 
     override fun DataLoadStateManager.FlowBuilder<Array<ConciseRecordWithBadges>>.buildDataFlow() = fromFlow {
         modeFlow.filterNotNull().map { selectedMode ->
@@ -88,51 +118,7 @@ class QuizViewModel @Inject constructor(
         _isAllAnswered.value = answeredBits.isAllBitsSet()
     }
 
-    fun saveResults() {
-        viewModelScope.launch {
-            try {
-                // Relies on the fact that user can't answer if result is null
-                val inputState = dataStateFlow.first()
-
-                if (inputState !is DataLoadState.Success<Array<ConciseRecordWithBadges>>) {
-                    throw IllegalStateException("Input is expected to be successful")
-                }
-
-                val (input) = inputState
-
-                // Results can be saved only when all questions are answered, user can't re-answer, which means
-                // by time of executing saveResults() correctAnsweredBits can't be changed.
-                //
-                // Also, if result is not null, it means correctAnsweredBits is not null as well.
-                val correctAnsweredBits = requireNotNull(correctAnsweredBits)
-
-                val snapshot = appPreferences.getSnapshotFlow().first()
-
-                val scorePointsPerCorrectAnswer = snapshot.scorePointsPerCorrectAnswer
-                val scorePointsPerWrongAnswer = snapshot.scorePointsPerWrongAnswer
-
-                val newScores = IntArray(input.size)
-                for (i in input.indices) {
-                    val currentScore = input[i].score
-
-                    val newScore = currentScore + if (correctAnsweredBits[i])
-                        scorePointsPerCorrectAnswer
-                    else
-                        -scorePointsPerWrongAnswer
-
-                    newScores[i] = newScore
-                }
-
-                recordDao.updateScores(input, newScores)
-
-                onResultSaved.raiseOnMainThread()
-            } catch (e: Exception) {
-                Log.e(TAG, "during save", e)
-
-                onSaveError.raiseOnMainThreadIfNotCancellation(e)
-            }
-        }
-    }
+    fun saveResults() = saveAction.run()
 
     companion object {
         private const val TAG = "QuizViewModel"

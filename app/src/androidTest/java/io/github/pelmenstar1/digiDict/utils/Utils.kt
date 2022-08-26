@@ -1,13 +1,11 @@
 package io.github.pelmenstar1.digiDict.utils
 
-import android.os.Looper
 import androidx.lifecycle.ViewModel
-import io.github.pelmenstar1.digiDict.common.Event
-import io.github.pelmenstar1.digiDict.common.mapToArray
+import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.data.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import kotlin.test.assertEquals
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlin.test.fail
 
 fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<T>, actual: Array<T>) {
@@ -28,10 +26,6 @@ fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<T>, act
     }
 }
 
-fun assertOnMainThread() {
-    assertEquals(Looper.getMainLooper().thread, Thread.currentThread())
-}
-
 fun ViewModel.clearThroughReflection() {
     val method = ViewModel::class.java.getDeclaredMethod("clear")
     method.isAccessible = true
@@ -44,43 +38,6 @@ inline fun <T : ViewModel> T.use(block: (vm: T) -> Unit) {
         block(this)
     } finally {
         clearThroughReflection()
-    }
-}
-
-fun assertOnMainThreadAndClear(vm: ViewModel) {
-    try {
-        assertOnMainThread()
-    } finally {
-        vm.clearThroughReflection()
-    }
-}
-
-suspend fun Event.setHandlerAndWait(block: () -> Unit) {
-    suspendCoroutine<Unit> {
-        handler = {
-            block()
-            it.resume(Unit)
-        }
-    }
-}
-
-suspend fun Event.waitUntilHandlerCalled() {
-    setHandlerAndWait { }
-}
-
-suspend fun <T : ViewModel> assertEventHandlerOnMainThread(
-    vm: T,
-    event: Event,
-    triggerAction: T.() -> Unit
-) {
-    suspendCoroutine<Unit> {
-        event.handler = {
-            assertOnMainThreadAndClear(vm)
-
-            it.resume(Unit)
-        }
-
-        vm.triggerAction()
     }
 }
 
@@ -107,4 +64,29 @@ suspend fun AppDatabase.addRecordAndBadges(
     )
 
     return recordWithBadges
+}
+
+suspend fun ViewModelAction.waitForResult() {
+    try {
+        coroutineScope {
+            launchFlowCollector(errorFlow) { throw it }
+            launchFlowCollector(successFlow) {
+                cancel()
+            }
+        }
+    } catch (e: Throwable) {
+        if (e !is CancellationException) {
+            throw e
+        }
+    }
+}
+
+suspend fun NoArgumentViewModelAction.runAndWaitForResult() {
+    run()
+    waitForResult()
+}
+
+suspend fun <T> SingleArgumentViewModelAction<T>.runAndWaitForResult(arg: T) {
+    run(arg)
+    waitForResult()
 }

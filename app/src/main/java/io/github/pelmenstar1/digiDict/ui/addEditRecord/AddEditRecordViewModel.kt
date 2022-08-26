@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui.addEditRecord
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -64,11 +63,6 @@ class AddEditRecordViewModel @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
-    private val isAddJobStarted = AtomicBoolean()
-
-    val onAddError = Event()
-    val onRecordSuccessfullyAdded = Event()
-
     private var _expression = ""
 
     var expression: CharSequence
@@ -80,6 +74,53 @@ class AddEditRecordViewModel @Inject constructor(
     var getMeaning: (() -> ComplexMeaning)? = null
     var getBadges: (() -> Array<RecordBadgeInfo>)? = null
     var additionalNotes: CharSequence = ""
+
+    val addOrEditAction = viewModelAction(TAG) {
+        val expr = _expression.trimToString()
+        val additionalNotes = additionalNotes.trimToString()
+        val rawMeaning = getMeaning.invokeOrThrow().rawText
+        val badges = getBadges.invokeOrThrow()
+        val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
+        val locale = localeProvider.get()
+
+        val recordId: Int
+        if (currentRecordId >= 0) {
+            recordDao.update(
+                currentRecordId,
+                expr, rawMeaning, additionalNotes,
+                epochSeconds
+            )
+
+            recordId = currentRecordId
+        } else {
+            recordDao.insert(
+                Record(
+                    id = 0,
+                    expr, rawMeaning, additionalNotes,
+                    score = 0,
+                    epochSeconds
+                )
+            )
+
+            recordId = recordDao.getRecordIdByExpression(expr)!!
+        }
+
+        val spr = SearchPreparedRecord.prepare(recordId, expr, rawMeaning, locale)
+        if (currentRecordId >= 0) {
+            searchPreparedRecordDao.update(spr)
+        } else {
+            searchPreparedRecordDao.insert(spr)
+        }
+
+        recordToBadgeRelationDao.deleteAllByRecordId(recordId)
+        recordToBadgeRelationDao.insertAll(
+            badges.mapToArray {
+                RecordToBadgeRelation(0, recordId, it.id)
+            }
+        )
+
+        listAppWidgetUpdater.updateAllWidgets()
+    }
 
     fun retryLoadCurrentRecord() {
         currentRecordStateManager.retry()
@@ -160,73 +201,7 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
-    fun addOrEditRecord() {
-        // Disallow starting a job when it has been started already.
-        if (isAddJobStarted.compareAndSet(false, true)) {
-            // Saving only those values which have been typed by the time of calling addOrEditExpression()
-            //
-            // Also, make sure additionalNotes is formatted properly.
-            // (If a string does not have any trailing or leading whitespaces, then trimToString won't allocate at all)
-            val expr = _expression.trimToString()
-            val additionalNotes = additionalNotes.trimToString()
-            val rawMeaning = getMeaning.invokeOrThrow().rawText
-            val badges = getBadges.invokeOrThrow()
-
-            viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
-                    val locale = localeProvider.get()
-
-                    val recordId: Int
-                    if (currentRecordId >= 0) {
-                        recordDao.update(
-                            currentRecordId,
-                            expr, rawMeaning, additionalNotes,
-                            epochSeconds
-                        )
-
-                        recordId = currentRecordId
-                    } else {
-                        recordDao.insert(
-                            Record(
-                                id = 0,
-                                expr, rawMeaning, additionalNotes,
-                                score = 0,
-                                epochSeconds
-                            )
-                        )
-
-                        recordId = recordDao.getRecordIdByExpression(expr)!!
-                    }
-
-                    val spr = SearchPreparedRecord.prepare(recordId, expr, rawMeaning, locale)
-                    if (currentRecordId >= 0) {
-                        searchPreparedRecordDao.update(spr)
-                    } else {
-                        searchPreparedRecordDao.insert(spr)
-                    }
-
-                    recordToBadgeRelationDao.deleteAllByRecordId(recordId)
-                    recordToBadgeRelationDao.insertAll(
-                        badges.mapToArray {
-                            RecordToBadgeRelation(0, recordId, it.id)
-                        }
-                    )
-
-                    listAppWidgetUpdater.updateAllWidgets()
-                    onRecordSuccessfullyAdded.raiseOnMainThread()
-
-                    // If there's no exception, then isAddJobStarted shouldn't be set to false,
-                    // because view-model will be destroyed soon.
-                } catch (e: Exception) {
-                    Log.e(TAG, null, e)
-                    isAddJobStarted.set(false)
-
-                    onAddError.raiseOnMainThreadIfNotCancellation(e)
-                }
-            }
-        }
-    }
+    fun addOrEditRecord() = addOrEditAction.run()
 
     companion object {
         private const val TAG = "AddExpressionVM"

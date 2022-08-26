@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRecordBadgesBinding
@@ -38,9 +38,9 @@ class ManageRecordBadgesFragment : Fragment() {
             }
         )
 
-        vm.onRemoveError.handler = showSnackbarEventHandler(container, R.string.manageRecordBadges_removeError)
-        vm.onAddError.handler = showSnackbarEventHandler(container, R.string.manageRecordBadges_addError)
-        vm.onUpdateError.handler = showSnackbarEventHandler(container, R.string.manageRecordBadges_editError)
+        showSnackbarEventHandlerOnError(vm.removeAction, container, R.string.manageRecordBadges_removeError)
+        showSnackbarEventHandlerOnError(vm.addAction, container, R.string.manageRecordBadges_addError)
+        showSnackbarEventHandlerOnError(vm.updateAction, container, R.string.manageRecordBadges_editError)
 
         binding.manageRecordBadgesRecyclerView.also {
             it.adapter = adapter

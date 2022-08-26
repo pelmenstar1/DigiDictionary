@@ -22,7 +22,10 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.*
-import kotlin.test.*
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 
 @RunWith(AndroidJUnit4::class)
 class AddEditRecordViewModelTests {
@@ -207,10 +210,7 @@ class AddEditRecordViewModelTests {
             vm.getBadges = { expectedBadges }
 
             recordBadgeDao.insertAll(expectedBadges)
-            vm.addOrEditRecord()
-
-            vm.onAddError.handler = { fail() }
-            vm.onRecordSuccessfullyAdded.waitUntilHandlerCalled()
+            vm.addOrEditAction.runAndWaitForResult()
 
             val actualRecord = recordDao.getRecordWithBadgesByExpression(expectedExpr)!!
 
@@ -292,10 +292,7 @@ class AddEditRecordViewModelTests {
             vm.getMeaning = { ComplexMeaning.parse(expectedNewRecord.meaning) }
             vm.getBadges = { newBadges }
 
-            vm.addOrEditRecord()
-
-            vm.onAddError.handler = { fail() }
-            vm.onRecordSuccessfullyAdded.waitUntilHandlerCalled()
+            vm.addOrEditAction.runAndWaitForResult()
 
             val actualRecord = recordDao.getRecordWithBadgesById(recordId)
             assertEquals(expectedNewRecord, actualRecord)
@@ -325,28 +322,6 @@ class AddEditRecordViewModelTests {
             oldBadges = arrayOf(RecordBadgeInfo(1, "Badge1", 1)),
             newBadges = emptyArray()
         )
-    }
-
-    @Test
-    fun onRecordSuccessfullyAddedCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel()
-        vm.getMeaning = { ComplexMeaning.Common("") }
-        vm.getBadges = { emptyArray() }
-
-        assertEventHandlerOnMainThread(vm, vm.onRecordSuccessfullyAdded) { addOrEditRecord() }
-    }
-
-    @Test
-    fun onAddErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(recordDao = object : RecordDaoStub() {
-            override suspend fun insert(value: Record) {
-                throw RuntimeException()
-            }
-        })
-        vm.getMeaning = { ComplexMeaning.Common("") }
-        vm.getBadges = { emptyArray() }
-
-        assertEventHandlerOnMainThread(vm, vm.onAddError) { addOrEditRecord() }
     }
 
     companion object {

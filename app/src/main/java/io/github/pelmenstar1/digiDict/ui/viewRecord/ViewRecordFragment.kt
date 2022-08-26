@@ -12,8 +12,8 @@ import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
-import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
-import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.common.popBackStackOnSuccess
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
@@ -22,8 +22,6 @@ import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 class ViewRecordFragment : Fragment() {
     private val args by navArgs<ViewRecordFragmentArgs>()
     private val viewModel by viewModels<ViewRecordViewModel>()
-
-    private lateinit var binding: FragmentViewRecordBinding
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,7 +35,6 @@ class ViewRecordFragment : Fragment() {
         val dateTimeFormatter = CompatDateTimeFormatter(context, DATE_TIME_FORMAT)
 
         val binding = FragmentViewRecordBinding.inflate(inflater, container, false)
-        this.binding = binding
 
         with(binding) {
             viewRecordDelete.setOnClickListener {
@@ -68,8 +65,9 @@ class ViewRecordFragment : Fragment() {
         }
 
         vm.id = args.id
-        vm.onRecordDeleted.handler = navController.popBackStackEventHandler()
-        vm.onDeleteError.handler = showSnackbarEventHandler(container, R.string.dbError)
+
+        popBackStackOnSuccess(vm.deleteAction, navController)
+        showSnackbarEventHandlerOnError(vm.deleteAction, container, R.string.dbError)
 
         return binding.root
     }

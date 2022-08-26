@@ -15,8 +15,8 @@ import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.launchSetEnabledFlowCollector
-import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
-import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.common.popBackStackOnSuccess
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
@@ -115,31 +115,31 @@ class QuizFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val context = requireContext()
-
         val vm = viewModel
         val navController = findNavController()
+        val ls = lifecycleScope
+        itemBackgroundHelper = QuizItemBackgroundHelper(context)
 
         val binding = FragmentQuizBinding.inflate(inflater, container, false)
 
-        itemBackgroundHelper = QuizItemBackgroundHelper(context)
-
-        vm.onResultSaved.handler = navController.popBackStackEventHandler()
         vm.mode = args.mode
+        popBackStackOnSuccess(vm.saveAction, navController)
 
         with(binding) {
-            vm.onSaveError.handler = showSnackbarEventHandler(
+            showSnackbarEventHandlerOnError(
+                vm.saveAction,
                 container,
                 msgId = R.string.quiz_saveError,
                 anchorView = quizSaveResults
             )
 
             quizSaveResults.run {
-                lifecycleScope.launchSetEnabledFlowCollector(this, vm.isAllAnswered)
+                ls.launchSetEnabledFlowCollector(this, vm.isAllAnswered)
 
                 setOnClickListener { vm.saveResults() }
             }
 
-            quizContainer.setupLoadStateFlow(lifecycleScope, vm) {
+            quizContainer.setupLoadStateFlow(ls, vm) {
                 if (it.isEmpty()) {
                     quizEmptyText.visibility = View.VISIBLE
                     quizSaveResults.visibility = View.GONE

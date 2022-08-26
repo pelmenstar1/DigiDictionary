@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRemoteDictProvidersBinding
 
@@ -43,17 +43,12 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
             }
 
             manageRemoteDictProvidersAdd.setOnClickListener {
-                val directions =
+                navController.navigate(
                     ManageRemoteDictionaryProvidersFragmentDirections.actionManageRemoteDictionaryProvidersToAddRemoteDictionaryProvider()
-
-                navController.navigate(directions)
+                )
             }
 
-            vm.onDeleteError.handler = showSnackbarEventHandler(
-                container,
-                msgId = R.string.manageRemoteDictProviders_deleteError
-            )
-
+            showSnackbarEventHandlerOnError(vm.deleteAction, container, R.string.manageRemoteDictProviders_deleteError)
             manageRemoteDictProvidersContainer.setupLoadStateFlow(lifecycleScope, vm) {
                 adapter.submitItems(it)
             }

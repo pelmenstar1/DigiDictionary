@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
 import org.junit.Before
@@ -22,7 +21,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.fail
 
 @RunWith(AndroidJUnit4::class)
 class ViewRecordViewModelTests {
@@ -49,19 +47,11 @@ class ViewRecordViewModelTests {
         val vm = createViewModel()
 
         vm.id = expectedToDeleteRecord.id
-        vm.delete()
+        vm.deleteAction.runAndWaitForResult()
+        val deletedRecord = dao.getRecordById(expectedToDeleteRecord.id)
+        assertNull(deletedRecord)
 
-        vm.onRecordDeleted.setHandlerAndWait {
-            launch {
-                val deletedRecord = dao.getRecordById(expectedToDeleteRecord.id)
-
-                assertNull(deletedRecord)
-
-                vm.clearThroughReflection()
-            }
-        }
-
-        vm.onDeleteError.handler = { fail() }
+        vm.clearThroughReflection()
     }
 
     @Test
@@ -78,7 +68,9 @@ class ViewRecordViewModelTests {
 
             val actualRecord = vm.dataStateFlow.firstSuccess()
             assertEquals(expectedRecordWithBadges, actualRecord)
+
             db.reset()
+            vm.clearThroughReflection()
         }
 
         testCase(badges = emptyArray())
@@ -134,6 +126,7 @@ class ViewRecordViewModelTests {
             assertEquals(expectedRecordWithBadges, actualRecord)
 
             db.reset()
+            vm.clearThroughReflection()
         }
 
         testCase(badges = emptyArray())
@@ -144,26 +137,6 @@ class ViewRecordViewModelTests {
                 RecordBadgeInfo(2, "Badge2", 2)
             )
         )
-    }
-
-    @Test
-    fun onDeleteErrorCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel(recordDao = object : RecordDaoStub() {
-            override suspend fun deleteById(id: Int): Int {
-                throw RuntimeException()
-            }
-        })
-
-        assertEventHandlerOnMainThread(vm, vm.onDeleteError) { delete() }
-    }
-
-    @Test
-    fun onRecordDeletedCalledOnMainThreadTest() = runTest {
-        val vm = createViewModel()
-
-        vm.use {
-            assertEventHandlerOnMainThread(vm, vm.onRecordDeleted) { delete() }
-        }
     }
 
     companion object {

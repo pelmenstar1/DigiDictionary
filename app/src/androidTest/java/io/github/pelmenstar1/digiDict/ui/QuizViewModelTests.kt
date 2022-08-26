@@ -7,14 +7,15 @@ import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.ConciseRecord.Companion.toConciseRecord
-import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.ui.quiz.QuizMode
 import io.github.pelmenstar1.digiDict.ui.quiz.QuizViewModel
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
+import io.github.pelmenstar1.digiDict.utils.ReadonlyAppPreferences
+import io.github.pelmenstar1.digiDict.utils.reset
+import io.github.pelmenstar1.digiDict.utils.use
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -22,7 +23,6 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.random.Random
 import kotlin.test.assertEquals
 
 @RunWith(AndroidJUnit4::class)
@@ -40,13 +40,13 @@ class QuizViewModelTests {
         return QuizViewModel(recordDao, appPreferences, currentEpochSecondsProvider)
     }
 
-    private fun createRecord(expression: String, score: Int): Record {
+    private fun createRecord(expression: String): Record {
         return Record(
             id = 0,
             expression = expression,
             meaning = "CMeaning",
             additionalNotes = "AdditionalNotes",
-            score = score,
+            score = 0,
             epochSeconds = 0
         )
     }
@@ -57,10 +57,10 @@ class QuizViewModelTests {
 
         dao.insertAll(
             arrayOf(
-                createRecord("Expr1", 0),
-                createRecord("Expr2", 0),
-                createRecord("Expr3", 0),
-                createRecord("Expr4", 0)
+                createRecord("Expr1"),
+                createRecord("Expr2"),
+                createRecord("Expr3"),
+                createRecord("Expr4")
             )
         )
 
@@ -88,58 +88,6 @@ class QuizViewModelTests {
         testCase(intArrayOf(0, 1, 2, 3), expectedResult = true)
         testCase(intArrayOf(3, 2, 1, 0), expectedResult = true)
         testCase(intArrayOf(0, 2, 1, 3), expectedResult = true)
-    }
-
-    @Test
-    fun onResultSavedCalledOnMainThread() = runTest {
-        val dao = object : RecordDaoStub() {
-            override suspend fun updateScore(id: Int, newScore: Int) {
-            }
-
-            override suspend fun getRandomConciseRecordsWithBadges(
-                random: Random,
-                size: Int
-            ): Array<ConciseRecordWithBadges> {
-                return arrayOf(
-                    ConciseRecordWithBadges.create(createRecord("Expr", 1).toConciseRecord(), emptyArray())
-                )
-            }
-        }
-
-        val vm = createViewModel(recordDao = dao)
-
-        vm.mode = QuizMode.ALL
-
-        // Wait until input is loaded.
-        vm.dataStateFlow.firstSuccess()
-
-        assertEventHandlerOnMainThread(vm, vm.onResultSaved) { vm.saveResults() }
-    }
-
-    @Test
-    fun onSaveErrorCalledOnMainThread() = runTest {
-        val dao = object : RecordDaoStub() {
-            override suspend fun getRandomConciseRecordsWithBadges(
-                random: Random,
-                size: Int
-            ): Array<ConciseRecordWithBadges> {
-                return arrayOf(
-                    ConciseRecordWithBadges.create(createRecord("Expr", 1).toConciseRecord(), emptyArray())
-                )
-            }
-
-            override suspend fun updateScore(id: Int, newScore: Int) {
-                throw RuntimeException()
-            }
-        }
-
-        val vm = createViewModel(recordDao = dao)
-        vm.mode = QuizMode.ALL
-
-        // Wait until input is loaded.
-        vm.dataStateFlow.firstSuccess()
-
-        assertEventHandlerOnMainThread(vm, vm.onSaveError) { saveResults() }
     }
 
     companion object {

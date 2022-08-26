@@ -8,13 +8,14 @@ import androidx.room.withTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
-import io.github.pelmenstar1.digiDict.common.Event
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.serialization.ValidationException
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -38,7 +39,7 @@ class SettingsViewModel @Inject constructor(
     private val progressReporter = ProgressReporter()
     val operationProgressFlow = progressReporter.progressFlow
 
-    val onOperationError = Event()
+    val operationErrorFlow = MutableSharedFlow<Throwable?>(replay = 1)
 
     override fun DataLoadStateManager.FlowBuilder<AppPreferences.Snapshot>.buildDataFlow() = fromFlow {
         appPreferences.getSnapshotFlow()
@@ -79,6 +80,8 @@ class SettingsViewModel @Inject constructor(
         progressReporter.reset()
 
         viewModelScope.launch {
+            operationErrorFlow.emit(null)
+
             try {
                 val showMessage = RecordImportExportManager.operation()
 
@@ -88,13 +91,14 @@ class SettingsViewModel @Inject constructor(
             } catch (e: ValidationException) {
                 _messageFlow.value = SettingsMessage.INVALID_FILE
 
-                onOperationError.raiseOnMainThread()
+                operationErrorFlow.emit(e)
             } catch (e: Exception) {
-                Log.e(TAG, "during $operationName", e)
+                if (e !is CancellationException) {
+                    Log.e(TAG, "during $operationName", e)
 
-                onOperationError.raiseOnMainThreadIfNotCancellation(e)
-
-                _messageFlow.value = operationErrorMsg
+                    operationErrorFlow.emit(e)
+                    _messageFlow.value = operationErrorMsg
+                }
             }
         }
     }
@@ -103,6 +107,8 @@ class SettingsViewModel @Inject constructor(
         progressReporter.reset()
 
         viewModelScope.launch {
+            operationErrorFlow.emit(null)
+
             try {
                 appDatabase.withTransaction {
                     progressReporter.onProgress(0, 100)
@@ -114,10 +120,12 @@ class SettingsViewModel @Inject constructor(
 
                 _messageFlow.value = SettingsMessage.DELETE_ALL_SUCCESS
             } catch (e: Exception) {
-                Log.e(TAG, "during deleteAllRecords", e)
+                if (e !is CancellationException) {
+                    Log.e(TAG, "during deleteAllRecords", e)
 
-                onOperationError.raiseOnMainThreadIfNotCancellation(e)
-                _messageFlow.value = SettingsMessage.DB_ERROR
+                    operationErrorFlow.emit(e)
+                    _messageFlow.value = SettingsMessage.DB_ERROR
+                }
             }
         }
     }
