@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common
+package io.github.pelmenstar1.digiDict.common.ui
 
 import android.view.View
 import android.view.ViewGroup
@@ -6,16 +6,11 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
+import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.showLifecycleAwareSnackbar
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-
-fun <T> CoroutineScope.launchFlowCollector(flow: Flow<T>, collector: FlowCollector<T>): Job {
-    return launch {
-        flow.collect(collector)
-    }
-}
+import kotlinx.coroutines.flow.Flow
 
 fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
     inputLayout: TextInputLayout,
@@ -27,10 +22,7 @@ fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
     }
 }
 
-fun CoroutineScope.launchSetEnabledFlowCollector(
-    view: View,
-    flow: Flow<Boolean>
-) {
+fun CoroutineScope.launchSetEnabledFlowCollector(view: View, flow: Flow<Boolean>) {
     launchFlowCollector(flow) { view.isEnabled = it }
 }
 
@@ -63,21 +55,4 @@ fun <T : Enum<T>> LifecycleOwner.launchMessageFlowCollector(
             }
         }
     }
-}
-
-inline fun MutableStateFlow<Int?>.updateNullable(func: (Int) -> Int) {
-    update {
-        val resolved = it ?: 0
-
-        func(resolved)
-    }
-}
-
-/**
- * Returns a flow which contains first elements of receiver flow that **do not** satisfy [condition].
- * The important part is that it lets the element on which [condition] returns true to be emitted to the output flow.
- */
-inline fun <T> Flow<T>.cancelAfter(crossinline condition: (T) -> Boolean) = transformWhile { value ->
-    emit(value)
-    !condition(value)
 }

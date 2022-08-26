@@ -9,8 +9,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.MaterialDialogFragment
+import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.trimToString
 import io.github.pelmenstar1.digiDict.common.ui.ColorPaletteView
+import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledIfEquals
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.databinding.DialogAddBadgeBinding
 import javax.inject.Inject

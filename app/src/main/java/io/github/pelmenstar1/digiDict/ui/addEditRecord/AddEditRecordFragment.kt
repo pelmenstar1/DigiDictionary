@@ -14,6 +14,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
+import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledIfEquals
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao

@@ -14,6 +14,12 @@ android {
         consumerProguardFiles "consumer-rules.pro"
     }
 
+    lint {
+        // In most situations showLifecycleAwareSnackbar is called to show snackbar, but lint doesn't understand
+        // that showLifecycleAwareSnackbar calls show() internally and shows this warning everywhere.
+        disable 'ShowToast'
+    }
+
     buildTypes {
         release {
             minifyEnabled false

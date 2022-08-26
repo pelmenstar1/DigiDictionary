@@ -15,6 +15,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListenerToString
+import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledIfEquals
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddRemoteDictProviderBinding
 import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject

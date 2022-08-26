@@ -13,6 +13,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.LoadingIndicatorDialog
+import io.github.pelmenstar1.digiDict.common.ui.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
