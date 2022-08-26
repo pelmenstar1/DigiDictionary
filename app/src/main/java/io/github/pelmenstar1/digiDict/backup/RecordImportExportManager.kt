@@ -166,7 +166,7 @@ object RecordImportExportManager {
             }
         }
 
-        return true
+        return false
     }
 
     @SuppressLint("RestrictedApi", "VisibleForTests")

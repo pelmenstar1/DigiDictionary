@@ -7,14 +7,12 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-fun <T> CoroutineScope.launchFlowCollector(flow: Flow<T>, collector: FlowCollector<T>) {
-    launch {
+fun <T> CoroutineScope.launchFlowCollector(flow: Flow<T>, collector: FlowCollector<T>): Job {
+    return launch {
         flow.collect(collector)
     }
 }
@@ -73,4 +71,13 @@ inline fun MutableStateFlow<Int?>.updateNullable(func: (Int) -> Int) {
 
         func(resolved)
     }
+}
+
+/**
+ * Returns a flow which contains first elements of receiver flow that **do not** satisfy [condition].
+ * The important part is that it lets the element on which [condition] returns true to be emitted to the output flow.
+ */
+inline fun <T> Flow<T>.cancelAfter(crossinline condition: (T) -> Boolean) = transformWhile { value ->
+    emit(value)
+    !condition(value)
 }
