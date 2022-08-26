@@ -8,12 +8,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.LoadingIndicatorDialog
+import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
@@ -93,13 +93,9 @@ class SettingsFragment : Fragment() {
     }
 
     private fun requestDeleteAllRecords() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setMessage(R.string.settings_deleteAllRecordsDialogMessage)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                invokeWithLoadingIndicator { deleteAllRecords() }
-            }
-            .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
-            .show()
+        showAlertDialog(messageId = R.string.settings_deleteAllRecordsDialogMessage) {
+            invokeWithLoadingIndicator { deleteAllRecords() }
+        }
     }
 
     private inline fun invokeWithLoadingIndicator(action: SettingsViewModel.() -> Unit) {

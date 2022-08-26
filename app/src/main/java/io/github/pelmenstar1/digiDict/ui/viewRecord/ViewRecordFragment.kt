@@ -9,13 +9,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
-import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.common.popBackStackEventHandler
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 
@@ -42,13 +41,9 @@ class ViewRecordFragment : Fragment() {
 
         with(binding) {
             viewRecordDelete.setOnClickListener {
-                MaterialAlertDialogBuilder(context)
-                    .setMessage(R.string.viewRecord_deleteMessage)
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        viewModel.delete()
-                    }
-                    .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
-                    .show()
+                showAlertDialog(messageId = R.string.viewRecord_deleteMessage) {
+                    viewModel.delete()
+                }
             }
 
             viewRecordEdit.setOnClickListener {
@@ -72,9 +67,8 @@ class ViewRecordFragment : Fragment() {
             }
         }
 
-        vm.onRecordDeleted.handler = navController.popBackStackEventHandler()
         vm.id = args.id
-
+        vm.onRecordDeleted.handler = navController.popBackStackEventHandler()
         vm.onDeleteError.handler = showSnackbarEventHandler(container, R.string.dbError)
 
         return binding.root

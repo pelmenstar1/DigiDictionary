@@ -10,11 +10,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRemoteDictProvidersBinding
 
 @AndroidEntryPoint
@@ -29,12 +28,10 @@ class ManageRemoteDictionaryProvidersFragment : Fragment() {
         val binding = FragmentManageRemoteDictProvidersBinding.inflate(inflater, container, false)
 
         val adapter = ManageRemoteDictionaryAdapter(
-            onDeleteProvider = {
-                MaterialAlertDialogBuilder(context)
-                    .setMessage(R.string.manageRemoteDictProviders_deleteMessage)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> vm.delete(it) }
-                    .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
-                    .show()
+            onDeleteProvider = { provider ->
+                showAlertDialog(R.string.manageRemoteDictProviders_deleteMessage) {
+                    vm.delete(provider)
+                }
             }
         )
 

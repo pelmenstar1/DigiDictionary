@@ -9,11 +9,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandler
+import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageRecordBadgesBinding
 
@@ -63,12 +62,9 @@ class ManageRecordBadgesFragment : Fragment() {
     }
 
     private fun showDeleteWarningDialog(badge: RecordBadgeInfo) {
-        // TODO: Generalize showing of the alert dialog.
-        MaterialAlertDialogBuilder(requireContext())
-            .setMessage(R.string.manageRecordBadges_removeWarning)
-            .setPositiveButton(android.R.string.ok) { _, _ -> viewModel.remove(badge) }
-            .setNegativeButton(android.R.string.cancel, NO_OP_DIALOG_ON_CLICK_LISTENER)
-            .show()
+        showAlertDialog(messageId = R.string.manageRecordBadges_removeWarning) {
+            viewModel.remove(badge)
+        }
     }
 
     private fun showAddEditBadgeDialog(currentBadge: RecordBadgeInfo?) {
