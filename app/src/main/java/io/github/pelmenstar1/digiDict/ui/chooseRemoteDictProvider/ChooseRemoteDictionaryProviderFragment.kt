@@ -21,13 +21,11 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.debugLog
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.mapOffset
 import io.github.pelmenstar1.digiDict.common.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -112,14 +110,21 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
         }
 
         lifecycleScope.run {
-            launchFlowCollector(viewModel.providers.catch {
-                showLoadProvidersError()
+            launch(Dispatchers.IO) {
+                val providers = try {
+                    viewModel.getAllProviders()
+                } catch (e: Exception) {
+                    Log.e(TAG, "", e)
+                    showLoadProvidersError()
 
-                emit(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
-            }) { providers ->
-                binding.chooseRemoteDictProviderLoadingIndicator.visibility = View.GONE
+                    RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS
+                }
 
-                adapter.submitItems(providers)
+                withContext(Dispatchers.Main) {
+                    binding.chooseRemoteDictProviderLoadingIndicator.visibility = View.GONE
+
+                    adapter.submitItems(providers)
+                }
             }
 
             launch(Dispatchers.Default) {

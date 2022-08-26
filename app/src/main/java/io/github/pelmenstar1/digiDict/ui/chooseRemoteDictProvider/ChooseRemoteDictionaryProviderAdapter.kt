@@ -45,10 +45,16 @@ class ChooseRemoteDictionaryProviderAdapter(
      */
     var query: String = ""
 
-    fun submitItems(items: Array<RemoteDictionaryProviderInfo>) {
-        this.items = items
+    /**
+     * Submits given items to the adapter. If [newItems] is not empty, the method can be called only once.
+     */
+    fun submitItems(newItems: Array<RemoteDictionaryProviderInfo>) {
+        if (items.isNotEmpty()) {
+            throw IllegalStateException("items is not empty on submitItems()")
+        }
 
-        notifyDataSetChanged()
+        items = newItems
+        notifyItemRangeInserted(0, newItems.size)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

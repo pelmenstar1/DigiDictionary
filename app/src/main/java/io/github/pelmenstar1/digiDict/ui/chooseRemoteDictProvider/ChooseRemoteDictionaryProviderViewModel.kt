@@ -19,8 +19,7 @@ class ChooseRemoteDictionaryProviderViewModel @Inject constructor(
     private val remoteDictProviderStatsDao: RemoteDictionaryProviderStatsDao,
     private val appPreferences: AppPreferences
 ) : ViewModel() {
-    val providers = remoteDictProviderDao.getAllFlow()
-
+    suspend fun getAllProviders() = remoteDictProviderDao.getAll()
     suspend fun useCustomTabs() = appPreferences.get { useCustomTabs }
     suspend fun getMostUsedProviders() = remoteDictProviderDao.getMostUsedProviders()
 
