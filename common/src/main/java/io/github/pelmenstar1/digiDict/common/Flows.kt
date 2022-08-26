@@ -21,3 +21,5 @@ inline fun <T> Flow<T>.cancelAfter(crossinline condition: (T) -> Boolean) = tran
     emit(value)
     !condition(value)
 }
+
+fun Flow<Boolean>.filterTrue() = filter { it }

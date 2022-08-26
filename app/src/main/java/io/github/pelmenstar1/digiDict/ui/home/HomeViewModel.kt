@@ -13,9 +13,8 @@ import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,24 +32,17 @@ class HomeViewModel @Inject constructor(
     ).flow.cachedIn(viewModelScope)
 
     private val recordDao = appDatabase.recordDao()
-    private val searchUpdateFlow = databaseObserverFlow(
-        appDatabase,
-        tables = arrayOf("records", "record_badges", "record_to_badge_relations")
-    )
 
     private val searchStateManager = DataLoadStateManager<FilteredArray<ConciseRecordWithSearchInfoAndBadges>>(TAG)
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {
-            // This makes getAllRecordsWithSearchInfoFlow() to be collected once
+            // This makes getAllConciseRecordsWithSearchInfoAndBadges() being invoked once
             // value of isActiveFlow is true. When value is changed from true to false,
-            // filter { it } will prevent false to trigger creation and collection of getAllRecordsWithSearchInfoFlow()
+            // filter { it } will prevent false to trigger collection.
             val recordFlow = GlobalSearchQueryProvider
                 .isActiveFlow
-                .filter { it }
-                .combine(
-                    // To make recordFlow load the records, at least one item should be emitted to searchUpdateFlow
-                    searchUpdateFlow.onStart { emit(Unit) }
-                ) { _, _ ->
+                .filterTrue()
+                .map {
                     recordDao.getAllConciseRecordsWithSearchInfoAndBadges()
                 }
 
@@ -62,7 +54,16 @@ class HomeViewModel @Inject constructor(
                 } else {
                     FilteredArray.empty()
                 }
-            }.flowOn(Dispatchers.IO)
+            }.flowOn(Dispatchers.Default)
+        }
+    }
+
+    init {
+        onDatabaseTablesUpdated(
+            appDatabase,
+            tables = arrayOf("records", "record_badges", "record_to_badge_relations")
+        ) {
+            retrySearch()
         }
     }
 

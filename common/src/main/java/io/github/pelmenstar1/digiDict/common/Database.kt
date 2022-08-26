@@ -1,6 +1,9 @@
 package io.github.pelmenstar1.digiDict.common
 
 import android.database.CharArrayBuffer
+import androidx.lifecycle.ViewModel
+import androidx.room.InvalidationTracker
+import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 inline fun <T : SupportSQLiteDatabase> T.runInTransitionBlocking(block: T.() -> Unit) {
@@ -12,6 +15,25 @@ inline fun <T : SupportSQLiteDatabase> T.runInTransitionBlocking(block: T.() -> 
         setTransactionSuccessful()
     } finally {
         endTransaction()
+    }
+}
+
+inline fun ViewModel.onDatabaseTablesUpdated(
+    db: RoomDatabase,
+    tables: Array<String>,
+    crossinline callback: () -> Unit
+) {
+    val observer = object : InvalidationTracker.Observer(tables) {
+        override fun onInvalidated(tables: MutableSet<String>) {
+            callback()
+        }
+    }
+
+    val invalidationTracker = db.invalidationTracker
+    invalidationTracker.addObserver(observer)
+
+    addCloseable {
+        invalidationTracker.removeObserver(observer)
     }
 }
 

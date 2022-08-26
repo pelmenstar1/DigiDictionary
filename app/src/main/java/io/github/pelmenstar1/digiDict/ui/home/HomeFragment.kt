@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.common.DataLoadState
+import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
@@ -21,6 +22,7 @@ import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.SearchAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.plus
 
 @AndroidEntryPoint
@@ -84,7 +86,14 @@ class HomeFragment : Fragment() {
         lifecycleScope.run {
             launchFlowCollector(viewModel.items, pagingAdapter::submitData)
 
-            launchFlowCollector(viewModel.searchStateFlow) {
+            // Start searchStateFlow collection only once isActiveFlow is true .
+            launchFlowCollector(
+                GlobalSearchQueryProvider
+                    .isActiveFlow
+                    .filterTrue()
+                    .flatMapConcat { viewModel.searchStateFlow }
+            ) {
+
                 when (it) {
                     is DataLoadState.Loading -> {
                         loadingIndicator.visibility = View.VISIBLE
