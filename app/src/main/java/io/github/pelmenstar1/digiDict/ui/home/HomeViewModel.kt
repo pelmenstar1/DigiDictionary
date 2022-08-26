@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,7 +47,10 @@ class HomeViewModel @Inject constructor(
             val recordFlow = GlobalSearchQueryProvider
                 .isActiveFlow
                 .filter { it }
-                .combine(searchUpdateFlow) { _, _ ->
+                .combine(
+                    // To make recordFlow load the records, at least one item should be emitted to searchUpdateFlow
+                    searchUpdateFlow.onStart { emit(Unit) }
+                ) { _, _ ->
                     recordDao.getAllConciseRecordsWithSearchInfoAndBadges()
                 }
 
