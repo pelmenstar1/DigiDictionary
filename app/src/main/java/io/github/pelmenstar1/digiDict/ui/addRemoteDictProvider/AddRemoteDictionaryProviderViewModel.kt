@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider
 
 import android.util.Patterns
-import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,9 +33,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     private val _schemaErrorFlow =
         MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
 
-    // TODO: Reduce count of flows.
-    private val _isNameEnabledFlow = MutableStateFlow(true)
-    private val _isSchemaEnabledFlow = MutableStateFlow(true)
+    private val _isInputsEnabled = MutableStateFlow(true)
 
     // As name and schema is empty by default, it's 0 as no validity bits are set.
     private val _validityFlow = MutableStateFlow<Int?>(null)
@@ -46,8 +43,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     val nameErrorFlow = _nameErrorFlow.asStateFlow()
     val schemaErrorFlow = _schemaErrorFlow.asStateFlow()
-    val isNameEnabledFlow = _isNameEnabledFlow.asStateFlow()
-    val isSchemaEnabledFlow = _isNameEnabledFlow.asStateFlow()
+    val isInputEnabledFlow = _isInputsEnabled.asStateFlow()
     val validityFlow = _validityFlow.asStateFlow()
 
     val addAction = viewModelAction(TAG) {
@@ -83,14 +79,12 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         scheduleCheckValue(TYPE_SCHEMA, schema)
     }
 
-    @MainThread
     private fun scheduleCheckValue(type: Int, value: String) {
         _validityFlow.updateNullable {
             it.withBit(valueValidityMask(type), false).withBit(valueValidityNotChosenMask(type), true)
         }
 
         startCheckValueJobIfNecessary()
-
         checkValueChannel.trySendBlocking(Message(type, value))
     }
 
@@ -107,9 +101,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                 } catch (e: Exception) {
                     // The job still can be restarted.
                     isCheckValueJobStarted.set(false)
-
-                    _isNameEnabledFlow.value = false
-                    _isSchemaEnabledFlow.value = false
+                    _isInputsEnabled.value = false
 
                     // There can be no errors as name and schema inputs are disabled.
                     _nameErrorFlow.value = null
@@ -126,9 +118,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                 }
 
                 // If the job is started after the error, _isNameEnabledFlow's and _isSchemaEnabledFlow's values might be false.
-                // So after we know allProviders are loaded successfully, we can set values to true.
-                _isNameEnabledFlow.value = true
-                _isSchemaEnabledFlow.value = true
+                // So after we know allProviders are loaded successfully, we can re-enable inputs.
+                _isInputsEnabled.value = true
 
                 while (isActive) {
                     val (type, value) = checkValueChannel.receive()

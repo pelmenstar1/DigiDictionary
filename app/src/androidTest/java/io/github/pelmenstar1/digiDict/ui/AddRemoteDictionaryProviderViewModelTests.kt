@@ -19,10 +19,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 @RunWith(AndroidJUnit4::class)
 class AddRemoteDictionaryProviderViewModelTests {
@@ -239,8 +236,41 @@ class AddRemoteDictionaryProviderViewModelTests {
             }
         })
 
+        // Trigger fetching all providers.
         vm.schema = "123"
         assertNotNull(vm.validityCheckErrorFlow.first())
+    }
+
+    @Test
+    fun isInputsEnabledFlowTest() = runTest {
+        var isFirst = true
+        val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
+            override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
+                if (isFirst) {
+                    isFirst = false
+
+                    // Simulate DB error.
+                    throw RuntimeException()
+                } else {
+                    // Result doesn't matter in this test, anything can be returned.
+                    return emptyArray()
+                }
+            }
+        })
+
+        // Trigger name check and fetching all providers.
+        vm.name = "123"
+
+        // The checking is expected to fail due to an exception and in that case, inputs should be dsiabled.
+        assertFalse(vm.isInputEnabledFlow.first())
+
+        vm.restartValidityCheck()
+
+        // We can't determine whether checking is actually started, wait some time.
+        Thread.sleep(300)
+
+        // As we restarted checking the name and in this time getAll should return without an exception, inputs should be enabled.
+        assertTrue(vm.isInputEnabledFlow.first())
     }
 
     companion object {
