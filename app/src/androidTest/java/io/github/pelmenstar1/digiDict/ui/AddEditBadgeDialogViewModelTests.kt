@@ -34,21 +34,21 @@ class AddEditBadgeDialogViewModelTests {
 
 
     @Test
-    fun inputErrorIsEmptyWhenInputIsEmpty() = runTest {
+    fun nameErrorIsEmptyWhenInputIsEmpty() = runTest {
         useViewModel { vm ->
-            vm.input = ""
+            vm.name = ""
 
-            assertEquals(AddEditBadgeInputMessage.EMPTY_TEXT, vm.inputErrorFlow.first())
+            assertEquals(AddEditBadgeInputMessage.EMPTY_TEXT, vm.nameErrorFlow.first())
         }
     }
 
     @Test
-    fun noInputErrorWhenNoBadges() = runTest {
-        suspend fun testCase(input: String) {
+    fun noNameErrorWhenNoBadges() = runTest {
+        suspend fun testCase(name: String) {
             useViewModel { vm ->
-                vm.input = input
+                vm.name = name
 
-                assertNull(vm.inputErrorFlow.first())
+                assertNull(vm.nameErrorFlow.first())
             }
         }
 
@@ -58,7 +58,7 @@ class AddEditBadgeDialogViewModelTests {
     }
 
     @Test
-    fun noInputErrorWhenThereAreSomeBadges() = runTest {
+    fun noNameErrorWhenThereAreSomeBadges() = runTest {
         val recordBadgeDao = db.recordBadgeDao()
         recordBadgeDao.insertAll(
             arrayOf(
@@ -67,11 +67,11 @@ class AddEditBadgeDialogViewModelTests {
             )
         )
 
-        suspend fun testCase(input: String) {
+        suspend fun testCase(name: String) {
             useViewModel { vm ->
-                vm.input = input
+                vm.name = name
 
-                assertNull(vm.inputErrorFlow.first())
+                assertNull(vm.nameErrorFlow.first())
             }
         }
 
@@ -81,29 +81,29 @@ class AddEditBadgeDialogViewModelTests {
     }
 
     @Test
-    fun noInputErrorWhenInputIsCurrentBadgeName() = runTest {
+    fun noNameErrorWhenInputIsCurrentBadgeName() = runTest {
         val badgeDao = db.recordBadgeDao()
         val badge = RecordBadgeInfo(id = 1, name = "Badge", outlineColor = 2)
         badgeDao.insert(badge)
 
         useViewModel { vm ->
             vm.currentBadgeName = badge.name
-            vm.input = badge.name
+            vm.name = badge.name
 
-            assertNull(vm.inputErrorFlow.first())
+            assertNull(vm.nameErrorFlow.first())
         }
     }
 
     @Test
-    fun inputErrorIsExistsWhenInputIsExistentBadgeName() = runTest {
+    fun nameErrorIsExistsWhenInputIsExistentBadgeName() = runTest {
         val badgeDao = db.recordBadgeDao()
         val badge = RecordBadgeInfo(id = 0, name = "Badge", outlineColor = 3)
         badgeDao.insert(badge)
 
         useViewModel { vm ->
-            vm.input = badge.name
+            vm.name = badge.name
 
-            assertEquals(AddEditBadgeInputMessage.EXISTS, vm.inputErrorFlow.first())
+            assertEquals(AddEditBadgeInputMessage.EXISTS, vm.nameErrorFlow.first())
         }
     }
 

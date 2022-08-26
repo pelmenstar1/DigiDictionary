@@ -56,7 +56,7 @@ class AddEditBadgeDialog : MaterialDialogFragment() {
             }
 
             b.addBadgeDialogNameInputLayout.also {
-                ls.launchErrorFlowCollector(it, vm.inputErrorFlow, inputMessageMapper)
+                ls.launchErrorFlowCollector(it, vm.nameErrorFlow, inputMessageMapper)
             }
 
             b.addBadgeDialogNameInput.also {
@@ -72,13 +72,11 @@ class AddEditBadgeDialog : MaterialDialogFragment() {
                     } else false
                 }
 
-                it.addTextChangedListener { text ->
-                    vm.input = text.trimToString()
-                }
+                it.addTextChangedListener { text -> vm.name = text.trimToString() }
             }
 
             b.addBadgeDialogAddButton.also {
-                ls.launchSetEnabledIfEquals(it, value = null, vm.inputErrorFlow)
+                ls.launchSetEnabledIfEquals(it, value = null, vm.nameErrorFlow)
 
                 it.setText(if (currentBadgeName != null) R.string.applyChanges else R.string.add)
                 it.setOnClickListener { notifySubmit() }
@@ -89,7 +87,7 @@ class AddEditBadgeDialog : MaterialDialogFragment() {
     }
 
     private fun notifySubmit() {
-        val name = viewModel.input
+        val name = viewModel.name
         val outlineColor = colorPaletteView.selectedColor
 
         onSubmit?.invoke(RecordBadgeInfo(currentBadge?.id ?: 0, name, outlineColor))

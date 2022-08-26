@@ -12,29 +12,32 @@ class AddEditBadgeDialogViewModel @Inject constructor(
     badgeDao: RecordBadgeDao
 ) : ViewModel() {
     private val allBadges = badgeDao.getAllFlow()
-    private val inputFlow = MutableStateFlow("")
+    private val nameFlow = MutableStateFlow("")
 
     var currentBadgeName: String? = null
         set(value) {
             field = value
-            value?.let { input = it }
+            value?.let { name = it }
         }
 
-    val inputErrorFlow = allBadges.combine(inputFlow) { badges, input ->
+    val nameErrorFlow = allBadges.combine(nameFlow) { badges, name ->
         val curBadgeName = currentBadgeName
 
         when {
-            input.isBlank() ->
+            name.isEmpty() ->
                 AddEditBadgeInputMessage.EMPTY_TEXT
-            (curBadgeName == null || curBadgeName != input) && badges.indexOfFirst { it.name == input } >= 0 ->
+            (curBadgeName == null || curBadgeName != name) && badges.any { it.name == name } ->
                 AddEditBadgeInputMessage.EXISTS
             else -> null
         }
     }
 
-    var input: String
-        get() = inputFlow.value
+    /**
+     * Name of the badge to be created. The string is expected to be without trailing and leading whitespaces.
+     */
+    var name: String
+        get() = nameFlow.value
         set(value) {
-            inputFlow.value = value
+            nameFlow.value = value
         }
 }
