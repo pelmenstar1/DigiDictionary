@@ -14,7 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
-import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListenerToString
+import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledIfEquals
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddRemoteDictProviderBinding
@@ -77,8 +77,8 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         binding.run {
             addRemoteDictProviderAdd.setOnClickListener { vm.add() }
 
-            addRemoteDictProviderNameInputLayout.addTextChangedListenerToString { vm.name = it }
-            addRemoteDictProviderSchemaInputLayout.addTextChangedListenerToString { vm.schema = it }
+            addRemoteDictProviderNameInputLayout.addTextChangedListener { vm.name = it.trimToString() }
+            addRemoteDictProviderSchemaInputLayout.addTextChangedListener { vm.schema = it.trimToString() }
 
             addRemoteDictProviderSpaceReplacementSpinner.apply {
                 val res = context.resources

@@ -58,17 +58,21 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     val validityCheckErrorFlow = MutableSharedFlow<Throwable?>(replay = 1)
 
+    /**
+     * Name of the provider, the string is expected to be without leading and trailing whitespaces
+     */
     var name: String = ""
         set(value) {
             field = value
-
             scheduleCheckValue(TYPE_NAME, value)
         }
 
+    /**
+     * Schema of the provider, the string is expected to be without leading and trailing whitespaces
+     */
     var schema: String = ""
         set(value) {
             field = value
-
             scheduleCheckValue(TYPE_SCHEMA, value)
         }
 
@@ -132,7 +136,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
                     var error: AddRemoteDictionaryProviderMessage? = null
 
-                    if (value.isBlank()) {
+                    if (value.isEmpty()) {
                         error = AddRemoteDictionaryProviderMessage.EMPTY_TEXT
                     } else {
                         when (type) {
