@@ -9,7 +9,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
-import androidx.core.widget.TextViewCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 
@@ -37,13 +36,10 @@ class ErrorContainer @JvmOverloads constructor(
                 gravity = Gravity.CENTER_HORIZONTAL
             }
 
-            errorTextView = this
             textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+            setTextAppearance { BodyLarge }
 
-            TextViewCompat.setTextAppearance(
-                this,
-                com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-            )
+            errorTextView = this
         })
 
         addView(MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
@@ -53,7 +49,7 @@ class ErrorContainer @JvmOverloads constructor(
                 gravity = Gravity.CENTER_HORIZONTAL
             }
 
-            text = res.getText(R.string.retry)
+            setText(R.string.retry)
             retryButton = this
         })
 

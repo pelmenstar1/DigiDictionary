@@ -7,10 +7,10 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.setPadding
-import androidx.core.widget.TextViewCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 // Instantiated only from the code.
@@ -54,13 +54,9 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
                 gravity = Gravity.CENTER_VERTICAL
             }
 
-            // TODO: Generalize TextViewCompat.setTextAppearance(..., _BodyLarge)
-            TextViewCompat.setTextAppearance(
-                this,
-                com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-            )
-
+            setTextAppearance { BodyLarge }
             ellipsize = null
+
             textView = this
         })
 

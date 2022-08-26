@@ -21,6 +21,7 @@ import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
+import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import kotlin.math.min
 
@@ -169,11 +170,7 @@ class SettingsInflater(private val context: Context) {
                     weight = 1f
                 }
 
-                TextViewCompat.setTextAppearance(
-                    this,
-                    com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-                )
-
+                setTextAppearance { BodyLarge }
                 setText(item.nameRes)
             })
 

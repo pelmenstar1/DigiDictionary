@@ -8,13 +8,13 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.setPadding
-import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
+import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
+import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
@@ -137,12 +137,10 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
         }
 
         internal fun createContainer(context: Context): ViewGroup {
-            val res = context.resources
-
             return LinearLayout(context).apply {
                 layoutParams = MATCH_WRAP_LAYOUT_PARAMS
                 orientation = LinearLayout.VERTICAL
-                setPadding(res.getDimensionPixelOffset(R.dimen.itemRecord_padding))
+                setPaddingRes(R.dimen.itemRecord_padding)
 
                 addView(createMainContentContainer(context))
             }
@@ -169,10 +167,7 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                 container.addView(MaterialTextView(context).apply {
                     layoutParams = WRAP_WRAP_LAYOUT_PARAMS
 
-                    TextViewCompat.setTextAppearance(
-                        this,
-                        com.google.android.material.R.style.TextAppearance_Material3_BodyMedium
-                    )
+                    setTextAppearance { BodyMedium }
                     setTextIsSelectable(false)
                 })
 
@@ -186,29 +181,21 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                         marginStart = res.getDimensionPixelOffset(R.dimen.itemRecord_expressionMarginStart)
                     }
 
-                    TextViewCompat.setTextAppearance(
-                        this,
-                        com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-                    )
-
-                    initMultilineTextView()
+                    initTextView()
                 })
 
                 container.addView(MaterialTextView(context).apply {
                     layoutParams = MEANING_LAYOUT_PARAMS
 
-                    TextViewCompat.setTextAppearance(
-                        this,
-                        com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-                    )
                     textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
-
-                    initMultilineTextView()
+                    initTextView()
                 })
             }
         }
 
-        private fun TextView.initMultilineTextView() {
+
+        private fun TextView.initTextView() {
+            setTextAppearance { BodyLarge }
             maxLines = 100
 
             // Turn off ellipsizing

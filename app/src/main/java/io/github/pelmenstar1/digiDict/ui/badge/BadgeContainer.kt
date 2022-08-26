@@ -20,12 +20,10 @@ class BadgeContainer @JvmOverloads constructor(
 
     init {
         val res = context.resources
-        val badgeEndMargin = res.getDimensionPixelOffset(R.dimen.badge_endMargin)
-        val badgeTopMargin = res.getDimensionPixelOffset(R.dimen.badge_topMargin)
 
         badgeLayoutParams = MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
-            marginEnd = badgeEndMargin
-            topMargin = badgeTopMargin
+            marginEnd = res.getDimensionPixelOffset(R.dimen.badge_endMargin)
+            topMargin = res.getDimensionPixelOffset(R.dimen.badge_topMargin)
         }
     }
 

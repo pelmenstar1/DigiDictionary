@@ -4,12 +4,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.setPadding
-import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
+import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 class BadgeSelectorDialogAdapter(
@@ -60,17 +60,11 @@ class BadgeSelectorDialogAdapter(
     override fun getItemCount() = elements.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val context = parent.context
-
-        val padding = context.resources.getDimensionPixelOffset(R.dimen.badgeSelectorDialog_listElementPadding)
-        val textView = MaterialTextView(context).apply {
+        val textView = MaterialTextView(parent.context).apply {
             layoutParams = ITEM_LAYOUT_PARAMS
 
-            setPadding(padding)
-            TextViewCompat.setTextAppearance(
-                this,
-                com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-            )
+            setPaddingRes(R.dimen.badgeSelectorDialog_listElementPadding)
+            setTextAppearance { BodyLarge }
         }
 
         return ViewHolder(textView)

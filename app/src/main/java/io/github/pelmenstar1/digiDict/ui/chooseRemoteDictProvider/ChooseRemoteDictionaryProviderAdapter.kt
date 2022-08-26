@@ -5,11 +5,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.setPadding
+import androidx.annotation.IdRes
+import androidx.annotation.StyleRes
 import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.ui.MaterialTextAppearanceSelector
+import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 
 class ChooseRemoteDictionaryProviderAdapter(
@@ -77,20 +80,12 @@ class ChooseRemoteDictionaryProviderAdapter(
             return LinearLayout(context).apply {
                 layoutParams = itemLayoutParams
                 orientation = LinearLayout.VERTICAL
-
-                val padding = res.getDimensionPixelOffset(R.dimen.itemRemoteDictProvider_padding)
-                setPadding(padding)
+                setPaddingRes(R.dimen.itemRemoteDictProvider_padding)
 
                 addView(MaterialTextView(context).apply {
                     layoutParams = nameLayoutParams
 
-                    id = R.id.itemRemoteDictProvider_name
-                    setTextIsSelectable(false)
-
-                    TextViewCompat.setTextAppearance(
-                        this,
-                        com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-                    )
+                    initTextView(R.id.itemRemoteDictProvider_name) { BodyLarge }
                 })
 
                 addView(MaterialTextView(context).apply {
@@ -101,15 +96,19 @@ class ChooseRemoteDictionaryProviderAdapter(
                         topMargin = res.getDimensionPixelOffset(R.dimen.itemRemoteDictProvider_schemaTopMargin)
                     }
 
-                    id = R.id.itemRemoteDictProvider_schema
-                    setTextIsSelectable(false)
-
-                    TextViewCompat.setTextAppearance(
-                        this,
-                        com.google.android.material.R.style.TextAppearance_Material3_BodySmall
-                    )
+                    initTextView(R.id.itemRemoteDictProvider_schema) { BodySmall }
                 })
             }
+        }
+
+        private inline fun TextView.initTextView(@IdRes id: Int, block: MaterialTextAppearanceSelector.() -> Int) {
+            initTextView(id, MaterialTextAppearanceSelector.block())
+        }
+
+        private fun TextView.initTextView(@IdRes id: Int, @StyleRes textAppearance: Int) {
+            this.id = id
+            setTextIsSelectable(false)
+            TextViewCompat.setTextAppearance(this, textAppearance)
         }
     }
 }
