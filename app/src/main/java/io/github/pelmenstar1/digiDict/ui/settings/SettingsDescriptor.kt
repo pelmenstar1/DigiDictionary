@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.ui.settings
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.navigation.NavDirections
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 
 /**
@@ -38,12 +39,20 @@ class SettingsDescriptor(val groups: List<Group>) {
         val step: Int,
     ) : ItemContent<Int>
 
-    class Item<T : Any>(
+    sealed interface Item
+
+    class ContentItem<T : Any>(
         @StringRes val nameRes: Int,
         @DrawableRes val iconRes: Int,
         val preferenceEntry: AppPreferences.Entry<T>,
         val content: ItemContent<T>
-    )
+    ) : Item
+
+    class LinkItem(
+        @StringRes val nameRes: Int,
+        @DrawableRes val iconRes: Int,
+        val directions: NavDirections
+    ) : Item
 
     class Action(
         val id: Int,
@@ -55,9 +64,9 @@ class SettingsDescriptor(val groups: List<Group>) {
         val titleRes: Int
     }
 
-    class ItemGroup(@StringRes override val titleRes: Int, val items: List<Item<*>>) : Group {
+    class ItemGroup(@StringRes override val titleRes: Int, val items: List<Item>) : Group {
         class Builder(@StringRes private val titleRes: Int) {
-            private val items = ArrayList<Item<*>>(4)
+            private val items = ArrayList<Item>(4)
 
             fun <T : Any> item(
                 @StringRes nameRes: Int,
@@ -65,7 +74,7 @@ class SettingsDescriptor(val groups: List<Group>) {
                 preferenceEntry: AppPreferences.Entry<T>,
                 content: ItemContent<T>,
             ) {
-                items.add(Item(nameRes, iconRes, preferenceEntry, content))
+                items.add(ContentItem(nameRes, iconRes, preferenceEntry, content))
             }
 
             inline fun <T : Any> item(
@@ -80,6 +89,14 @@ class SettingsDescriptor(val groups: List<Group>) {
                     AppPreferences.Entries.preferenceEntry(),
                     ItemContentBuilder.content(),
                 )
+            }
+
+            fun linkItem(
+                @StringRes nameRes: Int,
+                @DrawableRes iconRes: Int = -1,
+                directions: NavDirections
+            ) {
+                items.add(LinkItem(nameRes, iconRes, directions))
             }
 
             fun build() = ItemGroup(titleRes, items)

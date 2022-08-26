@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
@@ -48,6 +49,7 @@ class SettingsFragment : Fragment() {
 
         SettingsInflater(context).inflate(descriptor, container = contentContainer).run {
             onValueChangedHandler = viewModel::changePreferenceValue
+            navController = findNavController()
 
             bindActionHandler(ACTION_IMPORT) {
                 invokeWithLoadingIndicator { importData(context) }
@@ -169,6 +171,13 @@ class SettingsFragment : Fragment() {
         private const val ACTION_DELETE_ALL_RECORDS = 2
 
         private val descriptor = settingsDescriptor {
+            itemGroup(R.string.settings_generalGroup) {
+                linkItem(
+                    nameRes = R.string.settings_linkToManageRecordBadges,
+                    directions = SettingsFragmentDirections.actionSettingsToManageRecordBadges()
+                )
+            }
+
             itemGroup(R.string.quiz) {
                 item(
                     nameRes = R.string.settings_scorePointsPerCorrectAnswer,
@@ -195,6 +204,11 @@ class SettingsFragment : Fragment() {
                 ) {
                     switch()
                 }
+
+                linkItem(
+                    nameRes = R.string.settings_linkToManageRemoteDictProviders,
+                    directions = SettingsFragmentDirections.actionSettingsToManageRemoteDictionaryProviders()
+                )
             }
 
             itemGroup(R.string.remindRecords_label) {

@@ -9,12 +9,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.ColorInt
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
-import androidx.core.widget.TextViewCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
@@ -43,6 +43,11 @@ class SettingsInflater(private val context: Context) {
             controller.performAction(actionId)
         }
 
+        val linkOnClickListener = View.OnClickListener {
+            val item = it.tag as SettingsDescriptor.LinkItem
+            controller.navigate(item.directions)
+        }
+
         descriptor.groups.forEachWithNoIterator { group ->
             createTitleView(titleViewInfo).also {
                 it.setText(group.titleRes)
@@ -53,9 +58,16 @@ class SettingsInflater(private val context: Context) {
             when (group) {
                 is SettingsDescriptor.ItemGroup -> {
                     group.items.forEachWithNoIterator { item ->
-                        createItemContainer(controller, item, itemContainerViewInfo).also {
-                            container.addView(it)
+                        val itemContainer = when (item) {
+                            is SettingsDescriptor.ContentItem<*> -> {
+                                createContentItemContainer(controller, item, itemContainerViewInfo)
+                            }
+                            is SettingsDescriptor.LinkItem -> {
+                                createLinkItemContainer(item, itemContainerViewInfo, linkOnClickListener)
+                            }
                         }
+
+                        container.addView(itemContainer)
                     }
                 }
                 is SettingsDescriptor.ActionGroup -> {
@@ -103,13 +115,9 @@ class SettingsInflater(private val context: Context) {
     private fun createTitleView(info: TitleViewInfo): TextView {
         return MaterialTextView(context).apply {
             layoutParams = TITLE_LAYOUT_PARAMS
+
             setPadding(info.padding)
-
-            TextViewCompat.setTextAppearance(
-                this,
-                com.google.android.material.R.style.TextAppearance_Material3_BodyMedium
-            )
-
+            setTextAppearance { BodyMedium }
             info.typeface?.also { typeface = it }
             setBackgroundColor(info.background)
         }
@@ -125,9 +133,9 @@ class SettingsInflater(private val context: Context) {
         return ItemContainerViewInfo(padding, iconSize, nameMarginStart)
     }
 
-    private fun <T : Any> createItemContainer(
+    private fun createContentItemContainer(
         controller: SettingsController,
-        item: SettingsDescriptor.Item<T>,
+        item: SettingsDescriptor.ContentItem<out Any>,
         info: ItemContainerViewInfo
     ): ViewGroup {
         val content = item.content
@@ -149,30 +157,8 @@ class SettingsInflater(private val context: Context) {
                 )
             }
 
-            addView(AppCompatImageView(context).apply {
-                val size = info.iconSize
-
-                layoutParams = LinearLayout.LayoutParams(size, size).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-                }
-
-                setImageResource(item.iconRes)
-            })
-
-            addView(MaterialTextView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-
-                    marginStart = info.nameMarginStart
-                    weight = 1f
-                }
-
-                setTextAppearance { BodyLarge }
-                setText(item.nameRes)
-            })
+            addView(createItemIconView(item.iconRes, info))
+            addView(createItemNameView(item.nameRes, info))
 
             val contentView = inflater.createView(context, content, onValueChanged = { value ->
                 controller.onValueChanged(item.preferenceEntry, value)
@@ -181,6 +167,83 @@ class SettingsInflater(private val context: Context) {
             addView(contentView.also {
                 it.layoutParams = ITEM_CONTENT_LAYOUT_PARAMS
             })
+        }
+    }
+
+    private fun createLinkItemContainer(
+        item: SettingsDescriptor.LinkItem,
+        info: ItemContainerViewInfo,
+        onClickListener: View.OnClickListener
+    ): ViewGroup {
+        return LinearLayout(context).apply {
+            layoutParams = ITEM_CONTAINER_LAYOUT_PARAMS
+            orientation = LinearLayout.HORIZONTAL
+
+            // Tag is needed for click listener
+            tag = item
+
+            setPadding(info.padding)
+
+            val iconRes = item.iconRes
+            if (iconRes >= 0) {
+                addView(createItemIconView(iconRes, info))
+            }
+
+            addView(MaterialTextView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    gravity = Gravity.CENTER_VERTICAL
+
+                    // If there's no icon, name text-view should be on the same place.
+                    marginStart = info.nameMarginStart + if (iconRes >= 0) 0 else info.iconSize
+                    weight = 1f
+                }
+
+                setTextAppearance { BodyLarge }
+                setText(item.nameRes)
+            })
+
+            addView(AppCompatImageView(context).apply {
+                val size = info.iconSize
+                layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                    gravity = Gravity.CENTER_VERTICAL
+                }
+
+                setImageResource(R.drawable.ic_link)
+            })
+
+            setOnClickListener(onClickListener)
+        }
+    }
+
+    private fun createItemIconView(@DrawableRes iconRes: Int, info: ItemContainerViewInfo): AppCompatImageView {
+        return AppCompatImageView(context).apply {
+            val size = info.iconSize
+
+            layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            setImageResource(iconRes)
+        }
+    }
+
+    private fun createItemNameView(@StringRes nameRes: Int, info: ItemContainerViewInfo): MaterialTextView {
+        return MaterialTextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER_VERTICAL
+
+                marginStart = info.nameMarginStart
+                weight = 1f
+            }
+
+            setTextAppearance { BodyLarge }
+            setText(nameRes)
         }
     }
 
@@ -359,15 +422,13 @@ class SettingsInflater(private val context: Context) {
                 val itemContainer = container.getChildAt(i)
                 val tag = itemContainer.tag
 
-                if (tag is SettingsDescriptor.Item<*>) {
-                    val item = tag as SettingsDescriptor.Item<Any>
+                if (tag is SettingsDescriptor.ContentItem<*>) {
+                    val item = tag as SettingsDescriptor.ContentItem<Any>
                     val value = snapshot[item.preferenceEntry]
                     val contentView = (itemContainer as ViewGroup).getChildAt(ITEM_CONTENT_INDEX_IN_CONTAINER)
                     val content = item.content
 
-                    val itemInflater = content.getInflater()
-
-                    itemInflater.setValue(contentView, content, value)
+                    content.getInflater().setValue(contentView, content, value)
                 }
             }
         }

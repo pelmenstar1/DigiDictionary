@@ -25,9 +25,6 @@
             android:id="@+id/action_home_to_viewRecord"
             app:destination="@id/viewRecordFragment" />
         <action
-            android:id="@+id/action_home_to_manageRemoteDictionaryProviders"
-            app:destination="@id/manageRemoteDictionaryProvidersFragment" />
-        <action
             android:id="@+id/action_home_to_remindRecords"
             app:destination="@id/remindRecordsFragment" />
     </fragment>
@@ -53,7 +50,17 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.settings.SettingsFragment"
-        android:label="@string/settings" />
+        android:label="@string/settings">
+
+        <action
+            android:id="@+id/action_settings_to_manageRemoteDictionaryProviders"
+            app:destination="@id/manageRemoteDictionaryProvidersFragment" />
+
+        <action
+            android:id="@+id/action_settings_to_manageRecordBadges"
+            app:destination="@id/manageRecordBadgesFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/statsFragment"

@@ -135,7 +135,7 @@
     <string name="settings_exportSuccess">Export was successful</string>
     <string name="settings_importSuccess">Import was successful</string>
     <string name="settings_invalidFile">Invalid file format</string>
-
+    <string name="settings_generalGroup">General</string>
     <string name="settings_versionFormat">%1$s (%2$s)</string>
     <string name="settings_backupTitle">Backup</string>
     <string name="settings_openBrowserInApp">Open browser in-app</string>
@@ -145,6 +145,8 @@
     <string name="settings_remindShowMeaning">Show meaning</string>
     <string name="settings_widgetListMaxSize">List size</string>
     <string name="settings_widgetTitle">Widget</string>
+    <string name="settings_linkToManageRemoteDictProviders">Manage remote. dict providers</string>
+    <string name="settings_linkToManageRecordBadges">Manage record badges</string>
 
     <!-- List widget -->
     <string name="listWidget_description">Widget which shows you most recent expressions you added</string>
