@@ -52,7 +52,8 @@ class ViewRecordFragment : Fragment() {
             viewRecordContainer.setupLoadStateFlow(lifecycleScope, vm) { record ->
                 if (record != null) {
                     viewRecordExpressionView.setValue(record.expression)
-                    viewRecordMeaningView.text = MeaningTextHelper.parseToFormatted(
+                    viewRecordMeaningView.text = MeaningTextHelper.parseToFormattedAndHandleErrors(
+                        context,
                         record.meaning
                     )
 

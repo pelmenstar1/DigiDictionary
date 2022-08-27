@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class MeaningTextHelperTests {
     @Test
@@ -61,5 +62,20 @@ class MeaningTextHelperTests {
             meaning = "L2@A lot of words\nMore words",
             expected = "• A lot of words\n• More words"
         )
+    }
+
+    @Test
+    fun parseToFormattedThrowsFormatException() {
+        fun testCase(input: String) {
+            assertFailsWith<MeaningTextHelper.FormatException> {
+                MeaningTextHelper.parseToFormatted(input)
+            }
+        }
+
+        testCase("")
+        testCase("123")
+        testCase("L123")
+        testCase("L1--@")
+        testCase("@")
     }
 }

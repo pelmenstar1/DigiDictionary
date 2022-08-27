@@ -26,6 +26,7 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
     val meaningView: TextView
     val scoreView: TextView
 
+    private var meaningParseError: String? = null
     private var badgeContainer: BadgeContainer? = null
 
     constructor(context: Context) : this(createContainer(context))
@@ -64,7 +65,7 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
             container.setOnClickListener(onContainerClickListener)
 
             expressionView.text = record.expression
-            meaningView.text = MeaningTextHelper.parseToFormatted(record.meaning)
+            meaningView.text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
 
             scoreView.run {
                 val score = record.score

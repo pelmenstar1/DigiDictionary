@@ -50,7 +50,7 @@ class QuizFragment : Fragment() {
             badgeContainer.setBadges(value.badges)
             meaningView.apply {
                 visibility = View.INVISIBLE
-                text = MeaningTextHelper.parseToFormatted(value.meaning)
+                text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, value.meaning)
             }
 
             correctButton.initActionButton(isCorrect = true)

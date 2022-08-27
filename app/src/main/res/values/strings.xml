@@ -62,7 +62,7 @@
     <string name="origin">Origin</string>
     <string name="additionalNotes">Additional notes</string>
     <string name="score">Score</string>
-
+    <string name="meaningParseError">An error happened:\n%s</string>
     <string name="meaningPrefix">Meaning: </string>
     <string name="meaningAndOrdinalFormat">Meaning %d</string>
 

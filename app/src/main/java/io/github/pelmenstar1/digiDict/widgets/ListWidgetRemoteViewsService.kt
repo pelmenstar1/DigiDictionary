@@ -59,7 +59,7 @@ class ListWidgetRemoteViewsFactory(
             )
             it.setTextViewText(
                 R.id.listWidget_item_meaning,
-                MeaningTextHelper.parseToFormatted(record.meaning)
+                MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
             )
         }
     }
