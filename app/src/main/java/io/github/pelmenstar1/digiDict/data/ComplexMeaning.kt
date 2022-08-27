@@ -227,9 +227,12 @@ sealed class ComplexMeaning : Parcelable {
     override fun describeContents() = 0
 
     companion object {
+        const val COMMON_MARKER = 'C'
+        const val LIST_MARKER = 'L'
+
         internal fun createCommonRawText(text: String): String {
             val buffer = CharArray(text.length + 1)
-            buffer[0] = 'C'
+            buffer[0] = COMMON_MARKER
             text.toCharArray(buffer, 1)
 
             return String(buffer)
@@ -251,7 +254,7 @@ sealed class ComplexMeaning : Parcelable {
             }
 
             return buildString(capacity) {
-                append('L')
+                append(LIST_MARKER)
                 append(size)
                 append('@')
 
@@ -265,15 +268,20 @@ sealed class ComplexMeaning : Parcelable {
             }
         }
 
-        fun throwInvalidFormat(rawText: CharSequence): Nothing {
+        fun throwInvalidFormat(rawText: String): Nothing {
             throw IllegalArgumentException("Invalid format (rawText=$rawText)")
         }
 
         fun parse(rawText: String): ComplexMeaning {
-            return typeSwitch(
-                rawText,
-                onCommon = { Common(rawText.substring(1), rawText) },
-                onList = {
+            if (rawText.isEmpty()) {
+                throwInvalidFormat(rawText)
+            }
+
+            return when (rawText[0]) {
+                COMMON_MARKER -> {
+                    Common(rawText.substring(1), rawText)
+                }
+                LIST_MARKER -> {
                     // Skip mark character
                     val firstDelimiterIndex = rawText.indexOf('@', 1)
                     if (firstDelimiterIndex < 0) {
@@ -293,42 +301,25 @@ sealed class ComplexMeaning : Parcelable {
                     val elements = ArraySet<String>(count)
 
                     for (i in 0 until count) {
-                        var nextDelimiterIndex = rawText.indexOf('\n', prevPos)
-
-                        if (nextDelimiterIndex == -1) {
-                            nextDelimiterIndex = rawText.length
+                        var nextPos = rawText.indexOf('\n', prevPos)
+                        if (nextPos < 0) {
+                            nextPos = rawText.length
                         }
 
-                        val element = rawText.substring(prevPos, nextDelimiterIndex)
-
-                        prevPos = nextDelimiterIndex + 1
-
+                        val element = rawText.substring(prevPos, nextPos)
                         elements.add(element)
+
+                        prevPos = nextPos + 1
                     }
 
                     List(elements, rawText)
                 }
-            )
-        }
-
-        inline fun <R> typeSwitch(
-            value: CharSequence,
-            onCommon: () -> R,
-            onList: () -> R
-        ): R {
-            if (value.isEmpty()) {
-                throwInvalidFormat(value)
-            }
-
-            return when (value[0]) {
-                'C', 'c' -> onCommon()
-                'L', 'l' -> onList()
-                else -> throwInvalidFormat(value)
+                else -> throwInvalidFormat(rawText)
             }
         }
 
         inline fun iterateListElementRanges(
-            rawText: CharSequence,
+            rawText: String,
             block: (start: Int, end: Int) -> Unit
         ) {
             val length = rawText.length

@@ -85,7 +85,7 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override suspend fun getAllConciseRecordsWithSearchInfo(): Array<ConciseRecordWithSearchInfo> {
+    override suspend fun getAllConciseRecords(): Array<ConciseRecord> {
         throw NotImplementedError()
     }
 

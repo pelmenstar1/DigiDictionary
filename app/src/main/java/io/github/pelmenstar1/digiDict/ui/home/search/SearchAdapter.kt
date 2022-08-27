@@ -4,7 +4,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FilteredArray
 import io.github.pelmenstar1.digiDict.common.ui.AsyncDataDiffer
-import io.github.pelmenstar1.digiDict.data.ConciseRecordWithSearchInfoAndBadges
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.FilteredArrayDiffCallback
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
 import kotlinx.coroutines.CoroutineScope
@@ -18,12 +18,12 @@ class SearchAdapter(
     private val asyncDiffer = AsyncDataDiffer(
         adapter = this,
         scope = differScope,
-        emptyData = FilteredArray.empty<ConciseRecordWithSearchInfoAndBadges>()
+        emptyData = FilteredArray.empty<ConciseRecordWithBadges>()
     ) { oldData, newData ->
         FilteredArrayDiffCallback(oldData, newData)
     }
 
-    fun submitData(newData: FilteredArray<ConciseRecordWithSearchInfoAndBadges>) {
+    fun submitData(newData: FilteredArray<ConciseRecordWithBadges>) {
         asyncDiffer.submit(newData)
     }
 

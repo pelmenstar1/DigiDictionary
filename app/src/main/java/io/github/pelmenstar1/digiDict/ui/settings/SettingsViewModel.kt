@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import androidx.room.withTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
@@ -31,7 +30,6 @@ class SettingsViewModel @Inject constructor(
         get() = false
 
     private val recordDao = appDatabase.recordDao()
-    private val searchPreparedRecordDao = appDatabase.searchPreparedRecordDao()
 
     private val _messageFlow = MutableStateFlow<SettingsMessage?>(null)
     val messageFlow = _messageFlow.asStateFlow()
@@ -107,16 +105,10 @@ class SettingsViewModel @Inject constructor(
         progressReporter.reset()
 
         viewModelScope.launch {
-            operationErrorFlow.emit(null)
-
             try {
-                appDatabase.withTransaction {
-                    progressReporter.onProgress(0, 100)
-                    recordDao.deleteAll()
-                    progressReporter.onProgress(50, 100)
-                    searchPreparedRecordDao.deleteAll()
-                    progressReporter.onEnd()
-                }
+                progressReporter.onProgress(0, 100)
+                recordDao.deleteAll()
+                progressReporter.onEnd()
 
                 _messageFlow.value = SettingsMessage.DELETE_ALL_SUCCESS
             } catch (e: Exception) {

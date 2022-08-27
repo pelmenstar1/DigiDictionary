@@ -1,12 +1,10 @@
 package io.github.pelmenstar1.digiDict.data
 
 import android.content.Context
-import android.database.CharArrayBuffer
 import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import io.github.pelmenstar1.digiDict.common.asCharSequence
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
 
@@ -15,12 +13,11 @@ import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
         Record::class,
         RemoteDictionaryProviderInfo::class,
         RemoteDictionaryProviderStats::class,
-        SearchPreparedRecord::class,
         RecordBadgeInfo::class,
         RecordToBadgeRelation::class
     ],
     exportSchema = true,
-    version = 7,
+    version = 8,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -31,6 +28,11 @@ import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
             from = 6,
             to = 7,
             spec = AppDatabase.Migration_6_7::class
+        ),
+        AutoMigration(
+            from = 7,
+            to = 8,
+            spec = AppDatabase.Migration_7_8::class
         )
     ]
 )
@@ -40,6 +42,9 @@ abstract class AppDatabase : RoomDatabase() {
     class Migration_1_2 : AutoMigrationSpec
 
     class Migration_6_7 : AutoMigrationSpec
+
+    @DeleteTable(tableName = "search_prepared_records")
+    class Migration_7_8 : AutoMigrationSpec
 
     object Migration_2_3 : Migration(2, 3) {
         override fun migrate(database: SupportSQLiteDatabase) {
@@ -71,54 +76,16 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
+    // Does effectively nothing as there's no longer search-prepared records.
+    // Version 7 doesn't rely on search-prepared records and version 8 removes search-prepared records completely.
     object Migration_5_6 : Migration(5, 6) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            database.runInTransitionBlocking {
-                execSQL("CREATE TABLE search_prepared_records (id INTEGER PRIMARY KEY NOT NULL, keywords TEXT NOT NULL)")
-                val insertStatement = compileStatement("INSERT INTO search_prepared_records VALUES(?, ?)")
-
-                database.query("SELECT id, lower(expression), lower(meaning) FROM records").use { cursor ->
-                    val size = cursor.count
-
-                    val exprBuffer = CharArrayBuffer(64)
-
-                    // In general, meaning is longer than expression.
-                    val meaningBuffer = CharArrayBuffer(128)
-
-                    val exprBufferAsCs = exprBuffer.asCharSequence()
-                    val meaningBufferAsCs = meaningBuffer.asCharSequence()
-
-                    for (i in 0 until size) {
-                        cursor.moveToPosition(i)
-
-                        val id = cursor.getLong(0)
-                        cursor.copyStringToBuffer(1, exprBuffer)
-                        cursor.copyStringToBuffer(2, meaningBuffer)
-
-                        // Expression and meaning is already lowered in the query.
-                        val keywords = SearchPreparedRecord.prepareToKeywords(
-                            exprBufferAsCs,
-                            meaningBufferAsCs,
-                            needToLower = false
-                        )
-
-                        insertStatement.run {
-                            // Binding index is 1-based
-                            bindLong(1, id)
-                            bindString(2, keywords)
-
-                            executeInsert()
-                        }
-                    }
-                }
-            }
         }
     }
 
     abstract fun recordDao(): RecordDao
     abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
-    abstract fun searchPreparedRecordDao(): SearchPreparedRecordDao
     abstract fun recordBadgeDao(): RecordBadgeDao
     abstract fun recordToBadgeRelationDao(): RecordToBadgeRelationDao
 

@@ -194,45 +194,6 @@ class ConciseRecordWithSearchInfo(
     }
 }
 
-class ConciseRecordWithSearchInfoAndBadges(
-    id: Int,
-    expression: String,
-    meaning: String,
-    score: Int,
-    badges: Array<RecordBadgeInfo>,
-    val keywords: String?
-) : ConciseRecordWithBadges(id, expression, meaning, score, badges) {
-    override fun equals(other: Any?) = equalsPattern(other) { o ->
-        id == o.id && equalsNoId(o)
-    }
-
-    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
-        expression == o.expression &&
-                meaning == o.meaning &&
-                score == o.score &&
-                badges.contentEquals(o.badges) &&
-                keywords == o.keywords
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = result * 31 + keywords.hashCode()
-
-        return result
-    }
-
-    override fun toString(): String {
-        return "ConciseRecordWithSearchInfoAndBadges(id=$id, expression=$expression, meaning=$meaning, score=$score, badges=${badges.contentToString()}, keywords=$keywords)"
-    }
-
-    companion object {
-        fun create(record: ConciseRecordWithSearchInfo, badges: Array<RecordBadgeInfo>) =
-            ConciseRecordWithSearchInfoAndBadges(
-                record.id, record.expression, record.meaning, record.score, badges, record.keywords
-            )
-    }
-}
-
 @Suppress("EqualsOrHashCode") // equals() is declared in Record
 open class RecordWithBadges(
     id: Int,

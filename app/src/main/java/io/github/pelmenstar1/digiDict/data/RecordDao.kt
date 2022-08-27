@@ -110,22 +110,16 @@ abstract class RecordDao {
     @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
 
-    @Query(
-        """
-        SELECT r.id as id, r.expression as expression, r.meaning as meaning, r.score as score, spr.keywords
-        FROM records AS r 
-        LEFT JOIN search_prepared_records AS spr ON r.id=spr.id
-        """
-    )
-    abstract suspend fun getAllConciseRecordsWithSearchInfo(): Array<ConciseRecordWithSearchInfo>
+    @Query("SELECT id, expression, meaning, score FROM records")
+    abstract suspend fun getAllConciseRecords(): Array<ConciseRecord>
 
-    suspend fun getAllConciseRecordsWithSearchInfoAndBadges(): Array<ConciseRecordWithSearchInfoAndBadges> {
-        val records = getAllConciseRecordsWithSearchInfo()
+    suspend fun getAllConciseRecordsWithBadges(): Array<ConciseRecordWithBadges> {
+        val records = getAllConciseRecords()
 
         return records.mapToArray {
             val badges = getRecordBadgesByRecordId(it.id)
 
-            ConciseRecordWithSearchInfoAndBadges.create(it, badges)
+            ConciseRecordWithBadges.create(it, badges)
         }
     }
 

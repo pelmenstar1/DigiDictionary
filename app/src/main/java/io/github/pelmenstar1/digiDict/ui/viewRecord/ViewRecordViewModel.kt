@@ -6,7 +6,6 @@ import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.data.RecordWithBadges
-import io.github.pelmenstar1.digiDict.data.SearchPreparedRecordDao
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -16,7 +15,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ViewRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
-    private val preparedRecordDao: SearchPreparedRecordDao,
     private val listAppWidgetUpdater: AppWidgetUpdater
 ) : SingleDataLoadStateViewModel<RecordWithBadges?>(TAG) {
     override val canRefreshAfterSuccess: Boolean
@@ -32,11 +30,7 @@ class ViewRecordViewModel @Inject constructor(
         }
 
     val deleteAction = viewModelAction(TAG) {
-        id.let {
-            recordDao.deleteById(it)
-            preparedRecordDao.deleteById(it)
-        }
-
+        recordDao.deleteById(id)
         listAppWidgetUpdater.updateAllWidgets()
     }
 

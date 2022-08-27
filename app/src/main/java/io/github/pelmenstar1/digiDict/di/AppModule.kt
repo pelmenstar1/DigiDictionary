@@ -64,11 +64,6 @@ class AppModule {
     }
 
     @Provides
-    fun provideSearchPreparedRecordDao(appDatabase: AppDatabase): SearchPreparedRecordDao {
-        return appDatabase.searchPreparedRecordDao()
-    }
-
-    @Provides
     fun provideRecordBadgeDao(appDatabase: AppDatabase): RecordBadgeDao {
         return appDatabase.recordBadgeDao()
     }

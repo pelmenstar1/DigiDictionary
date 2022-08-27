@@ -19,11 +19,9 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
-    private val searchPreparedRecordDao: SearchPreparedRecordDao,
     private val recordToBadgeRelationDao: RecordToBadgeRelationDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
-    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
-    private val localeProvider: LocaleProvider
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : ViewModel() {
     val validity = MutableStateFlow<Int?>(null)
 
@@ -81,7 +79,6 @@ class AddEditRecordViewModel @Inject constructor(
         val rawMeaning = getMeaning.invokeOrThrow().rawText
         val badges = getBadges.invokeOrThrow()
         val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
-        val locale = localeProvider.get()
 
         val recordId: Int
         if (currentRecordId >= 0) {
@@ -103,13 +100,6 @@ class AddEditRecordViewModel @Inject constructor(
             )
 
             recordId = recordDao.getRecordIdByExpression(expr)!!
-        }
-
-        val spr = SearchPreparedRecord.prepare(recordId, expr, rawMeaning, locale)
-        if (currentRecordId >= 0) {
-            searchPreparedRecordDao.update(spr)
-        } else {
-            searchPreparedRecordDao.insert(spr)
         }
 
         recordToBadgeRelationDao.deleteAllByRecordId(recordId)

@@ -8,7 +8,7 @@ import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.ConciseRecordWithSearchInfoAndBadges
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import kotlinx.coroutines.Dispatchers
@@ -19,11 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val appDatabase: AppDatabase,
-    localeProvider: LocaleProvider
+    private val appDatabase: AppDatabase
 ) : ViewModel() {
-    private val locale = localeProvider.get()
-
     val items = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = {
@@ -33,7 +30,7 @@ class HomeViewModel @Inject constructor(
 
     private val recordDao = appDatabase.recordDao()
 
-    private val searchStateManager = DataLoadStateManager<FilteredArray<ConciseRecordWithSearchInfoAndBadges>>(TAG)
+    private val searchStateManager = DataLoadStateManager<FilteredArray<ConciseRecordWithBadges>>(TAG)
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {
             // This makes getAllConciseRecordsWithSearchInfoAndBadges() being invoked once
@@ -43,14 +40,14 @@ class HomeViewModel @Inject constructor(
                 .isActiveFlow
                 .filterTrue()
                 .map {
-                    recordDao.getAllConciseRecordsWithSearchInfoAndBadges()
+                    recordDao.getAllConciseRecordsWithBadges()
                 }
 
             recordFlow.combine(GlobalSearchQueryProvider.queryFlow) { records, query ->
                 // Search can only be performed if query contains at least one letter or digit.
                 // Otherwise, there's no sense in it.
                 if (query.containsLetterOrDigit()) {
-                    RecordSearchUtil.filter(records, query, locale)
+                    RecordSearchUtil.filter(records, query)
                 } else {
                     FilteredArray.empty()
                 }

@@ -18,7 +18,6 @@ import io.github.pelmenstar1.digiDict.common.serialization.writeValues
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.data.SearchPreparedRecord
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -158,7 +157,6 @@ object RecordImportExportManager {
                 import(
                     importedRecords,
                     appDatabase,
-                    locale = context.getLocaleCompat(),
                     progressReporter = progressReporter.subReporter(completed = 50, target = 100)
                 )
 
@@ -174,7 +172,6 @@ object RecordImportExportManager {
     fun import(
         records: Array<Record>,
         appDatabase: AppDatabase,
-        locale: Locale,
         progressReporter: ProgressReporter? = null
     ): Boolean {
         if (records.isNotEmpty()) {
@@ -201,41 +198,23 @@ object RecordImportExportManager {
                     appDatabase.compileStatement("INSERT OR REPLACE INTO records (expression,meaning,additionalNotes,score,dateTime) VALUES(?,?,?,?,?)")
 
                 insertRecordStatement.use {
-                    val insertPreparedSearchStatement =
-                        appDatabase.compileStatement("INSERT INTO search_prepared_records VALUES(?, ?)")
+                    for (i in 0 until recordsSize) {
+                        val record = records[i]
+                        val recordExpr = record.expression
+                        val recordMeaning = record.meaning
 
-                    insertPreparedSearchStatement.use {
-                        for (i in 0 until recordsSize) {
-                            val record = records[i]
-                            val recordExpr = record.expression
-                            val recordMeaning = record.meaning
+                        insertRecordStatement.run {
+                            // Binding index is 1-based.
+                            bindString(1, recordExpr)
+                            bindString(2, recordMeaning)
+                            bindString(3, record.additionalNotes)
+                            bindLong(4, record.score.toLong())
+                            bindLong(5, record.epochSeconds)
 
-                            insertRecordStatement.run {
-                                // Binding index is 1-based.
-                                bindString(1, recordExpr)
-                                bindString(2, recordMeaning)
-                                bindString(3, record.additionalNotes)
-                                bindLong(4, record.score.toLong())
-                                bindLong(5, record.epochSeconds)
-                            }
-
-                            val recordId = insertRecordStatement.executeInsert()
-                            val keywords = SearchPreparedRecord.prepareToKeywords(
-                                recordExpr, recordMeaning,
-                                needToLower = true,
-                                locale = locale
-                            )
-
-                            insertPreparedSearchStatement.run {
-                                // Binding index is 1-based.
-                                bindLong(1, recordId)
-                                bindString(2, keywords)
-
-                                executeInsert()
-                            }
-
-                            progressReporter?.onProgress(i, recordsSize)
+                            executeInsert()
                         }
+
+                        progressReporter?.onProgress(i, recordsSize)
                     }
 
                     progressReporter?.onEnd()

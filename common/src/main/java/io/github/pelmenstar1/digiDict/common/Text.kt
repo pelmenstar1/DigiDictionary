@@ -4,8 +4,6 @@ package io.github.pelmenstar1.digiDict.common
 
 import android.text.GetChars
 
-const val NULL_CHAR = 0.toChar()
-
 fun Int.decimalDigitCount(): Int {
     return when {
         this < 10 -> 1
@@ -127,14 +125,9 @@ fun CharSequence?.trimToString(): String {
     return subSequenceToString(start, end)
 }
 
-/**
- * Finds index of specified [char] in the receiver [CharSequence].
- * Search starts with [start] index and ends with [end] index.
- * If [char] is not found, returns `-1`
- */
-fun CharSequence.indexOf(char: Char, start: Int, end: Int): Int {
+private inline fun String.nextIndexWhen(start: Int, end: Int, predicate: (Char) -> Boolean): Int {
     for (i in start until end) {
-        if (this[i] == char) {
+        if (predicate(this[i])) {
             return i
         }
     }
@@ -142,95 +135,10 @@ fun CharSequence.indexOf(char: Char, start: Int, end: Int): Int {
     return -1
 }
 
-fun CharSequence.getTrimRangeNonLetterOrDigit(start: Int, end: Int): PackedIntRange {
-    if (start == end) {
-        return PackedIntRange(start, end)
-    }
+fun String.nextLetterOrDigitIndex(start: Int, end: Int) = nextIndexWhen(start, end) { it.isLetterOrDigit() }
+fun String.nextNonLetterOrDigitIndex(start: Int, end: Int) = nextIndexWhen(start, end) { !it.isLetterOrDigit() }
 
-    var rangeStart = start
-    var rangeEnd = end
-
-    for (i in start until end) {
-        if (this[i].isLetterOrDigit()) {
-            break
-        }
-
-        rangeStart++
-    }
-
-    var i = length - 1
-    while (i > rangeStart) {
-        if (this[i].isLetterOrDigit()) {
-            break
-        }
-
-        rangeEnd--
-        i--
-    }
-
-    return PackedIntRange(rangeStart, rangeEnd)
-}
-
-/**
- * Appends processed subsequence of [text] in range `[start; end)`.
- * The main idea of the 'processing' is to leave only meaningful parts of the sequence joined with spaces.
- * Example: " .. ; . AA  BB     CC DD ;;;" becomes "AA BB CC DD"
- *
- * The processing of the sequence:
- * - (1) Firstly, it determines the range in which
- *   all trailing and leading characters that are not letters or digits are not present
- *   (It's determined by [Char.isLetterOrDigit]. The method is ICU dependent,
- *   so on different versions of Android it can possibly returns different results)
- * - (2) Then, it appends the sequence to the [StringBuilder] char by char until it finds a character that isn't letter or digit.
- * - (3) If the 'illegal' character is found, it tries to find the next letter or digit character.
- *   Then it moves the internal offset to that index and appends space. By doing so, we can exclude following whitespaces
- *   from the result. Move to (2)
- */
-fun StringBuilder.appendReducedNonLettersOrDigitsReplacedToSpace(
-    text: CharSequence,
-    start: Int,
-    end: Int
-) {
-    val (trimmedStart, trimmedEnd) = text.getTrimRangeNonLetterOrDigit(start, end)
-
-    var index = trimmedStart
-
-    while (index < trimmedEnd) {
-        val current = text[index]
-
-        if (!current.isLetterOrDigit()) {
-            index++
-
-            while (index < trimmedEnd) {
-                if (text[index].isLetterOrDigit()) {
-                    break
-                }
-
-                index++
-            }
-
-            append(' ')
-        } else {
-            append(current)
-
-            index++
-        }
-    }
-}
-
-/**
- * Fast-path for `buildString { appendReducedNonLettersOrDigitsReplacedToSpace(str, 0, str.length) }`
- */
-fun CharSequence.reduceNonLettersOrDigitsReplacedToSpace(): String {
-    val length = length
-    val sb = StringBuilder(length)
-
-    sb.appendReducedNonLettersOrDigitsReplacedToSpace(this, 0, length)
-
-    return sb.toString()
-}
-
-fun String.containsLetterOrDigit() = any { it.isLetterOrDigit() }
+fun String.containsLetterOrDigit() = nextLetterOrDigitIndex(0, length) >= 0
 
 fun createNumberRangeList(start: Int, endInclusive: Int, step: Int = 1): List<String> {
     if (start > endInclusive) {
@@ -252,21 +160,4 @@ fun createNumberRangeList(start: Int, endInclusive: Int, step: Int = 1): List<St
     }
 
     return list
-}
-
-inline fun String.lazySplitToRanges(delimiter: Char, onRange: (start: Int, end: Int) -> Unit) {
-    var prevIndex = 0
-    val length = length
-
-    while (prevIndex < length) {
-        var nextIndex = indexOf(delimiter, prevIndex)
-        if (nextIndex == -1) {
-            nextIndex = length
-        }
-
-        onRange(prevIndex, nextIndex)
-
-        prevIndex = nextIndex + 1
-    }
-
 }
