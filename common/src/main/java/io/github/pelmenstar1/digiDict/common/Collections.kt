@@ -155,32 +155,3 @@ inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {
         block(this[i])
     }
 }
-
-class IntList {
-    private var elements: IntArray
-    private var size = 0
-
-    constructor() {
-        elements = EmptyArray.INT
-    }
-
-    constructor(capacity: Int) {
-        elements = IntArray(capacity)
-    }
-
-    fun add(element: Int) {
-        val capacity = elements.size
-        if (size >= capacity) {
-            elements[size++] = element
-        } else {
-            val newCapacity = (capacity * 3) / 2
-            val newElements = IntArray(newCapacity)
-            System.arraycopy(elements, 0, newElements, 0, capacity)
-            newElements[size++] = element
-
-            elements = newElements
-        }
-    }
-
-    fun array() = elements
-}
