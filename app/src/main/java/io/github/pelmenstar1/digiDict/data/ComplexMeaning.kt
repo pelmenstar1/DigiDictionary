@@ -79,13 +79,8 @@ sealed class ComplexMeaning : Parcelable {
             dest.writeString(text)
         }
 
-        override fun equals(other: Any?): Boolean {
-            if (other === this) return true
-            if (other == null || other.javaClass != javaClass) return false
-
-            other as Common
-
-            return text == other.text
+        override fun equals(other: Any?) = equalsPattern(other) { o ->
+            text == o.text
         }
 
         override fun hashCode(): Int = text.hashCode()
@@ -195,13 +190,8 @@ sealed class ComplexMeaning : Parcelable {
             elements.forEachFast(dest::writeString)
         }
 
-        override fun equals(other: Any?): Boolean {
-            if (other === this) return true
-            if (other == null || javaClass != other.javaClass) return false
-
-            other as List
-
-            return elements == other.elements
+        override fun equals(other: Any?) = equalsPattern(other) { o ->
+            return elements == o.elements
         }
 
         override fun hashCode(): Int = elements.hashCode()

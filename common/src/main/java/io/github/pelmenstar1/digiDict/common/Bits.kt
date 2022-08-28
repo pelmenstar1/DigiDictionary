@@ -106,13 +106,8 @@ class FixedBitSet : Parcelable {
         }
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (other === this) return true
-        if (other == null || other.javaClass != javaClass) return false
-
-        other as FixedBitSet
-
-        return size == other.size && words.contentEquals(other.words)
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        size == o.size && words.contentEquals(o.words)
     }
 
     override fun hashCode(): Int {

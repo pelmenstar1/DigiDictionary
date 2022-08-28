@@ -25,19 +25,14 @@ class FilteredArray<out T>(
         return bitSet.findPositionOfNthSetBit(index)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (other === this) return true
-        if (other == null || javaClass != other.javaClass) return false
-
-        other as FilteredArray<*>
-
-        if (size != other.size) return false
+    override fun equals(other: Any?) = equalsPattern(other) { o ->
+        if (size != o.size) return false
 
         val origin = origin
         val bitSet = bitSet
 
-        val otherOrigin = other.origin
-        val otherBitSet = other.bitSet
+        val otherOrigin = o.origin
+        val otherBitSet = o.bitSet
 
         if (origin === otherOrigin) {
             return bitSet.contentEquals(otherBitSet)

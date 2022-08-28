@@ -31,12 +31,8 @@ data class RemoteDictionaryProviderInfo(
             return text.replace(' ', spaceReplacement)
         }
 
-        override fun equals(other: Any?): Boolean {
-            return if (other is UrlEncodingRules) {
-                spaceReplacement == other.spaceReplacement
-            } else {
-                false
-            }
+        override fun equals(other: Any?) = equalsPattern(other) { o ->
+            spaceReplacement == o.spaceReplacement
         }
 
         override fun hashCode(): Int {
