@@ -14,6 +14,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.EmptyArray
+import io.github.pelmenstar1.digiDict.common.getByteArrayOrThrow
 import io.github.pelmenstar1.digiDict.common.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledFlowCollector
@@ -45,6 +47,7 @@ class QuizFragment : Fragment() {
 
         fun bind(value: ConciseRecordWithBadges, index: Int, state: Int) {
             this.index = index
+            setState(state)
 
             expressionView.text = value.expression
             badgeContainer.setBadges(value.badges)
@@ -56,8 +59,6 @@ class QuizFragment : Fragment() {
             correctButton.initActionButton(isCorrect = true)
             wrongButton.initActionButton(isCorrect = false)
 
-            setState(state)
-
             container.setOnClickListener {
                 setState(ITEM_STATE_EXTENDED)
 
@@ -66,7 +67,7 @@ class QuizFragment : Fragment() {
         }
 
         fun setState(state: Int) {
-            itemsState = itemsState.withItemState(index, state)
+            itemStates[index] = state.toByte()
 
             when (state) {
                 ITEM_STATE_NOT_EXTENDED -> {
@@ -107,7 +108,7 @@ class QuizFragment : Fragment() {
 
     private lateinit var itemBackgroundHelper: QuizItemBackgroundHelper
 
-    private var itemsState = 0
+    private var itemStates = EmptyArray.BYTE
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -124,6 +125,11 @@ class QuizFragment : Fragment() {
 
         vm.mode = args.mode
         popBackStackOnSuccess(vm.saveAction, navController)
+
+        // itemStates should be restored before it might be used.
+        if (savedInstanceState != null) {
+            itemStates = savedInstanceState.getByteArrayOrThrow(STATE_QUIZ_ITEM_STATES)
+        }
 
         with(binding) {
             showSnackbarEventHandlerOnError(
@@ -144,6 +150,11 @@ class QuizFragment : Fragment() {
                     quizEmptyText.visibility = View.VISIBLE
                     quizSaveResults.visibility = View.GONE
                 } else {
+                    // Don't re-write and clear the content of itemStates if it's non-empty (restored from saved state)
+                    if (itemStates.isEmpty()) {
+                        itemStates = ByteArray(it.size)
+                    }
+
                     submitItemsToContainer(quizItemsContainer, it)
 
                     quizEmptyText.visibility = View.GONE
@@ -152,19 +163,17 @@ class QuizFragment : Fragment() {
             }
         }
 
-        if (savedInstanceState != null) {
-            itemsState = savedInstanceState.getInt(STATE_QUIZ_STATE)
-        }
-
         return binding.root
     }
 
     private fun submitItemsToContainer(container: LinearLayout, items: Array<out ConciseRecordWithBadges>) {
+        // submitItemsToContainer is expected to be called only once during life of the fragment.
+        // This is just to be 100% sure that everything is fine.
         container.removeAllViews()
 
         for (i in items.indices) {
             val viewHolder = createItemViewHolder(container).also {
-                it.bind(items[i], i, itemsState.getItemState(i))
+                it.bind(items[i], i, itemStates[i].toInt())
             }
 
             container.addView(viewHolder.container)
@@ -186,11 +195,11 @@ class QuizFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        outState.putInt(STATE_QUIZ_STATE, itemsState)
+        outState.putByteArray(STATE_QUIZ_ITEM_STATES, itemStates)
     }
 
     companion object {
-        private const val STATE_QUIZ_STATE = "io.github.pelmenstar1.digiDict.QuizFragment.quizState"
+        private const val STATE_QUIZ_ITEM_STATES = "io.github.pelmenstar1.digiDict.QuizFragment.quizState"
 
         private val ITEM_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -201,18 +210,5 @@ class QuizFragment : Fragment() {
         private const val ITEM_STATE_EXTENDED = 1
         private const val ITEM_STATE_CORRECT = 2
         private const val ITEM_STATE_WRONG = 3
-
-        private const val STATE_BITS_COUNT = 3
-        private const val STATE_MASK = 0x7
-
-        internal fun Int.getItemState(index: Int): Int {
-            return (this shr (index * STATE_BITS_COUNT)) and STATE_MASK
-        }
-
-        internal fun Int.withItemState(index: Int, state: Int): Int {
-            val shift = index * STATE_BITS_COUNT
-
-            return (this and (STATE_MASK shl shift).inv()) or (state shl shift)
-        }
     }
 }
