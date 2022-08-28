@@ -5,7 +5,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.firstSuccess
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
@@ -31,10 +34,9 @@ class ViewRecordViewModelTests {
 
     private fun createViewModel(
         recordDao: RecordDao = db.recordDao(),
-        searchPreparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         listAppWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub
     ): ViewRecordViewModel {
-        return ViewRecordViewModel(recordDao, searchPreparedRecordDao, listAppWidgetUpdater)
+        return ViewRecordViewModel(recordDao, listAppWidgetUpdater)
     }
 
     @Test

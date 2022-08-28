@@ -3,7 +3,6 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.common.LocaleProvider
 import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
@@ -21,7 +20,6 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.*
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -36,38 +34,30 @@ class AddEditRecordViewModelTests {
 
     private fun createViewModel(
         recordDao: RecordDao = db.recordDao(),
-        preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         recordToBadgeRelationDao: RecordToBadgeRelationDao = db.recordToBadgeRelationDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT)
     ): AddEditRecordViewModel {
         return AddEditRecordViewModel(
             recordDao,
-            preparedRecordDao,
             recordToBadgeRelationDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
-            localeProvider
         )
     }
 
     private inline fun useViewModel(
         recordDao: RecordDao = db.recordDao(),
-        preparedRecordDao: SearchPreparedRecordDao = db.searchPreparedRecordDao(),
         recordToBadgeRelationDao: RecordToBadgeRelationDao = db.recordToBadgeRelationDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
-        localeProvider: LocaleProvider = LocaleProvider.fromValue(Locale.ROOT),
         block: (AddEditRecordViewModel) -> Unit
     ) {
         createViewModel(
             recordDao,
-            preparedRecordDao,
             recordToBadgeRelationDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
-            localeProvider
         ).use(block)
     }
 
