@@ -13,16 +13,8 @@ fun TextInputLayout.setText(text: CharSequence) {
     editText?.setText(text)
 }
 
-inline fun TextInputLayout.addTextChangedListenerToString(crossinline block: (String) -> Unit) {
-    editText?.addTextChangedListener {
-        block(it?.toString() ?: "")
-    }
-}
-
 inline fun TextInputLayout.addTextChangedListener(crossinline block: (CharSequence) -> Unit) {
-    editText?.addTextChangedListener {
-        block(it ?: "")
-    }
+    editText?.addTextChangedListener { block(it ?: "") }
 }
 
 inline fun <TGroup : ViewGroup> TGroup.adjustViewCountWithoutLast(
@@ -40,9 +32,9 @@ inline fun <TGroup : ViewGroup> TGroup.adjustViewCount(
     val childCount = childCount
     if (childCount == 0) {
         removeAllViews()
+    } else {
+        adjustViewCountInternal(targetCount, childCount, addNewView)
     }
-
-    adjustViewCountInternal(targetCount, childCount, addNewView)
 }
 
 inline fun <TGroup : ViewGroup> TGroup.adjustViewCountInternal(
