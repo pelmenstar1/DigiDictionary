@@ -14,6 +14,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Digi Dictionary"
-include ':app'
-include ':common'
-include ':commonUi'
+include(":app", ":common", ":commonUi")
