@@ -21,10 +21,7 @@ class FixedBitSet : Parcelable {
 
     constructor(parcel: Parcel) {
         size = parcel.readInt()
-
-        val wordCount = parcel.readInt()
-
-        words = LongArray(wordCount) { parcel.readLong() }
+        words = parcel.createLongArray() ?: EmptyArray.LONG
     }
 
     private constructor(words: LongArray, size: Int) {
@@ -32,12 +29,9 @@ class FixedBitSet : Parcelable {
         this.size = size
     }
 
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.run {
-            writeInt(size)
-            writeInt(words.size)
-            words.forEach(::writeLong)
-        }
+    override fun writeToParcel(dest: Parcel, flags: Int) = dest.run {
+        writeInt(size)
+        writeLongArray(words)
     }
 
     override fun describeContents() = 0
@@ -46,7 +40,6 @@ class FixedBitSet : Parcelable {
         checkIndex(index)
 
         val word = words[getWordIndex(index)]
-
         return (word and (1L shl index)) != 0L
     }
 
@@ -54,7 +47,6 @@ class FixedBitSet : Parcelable {
         checkIndex(index)
 
         val wordIndex = getWordIndex(index)
-
         words[wordIndex] = words[wordIndex] or (1L shl index)
     }
 
