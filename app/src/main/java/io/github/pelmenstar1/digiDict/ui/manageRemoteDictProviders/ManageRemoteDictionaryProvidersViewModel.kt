@@ -15,7 +15,7 @@ class ManageRemoteDictionaryProvidersViewModel @Inject constructor(
     private val remoteDictProviderStatsDao: RemoteDictionaryProviderStatsDao
 ) : SingleDataLoadStateViewModel<Array<RemoteDictionaryProviderInfo>>(TAG) {
     override val canRefreshAfterSuccess: Boolean
-        get() = false
+        get() = true
 
     val deleteAction = viewModelAction<RemoteDictionaryProviderInfo>(TAG) { provider ->
         remoteDictProviderDao.delete(provider)

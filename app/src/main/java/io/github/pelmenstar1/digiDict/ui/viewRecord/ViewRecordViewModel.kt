@@ -18,7 +18,7 @@ class ViewRecordViewModel @Inject constructor(
     private val listAppWidgetUpdater: AppWidgetUpdater
 ) : SingleDataLoadStateViewModel<RecordWithBadges?>(TAG) {
     override val canRefreshAfterSuccess: Boolean
-        get() = false
+        get() = true
 
     private val idFlow = MutableStateFlow<Int?>(null)
 
