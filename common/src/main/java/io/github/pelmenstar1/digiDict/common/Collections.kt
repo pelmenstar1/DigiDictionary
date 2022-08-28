@@ -150,12 +150,6 @@ inline fun <T> Array<out T>.mapToIntArray(block: (T) -> Int): IntArray {
     return IntArray(size) { block(this[it]) }
 }
 
-inline fun <T, R> Array<out T>.mapToHashSet(block: (T) -> R): HashSet<R> {
-    return HashSet<R>(size).also { set ->
-        forEach { set.add(block(it)) }
-    }
-}
-
 inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {
     for (i in 0 until size) {
         block(this[i])
