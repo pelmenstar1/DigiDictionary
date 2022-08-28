@@ -58,6 +58,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
 
@@ -85,58 +86,37 @@ kapt {
 }
 
 dependencies {
-    val room_version = "2.4.3"
-    val nav_version = "2.5.1"
-    val coroutines_version = "1.6.4"
-    val hilt_version = "2.43.2"
-    val lifecycle_version = "2.5.1"
-    val paging_version = "3.1.1"
-
     implementation(project(":common"))
     implementation(project(":commonUi"))
 
-    implementation("androidx.browser:browser:1.4.0")
+    implementation(libs.androidx.browser)
+    implementation(libs.bundles.androidx.nav)
+    implementation(libs.bundles.androidx.lifecycle)
+    implementation(libs.bundles.androidx.paging)
 
-    implementation("androidx.navigation:navigation-fragment:$nav_version")
-    implementation("androidx.navigation:navigation-ui:$nav_version")
-    implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
-    implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
+    implementation(libs.bundles.kotlinx.coroutines)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version")
-    implementation("org.jetbrains:annotations:23.0.0")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.paging)
+    kapt(libs.androidx.room.compiler)
 
-    implementation("androidx.room:room-runtime:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    implementation("androidx.room:room-paging:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
+    implementation(libs.dagger.hilt.android)
+    kapt(libs.dagger.hilt.compiler)
 
-    implementation("com.google.dagger:hilt-android:$hilt_version")
-    kapt("com.google.dagger:hilt-compiler:$hilt_version")
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.android.material)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.viewpager)
+    implementation(libs.androidx.datastore.prefs)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
+    testImplementation(libs.bundles.kotlin.test.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.5.0")
-    implementation("com.google.android.material:material:1.6.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.viewpager2:viewpager2:1.0.0")
-
-    implementation("androidx.paging:paging-runtime:$paging_version")
-    implementation("androidx.paging:paging-runtime-ktx:$paging_version")
-
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.7.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version")
-
-    androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.0")
-    androidTestImplementation("org.jetbrains.kotlin:kotlin-test:1.7.0")
-    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version")
-    androidTestImplementation("androidx.room:room-testing:$room_version")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation(libs.bundles.kotlin.test.junit)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.ext)
+    androidTestImplementation(libs.androidx.test.espresso)
+    androidTestImplementation(libs.androidx.room.testing)
 }

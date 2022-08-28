@@ -26,10 +26,12 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
 
@@ -42,36 +44,21 @@ android {
 }
 
 dependencies {
-    val coroutines_version = "1.6.4"
-    val nav_version = "2.5.1"
-    val sqlite_version = "2.2.0"
-    val room_version = "2.4.3"
+    implementation(libs.androidx.room.runtime)
 
-    implementation("androidx.room:room-runtime:$room_version")
+    implementation(libs.bundles.kotlinx.coroutines)
+    implementation(libs.bundles.androidx.nav)
+    implementation(libs.bundles.androidx.sqlite)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version")
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.android.material)
 
-    implementation("androidx.navigation:navigation-fragment:$nav_version")
-    implementation("androidx.navigation:navigation-ui:$nav_version")
-    implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
-    implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
+    testImplementation(libs.bundles.kotlin.test.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 
-    implementation("androidx.sqlite:sqlite:$sqlite_version")
-    implementation("androidx.sqlite:sqlite-ktx:$sqlite_version")
-
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.5.0")
-    implementation("com.google.android.material:material:1.6.1")
-
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.7.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version")
-
-    androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.0")
-    androidTestImplementation("org.jetbrains.kotlin:kotlin-test:1.7.0")
-    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation(libs.bundles.kotlin.test)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.ext)
+    androidTestImplementation(libs.androidx.test.espresso)
 }
