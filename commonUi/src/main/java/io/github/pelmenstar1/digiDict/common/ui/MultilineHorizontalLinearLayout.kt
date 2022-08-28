@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
-import io.github.pelmenstar1.digiDict.common.debugLog
 import kotlin.math.max
 
 /**
@@ -115,10 +114,6 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
             val child = getChildAt(i)
 
             if (child.visibility != GONE) {
-                debugLog(TAG) {
-                    info("Processing view at index $i")
-                }
-
                 val childParams = child.layoutParams as MarginLayoutParams
                 val childLeftMargin = childParams.leftMargin
                 val childTopMargin = childParams.topMargin
@@ -133,19 +128,11 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                 var nextLeft = currentLeft + requiredWidth
 
                 if (nextLeft > totalWidthWithoutRightPadding) {
-                    debugLog(TAG) {
-                        info("Moving to the new row")
-                    }
-
                     currentTop += rowHeight
                     currentLeft = pLeft
                     nextLeft = pLeft + requiredWidth
 
                     rowHeight = 0
-                }
-
-                debugLog(TAG) {
-                    info("currentLeft: $currentLeft; currentTop: $currentTop; nextLeft: $nextLeft")
                 }
 
                 val viewLeft = currentLeft + childLeftMargin
@@ -155,9 +142,5 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                 currentLeft = nextLeft
             }
         }
-    }
-
-    companion object {
-        private const val TAG = "MHLinearLayout"
     }
 }
