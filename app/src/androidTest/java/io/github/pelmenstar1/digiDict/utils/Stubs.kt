@@ -38,7 +38,7 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override suspend fun insertAll(values: Array<Record>) {
+    override suspend fun insertAll(values: Array<out Record>) {
         throw NotImplementedError()
     }
 

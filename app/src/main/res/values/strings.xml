@@ -150,4 +150,7 @@
 
     <!-- List widget -->
     <string name="listWidget_description">Widget which shows you most recent expressions you added</string>
+
+    <!-- Import/Export configuration related -->
+    <string name="importExprConf_title">Configure</string>
 </resources>

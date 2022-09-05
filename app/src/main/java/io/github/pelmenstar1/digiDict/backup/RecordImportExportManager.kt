@@ -1,36 +1,9 @@
 package io.github.pelmenstar1.digiDict.backup
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.result.ActivityResultCallback
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.Fragment
-import io.github.pelmenstar1.digiDict.RecordExpressionDuplicateException
-import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.appendPaddedFourDigit
-import io.github.pelmenstar1.digiDict.common.appendPaddedTwoDigit
-import io.github.pelmenstar1.digiDict.common.getLocaleCompat
-import io.github.pelmenstar1.digiDict.common.serialization.readValuesToArray
-import io.github.pelmenstar1.digiDict.common.serialization.writeValues
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordDao
-import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import java.io.FileDescriptor
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.util.*
-import kotlin.coroutines.resume
-
+/*
 object RecordImportExportManager {
     private const val EXTENSION = "dddb"
-    private const val MIME_TYPE = "*/*"
+    private const val MIME_TYPE = "*"
 
     private val mimeTypeArray = arrayOf(MIME_TYPE)
 
@@ -150,7 +123,7 @@ object RecordImportExportManager {
                 val importedRecords = uri.useAsFile(context, mode = "r") { descriptor ->
                     FileInputStream(descriptor).use {
                         val subReporter = progressReporter.subReporter(completed = 0, target = 50)
-                        it.channel.readValuesToArray(Record.NO_ID_SERIALIZER_RESOLVER, subReporter)
+                        it.channel.readValuesToArray(Record.SERIALIZER_RESOLVER, subReporter)
                     }
                 }
 
@@ -217,7 +190,7 @@ object RecordImportExportManager {
                         progressReporter?.onProgress(i, recordsSize)
                     }
 
-                    progressReporter?.onEnd()
+                    progressReporter?.end()
                 }
 
                 appDatabase.setTransactionSuccessful()
@@ -234,18 +207,7 @@ object RecordImportExportManager {
         return false
     }
 
-    private inline fun <R> Uri.useAsFile(
-        context: Context,
-        mode: String,
-        block: (FileDescriptor) -> R
-    ): R {
-        val contentResolver = context.contentResolver
-        val parcelDescriptor = requireNotNull(contentResolver.openFileDescriptor(this, mode))
 
-        return parcelDescriptor.use {
-            block(it.fileDescriptor)
-        }
-    }
 
     private fun createFileName(locale: Locale): String {
         val calendar = Calendar.getInstance(locale)
@@ -264,3 +226,4 @@ object RecordImportExportManager {
         }
     }
 }
+*/

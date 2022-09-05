@@ -6,6 +6,7 @@ plugins {
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
     id("androidx.navigation.safeargs.kotlin")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -65,7 +66,8 @@ android {
         freeCompilerArgs = freeCompilerArgs + arrayOf(
             "-opt-in=kotlin.contracts.ExperimentalContracts",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-opt-in=kotlinx.coroutines.FlowPreview"
+            "-opt-in=kotlinx.coroutines.FlowPreview",
+            "-opt-in=kotlinx.serialization.ExperimentalSerializationApi"
         )
     }
 
@@ -110,6 +112,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.viewpager)
     implementation(libs.androidx.datastore.prefs)
+
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.bundles.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)

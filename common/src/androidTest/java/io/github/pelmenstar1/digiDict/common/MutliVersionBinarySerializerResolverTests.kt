@@ -1,10 +1,10 @@
 package io.github.pelmenstar1.digiDict.common
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.common.serialization.BinarySerializer
-import io.github.pelmenstar1.digiDict.common.serialization.BinarySerializerResolverBuilder
-import io.github.pelmenstar1.digiDict.common.serialization.ValueReader
-import io.github.pelmenstar1.digiDict.common.serialization.ValueWriter
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializer
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolverBuilder
+import io.github.pelmenstar1.digiDict.common.binarySerialization.PrimitiveValueReader
+import io.github.pelmenstar1.digiDict.common.binarySerialization.PrimitiveValueWriter
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -14,9 +14,9 @@ class MutliVersionBinarySerializerResolverTests {
     private fun fakeBinarySerializer() = object : BinarySerializer<Any> {
         override fun newArrayOfNulls(size: Int) = arrayOfNulls<Any>(size)
         override fun getByteSize(value: Any) = 0
-        override fun readFrom(reader: ValueReader) = Any()
+        override fun readFrom(reader: PrimitiveValueReader) = Any()
 
-        override fun writeTo(writer: ValueWriter, value: Any) {
+        override fun writeTo(writer: PrimitiveValueWriter, value: Any) {
         }
     }
 

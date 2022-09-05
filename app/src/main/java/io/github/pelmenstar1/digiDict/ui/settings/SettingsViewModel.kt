@@ -5,10 +5,9 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.serialization.ValidationException
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinaryDataIntegrityException
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
@@ -54,9 +53,9 @@ class SettingsViewModel @Inject constructor(
             operationName = "export",
             operationSuccessMsg = SettingsMessage.EXPORT_SUCCESS,
             operationErrorMsg = SettingsMessage.EXPORT_ERROR,
-        ) {
+        ) /*{
             export(context, recordDao, progressReporter)
-        }
+        }*/
     }
 
     fun importData(context: Context) {
@@ -64,16 +63,16 @@ class SettingsViewModel @Inject constructor(
             operationName = "import",
             operationSuccessMsg = SettingsMessage.IMPORT_SUCCESS,
             operationErrorMsg = SettingsMessage.IMPORT_ERROR,
-        ) {
+        ) /*{
             import(context, appDatabase, progressReporter)
-        }
+        }*/
     }
 
     private fun importExport(
         operationName: String,
         operationSuccessMsg: SettingsMessage,
         operationErrorMsg: SettingsMessage,
-        operation: suspend RecordImportExportManager.() -> Boolean
+        //operation: suspend RecordImportExportManager.() -> Boolean
     ) {
         progressReporter.reset()
 
@@ -81,12 +80,12 @@ class SettingsViewModel @Inject constructor(
             operationErrorFlow.emit(null)
 
             try {
-                val showMessage = RecordImportExportManager.operation()
+                val showMessage = false // RecordImportExportManager.operation()
 
                 if (showMessage) {
                     _messageFlow.value = operationSuccessMsg
                 }
-            } catch (e: ValidationException) {
+            } catch (e: BinaryDataIntegrityException) {
                 _messageFlow.value = SettingsMessage.INVALID_FILE
 
                 operationErrorFlow.emit(e)
@@ -108,7 +107,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 progressReporter.onProgress(0, 100)
                 recordDao.deleteAll()
-                progressReporter.onEnd()
+                progressReporter.end()
 
                 _messageFlow.value = SettingsMessage.DELETE_ALL_SUCCESS
             } catch (e: Exception) {

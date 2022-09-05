@@ -59,7 +59,6 @@
         <action
             android:id="@+id/action_settings_to_manageRecordBadges"
             app:destination="@id/manageRecordBadgesFragment" />
-
     </fragment>
 
     <fragment

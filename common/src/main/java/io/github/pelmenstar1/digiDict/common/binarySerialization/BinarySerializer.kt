@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.serialization
+package io.github.pelmenstar1.digiDict.common.binarySerialization
 
 import android.util.SparseArray
 
@@ -7,12 +7,13 @@ interface BinarySerializer<T : Any> {
 
     fun getByteSize(value: T): Int
 
-    fun writeTo(writer: ValueWriter, value: T)
-    fun readFrom(reader: ValueReader): T
+    fun writeTo(writer: PrimitiveValueWriter, value: T)
+    fun readFrom(reader: PrimitiveValueReader): T
 }
 
 interface BinarySerializerResolver<T : Any> {
     val latest: BinarySerializer<T>
+    val latestVersion: Int
 
     fun getOrLatest(version: Int): BinarySerializer<T>
 }
@@ -32,8 +33,8 @@ class BinarySerializerResolverBuilder<T : Any> {
     inline fun <reified TR : T> forVersion(
         version: Int,
         crossinline getByteSize: BinarySize.(T) -> Int,
-        crossinline write: ValueWriter.(T) -> Unit,
-        crossinline read: ValueReader.() -> T
+        crossinline write: PrimitiveValueWriter.(T) -> Unit,
+        crossinline read: PrimitiveValueReader.() -> T
     ) {
         val serializer = object : BinarySerializer<T> {
             @Suppress("UNCHECKED_CAST")
@@ -43,11 +44,11 @@ class BinarySerializerResolverBuilder<T : Any> {
 
             override fun getByteSize(value: T) = BinarySize.getByteSize(value)
 
-            override fun writeTo(writer: ValueWriter, value: T) {
+            override fun writeTo(writer: PrimitiveValueWriter, value: T) {
                 writer.write(value)
             }
 
-            override fun readFrom(reader: ValueReader) = reader.read()
+            override fun readFrom(reader: PrimitiveValueReader) = reader.read()
         }
 
         forVersion(version, serializer)
@@ -57,6 +58,10 @@ class BinarySerializerResolverBuilder<T : Any> {
         override val latest: BinarySerializer<T>
             // As elements is sorted by key in SparseArray, element with the greatest key (version) should be the last.
             get() = serializers.valueAt(serializers.size() - 1)
+
+        override val latestVersion: Int
+            // Same principle as in latest
+            get() = serializers.keyAt(serializers.size() - 1)
 
         override fun getOrLatest(version: Int): BinarySerializer<T> {
             return serializers[version] ?: latest

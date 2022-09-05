@@ -11,8 +11,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.DataLoadState
+import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.debugLog
+import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.LoadingIndicatorDialog
 import io.github.pelmenstar1.digiDict.common.ui.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
@@ -45,7 +47,7 @@ class SettingsFragment : Fragment() {
         val binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val contentContainer = binding.settingsContentContainer
 
-        RecordImportExportManager.init(this)
+        //RecordImportExportManager.init(this)
 
         SettingsInflater(context).inflate(descriptor, container = contentContainer).run {
             onValueChangedHandler = viewModel::changePreferenceValue
@@ -119,10 +121,11 @@ class SettingsFragment : Fragment() {
         }
         var dialog: LoadingIndicatorDialog? = null
 
+        /*
         loadingProgressCollectionJob = lifecycleScope.launchFlowCollector(
-            viewModel.operationProgressFlow.cancelAfter { it == 100 }
+            viewModel.operationProgressFlow.cancelAfter { it == 100f }
         ) { progress ->
-            if (progress == 100) {
+            if (progress == 100f) {
                 dialog?.dismissNow()
 
                 // To be sure dialog won't be reused after it's dismissed.
@@ -150,16 +153,11 @@ class SettingsFragment : Fragment() {
         }.also {
             it.invokeOnCompletion { loadingProgressCollectionJob = null }
         }
+        */
     }
 
     private fun hideLoadingProgressDialog() {
         findLoadingIndicatorDialog(childFragmentManager)?.dismissNow()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        RecordImportExportManager.release()
     }
 
     companion object {

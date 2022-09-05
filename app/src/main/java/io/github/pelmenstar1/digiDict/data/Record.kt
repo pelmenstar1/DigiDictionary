@@ -1,22 +1,23 @@
 package io.github.pelmenstar1.digiDict.data
 
-import android.database.CharArrayBuffer
-import android.database.Cursor
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinaryDataIntegrityException
+import io.github.pelmenstar1.digiDict.common.binarySerialization.MultiVersionBinarySerializerResolver
 import io.github.pelmenstar1.digiDict.common.equalsPattern
-import io.github.pelmenstar1.digiDict.common.serialization.*
+import kotlinx.serialization.Serializable
 
 @Entity(
     tableName = "records",
     indices = [Index(RecordTable.expression, unique = true)]
 )
+@Serializable
 open class Record(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = RecordTable.id)
-    final override val id: Int,
+    final override val id: Int = 0,
     @ColumnInfo(name = RecordTable.expression) val expression: String,
     @ColumnInfo(name = RecordTable.meaning) val meaning: String,
     @ColumnInfo(name = RecordTable.additionalNotes) val additionalNotes: String,
@@ -61,7 +62,7 @@ open class Record(
             a.expression.compareTo(b.expression)
         }
 
-        val NO_ID_SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<Record> {
+        val SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<Record> {
             forVersion<Record>(
                 version = 1,
                 getByteSize = { value ->
@@ -86,7 +87,7 @@ open class Record(
                     val epochSeconds = int64()
 
                     if (epochSeconds < 0) {
-                        throw ValidationException("Epoch seconds can't be negative")
+                        throw BinaryDataIntegrityException("Epoch seconds can't be negative")
                     }
 
                     Record(
@@ -127,10 +128,6 @@ open class ConciseRecord(
     override fun toString(): String {
         return "ConciseRecord(id=$id, expression=$expression, meaning=$meaning, score=$score)"
     }
-
-    companion object {
-        fun Record.toConciseRecord() = ConciseRecord(id, expression, meaning, score)
-    }
 }
 
 open class ConciseRecordWithBadges(
@@ -166,35 +163,6 @@ open class ConciseRecordWithBadges(
     }
 }
 
-@Suppress("EqualsOrHashCode") // ConciseRecord defines equals()
-class ConciseRecordWithSearchInfo(
-    id: Int,
-    expression: String,
-    meaning: String,
-    score: Int,
-    val keywords: String?
-) : ConciseRecord(id, expression, meaning, score) {
-    override fun equals(other: Any?) = equalsPattern(other) { o ->
-        id == o.id && equalsNoId(o)
-    }
-
-    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
-        expression == o.expression && meaning == o.meaning && score == o.score && keywords == o.keywords
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = result * 31 + keywords.hashCode()
-
-        return result
-    }
-
-    override fun toString(): String {
-        return "ConciseRecordWithSearchInfoAndBadges(id=$id, expression=$expression, meaning=$meaning, score=$score, keywords=$keywords)"
-    }
-}
-
-@Suppress("EqualsOrHashCode") // equals() is declared in Record
 open class RecordWithBadges(
     id: Int,
     expression: String,
@@ -245,91 +213,4 @@ object RecordTable {
     const val additionalNotes = "additionalNotes"
     const val score = "score"
     const val epochSeconds = "dateTime"
-}
-
-fun Cursor.asRecordSerializableIterableNoId(): SerializableIterable {
-    val size = count
-    val cursor = this
-
-    return object : SerializableIterable {
-        override val size: Int
-            get() = size
-
-        private val exprIndex = columnIndex { expression }
-        private val meaningIndex = columnIndex { meaning }
-        private val additionalNotesIndex = columnIndex { additionalNotes }
-        private val scoreIndex = columnIndex { score }
-        private val epochSecondsIndex = columnIndex { epochSeconds }
-
-        private var isIteratorCreated = false
-
-        override val version: Int
-            get() = 1
-
-        private inline fun Cursor.columnIndex(block: RecordTable.() -> String): Int {
-            return getColumnIndex(block(RecordTable))
-        }
-
-        override fun recycle() {
-            return cursor.close()
-        }
-
-        override fun iterator(): SerializableIterator {
-            if (isIteratorCreated) {
-                throw IllegalStateException("Iterator was already created")
-            }
-
-            isIteratorCreated = true
-
-            return object : SerializableIterator {
-                private var currentScore = 0
-                private var currentEpochSeconds = 0L
-                private val expressionBuffer = CharArrayBuffer(32)
-                private val meaningBuffer = CharArrayBuffer(64)
-                private val additionalNotesBuffer = CharArrayBuffer(16)
-
-                init {
-                    // Make the iterator reusable
-                    moveToPosition(-1)
-                }
-
-                override fun moveToNext() = cursor.moveToNext()
-
-                override fun initCurrent() {
-                    cursor.run {
-                        currentScore = getInt(scoreIndex)
-                        currentEpochSeconds = getLong(epochSecondsIndex)
-
-                        copyStringToBuffer(exprIndex, expressionBuffer)
-                        copyStringToBuffer(meaningIndex, meaningBuffer)
-                        copyStringToBuffer(additionalNotesIndex, additionalNotesBuffer)
-                    }
-                }
-
-                override fun getCurrentElementByteSize(): Int {
-                    return with(BinarySize) {
-                        int32 /* score */ +
-                                int64 /* epochSeconds */ +
-                                stringUtf16(expressionBuffer) +
-                                stringUtf16(meaningBuffer) +
-                                stringUtf16(additionalNotesBuffer)
-                    }
-                }
-
-                override fun writeCurrentElement(writer: ValueWriter) {
-                    writer.run {
-                        stringUtf16(expressionBuffer)
-                        stringUtf16(meaningBuffer)
-                        stringUtf16(additionalNotesBuffer)
-                        int32(currentScore)
-                        int64(currentEpochSeconds)
-                    }
-                }
-
-                private fun ValueWriter.stringUtf16(buffer: CharArrayBuffer) {
-                    stringUtf16(buffer.data, 0, buffer.sizeCopied)
-                }
-            }
-        }
-    }
 }

@@ -4,8 +4,10 @@ import android.content.Context
 import android.database.Cursor
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
-import io.github.pelmenstar1.digiDict.common.serialization.readValuesToArray
+import io.github.pelmenstar1.digiDict.backup.BackupFormat
+import io.github.pelmenstar1.digiDict.backup.BackupManager
+import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
+import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.data.RecordTable
@@ -16,13 +18,13 @@ import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 
 @RunWith(AndroidJUnit4::class)
-class RecordImportExportManagerTests {
+class BackupManagerTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    private fun roundtripTestHelper(size: Int) = runTest {
+    private fun roundtripTestHelper(format: BackupFormat, size: Int) = runTest {
         val db = AppDatabaseUtils.createTestDatabase(context)
         try {
-            val file = context.getFileStreamPath("test.dddb")
+            val file = context.getFileStreamPath("test.${format.extension}")
             file.delete()
             file.createNewFile()
 
@@ -42,17 +44,18 @@ class RecordImportExportManagerTests {
             recordDao.insertAll(noIdRecords)
             val records = getAllRecordsNoIdInSet(recordDao)
 
+            val exportData = BackupManager.createBackupData(db)
             file.outputStream().use {
-                RecordImportExportManager.export(it, recordDao, null)
+                BackupManager.export(it, exportData, format, ExportOptions())
             }
 
             db.clearAllTables()
 
-            val importedRecords = file.inputStream().use {
-                it.channel.readValuesToArray(Record.NO_ID_SERIALIZER_RESOLVER)
+            val importData = file.inputStream().use {
+                BackupManager.import(it, format, ImportOptions())
             }
 
-            RecordImportExportManager.import(importedRecords, db)
+            BackupManager.deployImportData(importData, db)
             val importedRecordsInDb = getAllRecordsNoIdInSet(recordDao)
 
             assertEquals(records, importedRecordsInDb)
@@ -62,22 +65,34 @@ class RecordImportExportManagerTests {
     }
 
     @Test
-    fun roundtripTest_1() = roundtripTestHelper(1)
+    fun roundtripTestDddb_1() = roundtripTestHelper(BackupFormat.DDDB, 1)
 
     @Test
-    fun roundtripTest_4() = roundtripTestHelper(4)
+    fun roundtripTestDddb_4() = roundtripTestHelper(BackupFormat.DDDB, 4)
 
     @Test
-    fun roundtripTest_16() = roundtripTestHelper(16)
+    fun roundtripTestDddb_16() = roundtripTestHelper(BackupFormat.DDDB, 16)
 
     @Test
-    fun roundtripTest_128() = roundtripTestHelper(128)
+    fun roundtripTestDddb_128() = roundtripTestHelper(BackupFormat.DDDB, 128)
 
     @Test
-    fun roundtripTest_1024() = roundtripTestHelper(1024)
+    fun roundtripTestDddb_1024() = roundtripTestHelper(BackupFormat.DDDB, 1024)
 
     @Test
-    fun roundtripTest_4096() = roundtripTestHelper(4096)
+    fun roundtripTestJson_1() = roundtripTestHelper(BackupFormat.JSON, 1)
+
+    @Test
+    fun roundtripTestJson_4() = roundtripTestHelper(BackupFormat.JSON, 4)
+
+    @Test
+    fun roundtripTestJson_16() = roundtripTestHelper(BackupFormat.JSON, 16)
+
+    @Test
+    fun roundtripTestJson_128() = roundtripTestHelper(BackupFormat.JSON, 128)
+
+    @Test
+    fun roundtripTestJson_1024() = roundtripTestHelper(BackupFormat.JSON, 1024)
 
     companion object {
         internal fun getAllRecordsNoIdInSet(dao: RecordDao): Set<RecordNoId> {

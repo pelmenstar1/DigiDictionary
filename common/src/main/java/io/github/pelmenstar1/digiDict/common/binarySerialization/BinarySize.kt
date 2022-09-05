@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.serialization
+package io.github.pelmenstar1.digiDict.common.binarySerialization
 
 import android.database.CharArrayBuffer
 

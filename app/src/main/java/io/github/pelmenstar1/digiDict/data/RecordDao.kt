@@ -4,7 +4,6 @@ import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.common.generateUniqueRandomNumbers
 import io.github.pelmenstar1.digiDict.common.mapToArray
-import io.github.pelmenstar1.digiDict.common.serialization.SerializableIterable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlin.math.min
@@ -25,7 +24,7 @@ abstract class RecordDao {
     abstract suspend fun insert(value: Record)
 
     @Insert
-    abstract suspend fun insertAll(values: Array<Record>)
+    abstract suspend fun insertAll(values: Array<out Record>)
 
     @Query(
         """UPDATE records 
@@ -247,12 +246,6 @@ abstract class RecordDao {
         ids.copyInto(narrowedIds, endIndex = narrowedIds.size)
 
         return getConciseRecordsWithBadgesByIds(narrowedIds)
-    }
-
-    fun getAllRecordsNoIdIterable(): SerializableIterable {
-        val cursor = getAllRecordsNoIdRaw()
-
-        return cursor.asRecordSerializableIterableNoId()
     }
 
     companion object {
