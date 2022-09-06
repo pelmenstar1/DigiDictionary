@@ -1,17 +1,13 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.getByteAt
-import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
+import io.github.pelmenstar1.digiDict.common.*
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.CharBuffer
-import kotlin.math.min
 
 class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     private val byteBufferArray = ByteArray(bufferSize)
-    private val byteBuffer: ByteBuffer
     private val byteBufferAsChar: CharBuffer
 
     private var charBuffer: CharArray? = null
@@ -23,41 +19,47 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
             throw IllegalArgumentException("Size of buffer should be even")
         }
 
-        byteBuffer = ByteBuffer.wrap(byteBufferArray).also {
+        byteBufferAsChar = ByteBuffer.wrap(byteBufferArray).let {
             it.order(ByteOrder.LITTLE_ENDIAN)
+            it.asCharBuffer()
         }
-
-        byteBufferAsChar = byteBuffer.asCharBuffer()
     }
 
     fun int16(value: Int) {
-        writePrimitive(value, byteCount = 2, Int::getByteAt)
+        writePrimitive(value, byteCount = 2, Int::writeLowTo, Int::getByteAt)
     }
 
     fun int32(value: Int) {
-        writePrimitive(value, byteCount = 4, Int::getByteAt)
+        writePrimitive(value, byteCount = 4, Int::writeTo, Int::getByteAt)
     }
 
     fun int64(value: Long) {
-        writePrimitive(value, byteCount = 8, Long::getByteAt)
+        writePrimitive(value, byteCount = 8, Long::writeTo, Long::getByteAt)
     }
 
-    private inline fun <T> writePrimitive(value: T, byteCount: Int, getByteAt: T.(offset: Int) -> Byte) {
+    private inline fun <T> writePrimitive(
+        value: T,
+        byteCount: Int,
+        writeValue: T.(dest: ByteArray, offset: Int) -> Unit,
+        getByteAt: T.(offset: Int) -> Byte
+    ) {
         val buf = byteBufferArray
         var bp = bufferPos
         val remaining = buf.size - bp
 
-        val minLength = min(byteCount, remaining)
-        for (i in 0 until minLength) {
-            buf[bp++] = value.getByteAt(i)
-        }
+        if (remaining > byteCount) {
+            value.writeValue(buf, bp)
+            bp += byteCount
+        } else {
+            for (i in 0 until remaining) {
+                buf[bp++] = value.getByteAt(i)
+            }
 
-        if (minLength != byteCount) {
-            // If minLength != byteCount, it means that we can't write enough bits of value to the buffer and
+            // If remaining <= byteCount, it means that we can't write enough bits of value to the buffer and
             // it needs to be written to the stream first.
             output.write(buf, 0, bp)
 
-            // After buffer synchronization, buffer position should be set to zero in order to continue writing of remaining
+            // After a buffer synchronization, the buffer position should be set to zero in order to continue writing of remaining
             // bits of value.
             bp = 0
             for (i in remaining until byteCount) {

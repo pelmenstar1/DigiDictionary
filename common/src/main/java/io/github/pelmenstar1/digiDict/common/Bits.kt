@@ -255,9 +255,32 @@ fun LongArray.nextSetBit(fromIndex: Int): Int {
     }
 }
 
-private inline fun <T> T.getByteAt(index: Int, shr: (a: T, bitCount: Int) -> T, toByte: T.() -> Byte): Byte {
-    return shr(this, index * 8).toByte()
+private inline fun <T> T.getByteAt(index: Int, shr: T.(bitCount: Int) -> T, toByte: T.() -> Byte): Byte {
+    return this.shr(index shl 3).toByte()
 }
 
 fun Int.getByteAt(index: Int) = getByteAt(index, Int::shr, Int::toByte)
 fun Long.getByteAt(index: Int) = getByteAt(index, Long::shr, Long::toByte)
+
+fun Int.writeLowTo(dest: ByteArray, offset: Int) {
+    dest[offset] = this.toByte()
+    dest[offset + 1] = (this shr 8).toByte()
+}
+
+fun Int.writeTo(dest: ByteArray, offset: Int) {
+    dest[offset] = this.toByte()
+    dest[offset + 1] = (this shr 8).toByte()
+    dest[offset + 2] = (this shr 16).toByte()
+    dest[offset + 3] = (this shr 24).toByte()
+}
+
+fun Long.writeTo(dest: ByteArray, offset: Int) {
+    dest[offset] = this.toByte()
+    dest[offset + 1] = (this shr 8).toByte()
+    dest[offset + 2] = (this shr 16).toByte()
+    dest[offset + 3] = (this shr 24).toByte()
+    dest[offset + 4] = (this shr 32).toByte()
+    dest[offset + 5] = (this shr 40).toByte()
+    dest[offset + 6] = (this shr 48).toByte()
+    dest[offset + 7] = (this shr 56).toByte()
+}
