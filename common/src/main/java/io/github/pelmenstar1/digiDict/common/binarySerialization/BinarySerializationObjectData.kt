@@ -23,15 +23,15 @@ class BinarySerializationObjectData(
         val resolverPairs = staticInfo.keyResolverPairs
         val size = resolverPairs.size
 
-        writer.int64(MAGIC_WORD)
+        writer.emit(MAGIC_WORD)
 
         trackLoopProgressWithSubReporters(progressReporter, size) { i, subReporter ->
             val array = sections[i]
             val resolver = resolverPairs[i].resolver
             val latestSerializer = resolver.latestAny()
 
-            writer.int32(resolver.latestVersion)
-            writer.array(array, latestSerializer, subReporter)
+            writer.emit(resolver.latestVersion)
+            writer.emit(array, latestSerializer, subReporter)
         }
     }
 
@@ -49,7 +49,7 @@ class BinarySerializationObjectData(
             val resolverPairs = staticInfo.keyResolverPairs
             val size = resolverPairs.size
 
-            val magicWord = reader.int64()
+            val magicWord = reader.consumeLong()
 
             if (magicWord != MAGIC_WORD) {
                 throw BinaryDataIntegrityException("Magic word is not as expected")
@@ -58,7 +58,7 @@ class BinarySerializationObjectData(
             val arrays = unsafeNewArray<Array<out Any>>(size)
 
             trackLoopProgressWithSubReporters(progressReporter, size) { i, subReporter ->
-                val version = reader.int32()
+                val version = reader.consumeInt()
                 val serializer = resolverPairs[i].resolver.getOrLatest(version)
                 val array = reader.array(serializer, subReporter)
 

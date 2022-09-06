@@ -28,19 +28,19 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         }
     }
 
-    fun int16(value: Short) {
-        writePrimitive(value, byteCount = 2, Short::writeTo, Short::getByteAt)
+    fun emit(value: Short) {
+        emitPrimitive(value, byteCount = 2, Short::writeTo, Short::getByteAt)
     }
 
-    fun int32(value: Int) {
-        writePrimitive(value, byteCount = 4, Int::writeTo, Int::getByteAt)
+    fun emit(value: Int) {
+        emitPrimitive(value, byteCount = 4, Int::writeTo, Int::getByteAt)
     }
 
-    fun int64(value: Long) {
-        writePrimitive(value, byteCount = 8, Long::writeTo, Long::getByteAt)
+    fun emit(value: Long) {
+        emitPrimitive(value, byteCount = 8, Long::writeTo, Long::getByteAt)
     }
 
-    private inline fun <T> writePrimitive(
+    private inline fun <T> emitPrimitive(
         value: T,
         byteCount: Int,
         writeValue: T.(dest: ByteArray, offset: Int) -> Unit,
@@ -73,12 +73,12 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         bufferPos = bp
     }
 
-    fun stringUtf16(value: String) {
+    fun emit(value: String) {
         var cb = charBuffer
         val valueLength = value.length
 
         checkStringLength(valueLength)
-        int16(valueLength.toShort())
+        emit(valueLength.toShort())
 
         if (valueLength > 0) {
             if (cb == null || valueLength > cb.size) {
@@ -87,11 +87,11 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
             }
 
             value.toCharArray(cb)
-            stringUtf16(cb, 0, valueLength)
+            emit(cb, 0, valueLength)
         }
     }
 
-    fun stringUtf16(chars: CharArray, start: Int, end: Int) {
+    fun emit(chars: CharArray, start: Int, end: Int) {
         val out = output
         val bb = byteBufferArray
         val bbAsChar = byteBufferAsChar
@@ -148,13 +148,13 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         bufferPos = bp
     }
 
-    fun <T : Any> array(
+    fun <T : Any> emit(
         values: Array<out T>,
         serializer: BinarySerializer<in T>,
         progressReporter: ProgressReporter? = null
     ) {
         val size = values.size
-        int32(size)
+        emit(size)
 
         trackLoopProgressWith(progressReporter, size) { i ->
             serializer.writeTo(this, values[i])

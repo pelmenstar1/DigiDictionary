@@ -17,34 +17,34 @@ class PrimitiveValueWriterReaderTests {
         val writer = PrimitiveValueWriter(output, bufferSize = 32)
 
         writer.run {
-            int32(1)
-            int32(-100)
-            int64(383)
-            int32(222)
-            stringUtf16("123")
-            int32(0)
-            stringUtf16("55555")
-            stringUtf16("")
-            stringUtf16("1")
-            stringUtf16(bigString1)
-            stringUtf16(bigString2)
+            emit(1)
+            emit(-100)
+            emit(383)
+            emit(222)
+            emit("123")
+            emit(0)
+            emit("55555")
+            emit("")
+            emit("1")
+            emit(bigString1)
+            emit(bigString2)
 
             flush()
         }
 
         val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 32)
 
-        assertEquals(1, reader.int32())
-        assertEquals(-100, reader.int32())
-        assertEquals(383, reader.int64())
-        assertEquals(222, reader.int32())
-        assertEquals("123", reader.stringUtf16())
-        assertEquals(0, reader.int32())
-        assertEquals("55555", reader.stringUtf16())
-        assertEquals("", reader.stringUtf16())
-        assertEquals("1", reader.stringUtf16())
-        assertEquals(bigString1, reader.stringUtf16())
-        assertEquals(bigString2, reader.stringUtf16())
+        assertEquals(1, reader.consumeInt())
+        assertEquals(-100, reader.consumeInt())
+        assertEquals(383, reader.consumeLong())
+        assertEquals(222, reader.consumeInt())
+        assertEquals("123", reader.consumeStringUtf16())
+        assertEquals(0, reader.consumeInt())
+        assertEquals("55555", reader.consumeStringUtf16())
+        assertEquals("", reader.consumeStringUtf16())
+        assertEquals("1", reader.consumeStringUtf16())
+        assertEquals(bigString1, reader.consumeStringUtf16())
+        assertEquals(bigString2, reader.consumeStringUtf16())
     }
 
     @Test
@@ -52,17 +52,17 @@ class PrimitiveValueWriterReaderTests {
         val output = ByteArrayOutputStream()
         val writer = PrimitiveValueWriter(output, bufferSize = 128)
         writer.run {
-            stringUtf16("123")
-            stringUtf16("")
-            stringUtf16("55555")
+            emit("123")
+            emit("")
+            emit("55555")
 
             flush()
         }
 
         val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 128)
-        assertEquals("123", reader.stringUtf16())
-        assertEquals("", reader.stringUtf16())
-        assertEquals("55555", reader.stringUtf16())
+        assertEquals("123", reader.consumeStringUtf16())
+        assertEquals("", reader.consumeStringUtf16())
+        assertEquals("55555", reader.consumeStringUtf16())
     }
 
     @Test
@@ -70,14 +70,14 @@ class PrimitiveValueWriterReaderTests {
         val output = ByteArrayOutputStream()
         val writer = PrimitiveValueWriter(output, bufferSize = 128)
         writer.run {
-            stringUtf16(bigString1)
-            stringUtf16(bigString2)
+            emit(bigString1)
+            emit(bigString2)
 
             flush()
         }
 
         val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 128)
-        assertEquals(bigString1, reader.stringUtf16())
-        assertEquals(bigString2, reader.stringUtf16())
+        assertEquals(bigString1, reader.consumeStringUtf16())
+        assertEquals(bigString2, reader.consumeStringUtf16())
     }
 }

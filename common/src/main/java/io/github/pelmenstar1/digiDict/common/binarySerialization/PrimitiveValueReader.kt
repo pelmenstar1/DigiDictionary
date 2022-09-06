@@ -13,17 +13,17 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
     private var charBuffer: CharArray? = null
 
-    fun int16() = readPrimitive(byteCount = 2, ByteArray::readShort)
-    fun int32() = readPrimitive(byteCount = 4, ByteArray::readInt)
-    fun int64() = readPrimitive(byteCount = 8, ByteArray::readLong)
+    fun consumeShort() = readPrimitive(byteCount = 2, ByteArray::readShort)
+    fun consumeInt() = readPrimitive(byteCount = 4, ByteArray::readInt)
+    fun consumeLong() = readPrimitive(byteCount = 8, ByteArray::readLong)
 
     private inline fun <T> readPrimitive(byteCount: Int, readValue: ByteArray.(offset: Int) -> T): T {
-        val buf = readPrimitiveAsByteArray(byteCount)
+        val buf = consumePrimitiveAsByteArray(byteCount)
 
         return buf.readValue(0)
     }
 
-    private fun readPrimitiveAsByteArray(byteCount: Int): ByteArray {
+    private fun consumePrimitiveAsByteArray(byteCount: Int): ByteArray {
         val bb = byteBuffer
         val input = inputStream
         var actualBufLength = actualBufferLength
@@ -62,8 +62,8 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         return bbForPrimitives
     }
 
-    fun stringUtf16(): String {
-        val charLength = int16().toInt() and 0xFFFF
+    fun consumeStringUtf16(): String {
+        val charLength = consumeShort().toInt() and 0xFFFF
         if (charLength == 0) {
             return ""
         }
@@ -74,12 +74,12 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
             charBuffer = cb
         }
 
-        stringUtf16(cb, 0, charLength)
+        consumeStringUtf16(cb, 0, charLength)
         return String(cb, 0, charLength)
     }
 
     @Suppress("ReplaceArrayEqualityOpWithArraysEquals")
-    fun stringUtf16(chars: CharArray, start: Int, end: Int) {
+    fun consumeStringUtf16(chars: CharArray, start: Int, end: Int) {
         val charLength = end - start
         val byteLength = charLength * 2
 
@@ -145,7 +145,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> array(serializer: BinarySerializer<out T>, progressReporter: ProgressReporter? = null): Array<T> {
-        val size = int32()
+        val size = consumeInt()
         val result = serializer.newArrayOfNulls(size) as Array<T>
 
         trackLoopProgressWith(progressReporter, size) { i ->

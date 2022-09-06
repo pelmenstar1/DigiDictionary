@@ -73,18 +73,18 @@ open class Record(
                             int64 /* epochSeconds */
                 },
                 write = { value ->
-                    stringUtf16(value.expression)
-                    stringUtf16(value.meaning)
-                    stringUtf16(value.additionalNotes)
-                    int32(value.score)
-                    int64(value.epochSeconds)
+                    emit(value.expression)
+                    emit(value.meaning)
+                    emit(value.additionalNotes)
+                    emit(value.score)
+                    emit(value.epochSeconds)
                 },
                 read = {
-                    val expression = stringUtf16()
-                    val rawMeaning = stringUtf16()
-                    val additionalNotes = stringUtf16()
-                    val score = int32()
-                    val epochSeconds = int64()
+                    val expression = consumeStringUtf16()
+                    val rawMeaning = consumeStringUtf16()
+                    val additionalNotes = consumeStringUtf16()
+                    val score = consumeInt()
+                    val epochSeconds = consumeLong()
 
                     if (epochSeconds < 0) {
                         throw BinaryDataIntegrityException("Epoch seconds can't be negative")
