@@ -144,7 +144,10 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> array(serializer: BinarySerializer<out T>, progressReporter: ProgressReporter? = null): Array<T> {
+    fun <T : Any> consumeArray(
+        serializer: BinarySerializer<out T>,
+        progressReporter: ProgressReporter? = null
+    ): Array<T> {
         val size = consumeInt()
         val result = serializer.newArrayOfNulls(size) as Array<T>
 

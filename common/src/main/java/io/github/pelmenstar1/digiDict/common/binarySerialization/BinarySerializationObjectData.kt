@@ -60,7 +60,7 @@ class BinarySerializationObjectData(
             trackLoopProgressWithSubReporters(progressReporter, size) { i, subReporter ->
                 val version = reader.consumeInt()
                 val serializer = resolverPairs[i].resolver.getOrLatest(version)
-                val array = reader.array(serializer, subReporter)
+                val array = reader.consumeArray(serializer, subReporter)
 
                 arrays[i] = array
             }
