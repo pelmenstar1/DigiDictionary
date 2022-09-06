@@ -254,3 +254,10 @@ fun LongArray.nextSetBit(fromIndex: Int): Int {
         word = this[wordIndex]
     }
 }
+
+private inline fun <T> T.getByteAt(index: Int, shr: (a: T, bitCount: Int) -> T, toByte: T.() -> Byte): Byte {
+    return shr(this, index * 8).toByte()
+}
+
+fun Int.getByteAt(index: Int) = getByteAt(index, Int::shr, Int::toByte)
+fun Long.getByteAt(index: Int) = getByteAt(index, Long::shr, Long::toByte)

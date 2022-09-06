@@ -1,77 +1,146 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.getByteAt
 import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
 import java.io.OutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.CharBuffer
 import kotlin.math.min
 
-class PrimitiveValueWriter(private val output: OutputStream) {
-    // Temporary buffer for writing primitive values to and for caching chunk of string's data.
-    private val internalBuffer = ByteArray(INTERNAL_BUFFER_SIZE)
+class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
+    private val byteBufferArray = ByteArray(bufferSize)
+    private val byteBuffer: ByteBuffer
+    private val byteBufferAsChar: CharBuffer
 
-    private fun writeInt16Internal(value: Int, offset: Int, buffer: ByteArray) {
-        buffer[offset] = value.toByte()
-        buffer[offset + 1] = (value shr 8).toByte()
+    private var charBuffer: CharArray? = null
+
+    private var bufferPos = 0
+
+    init {
+        if (bufferSize % 2 != 0) {
+            throw IllegalArgumentException("Size of buffer should be even")
+        }
+
+        byteBuffer = ByteBuffer.wrap(byteBufferArray).also {
+            it.order(ByteOrder.LITTLE_ENDIAN)
+        }
+
+        byteBufferAsChar = byteBuffer.asCharBuffer()
     }
 
     fun int16(value: Int) {
-        writePrimitive(byteCount = 2) { writeInt16Internal(value, offset = 0, buffer = it) }
+        writePrimitive(value, byteCount = 2, Int::getByteAt)
     }
 
     fun int32(value: Int) {
-        writePrimitive(byteCount = 4) {
-            it[0] = value.toByte()
-            it[1] = (value shr 8).toByte()
-            it[2] = (value shr 16).toByte()
-            it[3] = (value shr 24).toByte()
-        }
+        writePrimitive(value, byteCount = 4, Int::getByteAt)
     }
 
     fun int64(value: Long) {
-        writePrimitive(byteCount = 8) {
-            it[0] = value.toByte()
-            it[1] = (value shr 8).toByte()
-            it[2] = (value shr 16).toByte()
-            it[3] = (value shr 24).toByte()
-            it[4] = (value shr 32).toByte()
-            it[5] = (value shr 40).toByte()
-            it[6] = (value shr 48).toByte()
-            it[7] = (value shr 56).toByte()
-        }
+        writePrimitive(value, byteCount = 8, Long::getByteAt)
     }
 
-    private inline fun writePrimitive(byteCount: Int, writeToBuffer: (ByteArray) -> Unit) {
-        val buffer = internalBuffer
-        writeToBuffer(buffer)
+    private inline fun <T> writePrimitive(value: T, byteCount: Int, getByteAt: T.(offset: Int) -> Byte) {
+        val buf = byteBufferArray
+        var bp = bufferPos
+        val remaining = buf.size - bp
 
-        output.write(buffer, 0, byteCount)
+        val minLength = min(byteCount, remaining)
+        for (i in 0 until minLength) {
+            buf[bp++] = value.getByteAt(i)
+        }
+
+        if (minLength != byteCount) {
+            // If minLength != byteCount, it means that we can't write enough bits of value to the buffer and
+            // it needs to be written to the stream first.
+            output.write(buf, 0, bp)
+
+            // After buffer synchronization, buffer position should be set to zero in order to continue writing of remaining
+            // bits of value.
+            bp = 0
+            for (i in remaining until byteCount) {
+                buf[bp++] = value.getByteAt(i)
+            }
+        }
+
+        bufferPos = bp
     }
 
     fun stringUtf16(value: String) {
+        var cb = charBuffer
         val valueLength = value.length
-        val buffer = internalBuffer
 
         checkStringLength(valueLength)
-
-        // checkStringLength() checks whether a string length bigger than int16's maximum.
         int16(valueLength)
 
-        var strOffset = 0
-        var bufferOffset = 0
-
-        while (strOffset < valueLength) {
-            val end = min(strOffset + INTERNAL_BUFFER_SIZE / 2, valueLength)
-
-            for (i in strOffset until end) {
-                writeInt16Internal(value[i].code, bufferOffset, buffer)
-                bufferOffset += 2
+        if (valueLength > 0) {
+            if (cb == null || valueLength > cb.size) {
+                cb = CharArray(valueLength)
+                charBuffer = cb
             }
 
-            output.write(buffer, 0, bufferOffset)
-
-            bufferOffset = 0
-            strOffset = end
+            value.toCharArray(cb)
+            stringUtf16(cb, 0, valueLength)
         }
+    }
+
+    fun stringUtf16(chars: CharArray, start: Int, end: Int) {
+        val out = output
+        val bb = byteBufferArray
+        val bbAsChar = byteBufferAsChar
+        var bp = bufferPos
+        val bufSize = bb.size
+        val bufSizeAsChar = bufSize / 2
+
+        val charLength = end - start
+
+        bbAsChar.position(bp / 2)
+        val remCharsInByteBuffer = (bufSize - bp) / 2
+
+        if (remCharsInByteBuffer > charLength) {
+            // We can write a whole region of chars.
+            bbAsChar.put(chars, start, charLength)
+            bp += charLength * 2
+        } else {
+            var charPos = start
+
+            // Write prefix of chars to fulfill the buffer and write it.
+            bbAsChar.put(chars, charPos, remCharsInByteBuffer)
+
+            charPos += remCharsInByteBuffer
+            out.write(bb, 0, bufSize)
+
+            // Stores amount of chars in 'chars' array that need to be written.
+            var remChars: Int
+
+            // This loop does full buffer writes so buffer position is considered to be 0.
+            while (true) {
+                remChars = end - charPos
+
+                // Exit the loop if we can't do full buffer write.
+                if (remChars < bufSizeAsChar) {
+                    break
+                }
+
+                bbAsChar.position(0)
+                bbAsChar.put(chars, charPos, bufSizeAsChar)
+
+                charPos += bufSizeAsChar
+                out.write(bb, 0, bufSize)
+            }
+
+            // Write suffix if it exists.
+            if (remChars != 0) {
+                bbAsChar.position(0)
+                bbAsChar.put(chars, charPos, remChars)
+
+                bp = remChars * 2
+            }
+        }
+
+        bufferPos = bp
     }
 
     fun <T : Any> array(
@@ -87,9 +156,14 @@ class PrimitiveValueWriter(private val output: OutputStream) {
         }
     }
 
-    companion object {
-        private const val INTERNAL_BUFFER_SIZE = 32
+    fun flush() {
+        val bp = bufferPos
+        if (bp > 0) {
+            output.write(byteBufferArray, 0, bp)
+        }
+    }
 
+    companion object {
         internal fun checkStringLength(length: Int) {
             if (length > 65535) {
                 throw IllegalArgumentException("Length of the string to be written can't be greater than 65535")

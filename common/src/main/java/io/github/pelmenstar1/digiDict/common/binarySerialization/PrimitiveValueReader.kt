@@ -73,7 +73,6 @@ class PrimitiveValueReader(private val input: InputStream) {
             byteOffset += 2
         }
 
-        String(bb, 0, 0)
         return String(cb, 0, charLength)
     }
 

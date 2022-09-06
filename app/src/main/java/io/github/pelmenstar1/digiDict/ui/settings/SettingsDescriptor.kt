@@ -65,6 +65,7 @@ class SettingsDescriptor(val groups: List<Group>) {
     }
 
     class ItemGroup(@StringRes override val titleRes: Int, val items: List<Item>) : Group {
+        // TODO: Implement as inline-class
         class Builder(@StringRes private val titleRes: Int) {
             private val items = ArrayList<Item>(4)
 
@@ -104,6 +105,7 @@ class SettingsDescriptor(val groups: List<Group>) {
     }
 
     class ActionGroup(@StringRes override val titleRes: Int, val actions: List<Action>) : Group {
+        // TODO: Implement as inline-class
         class Builder(@StringRes private val titleRes: Int) {
             private val actions = ArrayList<Action>(4)
 
@@ -115,6 +117,7 @@ class SettingsDescriptor(val groups: List<Group>) {
         }
     }
 
+    // TODO: Implement as inline-class
     class Builder {
         private val groups = ArrayList<Group>(4)
 

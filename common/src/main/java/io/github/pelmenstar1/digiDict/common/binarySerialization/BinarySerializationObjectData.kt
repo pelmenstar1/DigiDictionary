@@ -9,7 +9,7 @@ import kotlin.contracts.contract
 @Suppress("UNCHECKED_CAST")
 class BinarySerializationObjectData(
     private val staticInfo: BinarySerializationStaticInfo,
-    private val sections: Array<Array<out Any>>
+    private val sections: Array<out Array<out Any>>
 ) {
     init {
         require(staticInfo.keyResolverPairs.size == sections.size)
@@ -17,14 +17,6 @@ class BinarySerializationObjectData(
 
     operator fun <T : Any> get(key: BinarySerializationStaticInfo.SectionKey<T>): Array<out T> {
         return sections[key.ordinal] as Array<out T>
-    }
-
-    fun byteSize() = with(BinarySize) {
-        val resolverPairs = staticInfo.keyResolverPairs
-
-        int64 + resolverPairs.sumOf {
-            it.resolver.latestAny().getByteSize(it)
-        } + resolverPairs.size * int32
     }
 
     fun writeTo(writer: PrimitiveValueWriter, progressReporter: ProgressReporter? = null) {

@@ -12,9 +12,9 @@ class PrimitiveValueWriterReaderTests {
     private val bigString2 = (0..1024).joinToString()
 
     @Test
-    fun readWriteTest() {
+    fun readWriteTest_mixed() {
         val output = ByteArrayOutputStream()
-        val writer = PrimitiveValueWriter(output)
+        val writer = PrimitiveValueWriter(output, bufferSize = 32)
 
         writer.run {
             int32(1)
@@ -28,6 +28,8 @@ class PrimitiveValueWriterReaderTests {
             stringUtf16("1")
             stringUtf16(bigString1)
             stringUtf16(bigString2)
+
+            flush()
         }
 
         val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()))
@@ -41,6 +43,40 @@ class PrimitiveValueWriterReaderTests {
         assertEquals("55555", reader.stringUtf16())
         assertEquals("", reader.stringUtf16())
         assertEquals("1", reader.stringUtf16())
+        assertEquals(bigString1, reader.stringUtf16())
+        assertEquals(bigString2, reader.stringUtf16())
+    }
+
+    @Test
+    fun readWriteString_allInBuffer() {
+        val output = ByteArrayOutputStream()
+        val writer = PrimitiveValueWriter(output, bufferSize = 128)
+        writer.run {
+            stringUtf16("123")
+            stringUtf16("")
+            stringUtf16("55555")
+
+            flush()
+        }
+
+        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()))
+        assertEquals("123", reader.stringUtf16())
+        assertEquals("", reader.stringUtf16())
+        assertEquals("55555", reader.stringUtf16())
+    }
+
+    @Test
+    fun readWriteString_big() {
+        val output = ByteArrayOutputStream()
+        val writer = PrimitiveValueWriter(output, bufferSize = 128)
+        writer.run {
+            stringUtf16(bigString1)
+            stringUtf16(bigString2)
+
+            flush()
+        }
+
+        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()))
         assertEquals(bigString1, reader.stringUtf16())
         assertEquals(bigString2, reader.stringUtf16())
     }
