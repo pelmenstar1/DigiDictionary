@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.backup.importing
 import io.github.pelmenstar1.digiDict.backup.BackupData
 import io.github.pelmenstar1.digiDict.backup.BinarySerializing
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.binarySerialization.readSerializationObjectDataBuffered
+import io.github.pelmenstar1.digiDict.common.binarySerialization.readSerializationObjectData
 import java.io.InputStream
 
 class BinaryDataImporter : DataImporter {
@@ -12,7 +12,8 @@ class BinaryDataImporter : DataImporter {
         options: ImportOptions,
         progressReporter: ProgressReporter?
     ): BackupData {
-        val objectData = input.readSerializationObjectDataBuffered(BinarySerializing.staticInfo, progressReporter)
+        val objectData =
+            input.readSerializationObjectData(BinarySerializing.staticInfo, progressReporter, bufferSize = 4096)
         val records = objectData[BinarySerializing.Sections.records]
 
         return BackupData(records)

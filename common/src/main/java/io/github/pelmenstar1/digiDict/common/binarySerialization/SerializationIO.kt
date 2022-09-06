@@ -18,19 +18,13 @@ fun OutputStream.writeSerializationObjectData(
     }
 }
 
-fun InputStream.readSerializationObjectDataBuffered(
-    staticInfo: BinarySerializationStaticInfo,
-    progressReporter: ProgressReporter? = null,
-    bufferSize: Int = 4096
-): BinarySerializationObjectData {
-    return buffered(bufferSize).readSerializationObjectData(staticInfo, progressReporter)
-}
-
 fun InputStream.readSerializationObjectData(
     staticInfo: BinarySerializationStaticInfo,
-    progressReporter: ProgressReporter?
+    progressReporter: ProgressReporter?,
+    bufferSize: Int
 ): BinarySerializationObjectData {
     return trackProgressWith(progressReporter) {
-        BinarySerializationObjectData.read(PrimitiveValueReader(this), staticInfo, progressReporter)
+        val reader = PrimitiveValueReader(this, bufferSize)
+        BinarySerializationObjectData.read(reader, staticInfo, progressReporter)
     }
 }

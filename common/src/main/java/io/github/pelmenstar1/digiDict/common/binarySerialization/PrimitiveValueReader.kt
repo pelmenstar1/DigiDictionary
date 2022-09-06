@@ -1,58 +1,71 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
-import java.io.IOException
+import io.github.pelmenstar1.digiDict.common.*
 import java.io.InputStream
+import kotlin.math.min
 
-class PrimitiveValueReader(private val input: InputStream) {
-    private var byteBuffer = ByteArray(SMALL_BUFFER_SIZE)
+class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int) {
+    private var byteBufferForPrimitives: ByteArray? = null
+
+    private val byteBuffer = ByteArray(bufferSize)
+    private var consumedByteLength = 0
+    private var actualBufferLength = -1
+
     private var charBuffer: CharArray? = null
 
-    private fun readInt16Internal(buffer: ByteArray, offset: Int): Int {
-        return buffer[offset].toInt() and 0xFF or
-                (buffer[offset + 1].toInt() and 0xFF shl 8)
+    fun int16() = readPrimitive(byteCount = 2, ByteArray::readShort)
+    fun int32() = readPrimitive(byteCount = 4, ByteArray::readInt)
+    fun int64() = readPrimitive(byteCount = 8, ByteArray::readLong)
+
+    private inline fun <T> readPrimitive(byteCount: Int, readValue: ByteArray.(offset: Int) -> T): T {
+        val buf = readPrimitiveAsByteArray(byteCount)
+
+        return buf.readValue(0)
     }
 
-    private fun readInt16AsPrimitive() = readPrimitive(byteCount = 2) { readInt16Internal(it, 0) }
+    private fun readPrimitiveAsByteArray(byteCount: Int): ByteArray {
+        val bb = byteBuffer
+        val input = inputStream
+        var actualBufLength = actualBufferLength
+        var consumedBytes = consumedByteLength
 
-    fun int32() = readPrimitive(byteCount = 4) { buffer ->
-        buffer[0].toInt() and 0xFF or
-                (buffer[1].toInt() and 0xFF shl 8) or
-                (buffer[2].toInt() and 0xFF shl 16) or
-                (buffer[3].toInt() and 0xFF shl 24)
-    }
+        var bbForPrimitives = byteBufferForPrimitives
+        if (bbForPrimitives == null) {
+            bbForPrimitives = ByteArray(MAX_PRIMITIVE_LENGTH)
+            byteBufferForPrimitives = bbForPrimitives
+        }
 
-    fun int64() = readPrimitive(byteCount = 8) { buffer ->
-        buffer[0].toLong() and 0xffL or
-                (buffer[1].toLong() and 0xffL shl 8) or
-                (buffer[2].toLong() and 0xffL shl 16) or
-                (buffer[3].toLong() and 0xffL shl 24) or
-                (buffer[4].toLong() and 0xffL shl 32) or
-                (buffer[5].toLong() and 0xffL shl 40) or
-                (buffer[6].toLong() and 0xffL shl 48) or
-                (buffer[7].toLong() and 0xffL shl 56)
-    }
+        if (actualBufLength < 0) {
+            actualBufLength = input.readAtLeast(bb, 0, minLength = byteCount, maxLength = bb.size)
 
-    private inline fun <T> readPrimitive(byteCount: Int, readFunc: (ByteArray) -> T): T {
-        val buffer = byteBuffer
-        readExact(buffer, byteCount)
+            System.arraycopy(bb, 0, bbForPrimitives, 0, byteCount)
+            consumedBytes = byteCount
+        } else {
+            val remainingBytes = actualBufLength - consumedBytes
+            val prefixLength = min(remainingBytes, byteCount)
+            val suffixLength = byteCount - prefixLength
 
-        return readFunc(buffer)
+            System.arraycopy(bb, consumedBytes, bbForPrimitives, 0, prefixLength)
+
+            if (suffixLength != 0) {
+                actualBufLength = input.readAtLeast(bb, 0, minLength = suffixLength, maxLength = bb.size)
+                System.arraycopy(bb, 0, bbForPrimitives, prefixLength, suffixLength)
+                consumedBytes = suffixLength
+            } else {
+                consumedBytes += prefixLength
+            }
+        }
+
+        consumedByteLength = consumedBytes
+        actualBufferLength = actualBufLength
+
+        return bbForPrimitives
     }
 
     fun stringUtf16(): String {
-        val charLength = readInt16AsPrimitive() and 0xFFFF
-        val byteLength = charLength * 2
-
+        val charLength = int16() and 0xFFFF
         if (charLength == 0) {
             return ""
-        }
-
-        var bb = byteBuffer
-        if (byteLength > bb.size) {
-            bb = ByteArray(byteLength)
-            byteBuffer = bb
         }
 
         var cb = charBuffer
@@ -61,19 +74,73 @@ class PrimitiveValueReader(private val input: InputStream) {
             charBuffer = cb
         }
 
-        readExact(bb, byteLength)
+        stringUtf16(cb, 0, charLength)
+        return String(cb, 0, charLength)
+    }
 
-        var charOffset = 0
-        var byteOffset = 0
+    @Suppress("ReplaceArrayEqualityOpWithArraysEquals")
+    fun stringUtf16(chars: CharArray, start: Int, end: Int) {
+        val charLength = end - start
+        val byteLength = charLength * 2
 
-        while (charOffset < charLength) {
-            cb[charOffset] = readInt16Internal(bb, byteOffset).toChar()
+        val bb = byteBuffer
+        val bufSize = bb.size
+        val bufSizeAsChar = bufSize / 2
+        val input = inputStream
+        var actualBufLength = actualBufferLength
+        var consumedBytes = consumedByteLength
 
-            charOffset++
-            byteOffset += 2
+        var charPos = start
+        if (actualBufLength < 0) {
+            actualBufLength = input.readAtLeast(bb, 0, minLength = min(byteLength, bufSize), maxLength = bufSize)
         }
 
-        return String(cb, 0, charLength)
+        val remCachedBytes = actualBufLength - consumedBytes
+
+        val prefixByteLength = min(byteLength, remCachedBytes)
+        val consumedBytesAndPrefix = consumedBytes + prefixByteLength
+
+        convertByteBufferToChars(consumedBytes, consumedBytesAndPrefix, chars, start)
+        charPos += prefixByteLength / 2
+        consumedBytes = consumedBytesAndPrefix
+
+        if (charPos != end) {
+            var remChars: Int
+
+            while (true) {
+                remChars = end - charPos
+                if (remChars < bufSizeAsChar) {
+                    break
+                }
+
+                input.readExact(bb, 0, bufSize)
+                convertByteBufferToChars(0, bufSize, chars, charPos)
+                charPos += bufSizeAsChar
+            }
+
+            if (remChars > 0) {
+                val remCharsAsByte = remChars * 2
+                actualBufLength = input.readAtLeast(bb, 0, minLength = remCharsAsByte, maxLength = bufSize)
+                convertByteBufferToChars(0, remCharsAsByte, chars, charPos)
+
+                consumedBytes = remCharsAsByte
+            }
+        }
+
+        consumedByteLength = consumedBytes
+        actualBufferLength = actualBufLength
+    }
+
+    private fun convertByteBufferToChars(byteStart: Int, byteEnd: Int, chars: CharArray, charStart: Int) {
+        val bb = byteBuffer
+        var byteOffset = byteStart
+        var charPos = charStart
+
+        while (byteOffset < byteEnd) {
+            chars[charPos] = bb.readShort(byteOffset).toChar()
+            charPos++
+            byteOffset += 2
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -88,19 +155,7 @@ class PrimitiveValueReader(private val input: InputStream) {
         return result
     }
 
-    private fun readExact(buffer: ByteArray, n: Int) {
-        var offset = 0
-        while (offset < n) {
-            val bytesRead = input.read(buffer, offset, n - offset)
-            if (bytesRead <= 0) {
-                throw IOException("Not enough data")
-            }
-
-            offset += bytesRead
-        }
-    }
-
     companion object {
-        private const val SMALL_BUFFER_SIZE = 32
+        private const val MAX_PRIMITIVE_LENGTH = 8
     }
 }

@@ -284,3 +284,26 @@ fun Long.writeTo(dest: ByteArray, offset: Int) {
     dest[offset + 6] = (this shr 48).toByte()
     dest[offset + 7] = (this shr 56).toByte()
 }
+
+fun ByteArray.readShort(offset: Int): Int {
+    return (this[offset].toInt() and 0xFF) or
+            (this[offset + 1].toInt() and 0xFF shl 8)
+}
+
+fun ByteArray.readInt(offset: Int): Int {
+    return (this[offset].toInt() and 0xFF) or
+            (this[offset + 1].toInt() and 0xFF shl 8) or
+            (this[offset + 2].toInt() and 0xFF shl 16) or
+            (this[offset + 3].toInt() and 0xFF shl 24)
+}
+
+fun ByteArray.readLong(offset: Int): Long {
+    return (this[offset].toLong() and 0xFF) or
+            (this[offset + 1].toLong() and 0xFF shl 8) or
+            (this[offset + 2].toLong() and 0xFF shl 16) or
+            (this[offset + 3].toLong() and 0xFF shl 24) or
+            (this[offset + 4].toLong() and 0xFF shl 32) or
+            (this[offset + 5].toLong() and 0xFF shl 40) or
+            (this[offset + 6].toLong() and 0xFF shl 48) or
+            (this[offset + 7].toLong() and 0xFF shl 56)
+}

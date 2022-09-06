@@ -32,7 +32,7 @@ class PrimitiveValueWriterReaderTests {
             flush()
         }
 
-        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()))
+        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 32)
 
         assertEquals(1, reader.int32())
         assertEquals(-100, reader.int32())
@@ -59,7 +59,7 @@ class PrimitiveValueWriterReaderTests {
             flush()
         }
 
-        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()))
+        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 128)
         assertEquals("123", reader.stringUtf16())
         assertEquals("", reader.stringUtf16())
         assertEquals("55555", reader.stringUtf16())
@@ -76,7 +76,7 @@ class PrimitiveValueWriterReaderTests {
             flush()
         }
 
-        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()))
+        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 128)
         assertEquals(bigString1, reader.stringUtf16())
         assertEquals(bigString2, reader.stringUtf16())
     }
