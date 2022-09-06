@@ -65,13 +65,6 @@ open class Record(
         val SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<Record> {
             forVersion<Record>(
                 version = 1,
-                getByteSize = { value ->
-                    stringUtf16(value.expression) +
-                            stringUtf16(value.meaning) +
-                            stringUtf16(value.additionalNotes) +
-                            int32 /* score */ +
-                            int64 /* epochSeconds */
-                },
                 write = { value ->
                     emit(value.expression)
                     emit(value.meaning)

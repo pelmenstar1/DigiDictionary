@@ -5,8 +5,6 @@ import android.util.SparseArray
 interface BinarySerializer<T : Any> {
     fun newArrayOfNulls(size: Int): Array<T?>
 
-    fun getByteSize(value: T): Int
-
     fun writeTo(writer: PrimitiveValueWriter, value: T)
     fun readFrom(reader: PrimitiveValueReader): T
 }
@@ -26,13 +24,12 @@ class BinarySerializerResolverBuilder<T : Any> {
     }
 
     /**
-     * Assigns a [BinarySerializer] instance with specified [getByteSize], [write] and [read] methods to given version.
+     * Assigns a [BinarySerializer] instance with specified [write] and [read] methods to given version.
      * [TR] is used to create new array of [T], so [TR] should be the same type as [T].
      * It's used to workaround type erasure.
      */
     inline fun <reified TR : T> forVersion(
         version: Int,
-        crossinline getByteSize: BinarySize.(T) -> Int,
         crossinline write: PrimitiveValueWriter.(T) -> Unit,
         crossinline read: PrimitiveValueReader.() -> T
     ) {
@@ -41,8 +38,6 @@ class BinarySerializerResolverBuilder<T : Any> {
             override fun newArrayOfNulls(size: Int): Array<T?> {
                 return arrayOfNulls<TR>(size) as Array<T?>
             }
-
-            override fun getByteSize(value: T) = BinarySize.getByteSize(value)
 
             override fun writeTo(writer: PrimitiveValueWriter, value: T) {
                 writer.write(value)
@@ -72,7 +67,5 @@ class BinarySerializerResolverBuilder<T : Any> {
 inline fun <T : Any> MultiVersionBinarySerializerResolver(
     block: BinarySerializerResolverBuilder<T>.() -> Unit
 ): BinarySerializerResolver<T> {
-    val builder = BinarySerializerResolverBuilder<T>().also(block)
-
-    return builder.build()
+    return BinarySerializerResolverBuilder<T>().also(block).build()
 }
