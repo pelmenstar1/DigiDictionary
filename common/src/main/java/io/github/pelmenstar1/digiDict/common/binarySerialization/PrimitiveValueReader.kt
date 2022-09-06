@@ -63,7 +63,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
     }
 
     fun stringUtf16(): String {
-        val charLength = int16() and 0xFFFF
+        val charLength = int16().toInt() and 0xFFFF
         if (charLength == 0) {
             return ""
         }
@@ -137,7 +137,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         var charPos = charStart
 
         while (byteOffset < byteEnd) {
-            chars[charPos] = bb.readShort(byteOffset).toChar()
+            chars[charPos] = bb.readShort(byteOffset).toInt().toChar()
             charPos++
             byteOffset += 2
         }

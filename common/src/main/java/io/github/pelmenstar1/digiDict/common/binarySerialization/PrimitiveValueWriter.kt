@@ -1,6 +1,9 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.getByteAt
+import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
+import io.github.pelmenstar1.digiDict.common.writeTo
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -25,8 +28,8 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         }
     }
 
-    fun int16(value: Int) {
-        writePrimitive(value, byteCount = 2, Int::writeLowTo, Int::getByteAt)
+    fun int16(value: Short) {
+        writePrimitive(value, byteCount = 2, Short::writeTo, Short::getByteAt)
     }
 
     fun int32(value: Int) {
@@ -75,7 +78,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         val valueLength = value.length
 
         checkStringLength(valueLength)
-        int16(valueLength)
+        int16(valueLength.toShort())
 
         if (valueLength > 0) {
             if (cb == null || valueLength > cb.size) {

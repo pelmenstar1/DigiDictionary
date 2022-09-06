@@ -259,12 +259,13 @@ private inline fun <T> T.getByteAt(index: Int, shr: T.(bitCount: Int) -> T, toBy
     return this.shr(index shl 3).toByte()
 }
 
+fun Short.getByteAt(index: Int) = toInt().getByteAt(index)
 fun Int.getByteAt(index: Int) = getByteAt(index, Int::shr, Int::toByte)
 fun Long.getByteAt(index: Int) = getByteAt(index, Long::shr, Long::toByte)
 
-fun Int.writeLowTo(dest: ByteArray, offset: Int) {
+fun Short.writeTo(dest: ByteArray, offset: Int) {
     dest[offset] = this.toByte()
-    dest[offset + 1] = (this shr 8).toByte()
+    dest[offset + 1] = (this.toInt() shr 8).toByte()
 }
 
 fun Int.writeTo(dest: ByteArray, offset: Int) {
@@ -285,9 +286,9 @@ fun Long.writeTo(dest: ByteArray, offset: Int) {
     dest[offset + 7] = (this shr 56).toByte()
 }
 
-fun ByteArray.readShort(offset: Int): Int {
-    return (this[offset].toInt() and 0xFF) or
-            (this[offset + 1].toInt() and 0xFF shl 8)
+fun ByteArray.readShort(offset: Int): Short {
+    return ((this[offset].toInt() and 0xFF) or
+            (this[offset + 1].toInt() and 0xFF shl 8)).toShort()
 }
 
 fun ByteArray.readInt(offset: Int): Int {
