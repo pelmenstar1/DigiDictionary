@@ -25,6 +25,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
     private fun consumePrimitiveAsByteArray(byteCount: Int): ByteArray {
         val bb = byteBuffer
+        val bufSize = bb.size
         val input = inputStream
         var actualBufLength = actualBufferLength
         var consumedBytes = consumedByteLength
@@ -35,8 +36,8 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
             byteBufferForPrimitives = bbForPrimitives
         }
 
-        if (actualBufLength < 0) {
-            actualBufLength = input.readAtLeast(bb, 0, minLength = byteCount, maxLength = bb.size)
+        if (actualBufLength < 0 || consumedBytes == bufSize) {
+            actualBufLength = input.readAtLeast(bb, 0, minLength = byteCount, maxLength = bufSize)
 
             System.arraycopy(bb, 0, bbForPrimitives, 0, byteCount)
             consumedBytes = byteCount
@@ -48,7 +49,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
             System.arraycopy(bb, consumedBytes, bbForPrimitives, 0, prefixLength)
 
             if (suffixLength != 0) {
-                actualBufLength = input.readAtLeast(bb, 0, minLength = suffixLength, maxLength = bb.size)
+                actualBufLength = input.readAtLeast(bb, 0, minLength = suffixLength, maxLength = bufSize)
                 System.arraycopy(bb, 0, bbForPrimitives, prefixLength, suffixLength)
                 consumedBytes = suffixLength
             } else {
@@ -91,18 +92,19 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         var consumedBytes = consumedByteLength
 
         var charPos = start
-        if (actualBufLength < 0) {
+        if (actualBufLength < 0 || consumedBytes == bufSize) {
             actualBufLength = input.readAtLeast(bb, 0, minLength = min(byteLength, bufSize), maxLength = bufSize)
+            consumedBytes = 0
         }
 
         val remCachedBytes = actualBufLength - consumedBytes
 
         val prefixByteLength = min(byteLength, remCachedBytes)
-        val consumedBytesAndPrefix = consumedBytes + prefixByteLength
+        val prefixEnd = consumedBytes + prefixByteLength
 
-        convertByteBufferToChars(consumedBytes, consumedBytesAndPrefix, chars, start)
+        convertByteBufferToChars(consumedBytes, prefixEnd, chars, start)
         charPos += prefixByteLength / 2
-        consumedBytes = consumedBytesAndPrefix
+        consumedBytes = prefixEnd
 
         if (charPos != end) {
             var remChars: Int

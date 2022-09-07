@@ -50,7 +50,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         var bp = bufferPos
         val remaining = buf.size - bp
 
-        if (remaining > byteCount) {
+        if (remaining >= byteCount) {
             value.writeValue(buf, bp)
             bp += byteCount
         } else {
@@ -70,7 +70,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
             }
         }
 
-        bufferPos = bp
+        setBufferPosAndSyncIfNecessary(bp)
     }
 
     fun emit(value: String) {
@@ -104,7 +104,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         bbAsChar.position(bp / 2)
         val remCharsInByteBuffer = (bufSize - bp) / 2
 
-        if (remCharsInByteBuffer > charLength) {
+        if (remCharsInByteBuffer >= charLength) {
             // We can write a whole region of chars.
             bbAsChar.put(chars, start, charLength)
             bp += charLength * 2
@@ -145,7 +145,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
             }
         }
 
-        bufferPos = bp
+        setBufferPosAndSyncIfNecessary(bp)
     }
 
     fun <T : Any> emit(
@@ -165,6 +165,19 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         val bp = bufferPos
         if (bp > 0) {
             output.write(byteBufferArray, 0, bp)
+        }
+    }
+
+    private fun setBufferPosAndSyncIfNecessary(newPos: Int) {
+        val bb = byteBufferArray
+        val bufSize = bb.size
+
+        bufferPos = if (newPos == bufSize) {
+            output.write(bb, 0, bufSize)
+
+            0
+        } else {
+            newPos
         }
     }
 
