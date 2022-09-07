@@ -263,6 +263,56 @@ fun Short.getByteAt(index: Int) = toInt().getByteAt(index)
 fun Int.getByteAt(index: Int) = getByteAt(index, Int::shr, Int::toByte)
 fun Long.getByteAt(index: Int) = getByteAt(index, Long::shr, Long::toByte)
 
+private inline fun <T> T.withByteRegionOnZero(
+    buffer: ByteArray,
+    bufferStart: Int,
+    valueStart: Int,
+    length: Int,
+    bitsSet8: T,
+    byteToT: Byte.() -> T,
+    shl: T.(Int) -> T,
+    and: T.(T) -> T,
+    or: T.(T) -> T
+): T {
+    var bufferIndex = bufferStart
+
+    var shift = valueStart shl 3
+    var result = this
+
+    repeat(length) {
+        val b = buffer[bufferIndex++]
+        result = result.or((b.byteToT().and(bitsSet8)).shl(shift))
+
+        shift += 8
+    }
+
+    return result
+}
+
+fun Int.withByteRegionOnZero(
+    buffer: ByteArray,
+    bufferStart: Int,
+    valueStart: Int,
+    length: Int
+): Int {
+    return withByteRegionOnZero(
+        buffer, bufferStart, valueStart, length,
+        0xFF, Byte::toInt, Int::shl, Int::and, Int::or
+    )
+}
+
+fun Long.withByteRegionOnZero(
+    buffer: ByteArray,
+    bufferStart: Int,
+    valueStart: Int,
+    length: Int
+): Long {
+    return withByteRegionOnZero(
+        buffer, bufferStart, valueStart, length,
+        0xFFL, Byte::toLong, Long::shl, Long::and, Long::or
+    )
+}
+
 fun Short.writeTo(dest: ByteArray, offset: Int) {
     dest[offset] = this.toByte()
     dest[offset + 1] = (this.toInt() shr 8).toByte()
