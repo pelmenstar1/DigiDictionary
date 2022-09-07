@@ -6,13 +6,14 @@ import kotlin.math.min
 
 /**
  * Provides means for reading primitive types (like [Int], [Long], [String]) from [InputStream].
+ * The byte order can't be changed and is always little-endian.
  *
- * The class provides consume-like methods that read a value and moves the cursor forward for the amount of bytes that was read.
+ * The class provides consume-like methods that read a value and move the cursor forward for the amount of bytes that was read.
  * Because of its stream nature, there's no going back and the cursor can't be moved forward or backward.
  *
  * The reader is already optimized for buffer reading, thus a reasonable buffer size should be specified in constructor.
  * There are several limitations imposed on buffer size:
- * - It should be greater than or equals to 2.
+ * - It should be greater than or equals to 8.
  * - It should be even.
  */
 class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int) {
@@ -32,13 +33,13 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
     init {
         when {
-            bufferSize < 2 -> throw IllegalArgumentException("bufferSize should be greater than 2")
+            bufferSize < 8 -> throw IllegalArgumentException("bufferSize should be greater than or equals to 8")
             bufferSize % 2 != 0 -> throw IllegalArgumentException("bufferSize should be even")
         }
     }
 
     fun consumeShort(): Short {
-        // Short (2 bytes) consumption is special because as consumedByteLength should be even and buffer size is greater than or equals to 2,
+        // Short (2 bytes) consumption is special because as consumedByteLength should be even and buffer size is greater than or equals to 8,
         // there can't be cross-buffer read. The logic can be simpler comparing to general consumePrimitive.
         invalidateBufferIfNecessary(minLength = 2)
 

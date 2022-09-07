@@ -9,17 +9,40 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.CharBuffer
 
+/**
+ * Provides means for writing primitive types (like [Int], [Long], [String]) to [OutputStream].
+ * The byte order can't be changed and is always little-endian.
+ *
+ * The class provides emit-like methods that write a value and move the cursor forward for the amount of bytes that was written.
+ * Because of its stream nature, there's no going back and the cursor can't be moved forward or backward.
+ *
+ * The writer is already buffered, thus a reasonable buffer size should be specified in constructor.
+ * There are several limitations imposed on buffer size:
+ * - It should be greater than or equals to 8.
+ * - It should be even.
+ */
 class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     private val byteBufferArray = ByteArray(bufferSize)
+
+    // A CharBuffer which can effectively write chars to byteBufferArray
     private val byteBufferAsChar: CharBuffer
 
+    // A cached reference to the char array which is used in emit(String) to write a char data to it and write the array to the stream.
+    // There's a temporary step with the char array because CharBuffer (when mapped from ByteBuffer)
+    // provides optimized way for writing CharArray but not String.
+    //
+    // The size of the array is only extended when a string with bigger length than the array's one is requested.
+    // Outside the emit(String) method, the array's content should be considered as garbage.
     private var charBuffer: CharArray? = null
 
+    // Stores a current position in byteBufferArray from which writing the data should start.
+    // It can't equal to byteBufferArray.size and should be even.
     private var bufferPos = 0
 
     init {
-        if (bufferSize % 2 != 0) {
-            throw IllegalArgumentException("Size of buffer should be even")
+        when {
+            bufferSize < 8 -> throw IllegalArgumentException("bufferSize should be greater than or equals to 8")
+            bufferSize % 2 != 0 -> throw IllegalArgumentException("bufferSize should be even")
         }
 
         byteBufferAsChar = ByteBuffer.wrap(byteBufferArray).let {
@@ -29,18 +52,23 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     }
 
     fun emit(value: Short) {
-        emitPrimitive(value, byteCount = 2, Short::writeTo, Short::getByteAt)
+        // Short (2 bytes) emission is special because as bufferPos should be even and buffer size is greater than or equals to 8,
+        // there can't be cross-buffer writing. The logic can be simpler comparing to general emitPrimitive.
+        val bp = bufferPos
+
+        value.writeTo(byteBufferArray, bp)
+        setBufferPosAndSyncIfNecessary(bp + 2)
     }
 
     fun emit(value: Int) {
-        emitPrimitive(value, byteCount = 4, Int::writeTo, Int::getByteAt)
+        emitNumberPrimitive(value, byteCount = 4, Int::writeTo, Int::getByteAt)
     }
 
     fun emit(value: Long) {
-        emitPrimitive(value, byteCount = 8, Long::writeTo, Long::getByteAt)
+        emitNumberPrimitive(value, byteCount = 8, Long::writeTo, Long::getByteAt)
     }
 
-    private inline fun <T> emitPrimitive(
+    private inline fun <T> emitNumberPrimitive(
         value: T,
         byteCount: Int,
         writeValue: T.(dest: ByteArray, offset: Int) -> Unit,
@@ -58,7 +86,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
                 buf[bp++] = value.getByteAt(i)
             }
 
-            // If remaining <= byteCount, it means that we can't write enough bits of value to the buffer and
+            // If remaining < byteCount, it means that we can't write enough bits of value to the buffer and
             // it needs to be written to the stream first.
             output.write(buf, 0, bp)
 
@@ -80,6 +108,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         checkStringLength(valueLength)
         emit(valueLength.toShort())
 
+        // It saves a few allocations if the string is empty.
         if (valueLength > 0) {
             if (cb == null || valueLength > cb.size) {
                 cb = CharArray(valueLength)
@@ -111,7 +140,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         } else {
             var charPos = start
 
-            // Write prefix of chars to fulfill the buffer and write it.
+            // Write a prefix of chars to fulfill the buffer and write it.
             bbAsChar.put(chars, charPos, remCharsInByteBuffer)
 
             charPos += remCharsInByteBuffer

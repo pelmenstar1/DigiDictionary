@@ -259,7 +259,6 @@ private inline fun <T> T.getByteAt(index: Int, shr: T.(bitCount: Int) -> T, toBy
     return this.shr(index shl 3).toByte()
 }
 
-fun Short.getByteAt(index: Int) = toInt().getByteAt(index)
 fun Int.getByteAt(index: Int) = getByteAt(index, Int::shr, Int::toByte)
 fun Long.getByteAt(index: Int) = getByteAt(index, Long::shr, Long::toByte)
 
