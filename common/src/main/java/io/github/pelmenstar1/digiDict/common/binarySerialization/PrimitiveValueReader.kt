@@ -2,9 +2,7 @@ package io.github.pelmenstar1.digiDict.common.binarySerialization
 
 import io.github.pelmenstar1.digiDict.common.*
 import java.io.InputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.CharBuffer
+import java.nio.*
 import kotlin.math.min
 
 /**
@@ -35,7 +33,8 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
     private var charBuffer: CharArray? = null
 
     private var byteBuffer: ByteBuffer? = null
-    private var byteBufferAsChar: CharBuffer? = null
+    private var byteBufferAsCharHolder: CharBuffer? = null
+    private var byteBufferAsIntHolder: IntBuffer? = null
 
     init {
         when {
@@ -58,9 +57,17 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
     private fun getByteBufferAsChar(): CharBuffer {
         return getLazyValue(
-            byteBufferAsChar,
+            byteBufferAsCharHolder,
             { getByteBuffer().asCharBuffer() },
-            { byteBufferAsChar = it }
+            { byteBufferAsCharHolder = it }
+        )
+    }
+
+    private fun getByteBufferAsInt(): IntBuffer {
+        return getLazyValue(
+            byteBufferAsIntHolder,
+            { getByteBuffer().asIntBuffer() },
+            { byteBufferAsIntHolder = it }
         )
     }
 
@@ -141,60 +148,142 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         return String(cb, 0, charLength)
     }
 
-    fun consumeCharArray(chars: CharArray, start: Int, end: Int) {
-        val charLength = end - start
-        val byteLength = charLength * 2
+    fun consumeCharArray(dest: CharArray, start: Int, end: Int) {
+        // Consumption of char array is always "aligned" as consumedByteLength is always even.
+        consumePrimitiveArrayAligned(dest, start, end, elementSize = 2, getByteBufferAsChar(), CharBuffer::get)
+    }
+
+    fun consumeIntArray(dest: IntArray, start: Int, end: Int) {
+        consumePrimitiveArray(
+            dest,
+            start,
+            end,
+            elementSize = 4,
+            this::consumeIntArrayAligned,
+            this::consumeIntArrayNonAligned
+        )
+    }
+
+    private fun consumeIntArrayAligned(dest: IntArray, start: Int, end: Int) {
+        consumePrimitiveArrayAligned(dest, start, end, elementSize = 4, getByteBufferAsInt(), IntBuffer::get)
+    }
+
+    private fun consumeIntArrayNonAligned(dest: IntArray, start: Int, end: Int) {
+        consumePrimitiveArrayNonAligned(dest, start, end, IntArray::set, this::consumeInt)
+    }
+
+    fun consumeIntArray(length: Int): IntArray {
+        return IntArray(length).also { consumeIntArray(it, 0, length) }
+    }
+
+    fun consumeIntArrayAndLength(): IntArray {
+        val length = consumeInt()
+
+        return consumeIntArray(length)
+    }
+
+    private inline fun <TArray> consumePrimitiveArray(
+        dest: TArray,
+        start: Int,
+        end: Int,
+        elementSize: Int,
+        consumeAligned: (TArray, Int, Int) -> Unit,
+        consumeNonAligned: (TArray, Int, Int) -> Unit,
+    ) {
+        if (consumedByteLength % elementSize == 0) {
+            consumeAligned(dest, start, end)
+        } else {
+            consumeNonAligned(dest, start, end)
+        }
+    }
+
+    /**
+     * A builder for creating a function that consumes a primitive array
+     * when [consumedByteLength] is not a multiple of count of bytes required to store [TValue].
+     *
+     * The performance of the implementation can be improved by using [IntBuffer]
+     * and another things used in [consumePrimitiveArrayAligned] but the effort is probably not worth it.
+     */
+    private inline fun <TValue, TArray> consumePrimitiveArrayNonAligned(
+        dest: TArray,
+        start: Int,
+        end: Int,
+        setValue: TArray.(Int, TValue) -> Unit,
+        consumePrimitive: () -> TValue
+    ) {
+        for (i in start until end) {
+            dest.setValue(i, consumePrimitive())
+        }
+    }
+
+    /**
+     * A builder for creating a function that consumes a primitive array when [consumedByteLength] is a multiple of [elementSize].
+     * If [consumedByteLength] is not a multiple of [elementSize], the result will be wrong.
+     */
+    private inline fun <TArray : Any, TBuffer : Buffer> consumePrimitiveArrayAligned(
+        dest: TArray,
+        start: Int,
+        end: Int,
+        elementSize: Int,
+        elementBuffer: TBuffer,
+        getArray: TBuffer.(TArray, start: Int, length: Int) -> Unit
+    ) {
+        val length = end - start
+        val byteLength = length * elementSize
 
         // Locals should be assigned after buffer invalidation.
         invalidateBufferIfNecessary(minLength = byteLength)
 
         val bb = byteBufferArray
-        val bbAsChar = getByteBufferAsChar()
         val bufSize = bb.size
-        val bufSizeAsChar = bufSize / 2
+        val bufSizeAsElement = bufSize / elementSize
+        val alignedBufSize = bufSizeAsElement * elementSize
+
         val input = inputStream
         var actualBufLength = actualBufferLength
         var consumedBytes = consumedByteLength
-        var charPos = start
+        var elemPos = start
 
         val remCachedBytes = actualBufLength - consumedBytes
 
         val prefixByteLength = min(byteLength, remCachedBytes)
-        val prefixCharLength = prefixByteLength / 2
+        val prefixElementLength = prefixByteLength / elementSize
 
-        bbAsChar.position(consumedBytes / 2)
-        bbAsChar.get(chars, start, prefixCharLength)
-        charPos += prefixCharLength
+        elementBuffer.position(consumedBytes / elementSize)
+        elementBuffer.getArray(dest, start, prefixElementLength)
+        elemPos += prefixElementLength
         consumedBytes += prefixByteLength
 
         // If we can't read a full content of a string from existing buffer, we should read from InputStream to fulfill char buffer.
-        if (charPos != end) {
-            var remChars: Int
-
+        if (elemPos != end) {
+            var remElements: Int
             while (true) {
-                remChars = end - charPos
+                remElements = end - elemPos
 
                 // Bail out if we can't read a full byte buffer.
-                if (remChars < bufSizeAsChar) {
+                if (remElements < bufSizeAsElement) {
                     break
                 }
 
-                input.readExact(bb, 0, bufSize)
+                input.readExact(bb, 0, alignedBufSize)
 
-                bbAsChar.position(0)
-                bbAsChar.get(chars, charPos, bufSizeAsChar)
+                elementBuffer.position(0)
+                elementBuffer.getArray(dest, elemPos, bufSizeAsElement)
 
-                charPos += bufSizeAsChar
+                elemPos += bufSizeAsElement
             }
 
             // Read from InputStream if some chars are still remaining.
-            if (remChars > 0) {
-                val remCharsAsByte = remChars * 2
-                actualBufLength = input.readAtLeast(bb, 0, minLength = remCharsAsByte, maxLength = bufSize)
-                bbAsChar.position(0)
-                bbAsChar.get(chars, charPos, remChars)
+            if (remElements > 0) {
+                val remElementsAsByte = remElements * elementSize
+                actualBufLength = input.readAtLeast(bb, 0, minLength = remElementsAsByte, maxLength = bufSize)
 
-                consumedBytes = remCharsAsByte
+                elementBuffer.position(0)
+                elementBuffer.getArray(dest, elemPos, remElements)
+
+                consumedBytes = remElementsAsByte
+            } else {
+                consumedBytes = 0
             }
         }
 
@@ -221,9 +310,14 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         val bb = byteBufferArray
         val bufSize = bb.size
 
+        // The buffer should be invalidated when either no data was written to it or all the bytes in the buffer is consumed.
         if (actualBufferLength < 0 || consumedByteLength == bufSize) {
-            actualBufferLength =
-                inputStream.readAtLeast(bb, 0, minLength = min(minLength, bufSize), maxLength = bufSize)
+            actualBufferLength = inputStream.readAtLeast(
+                bb,
+                0,
+                minLength = min(minLength, bufSize),
+                maxLength = bufSize
+            )
             consumedByteLength = 0
         }
     }

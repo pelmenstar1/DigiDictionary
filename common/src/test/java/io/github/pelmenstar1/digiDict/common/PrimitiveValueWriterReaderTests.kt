@@ -5,6 +5,7 @@ import io.github.pelmenstar1.digiDict.common.binarySerialization.PrimitiveValueW
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class PrimitiveValueWriterReaderTests {
@@ -13,12 +14,17 @@ class PrimitiveValueWriterReaderTests {
     private class IntOperation(value: Int) : Operation<Int>(value)
     private class LongOperation(value: Long) : Operation<Long>(value)
     private class StringOperation(value: String) : Operation<String>(value)
+    private class IntArrayOperation(value: IntArray) : Operation<IntArray>(value)
 
     private class OperationChainBuilder(private val ops: MutableList<Operation<out Any>>) {
         fun short(value: Short) = add(ShortOperation(value))
         fun int(value: Int) = add(IntOperation(value))
         fun long(value: Long) = add(LongOperation(value))
         fun string(value: String) = add(StringOperation(value))
+        fun intArray(value: IntArray) = add(IntArrayOperation(value))
+        fun intArray(value: Int, vararg other: Int) {
+            intArray(other.withAddedElement(value))
+        }
 
         private fun add(op: Operation<out Any>) {
             ops.add(op)
@@ -49,6 +55,7 @@ class PrimitiveValueWriterReaderTests {
                         is IntOperation -> emit(op.value)
                         is LongOperation -> emit(op.value)
                         is StringOperation -> emit(op.value)
+                        is IntArrayOperation -> emitArrayAndLength(op.value)
                     }
                 }
             }
@@ -63,10 +70,19 @@ class PrimitiveValueWriterReaderTests {
                         is IntOperation -> consumeInt()
                         is LongOperation -> consumeLong()
                         is StringOperation -> consumeStringUtf16()
+                        is IntArrayOperation -> consumeIntArrayAndLength()
                     }
                 }
 
-                assertEquals(op.value, actualValue, "bufferSize: $bufSize")
+                val msg = "bufferSize: $bufSize"
+                val expectedValue = op.value
+
+                if (actualValue is IntArray && expectedValue is IntArray) {
+                    assertContentEquals(expectedValue, actualValue, msg)
+                } else {
+                    assertEquals(expectedValue, actualValue, msg)
+                }
+
             }
         }
     }
@@ -85,6 +101,9 @@ class PrimitiveValueWriterReaderTests {
         string("1")
         string(bigString1)
         string(bigString2)
+        intArray(0, 1, 2, 3)
+        intArray(Int.MAX_VALUE, 245, 444, 8)
+        intArray(IntArray(1024) { it })
     }
 
     @Test
@@ -104,6 +123,7 @@ class PrimitiveValueWriterReaderTests {
         int(344)
         string("123")
         long(1L)
+        intArray(Int.MAX_VALUE, 12, 3)
         long(0L)
         int(Int.MAX_VALUE)
         long(Long.MAX_VALUE)
@@ -133,10 +153,16 @@ class PrimitiveValueWriterReaderTests {
             // We've written 4 longs (8 * 4 = 32), then write a string.
             string("123")
         }
+
+        readWriteTestHelper(bufferSize = 32) {
+            string(" ".repeat(15))
+
+            intArray(1, 2, 3, 4)
+        }
     }
 
     @Test
-    fun readWriteCrossBuffer() {
+    fun readWriteCrossBuffer_int() {
         readWriteTestHelper(bufferSize = 32) {
             // Make string to almost reach the end of the buffer: 2 + 14 * 2 = 30
             string(" ".repeat(14))
@@ -144,7 +170,10 @@ class PrimitiveValueWriterReaderTests {
             // Make cross-buffer write (low bits in current buffer, high bits in the same buffer but at another position)
             int(12)
         }
+    }
 
+    @Test
+    fun readWriteCrossBuffer_long() {
         readWriteTestHelper(bufferSize = 32) {
             string(" ".repeat(14))
 
@@ -153,37 +182,43 @@ class PrimitiveValueWriterReaderTests {
     }
 
     @Test
-    fun readWriteString_1() {
-        val output = ByteArrayOutputStream()
-        val writer = PrimitiveValueWriter(output, bufferSize = 128)
-        writer.run {
-            emit("123")
-            emit("")
-            emit("55555")
-
-            flush()
+    fun readWriteCrossBuffer_string() {
+        readWriteTestHelper(bufferSize = 32) {
+            string(" ".repeat(14))
+            string("1111")
         }
+    }
 
-        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 128)
-        assertEquals("123", reader.consumeStringUtf16())
-        assertEquals("", reader.consumeStringUtf16())
-        assertEquals("55555", reader.consumeStringUtf16())
+    @Test
+    fun readWriteCrossBuffer_intArray_aligned() {
+        readWriteTestHelper(bufferSize = 128) {
+            intArray(IntArray(1024) { it })
+        }
+    }
+
+    @Test
+    fun readWriteCrossBuffer_intArray_nonAligned() {
+        readWriteTestHelper(bufferSize = 128) {
+            short(0)
+            intArray(IntArray(1024) { it })
+        }
+    }
+
+    @Test
+    fun readWriteString_1() {
+        readWriteTestHelper(bufferSize = 128) {
+            string("123")
+            string("")
+            string("55555")
+        }
     }
 
     @Test
     fun readWriteString_2() {
-        val output = ByteArrayOutputStream()
-        val writer = PrimitiveValueWriter(output, bufferSize = 128)
-        writer.run {
-            emit(bigString1)
-            emit(bigString2)
-
-            flush()
+        readWriteTestHelper(bufferSize = 128) {
+            string(bigString1)
+            string(bigString2)
         }
-
-        val reader = PrimitiveValueReader(ByteArrayInputStream(output.toByteArray()), 128)
-        assertEquals(bigString1, reader.consumeStringUtf16())
-        assertEquals(bigString2, reader.consumeStringUtf16())
     }
 
     @Test

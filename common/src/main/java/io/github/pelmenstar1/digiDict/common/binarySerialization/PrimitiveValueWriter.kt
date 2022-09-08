@@ -1,13 +1,8 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.getByteAt
-import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
-import io.github.pelmenstar1.digiDict.common.writeTo
+import io.github.pelmenstar1.digiDict.common.*
 import java.io.OutputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.CharBuffer
+import java.nio.*
 
 /**
  * Provides means for writing primitive types (like [Int], [Long], [String]) to [OutputStream].
@@ -24,8 +19,14 @@ import java.nio.CharBuffer
 class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     private val byteBufferArray = ByteArray(bufferSize)
 
+    private var byteBuffer: ByteBuffer? = null
+
     // A CharBuffer which can effectively write chars to byteBufferArray
-    private val byteBufferAsChar: CharBuffer
+    private var byteBufferAsCharHolder: CharBuffer? = null
+
+    // A IntBuffer which can effectively write ints to byteBufferArray
+    private var byteBufferAsIntHolder: IntBuffer? = null
+    private var byteBufferAsIntOffset = 0
 
     // A cached reference to the char array which is used in emit(String) to write a char data to it and write the array to the stream.
     // There's a temporary step with the char array because CharBuffer (when mapped from ByteBuffer)
@@ -44,11 +45,42 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
             bufferSize < 8 -> throw IllegalArgumentException("bufferSize should be greater than or equals to 8")
             bufferSize % 2 != 0 -> throw IllegalArgumentException("bufferSize should be even")
         }
+    }
 
-        byteBufferAsChar = ByteBuffer.wrap(byteBufferArray).let {
-            it.order(ByteOrder.LITTLE_ENDIAN)
-            it.asCharBuffer()
+    private fun getByteBuffer(): ByteBuffer {
+        return getLazyValue(
+            byteBuffer,
+            {
+                ByteBuffer.wrap(byteBufferArray).apply {
+                    order(ByteOrder.LITTLE_ENDIAN)
+                }
+            },
+            { byteBuffer = it }
+        )
+    }
+
+    // offset is not used and its only purpose is to match a lambda signature in emitArray()
+    private fun getByteBufferAsChar(@Suppress("UNUSED_PARAMETER") offset: Int = 0): CharBuffer {
+        return getLazyValue(
+            byteBufferAsCharHolder,
+            { getByteBuffer().asCharBuffer() },
+            { byteBufferAsCharHolder = it }
+        )
+    }
+
+    private fun getByteBufferAsInt(offset: Int): IntBuffer {
+        var bbAsInt = byteBufferAsIntHolder
+
+        if (bbAsInt == null || byteBufferAsIntOffset != offset) {
+            val bb = getByteBuffer()
+            bb.position(offset)
+            bbAsInt = bb.asIntBuffer()
         }
+
+        byteBufferAsIntHolder = bbAsInt
+        byteBufferAsIntOffset = offset
+
+        return bbAsInt!!
     }
 
     fun emit(value: Short) {
@@ -121,56 +153,86 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     }
 
     fun emit(chars: CharArray, start: Int, end: Int) {
+        emitPrimitiveArray(chars, start, end, elementSize = 2, this::getByteBufferAsChar, CharBuffer::put)
+    }
+
+    fun emit(ints: IntArray, start: Int, end: Int) {
+        emitPrimitiveArray(ints, start, end, elementSize = 4, this::getByteBufferAsInt, IntBuffer::put)
+    }
+
+    fun emitArrayAndLength(ints: IntArray, start: Int = 0, end: Int = ints.size) {
+        val length = end - start
+
+        emit(length)
+        emit(ints, start, end)
+    }
+
+    private inline fun <TArray : Any, TBuffer : Buffer> emitPrimitiveArray(
+        array: TArray,
+        start: Int,
+        end: Int,
+        elementSize: Int,
+        getElementBuffer: (offset: Int) -> TBuffer,
+        putArray: TBuffer.(TArray, start: Int, length: Int) -> Unit
+    ) {
         val out = output
         val bb = byteBufferArray
-        val bbAsChar = byteBufferAsChar
         var bp = bufferPos
         val bufSize = bb.size
-        val bufSizeAsChar = bufSize / 2
 
-        val charLength = end - start
+        val elemPos = bp / elementSize
+        val elemOffset = bp % elementSize
+        val offsetElemBuffer = getElementBuffer(elemOffset)
 
-        bbAsChar.position(bp / 2)
-        val remCharsInByteBuffer = (bufSize - bp) / 2
+        val elementLength = end - start
 
-        if (remCharsInByteBuffer >= charLength) {
-            // We can write a whole region of chars.
-            bbAsChar.put(chars, start, charLength)
-            bp += charLength * 2
+        offsetElemBuffer.position(elemPos)
+        val remElementsInByteBuffer = (bufSize - bp) / elementSize
+
+        if (remElementsInByteBuffer >= elementLength) {
+            // We can write a whole region of elements.
+            offsetElemBuffer.putArray(array, start, elementLength)
+            bp += elementLength * elementSize
         } else {
-            var charPos = start
+            var elementPos = start
 
-            // Write a prefix of chars to fulfill the buffer and write it.
-            bbAsChar.put(chars, charPos, remCharsInByteBuffer)
+            // Write a prefix to fulfill the buffer and write it.
+            offsetElemBuffer.putArray(array, elementPos, remElementsInByteBuffer)
+            bp += remElementsInByteBuffer * elementSize
+            elementPos += remElementsInByteBuffer
 
-            charPos += remCharsInByteBuffer
-            out.write(bb, 0, bufSize)
+            out.write(bb, 0, bp)
 
-            // Stores amount of chars in 'chars' array that need to be written.
-            var remChars: Int
+            val elemBuffer = getElementBuffer(0)
+            val bufSizeAsElement = bufSize / elementSize
+            val alignedBufSize = bufSizeAsElement * elementSize
 
-            // This loop does full buffer writes so buffer position is considered to be 0.
+            // Stores amount of elements that need to be written.
+            var remElements: Int
+
             while (true) {
-                remChars = end - charPos
+                remElements = end - elementPos
 
                 // Exit the loop if we can't do full buffer write.
-                if (remChars < bufSizeAsChar) {
+                if (remElements < bufSizeAsElement) {
                     break
                 }
 
-                bbAsChar.position(0)
-                bbAsChar.put(chars, charPos, bufSizeAsChar)
+                elemBuffer.position(0)
+                elemBuffer.putArray(array, elementPos, bufSizeAsElement)
 
-                charPos += bufSizeAsChar
-                out.write(bb, 0, bufSize)
+                elementPos += bufSizeAsElement
+                out.write(bb, 0, alignedBufSize)
             }
 
             // Write suffix if it exists.
-            if (remChars != 0) {
-                bbAsChar.position(0)
-                bbAsChar.put(chars, charPos, remChars)
+            if (remElements != 0) {
+                elemBuffer.position(0)
+                elemBuffer.putArray(array, elementPos, remElements)
 
-                bp = remChars * 2
+                bp = remElements * elementSize
+            } else {
+                bp = 0
             }
         }
 
