@@ -5,26 +5,29 @@ import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import java.io.InputStream
 import java.io.OutputStream
 
-fun OutputStream.writeSerializationObjectData(
-    data: BinarySerializationObjectData,
+fun <TKeys : BinarySerializationSectionKeys> OutputStream.writeSerializationObjectData(
+    data: BinarySerializationObjectData<TKeys>,
     progressReporter: ProgressReporter? = null,
     bufferSize: Int
 ) {
     val writer = PrimitiveValueWriter(this, bufferSize)
+    val encoder = BinarySerializationEncoder<TKeys>()
 
     trackProgressWith(progressReporter) {
-        data.writeTo(writer, progressReporter)
+        encoder.encode(data, writer, progressReporter)
         writer.flush()
     }
 }
 
-fun InputStream.readSerializationObjectData(
-    staticInfo: BinarySerializationStaticInfo,
+fun <TKeys : BinarySerializationSectionKeys> InputStream.readSerializationObjectData(
+    staticInfo: BinarySerializationStaticInfo<TKeys>,
     progressReporter: ProgressReporter?,
     bufferSize: Int
-): BinarySerializationObjectData {
+): BinarySerializationObjectData<TKeys> {
     return trackProgressWith(progressReporter) {
         val reader = PrimitiveValueReader(this, bufferSize)
-        BinarySerializationObjectData.read(reader, staticInfo, progressReporter)
+        val decoder = BinarySerializationDecoder<TKeys>()
+
+        decoder.decode(reader, staticInfo, progressReporter)
     }
 }

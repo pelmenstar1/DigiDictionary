@@ -11,7 +11,6 @@ class JsonDataExporter : DataExporter {
     override fun export(
         output: OutputStream,
         data: BackupData,
-        options: ExportOptions,
         progressReporter: ProgressReporter?
     ) {
         trackProgressWith(progressReporter) {

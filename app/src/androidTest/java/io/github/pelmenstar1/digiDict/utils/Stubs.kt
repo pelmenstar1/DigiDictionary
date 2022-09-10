@@ -38,7 +38,15 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
+    override fun insertReplace(value: Record): Long {
+        throw NotImplementedError()
+    }
+
     override suspend fun insertAll(values: Array<out Record>) {
+        throw NotImplementedError()
+    }
+
+    override suspend fun insertAllReplace(values: Array<out Record>) {
         throw NotImplementedError()
     }
 
@@ -66,6 +74,10 @@ open class RecordDaoStub : RecordDao() {
     }
 
     override suspend fun getRecordById(id: Int): Record? {
+        throw NotImplementedError()
+    }
+
+    override suspend fun getAllRecordsByIdAsc(): Array<Record> {
         throw NotImplementedError()
     }
 

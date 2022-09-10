@@ -11,11 +11,12 @@ class BinaryDataExporter : DataExporter {
     override fun export(
         output: OutputStream,
         data: BackupData,
-        options: ExportOptions,
         progressReporter: ProgressReporter?
     ) {
         val objectData = BinarySerializationObjectData(BinarySerializing.staticInfo) {
-            put(BinarySerializing.Sections.records, data.records)
+            put(BinarySerializing.SectionKeys.records, data.records)
+            put(BinarySerializing.SectionKeys.badges, data.badges)
+            put(BinarySerializing.SectionKeys.badgeToMultipleRecordEntries, data.badgeToMultipleRecordEntries)
         }
 
         output.writeSerializationObjectData(objectData, progressReporter, bufferSize = 4096)

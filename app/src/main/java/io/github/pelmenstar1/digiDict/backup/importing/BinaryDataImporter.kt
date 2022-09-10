@@ -12,10 +12,16 @@ class BinaryDataImporter : DataImporter {
         options: ImportOptions,
         progressReporter: ProgressReporter?
     ): BackupData {
-        val objectData =
-            input.readSerializationObjectData(BinarySerializing.staticInfo, progressReporter, bufferSize = 4096)
-        val records = objectData[BinarySerializing.Sections.records]
+        val objectData = input.readSerializationObjectData(
+            BinarySerializing.staticInfo,
+            progressReporter,
+            bufferSize = 4096
+        )
 
-        return BackupData(records)
+        val records = objectData.get { records }
+        val badges = objectData.get { badges }
+        val badgeToMultipleRecordEntries = objectData.get { badgeToMultipleRecordEntries }
+
+        return BackupData(records, badges, badgeToMultipleRecordEntries)
     }
 }

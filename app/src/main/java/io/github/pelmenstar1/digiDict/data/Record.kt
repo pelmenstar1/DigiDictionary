@@ -58,6 +58,10 @@ open class Record(
     }
 
     companion object {
+        val ID_COMPARATOR = Comparator<Record> { a, b ->
+            a.id.compareTo(b.id)
+        }
+
         val EXPRESSION_COMPARATOR = Comparator<Record> { a, b ->
             a.expression.compareTo(b.expression)
         }

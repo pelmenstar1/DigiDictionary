@@ -8,7 +8,6 @@ interface DataExporter {
     fun export(
         output: OutputStream,
         data: BackupData,
-        options: ExportOptions,
         progressReporter: ProgressReporter? = null
     )
 }

@@ -1,92 +1,50 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.trackLoopProgressWithSubReporters
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 @Suppress("UNCHECKED_CAST")
-class BinarySerializationObjectData(
-    private val staticInfo: BinarySerializationStaticInfo,
-    private val sections: Array<out Array<out Any>>
+class BinarySerializationObjectData<TKeys : BinarySerializationSectionKeys>(
+    val staticInfo: BinarySerializationStaticInfo<TKeys>,
+    val sections: Array<out Array<out Any>>
 ) {
     init {
-        require(staticInfo.keyResolverPairs.size == sections.size)
+        require(staticInfo.keys.size == sections.size)
     }
 
-    operator fun <T : Any> get(key: BinarySerializationStaticInfo.SectionKey<T>): Array<out T> {
-        return sections[key.ordinal] as Array<out T>
+    operator fun <TValue : Any> get(key: BinarySerializationSectionKey<TKeys, TValue>): Array<out TValue> {
+        return sections[key.ordinal] as Array<out TValue>
     }
 
-    fun writeTo(writer: PrimitiveValueWriter, progressReporter: ProgressReporter? = null) {
-        val resolverPairs = staticInfo.keyResolverPairs
-        val size = resolverPairs.size
-
-        writer.emit(MAGIC_WORD)
-
-        trackLoopProgressWithSubReporters(progressReporter, size) { i, subReporter ->
-            val array = sections[i]
-            val resolver = resolverPairs[i].resolver
-            val latestSerializer = resolver.latestAny()
-
-            writer.emit(resolver.latestVersion)
-            writer.emit(array, latestSerializer, subReporter)
+    fun <TValue : Any> get(key: TKeys.() -> BinarySerializationSectionKey<TKeys, TValue>): Array<out TValue> {
+        contract {
+            callsInPlace(key, InvocationKind.EXACTLY_ONCE)
         }
-    }
 
-    @Suppress("NOTHING_TO_INLINE")
-    private inline fun <T : Any> BinarySerializerResolver<T>.latestAny() = latest as BinarySerializer<Any>
-
-    companion object {
-        private const val MAGIC_WORD = 0x00FF00FF_abcdedf00L
-
-        fun read(
-            reader: PrimitiveValueReader,
-            staticInfo: BinarySerializationStaticInfo,
-            progressReporter: ProgressReporter? = null
-        ): BinarySerializationObjectData {
-            val resolverPairs = staticInfo.keyResolverPairs
-            val size = resolverPairs.size
-
-            val magicWord = reader.consumeLong()
-
-            if (magicWord != MAGIC_WORD) {
-                throw BinaryDataIntegrityException("Magic word is not as expected")
-            }
-
-            val arrays = unsafeNewArray<Array<out Any>>(size)
-
-            trackLoopProgressWithSubReporters(progressReporter, size) { i, subReporter ->
-                val version = reader.consumeInt()
-                val serializer = resolverPairs[i].resolver.getOrLatest(version)
-                val array = reader.consumeArray(serializer, subReporter)
-
-                arrays[i] = array
-            }
-
-            return BinarySerializationObjectData(staticInfo, arrays)
-        }
+        return get(staticInfo.keys.key())
     }
 }
 
 @JvmInline
-value class BinarySerializationObjectDataBuilder(private val sections: Array<Array<out Any>>) {
-    fun <T : Any> put(key: BinarySerializationStaticInfo.SectionKey<T>, values: Array<out T>) {
+value class BinarySerializationObjectDataBuilder<TKeys : BinarySerializationSectionKeys>(
+    private val sections: Array<Array<out Any>>
+) {
+    fun <TValue : Any> put(key: BinarySerializationSectionKey<TKeys, TValue>, values: Array<out TValue>) {
         sections[key.ordinal] = values
     }
 }
 
-inline fun BinarySerializationObjectData(
-    staticInfo: BinarySerializationStaticInfo,
-    block: BinarySerializationObjectDataBuilder.() -> Unit
-): BinarySerializationObjectData {
+inline fun <TKeys : BinarySerializationSectionKeys> BinarySerializationObjectData(
+    staticInfo: BinarySerializationStaticInfo<TKeys>,
+    block: BinarySerializationObjectDataBuilder<TKeys>.() -> Unit
+): BinarySerializationObjectData<TKeys> {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    val sections = unsafeNewArray<Array<out Any>>(staticInfo.sectionInfo.count)
-    BinarySerializationObjectDataBuilder(sections).block()
+    val sections = unsafeNewArray<Array<out Any>>(staticInfo.keys.size)
+    BinarySerializationObjectDataBuilder<TKeys>(sections).block()
 
     return BinarySerializationObjectData(staticInfo, sections)
 }

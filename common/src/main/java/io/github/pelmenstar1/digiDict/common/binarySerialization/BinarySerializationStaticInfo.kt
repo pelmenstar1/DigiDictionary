@@ -1,47 +1,39 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-class BinarySerializationStaticInfo(
-    val sectionInfo: SectionsInfo,
-    val keyResolverPairs: Array<out KeyResolverPair<out Any>>
+class BinarySerializationStaticInfo<TKeys : BinarySerializationSectionKeys>(
+    val keys: TKeys,
+    val resolvers: Array<out BinarySerializerResolver<out Any>>
 ) {
-    interface SectionsInfo {
-        val count: Int
-    }
-
-    class SectionKey<TValue : Any>(val ordinal: Int)
-    class KeyResolverPair<TValue : Any>(
-        val key: SectionKey<TValue>,
-        val resolver: BinarySerializerResolver<TValue>
-    )
-
     @Suppress("UNCHECKED_CAST")
-    operator fun <TValue : Any> get(key: SectionKey<TValue>): BinarySerializerResolver<TValue> {
-        val index = indexOf(key)
-        if (index < 0) {
-            throw IllegalStateException("A binary serializer resolver with given key is not found")
-        }
-
-        return keyResolverPairs[index].resolver as BinarySerializerResolver<TValue>
-    }
-
-    fun indexOf(key: SectionKey<*>): Int {
-        return keyResolverPairs.indexOfFirst { it.key == key }
+    operator fun <TValue : Any> get(key: BinarySerializationSectionKey<TKeys, TValue>): BinarySerializerResolver<TValue> {
+        return resolvers[key.ordinal] as BinarySerializerResolver<TValue>
     }
 }
 
-fun <TValue : Any> BinarySerializationStaticInfo.SectionsInfo.key(ordinal: Int): BinarySerializationStaticInfo.SectionKey<TValue> {
-    return BinarySerializationStaticInfo.SectionKey(ordinal)
+@JvmInline
+value class BinarySerializationKeyResolverPairListBuilder<TKeys : BinarySerializationSectionKeys>(
+    private val pairs: Array<BinarySerializerResolver<out Any>?>
+) {
+    fun <TValue : Any> section(
+        key: BinarySerializationSectionKey<TKeys, TValue>,
+        resolver: BinarySerializerResolver<TValue>
+    ) {
+        pairs[key.ordinal] = resolver
+    }
 }
 
-infix fun <TValue : Any> BinarySerializerResolver<TValue>.connectedWith(
-    key: BinarySerializationStaticInfo.SectionKey<TValue>
-): BinarySerializationStaticInfo.KeyResolverPair<TValue> {
-    return BinarySerializationStaticInfo.KeyResolverPair(key, this)
-}
+@Suppress("UNCHECKED_CAST")
+inline fun <TKeys : BinarySerializationSectionKeys> BinarySerializationStaticInfo(
+    keys: TKeys,
+    block: BinarySerializationKeyResolverPairListBuilder<TKeys>.() -> Unit
+): BinarySerializationStaticInfo<TKeys> {
+    val resolvers = arrayOfNulls<BinarySerializerResolver<out Any>>(keys.size)
+    block(BinarySerializationKeyResolverPairListBuilder(resolvers))
 
-fun BinarySerializationStaticInfo(
-    sections: BinarySerializationStaticInfo.SectionsInfo,
-    vararg keyResolverPairs: BinarySerializationStaticInfo.KeyResolverPair<out Any>
-): BinarySerializationStaticInfo {
-    return BinarySerializationStaticInfo(sections, keyResolverPairs)
+    if (resolvers.any { it == null }) {
+        throw IllegalStateException("All keys of given keys should be added the static info")
+    }
+
+    // Each element of resolvers is proved to be not-null, so the cast is safe.
+    return BinarySerializationStaticInfo(keys, resolvers as Array<out BinarySerializerResolver<out Any>>)
 }

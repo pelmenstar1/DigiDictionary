@@ -20,11 +20,17 @@ abstract class RecordDao {
     @Query("SELECT count(*) FROM records")
     abstract suspend fun count(): Int
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert
     abstract suspend fun insert(value: Record)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract fun insertReplace(value: Record): Long
 
     @Insert
     abstract suspend fun insertAll(values: Array<out Record>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertAllReplace(values: Array<out Record>)
 
     @Query(
         """UPDATE records 
@@ -108,6 +114,9 @@ abstract class RecordDao {
 
     @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
+
+    @Query("SELECT * FROM records ORDER BY id ASC")
+    abstract suspend fun getAllRecordsByIdAsc(): Array<Record>
 
     @Query("SELECT id, expression, meaning, score FROM records")
     abstract suspend fun getAllConciseRecords(): Array<ConciseRecord>

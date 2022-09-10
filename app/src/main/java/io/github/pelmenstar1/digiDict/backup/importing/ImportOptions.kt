@@ -1,3 +1,3 @@
 package io.github.pelmenstar1.digiDict.backup.importing
 
-class ImportOptions
+data class ImportOptions(val importBadges: Boolean, val replaceBadges: Boolean)

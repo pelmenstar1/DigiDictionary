@@ -17,7 +17,7 @@ import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
         RecordToBadgeRelation::class
     ],
     exportSchema = true,
-    version = 8,
+    version = 9,
     autoMigrations = [
         AutoMigration(
             from = 1,
