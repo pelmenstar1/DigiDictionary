@@ -13,8 +13,12 @@ class JsonDataExporter : DataExporter {
         data: BackupData,
         progressReporter: ProgressReporter?
     ) {
-        trackProgressWith(progressReporter) {
-            Json.encodeToStream(data, output)
+        try {
+            trackProgressWith(progressReporter) {
+                Json.encodeToStream(data, output)
+            }
+        } catch (e: Exception) {
+            throw ExportException(cause = e)
         }
     }
 }

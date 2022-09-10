@@ -5,7 +5,7 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 @Suppress("UNCHECKED_CAST")
-class BinarySerializationObjectData<TKeys : BinarySerializationSectionKeys>(
+class BinarySerializationObjectData<TKeys : BinarySerializationSectionKeys<TKeys>>(
     val staticInfo: BinarySerializationStaticInfo<TKeys>,
     val sections: Array<out Array<out Any>>
 ) {
@@ -27,7 +27,7 @@ class BinarySerializationObjectData<TKeys : BinarySerializationSectionKeys>(
 }
 
 @JvmInline
-value class BinarySerializationObjectDataBuilder<TKeys : BinarySerializationSectionKeys>(
+value class BinarySerializationObjectDataBuilder<TKeys : BinarySerializationSectionKeys<TKeys>>(
     private val sections: Array<Array<out Any>>
 ) {
     fun <TValue : Any> put(key: BinarySerializationSectionKey<TKeys, TValue>, values: Array<out TValue>) {
@@ -35,7 +35,7 @@ value class BinarySerializationObjectDataBuilder<TKeys : BinarySerializationSect
     }
 }
 
-inline fun <TKeys : BinarySerializationSectionKeys> BinarySerializationObjectData(
+inline fun <TKeys : BinarySerializationSectionKeys<TKeys>> BinarySerializationObjectData(
     staticInfo: BinarySerializationStaticInfo<TKeys>,
     block: BinarySerializationObjectDataBuilder<TKeys>.() -> Unit
 ): BinarySerializationObjectData<TKeys> {

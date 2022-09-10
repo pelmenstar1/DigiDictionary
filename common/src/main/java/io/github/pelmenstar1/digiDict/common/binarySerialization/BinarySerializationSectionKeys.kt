@@ -1,13 +1,33 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-interface BinarySerializationSectionKeys {
+class BinarySerializationSectionKey<TKeys : BinarySerializationSectionKeys<TKeys>, TValue : Any>(
+    val ordinal: Int,
+    val name: String
+)
+
+interface BinarySerializationSectionKeys<TSelf : BinarySerializationSectionKeys<TSelf>> {
     val size: Int
+
+    operator fun get(ordinal: Int): BinarySerializationSectionKey<TSelf, out Any>
 }
 
-class BinarySerializationSectionKey<TKeys : BinarySerializationSectionKeys, TValue : Any>(val ordinal: Int)
+abstract class SimpleBinarySerializationSectionKeys<TSelf : SimpleBinarySerializationSectionKeys<TSelf>> :
+    BinarySerializationSectionKeys<TSelf> {
+    private val all: Array<out BinarySerializationSectionKey<TSelf, out Any>>
 
-// Receiver parameter is effectively unused, but it makes possible to narrow the range of using concise creation of BinarySerializationStaticInfo.SectionKey
-@Suppress("unused")
-fun <TKeys : BinarySerializationSectionKeys, TValue : Any> TKeys.key(ordinal: Int): BinarySerializationSectionKey<TKeys, TValue> {
-    return BinarySerializationSectionKey(ordinal)
+    final override val size: Int
+        get() = all.size
+
+    init {
+        @Suppress("LeakingThis")
+        all = getAll()
+    }
+
+    final override fun get(ordinal: Int) = all[ordinal]
+
+    protected fun <TValue : Any> key(ordinal: Int, name: String): BinarySerializationSectionKey<TSelf, TValue> {
+        return BinarySerializationSectionKey(ordinal, name)
+    }
+
+    protected abstract fun getAll(): Array<out BinarySerializationSectionKey<TSelf, out Any>>
 }

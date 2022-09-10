@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.binarySerialization.BinaryDataIntegrityException
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializationException
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
@@ -85,7 +85,7 @@ class SettingsViewModel @Inject constructor(
                 if (showMessage) {
                     _messageFlow.value = operationSuccessMsg
                 }
-            } catch (e: BinaryDataIntegrityException) {
+            } catch (e: BinarySerializationException) {
                 _messageFlow.value = SettingsMessage.INVALID_FILE
 
                 operationErrorFlow.emit(e)

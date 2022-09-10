@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-class BinarySerializationStaticInfo<TKeys : BinarySerializationSectionKeys>(
+class BinarySerializationStaticInfo<TKeys : BinarySerializationSectionKeys<TKeys>>(
     val keys: TKeys,
     val resolvers: Array<out BinarySerializerResolver<out Any>>
 ) {
@@ -11,7 +11,7 @@ class BinarySerializationStaticInfo<TKeys : BinarySerializationSectionKeys>(
 }
 
 @JvmInline
-value class BinarySerializationKeyResolverPairListBuilder<TKeys : BinarySerializationSectionKeys>(
+value class BinarySerializationKeyResolverPairListBuilder<TKeys : BinarySerializationSectionKeys<TKeys>>(
     private val pairs: Array<BinarySerializerResolver<out Any>?>
 ) {
     fun <TValue : Any> section(
@@ -23,7 +23,7 @@ value class BinarySerializationKeyResolverPairListBuilder<TKeys : BinarySerializ
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <TKeys : BinarySerializationSectionKeys> BinarySerializationStaticInfo(
+inline fun <TKeys : BinarySerializationSectionKeys<TKeys>> BinarySerializationStaticInfo(
     keys: TKeys,
     block: BinarySerializationKeyResolverPairListBuilder<TKeys>.() -> Unit
 ): BinarySerializationStaticInfo<TKeys> {

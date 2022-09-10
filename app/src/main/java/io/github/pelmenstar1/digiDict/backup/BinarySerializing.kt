@@ -1,19 +1,18 @@
 package io.github.pelmenstar1.digiDict.backup
 
-import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializationSectionKeys
 import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializationStaticInfo
-import io.github.pelmenstar1.digiDict.common.binarySerialization.key
+import io.github.pelmenstar1.digiDict.common.binarySerialization.SimpleBinarySerializationSectionKeys
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 object BinarySerializing {
-    object SectionKeys : BinarySerializationSectionKeys {
-        override val size: Int
-            get() = 3
+    object SectionKeys : SimpleBinarySerializationSectionKeys<SectionKeys>() {
+        val records = key<Record>(ordinal = 0, name = "records")
+        val badges = key<RecordBadgeInfo>(ordinal = 1, name = "badges")
+        val badgeToMultipleRecordEntries =
+            key<BackupBadgeToMultipleRecordEntry>(ordinal = 2, name = "badgeToMultipleRecordEntries")
 
-        val records = key<_, Record>(ordinal = 0)
-        val badges = key<_, RecordBadgeInfo>(ordinal = 1)
-        val badgeToMultipleRecordEntries = key<_, BackupBadgeToMultipleRecordEntry>(ordinal = 2)
+        override fun getAll() = arrayOf(records, badges, badgeToMultipleRecordEntries)
     }
 
     val staticInfo = BinarySerializationStaticInfo(keys = SectionKeys) {

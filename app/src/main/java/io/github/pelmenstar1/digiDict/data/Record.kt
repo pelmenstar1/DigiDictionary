@@ -4,8 +4,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.common.binarySerialization.BinaryDataIntegrityException
 import io.github.pelmenstar1.digiDict.common.binarySerialization.MultiVersionBinarySerializerResolver
+import io.github.pelmenstar1.digiDict.common.binarySerialization.checkDataValidity
 import io.github.pelmenstar1.digiDict.common.equalsPattern
 import kotlinx.serialization.Serializable
 
@@ -83,9 +83,7 @@ open class Record(
                     val score = consumeInt()
                     val epochSeconds = consumeLong()
 
-                    if (epochSeconds < 0) {
-                        throw BinaryDataIntegrityException("Epoch seconds can't be negative")
-                    }
+                    checkDataValidity("Epoch seconds can't be negative") { epochSeconds >= 0 }
 
                     Record(
                         id = 0,

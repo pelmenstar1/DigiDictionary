@@ -13,8 +13,14 @@ class JsonDataImporter : DataImporter {
         options: ImportOptions,
         progressReporter: ProgressReporter?
     ): BackupData {
-        return trackProgressWith(progressReporter) {
-            Json.decodeFromStream(input)
+        try {
+            return trackProgressWith(progressReporter) {
+                Json.decodeFromStream(input)
+            }
+        } catch (e: IllegalArgumentException) {
+            throw ImportException(ImportException.REASON_DATA_VALIDATION, e.message, e.cause)
+        } catch (e: Exception) {
+            throw ImportException(ImportException.REASON_INTERNAL, "Internal error", e)
         }
     }
 }

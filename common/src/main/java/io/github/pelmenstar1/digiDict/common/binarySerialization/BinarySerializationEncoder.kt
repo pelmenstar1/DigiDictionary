@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.common.binarySerialization
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.trackLoopProgressWithSubReporters
 
-class BinarySerializationEncoder<TKeys : BinarySerializationSectionKeys> {
+class BinarySerializationEncoder<TKeys : BinarySerializationSectionKeys<TKeys>> {
     @Suppress("UNCHECKED_CAST")
     fun encode(
         objectData: BinarySerializationObjectData<TKeys>,
@@ -13,7 +13,6 @@ class BinarySerializationEncoder<TKeys : BinarySerializationSectionKeys> {
         val staticInfo = objectData.staticInfo
         val resolvers = staticInfo.resolvers
         val sections = objectData.sections
-
         val size = sections.size
 
         writer.emit(BinarySerializationConstants.MAGIC_WORD)

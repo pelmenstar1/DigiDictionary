@@ -13,12 +13,16 @@ class BinaryDataExporter : DataExporter {
         data: BackupData,
         progressReporter: ProgressReporter?
     ) {
-        val objectData = BinarySerializationObjectData(BinarySerializing.staticInfo) {
-            put(BinarySerializing.SectionKeys.records, data.records)
-            put(BinarySerializing.SectionKeys.badges, data.badges)
-            put(BinarySerializing.SectionKeys.badgeToMultipleRecordEntries, data.badgeToMultipleRecordEntries)
-        }
+        try {
+            val objectData = BinarySerializationObjectData(BinarySerializing.staticInfo) {
+                put(BinarySerializing.SectionKeys.records, data.records)
+                put(BinarySerializing.SectionKeys.badges, data.badges)
+                put(BinarySerializing.SectionKeys.badgeToMultipleRecordEntries, data.badgeToMultipleRecordEntries)
+            }
 
-        output.writeSerializationObjectData(objectData, progressReporter, bufferSize = 4096)
+            output.writeSerializationObjectData(objectData, progressReporter, bufferSize = 4096)
+        } catch (e: Exception) {
+            throw ExportException(cause = e)
+        }
     }
 }

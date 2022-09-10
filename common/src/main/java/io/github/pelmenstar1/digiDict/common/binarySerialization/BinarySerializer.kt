@@ -13,7 +13,7 @@ interface BinarySerializerResolver<T : Any> {
     val latest: BinarySerializer<T>
     val latestVersion: Int
 
-    fun getOrLatest(version: Int): BinarySerializer<T>
+    fun get(version: Int): BinarySerializer<T>?
 }
 
 class BinarySerializerResolverBuilder<T : Any> {
@@ -58,8 +58,8 @@ class BinarySerializerResolverBuilder<T : Any> {
             // Same principle as in latest
             get() = serializers.keyAt(serializers.size() - 1)
 
-        override fun getOrLatest(version: Int): BinarySerializer<T> {
-            return serializers[version] ?: latest
+        override fun get(version: Int): BinarySerializer<T>? {
+            return serializers[version]
         }
     }
 }
