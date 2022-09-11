@@ -58,14 +58,6 @@ open class Record(
     }
 
     companion object {
-        val ID_COMPARATOR = Comparator<Record> { a, b ->
-            a.id.compareTo(b.id)
-        }
-
-        val EXPRESSION_COMPARATOR = Comparator<Record> { a, b ->
-            a.expression.compareTo(b.expression)
-        }
-
         val SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<Record> {
             forVersion<Record>(
                 version = 1,
@@ -78,7 +70,7 @@ open class Record(
                 },
                 read = {
                     val expression = consumeStringUtf16()
-                    val rawMeaning = consumeStringUtf16()
+                    val meaning = consumeStringUtf16()
                     val additionalNotes = consumeStringUtf16()
                     val score = consumeInt()
                     val epochSeconds = consumeLong()
@@ -87,7 +79,7 @@ open class Record(
 
                     Record(
                         id = 0,
-                        expression, rawMeaning, additionalNotes,
+                        expression, meaning, additionalNotes,
                         score,
                         epochSeconds
                     )

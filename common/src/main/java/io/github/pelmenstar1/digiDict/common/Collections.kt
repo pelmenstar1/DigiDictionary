@@ -17,28 +17,6 @@ fun <T> Array<out T>.asSizedIterable(): SizedIterable<T> {
     }
 }
 
-/**
- * Represents a class that sequentially adds given elements to the [array] to fulfill it.
- */
-class LocalArrayBuilder<T>(val array: Array<T>) {
-    private var index = 0
-
-    fun add(value: T) {
-        array[index++] = value
-    }
-
-    fun isFull() = index == array.size
-}
-
-/**
- * A fast-path for instantiating the [LocalArrayBuilder] instance with given size of the array.
- * If [T] is not-null, it's unsafe to use the array until it's fully filled with not-null elements.
- */
-@Suppress("UNCHECKED_CAST")
-inline fun <reified T> LocalArrayBuilder(size: Int): LocalArrayBuilder<T> {
-    return LocalArrayBuilder(arrayOfNulls<T>(size) as Array<T>)
-}
-
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
     return arrayOfNulls<T>(size) as Array<T>
