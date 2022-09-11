@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.common.binarySerialization.MultiVersionBinarySerializerResolver
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
 import io.github.pelmenstar1.digiDict.common.binarySerialization.checkDataValidity
 import io.github.pelmenstar1.digiDict.common.equalsPattern
 import kotlinx.serialization.Serializable
@@ -58,8 +58,8 @@ open class Record(
     }
 
     companion object {
-        val SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<Record> {
-            forVersion<Record>(
+        val SERIALIZER_RESOLVER = BinarySerializerResolver<Record> {
+            register<Record>(
                 version = 1,
                 write = { value ->
                     emit(value.expression)

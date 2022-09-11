@@ -5,7 +5,7 @@ import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.common.binarySerialization.MultiVersionBinarySerializerResolver
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
 import io.github.pelmenstar1.digiDict.common.equalsPattern
 import io.github.pelmenstar1.digiDict.common.readStringOrThrow
 import kotlinx.serialization.Serializable
@@ -67,8 +67,8 @@ class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
             override fun newArray(size: Int) = arrayOfNulls<RecordBadgeInfo>(size)
         }
 
-        val SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<RecordBadgeInfo> {
-            forVersion<RecordBadgeInfo>(
+        val SERIALIZER_RESOLVER = BinarySerializerResolver<RecordBadgeInfo> {
+            register<RecordBadgeInfo>(
                 version = 1,
                 write = { value: RecordBadgeInfo ->
                     emit(value.name)

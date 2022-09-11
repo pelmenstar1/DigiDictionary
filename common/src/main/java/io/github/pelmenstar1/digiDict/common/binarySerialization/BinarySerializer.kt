@@ -16,10 +16,28 @@ interface BinarySerializerResolver<T : Any> {
     fun get(version: Int): BinarySerializer<T>?
 }
 
-class BinarySerializerResolverBuilder<T : Any> {
-    private val serializers = SparseArray<BinarySerializer<T>>(4)
+/**
+ * Represents an implementation of [BinarySerializerResolver] that uses [SparseArray] to store all known serializers.
+ * The key of the [SparseArray] instance is a version of serializer.
+ */
+class SparseArrayBinarySerializerResolver<T : Any>(
+    private val serializers: SparseArray<BinarySerializer<T>>
+) : BinarySerializerResolver<T> {
+    // As elements is sorted by key in SparseArray, element with the greatest key (version) should be the last.
+    override val latest: BinarySerializer<T> = serializers.valueAt(serializers.size() - 1)
 
-    fun forVersion(version: Int, serializer: BinarySerializer<T>) {
+    override val latestVersion = serializers.keyAt(serializers.size() - 1)
+
+    override fun get(version: Int): BinarySerializer<T>? {
+        return serializers[version]
+    }
+}
+
+@JvmInline
+value class SparseArrayBinarySerializerResolverBuilder<T : Any>(
+    private val serializers: SparseArray<BinarySerializer<T>>
+) {
+    fun register(version: Int, serializer: BinarySerializer<T>) {
         serializers.put(version, serializer)
     }
 
@@ -28,16 +46,14 @@ class BinarySerializerResolverBuilder<T : Any> {
      * [TR] is used to create new array of [T], so [TR] should be the same type as [T].
      * It's used to workaround type erasure.
      */
-    inline fun <reified TR : T> forVersion(
+    inline fun <reified TR : T> register(
         version: Int,
         crossinline write: PrimitiveValueWriter.(T) -> Unit,
         crossinline read: PrimitiveValueReader.() -> T
     ) {
         val serializer = object : BinarySerializer<T> {
             @Suppress("UNCHECKED_CAST")
-            override fun newArrayOfNulls(size: Int): Array<T?> {
-                return arrayOfNulls<TR>(size) as Array<T?>
-            }
+            override fun newArrayOfNulls(size: Int) = arrayOfNulls<TR>(size) as Array<T?>
 
             override fun writeTo(writer: PrimitiveValueWriter, value: T) {
                 writer.write(value)
@@ -46,26 +62,15 @@ class BinarySerializerResolverBuilder<T : Any> {
             override fun readFrom(reader: PrimitiveValueReader) = reader.read()
         }
 
-        forVersion(version, serializer)
-    }
-
-    fun build() = object : BinarySerializerResolver<T> {
-        override val latest: BinarySerializer<T>
-            // As elements is sorted by key in SparseArray, element with the greatest key (version) should be the last.
-            get() = serializers.valueAt(serializers.size() - 1)
-
-        override val latestVersion: Int
-            // Same principle as in latest
-            get() = serializers.keyAt(serializers.size() - 1)
-
-        override fun get(version: Int): BinarySerializer<T>? {
-            return serializers[version]
-        }
+        register(version, serializer)
     }
 }
 
-inline fun <T : Any> MultiVersionBinarySerializerResolver(
-    block: BinarySerializerResolverBuilder<T>.() -> Unit
+inline fun <T : Any> BinarySerializerResolver(
+    block: SparseArrayBinarySerializerResolverBuilder<T>.() -> Unit
 ): BinarySerializerResolver<T> {
-    return BinarySerializerResolverBuilder<T>().also(block).build()
+    val serializers = SparseArray<BinarySerializer<T>>(4)
+    SparseArrayBinarySerializerResolverBuilder(serializers).block()
+
+    return SparseArrayBinarySerializerResolver(serializers)
 }

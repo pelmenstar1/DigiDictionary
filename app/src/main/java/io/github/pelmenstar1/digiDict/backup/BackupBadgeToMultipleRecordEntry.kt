@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.backup
 
-import io.github.pelmenstar1.digiDict.common.binarySerialization.MultiVersionBinarySerializerResolver
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
 import io.github.pelmenstar1.digiDict.common.equalsPattern
 import kotlinx.serialization.Serializable
 
@@ -27,8 +27,8 @@ data class BackupBadgeToMultipleRecordEntry(val badgeOrdinal: Int, val recordOrd
     }
 
     companion object {
-        val SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<BackupBadgeToMultipleRecordEntry> {
-            forVersion<BackupBadgeToMultipleRecordEntry>(
+        val SERIALIZER_RESOLVER = BinarySerializerResolver<BackupBadgeToMultipleRecordEntry> {
+            register<BackupBadgeToMultipleRecordEntry>(
                 version = 1,
                 write = { (badgeId, recordIds) ->
                     emit(badgeId)

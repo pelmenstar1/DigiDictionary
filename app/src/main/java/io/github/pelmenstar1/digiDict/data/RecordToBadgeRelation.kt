@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import io.github.pelmenstar1.digiDict.common.binarySerialization.MultiVersionBinarySerializerResolver
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,8 +14,8 @@ class RecordToBadgeRelation(
     val badgeId: Int
 ) {
     companion object {
-        val SERIALIZER_RESOLVER = MultiVersionBinarySerializerResolver<RecordToBadgeRelation> {
-            forVersion<RecordToBadgeRelation>(
+        val SERIALIZER_RESOLVER = BinarySerializerResolver<RecordToBadgeRelation> {
+            register<RecordToBadgeRelation>(
                 version = 1,
                 write = { value ->
                     emit(value.recordId)
