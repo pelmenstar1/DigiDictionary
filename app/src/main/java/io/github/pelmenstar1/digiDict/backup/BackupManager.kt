@@ -13,6 +13,7 @@ import io.github.pelmenstar1.digiDict.backup.importing.DataImporter
 import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
 import io.github.pelmenstar1.digiDict.backup.importing.JsonDataImporter
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.fileExtensionOrNull
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
@@ -106,13 +107,8 @@ object BackupManager {
     }
 
     fun getBackupFormatForUri(uri: Uri): BackupFormat {
-        val path = uri.path ?: throw RuntimeException("Invalid uri")
-        val lastDotIndex = path.lastIndexOf('.')
-        if (lastDotIndex < 0 || lastDotIndex == path.length - 1) {
-            throw RuntimeException("Invalid uri")
-        }
+        val ext = uri.fileExtensionOrNull() ?: throw RuntimeException("Invalid URI")
 
-        val ext = path.substring(lastDotIndex + 1)
         return BackupFormat.fromExtension(ext)
     }
 

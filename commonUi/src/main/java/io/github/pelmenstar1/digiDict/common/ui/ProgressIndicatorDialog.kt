@@ -6,21 +6,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.annotation.IntRange
+import androidx.annotation.FloatRange
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.github.pelmenstar1.digiDict.common.TransparentDrawable
 
-class LoadingIndicatorDialog : DialogFragment() {
-    private var currentProgress = -1
-
+class ProgressIndicatorDialog : DialogFragment() {
+    private var currentProgress = Float.NaN
     private var progressIndicator: CircularProgressIndicator? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
 
-        if (currentProgress < 0) {
-            currentProgress = savedInstanceState?.getInt(STATE_PROGRESS, 0) ?: 0
+        if (currentProgress.isNaN()) {
+            currentProgress = savedInstanceState?.getFloat(STATE_PROGRESS, 0f) ?: 0f
         }
 
         dialog?.window?.setBackgroundDrawable(TransparentDrawable)
@@ -35,31 +34,32 @@ class LoadingIndicatorDialog : DialogFragment() {
                     it.gravity = Gravity.CENTER
                 }
 
-                progress = currentProgress
+                progress = (currentProgress * 100f + 0.5f).toInt()
 
                 progressIndicator = this
             })
         }
     }
 
-    fun setProgress(@IntRange(from = 0, to = 100) value: Int) {
+    fun setProgress(@FloatRange(from = 0.0, to = 1.0) value: Float) {
         currentProgress = value
+        progressIndicator?.progress = (value * 100f + 0.5f).toInt()
 
-        val indicator = progressIndicator
-        if (indicator != null) {
-            indicator.progress = value
-        } else {
-            currentProgress = value
+        /*
+        debugLog("ProgressIndicatorDialog") {
+            info("progress: ${(value * 100f + 0.5f).toInt()}")
         }
+
+         */
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        outState.putInt(STATE_PROGRESS, currentProgress)
+        outState.putFloat(STATE_PROGRESS, currentProgress)
     }
 
     companion object {
-        private const val STATE_PROGRESS = "io.github.pelmenstar1.digiDict.common.ui.LoadingProgressDialog.progress"
+        private const val STATE_PROGRESS = "io.github.pelmenstar1.digiDict.common.ui.ProgressIndicatorDialog.progress"
     }
 }

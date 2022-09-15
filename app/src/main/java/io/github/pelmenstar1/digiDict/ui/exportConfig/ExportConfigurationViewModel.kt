@@ -1,0 +1,47 @@
+package io.github.pelmenstar1.digiDict.ui.exportConfig
+
+import android.content.Context
+import android.net.Uri
+import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.backup.BackupFormat
+import io.github.pelmenstar1.digiDict.backup.BackupManager
+import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.viewModelAction
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import javax.inject.Inject
+
+@HiltViewModel
+class ExportConfigurationViewModel @Inject constructor(
+    private val appDatabase: AppDatabase
+) : ViewModel() {
+    private val progressReporter = ProgressReporter()
+    val progressFlow = progressReporter.progressFlow
+
+    var selectedFormat: BackupFormat? = null
+    var exportBadges: Boolean = true
+
+    val exportAction = viewModelAction<Context, Uri>(TAG) { context, uri ->
+        val options = ExportOptions(exportBadges)
+        val reporter = progressReporter
+
+        reporter.start()
+        val data = BackupManager.createBackupData(appDatabase, options)
+
+        // Treat extracting the data as half of the job.
+        reporter.onProgress(0.5f)
+
+        BackupManager.export(
+            context,
+            uri,
+            data,
+            selectedFormat!!,
+            reporter.subReporter(completed = 0.5f, target = 1f)
+        )
+    }
+
+    companion object {
+        private const val TAG = "ExportConfViewModel"
+    }
+}

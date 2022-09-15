@@ -40,4 +40,9 @@
 
     <dimen name="itemManageRecordBadges_actionButtonSize">48dp</dimen>
     <dimen name="itemManageRecordBadges_colorCircleSize">32dp</dimen>
+
+    <dimen name="exportFormatEntry_padding">10dp</dimen>
+    <dimen name="exportFormatEntry_indicatorSize">24dp</dimen>
+    <dimen name="exportFormatEntry_indicatorMarginEnd">12dp</dimen>
+    <dimen name="exportFormatEntry_nameMarginBottom">5dp</dimen>
 </resources>

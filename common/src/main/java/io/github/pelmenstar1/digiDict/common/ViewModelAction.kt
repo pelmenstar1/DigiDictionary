@@ -80,6 +80,17 @@ abstract class SingleArgumentViewModelAction<T>(
     protected abstract suspend fun invokeAction(arg: T)
 }
 
+abstract class TwoArgumentViewModelAction<T1, T2>(
+    vm: ViewModel,
+    logTag: String
+) : ViewModelAction(vm, logTag) {
+    fun run(arg1: T1, arg2: T2) {
+        runInternal { invokeAction(arg1, arg2) }
+    }
+
+    protected abstract suspend fun invokeAction(arg1: T1, arg2: T2)
+}
+
 @JvmName("noArgViewModelAction")
 inline fun ViewModel.viewModelAction(
     logTag: String,
@@ -101,5 +112,17 @@ inline fun <T> ViewModel.viewModelAction(
 
     return object : SingleArgumentViewModelAction<T>(vm, logTag) {
         override suspend fun invokeAction(arg: T) = action(arg)
+    }
+}
+
+@JvmName("twoArgViewModelAction")
+inline fun <T1, T2> ViewModel.viewModelAction(
+    logTag: String,
+    crossinline action: suspend (T1, T2) -> Unit
+): TwoArgumentViewModelAction<T1, T2> {
+    val vm = this
+
+    return object : TwoArgumentViewModelAction<T1, T2>(vm, logTag) {
+        override suspend fun invokeAction(arg1: T1, arg2: T2) = action(arg1, arg2)
     }
 }

@@ -1,13 +1,12 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializationException
+import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
@@ -48,66 +47,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun exportData(context: Context) {
-        importExport(
-            operationName = "export",
-            operationSuccessMsg = SettingsMessage.EXPORT_SUCCESS,
-            operationErrorMsg = SettingsMessage.EXPORT_ERROR,
-        ) /*{
-            export(context, recordDao, progressReporter)
-        }*/
-    }
-
-    fun importData(context: Context) {
-        importExport(
-            operationName = "import",
-            operationSuccessMsg = SettingsMessage.IMPORT_SUCCESS,
-            operationErrorMsg = SettingsMessage.IMPORT_ERROR,
-        ) /*{
-            import(context, appDatabase, progressReporter)
-        }*/
-    }
-
-    private fun importExport(
-        operationName: String,
-        operationSuccessMsg: SettingsMessage,
-        operationErrorMsg: SettingsMessage,
-        //operation: suspend RecordImportExportManager.() -> Boolean
-    ) {
-        progressReporter.reset()
-
-        viewModelScope.launch {
-            operationErrorFlow.emit(null)
-
-            try {
-                val showMessage = false // RecordImportExportManager.operation()
-
-                if (showMessage) {
-                    _messageFlow.value = operationSuccessMsg
-                }
-            } catch (e: BinarySerializationException) {
-                _messageFlow.value = SettingsMessage.INVALID_FILE
-
-                operationErrorFlow.emit(e)
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    Log.e(TAG, "during $operationName", e)
-
-                    operationErrorFlow.emit(e)
-                    _messageFlow.value = operationErrorMsg
-                }
-            }
-        }
-    }
-
     fun deleteAllRecords() {
         progressReporter.reset()
 
         viewModelScope.launch {
             try {
-                progressReporter.onProgress(0, 100)
-                recordDao.deleteAll()
-                progressReporter.end()
+                trackProgressWith(progressReporter) {
+                    recordDao.deleteAll()
+                }
 
                 _messageFlow.value = SettingsMessage.DELETE_ALL_SUCCESS
             } catch (e: Exception) {
