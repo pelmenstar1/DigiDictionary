@@ -20,7 +20,7 @@ class ProgressReporter {
 
         _completed = 0f
         _target = 1f
-        _diff = 0f
+        _diff = 1f
     }
 
     private constructor(pFlow: MutableStateFlow<Float>, completed: Float, target: Float) {

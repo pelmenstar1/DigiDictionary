@@ -20,7 +20,6 @@ import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentExportConfigurationBinding
 import java.util.*
 
-// TODO: Fix progress dialog
 @AndroidEntryPoint
 class ExportConfigurationFragment : Fragment() {
     private val viewModel by viewModels<ExportConfigurationViewModel>()

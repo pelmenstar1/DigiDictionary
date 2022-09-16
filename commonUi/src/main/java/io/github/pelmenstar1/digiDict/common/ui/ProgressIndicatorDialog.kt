@@ -6,21 +6,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.annotation.FloatRange
+import androidx.annotation.IntRange
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.github.pelmenstar1.digiDict.common.TransparentDrawable
-import io.github.pelmenstar1.digiDict.common.debugLog
 
 class ProgressIndicatorDialog : DialogFragment() {
-    private var currentProgress = Float.NaN
+    private var currentProgress = -1
     private var progressIndicator: CircularProgressIndicator? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
 
-        if (currentProgress.isNaN()) {
-            currentProgress = savedInstanceState?.getFloat(STATE_PROGRESS, 0f) ?: 0f
+        if (currentProgress < 0) {
+            currentProgress = savedInstanceState?.getInt(STATE_PROGRESS, 0) ?: 0
         }
 
         dialog?.window?.setBackgroundDrawable(TransparentDrawable)
@@ -35,27 +34,21 @@ class ProgressIndicatorDialog : DialogFragment() {
                     it.gravity = Gravity.CENTER
                 }
 
-                progress = (currentProgress * 100f + 0.5f).toInt()
-                max = 100
-
+                progress = currentProgress
                 progressIndicator = this
             })
         }
     }
 
-    fun setProgress(@FloatRange(from = 0.0, to = 1.0) value: Float) {
+    fun setProgress(@IntRange(from = 0, to = 100) value: Int) {
         currentProgress = value
-        progressIndicator?.progress = 25 //(value * 100f).toInt()
-
-        debugLog("ProgressIndicatorDialog") {
-            info("setProgress(value=${(value * 100f).toInt()})")
-        }
+        progressIndicator?.progress = value
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        outState.putFloat(STATE_PROGRESS, currentProgress)
+        outState.putInt(STATE_PROGRESS, currentProgress)
     }
 
     companion object {

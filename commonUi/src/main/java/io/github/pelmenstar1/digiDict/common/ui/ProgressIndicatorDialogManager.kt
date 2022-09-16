@@ -56,10 +56,6 @@ class ProgressIndicatorDialogManager {
 
         progressCollectionJob = scope.launch {
             pFlow.cancelAfter { it == 1f }.collect { progress ->
-                debugLog(TAG) {
-                    info("progress: $progress")
-                }
-
                 when (progress) {
                     1f -> {
                         dialog?.dismissNow()
@@ -89,7 +85,7 @@ class ProgressIndicatorDialogManager {
                             dialog = tempDialog
                         }
 
-                        tempDialog.setProgress(progress)
+                        tempDialog.setProgress((progress * 100f + 0.5f).toInt())
                     }
                 }
             }

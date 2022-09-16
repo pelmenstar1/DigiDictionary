@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
@@ -31,7 +32,7 @@ class ImportConfigurationViewModel @Inject constructor(
         }
 
     var replaceBadges: Boolean = true
-    val importAction = viewModelAction<Context, Uri, BackupFormat>(TAG) { context, source, format ->
+    val importAction = viewModelAction<Context, Uri, BackupFormat>(TAG, Dispatchers.IO) { context, source, format ->
         val options = ImportOptions(importBadges, replaceBadges)
 
         trackProgressWith(operationProgressReporter) {

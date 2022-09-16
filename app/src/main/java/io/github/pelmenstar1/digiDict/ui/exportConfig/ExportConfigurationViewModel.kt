@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,7 +24,7 @@ class ExportConfigurationViewModel @Inject constructor(
     var selectedFormat: BackupFormat? = null
     var exportBadges: Boolean = true
 
-    val exportAction = viewModelAction<Context, Uri>(TAG) { context, uri ->
+    val exportAction = viewModelAction<Context, Uri>(TAG, Dispatchers.IO) { context, uri ->
         val options = ExportOptions(exportBadges)
         val reporter = progressReporter
 
