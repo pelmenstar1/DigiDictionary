@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.common.binarySerialization
 import io.github.pelmenstar1.digiDict.common.*
 import java.io.OutputStream
 import java.nio.*
+import kotlin.math.min
 
 /**
  * Provides means for writing primitive types (like [Int], [Long], [String]) to [OutputStream].
@@ -189,20 +190,15 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         offsetElemBuffer.position(elemPos)
         val remElementsInByteBuffer = (bufSize - bp) / elementSize
 
-        if (remElementsInByteBuffer >= elementLength) {
-            // We can write a whole region of elements.
-            offsetElemBuffer.putArray(array, start, elementLength)
-            bp += elementLength * elementSize
-        } else {
-            var elementPos = start
+        val prefixElemLength = min(remElementsInByteBuffer, elementLength)
+        offsetElemBuffer.putArray(array, start, prefixElemLength)
+        bp += prefixElemLength * elementSize
 
-            // Write a prefix to fulfill the buffer and write it.
-            offsetElemBuffer.putArray(array, elementPos, remElementsInByteBuffer)
-            bp += remElementsInByteBuffer * elementSize
-            elementPos += remElementsInByteBuffer
-
+        if (prefixElemLength != elementLength) {
+            // We've written what we can to the buffer which means we need to write it down the stream and start to re-fill the buffer.
             out.write(bb, 0, bp)
 
+            var elementPos = start + prefixElemLength
             val elemBuffer = getElementBuffer(0)
             val bufSizeAsElement = bufSize / elementSize
             val alignedBufSize = bufSizeAsElement * elementSize
@@ -225,16 +221,13 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
                 out.write(bb, 0, alignedBufSize)
             }
 
-            // TODO: Fix code duplication.
             // Write suffix if it exists.
-            if (remElements != 0) {
+            if (remElements > 0) {
                 elemBuffer.position(0)
                 elemBuffer.putArray(array, elementPos, remElements)
-
-                bp = remElements * elementSize
-            } else {
-                bp = 0
             }
+
+            bp = remElements * elementSize
         }
 
         setBufferPosAndSyncIfNecessary(bp)
