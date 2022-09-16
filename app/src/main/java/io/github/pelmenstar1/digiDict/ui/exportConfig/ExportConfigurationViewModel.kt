@@ -29,10 +29,11 @@ class ExportConfigurationViewModel @Inject constructor(
         val reporter = progressReporter
 
         trackProgressWith(reporter) {
-            val data = BackupManager.createBackupData(appDatabase, options)
-
-            // Treat extracting the data as half of the job.
-            reporter.onProgress(0.5f)
+            val data = BackupManager.createBackupData(
+                appDatabase,
+                options,
+                reporter.subReporter(completed = 0f, target = .5f)  // Treat extracting the data as half of the job.
+            )
 
             BackupManager.export(
                 context,

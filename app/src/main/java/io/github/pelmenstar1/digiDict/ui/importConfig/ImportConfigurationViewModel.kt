@@ -34,11 +34,21 @@ class ImportConfigurationViewModel @Inject constructor(
     var replaceBadges: Boolean = true
     val importAction = viewModelAction<Context, Uri, BackupFormat>(TAG, Dispatchers.IO) { context, source, format ->
         val options = ImportOptions(importBadges, replaceBadges)
+        val reporter = operationProgressReporter
 
-        trackProgressWith(operationProgressReporter) {
-            val data = BackupManager.import(context, source, format, options, operationProgressReporter)
+        trackProgressWith(reporter) {
+            val data = BackupManager.import(
+                context,
+                source, format, options,
+                reporter.subReporter(completed = 0f, target = .5f) // Treat reading the data as half of the job.
+            )
 
-            BackupManager.deployImportData(data, options, appDatabase)
+            BackupManager.deployImportData(
+                data,
+                options,
+                appDatabase,
+                reporter.subReporter(completed = .5f, target = 1f)
+            )
         }
     }
 

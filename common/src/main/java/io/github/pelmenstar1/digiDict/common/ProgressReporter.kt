@@ -120,6 +120,20 @@ inline fun trackLoopProgressWith(reporter: ProgressReporter?, size: Int, loopBod
     }
 }
 
+inline fun <T> trackLoopProgressWith(
+    reporter: ProgressReporter?,
+    elements: Array<out T>,
+    loopBody: (index: Int, element: T) -> Unit
+) {
+    contract {
+        callsInPlace(loopBody, InvocationKind.UNKNOWN)
+    }
+
+    trackLoopProgressWith(reporter, elements.size) { i ->
+        loopBody(i, elements[i])
+    }
+}
+
 inline fun trackLoopProgressWithSubReporters(
     reporter: ProgressReporter?,
     size: Int,
