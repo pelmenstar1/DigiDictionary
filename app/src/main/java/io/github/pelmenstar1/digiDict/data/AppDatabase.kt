@@ -17,7 +17,7 @@ import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
         RecordToBadgeRelation::class
     ],
     exportSchema = true,
-    version = 8,
+    version = 9,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -33,6 +33,11 @@ import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
             from = 7,
             to = 8,
             spec = AppDatabase.Migration_7_8::class
+        ),
+        AutoMigration(
+            from = 8,
+            to = 9,
+            spec = AppDatabase.Migration_8_9::class
         )
     ]
 )
@@ -45,6 +50,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     @DeleteTable(tableName = "search_prepared_records")
     class Migration_7_8 : AutoMigrationSpec
+
+    class Migration_8_9 : AutoMigrationSpec
 
     object Migration_2_3 : Migration(2, 3) {
         override fun migrate(database: SupportSQLiteDatabase) {

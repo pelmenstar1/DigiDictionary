@@ -36,6 +36,10 @@ dependencyResolutionManagement {
             ).versionRef("kotlinx-coroutines")
             bundle("kotlinx-coroutines", listOf("kotlinx-coroutines-core", "kotlinx-coroutines-android"))
 
+            library(
+                "kotlinx-serialization-json", "org.jetbrains.kotlinx", "kotlinx-serialization-json"
+            ).version("1.4.0")
+
             // Android related.
             library("androidx-core", "androidx.core", "core-ktx").version("1.8.0")
             library("androidx-appcompat", "androidx.appcompat", "appcompat").version("1.5.0")

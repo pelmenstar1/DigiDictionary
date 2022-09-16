@@ -4,7 +4,6 @@ import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.common.generateUniqueRandomNumbers
 import io.github.pelmenstar1.digiDict.common.mapToArray
-import io.github.pelmenstar1.digiDict.common.serialization.SerializableIterable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlin.math.min
@@ -21,11 +20,17 @@ abstract class RecordDao {
     @Query("SELECT count(*) FROM records")
     abstract suspend fun count(): Int
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert
     abstract suspend fun insert(value: Record)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract fun insertReplace(value: Record): Long
+
     @Insert
-    abstract suspend fun insertAll(values: Array<Record>)
+    abstract suspend fun insertAll(values: Array<out Record>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertAllReplace(values: Array<out Record>)
 
     @Query(
         """UPDATE records 
@@ -109,6 +114,9 @@ abstract class RecordDao {
 
     @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
+
+    @Query("SELECT * FROM records ORDER BY id ASC")
+    abstract suspend fun getAllRecordsByIdAsc(): Array<Record>
 
     @Query("SELECT id, expression, meaning, score FROM records")
     abstract suspend fun getAllConciseRecords(): Array<ConciseRecord>
@@ -247,12 +255,6 @@ abstract class RecordDao {
         ids.copyInto(narrowedIds, endIndex = narrowedIds.size)
 
         return getConciseRecordsWithBadgesByIds(narrowedIds)
-    }
-
-    fun getAllRecordsNoIdIterable(): SerializableIterable {
-        val cursor = getAllRecordsNoIdRaw()
-
-        return cursor.asRecordSerializableIterableNoId()
     }
 
     companion object {

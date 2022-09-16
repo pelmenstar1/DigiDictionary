@@ -6,7 +6,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface RecordBadgeDao {
     @Insert
-    suspend fun insert(value: RecordBadgeInfo)
+    suspend fun insert(value: RecordBadgeInfo): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertReplace(value: RecordBadgeInfo): Long
 
     @Insert
     suspend fun insertAll(values: Array<out RecordBadgeInfo>)
@@ -16,6 +19,9 @@ interface RecordBadgeDao {
 
     @Delete
     suspend fun delete(value: RecordBadgeInfo)
+
+    @Query("SELECT * FROM record_badges ORDER BY id ASC")
+    suspend fun getAllOrderByIdAsc(): Array<RecordBadgeInfo>
 
     @Query("SELECT * FROM record_badges")
     fun getAllFlow(): Flow<Array<RecordBadgeInfo>>
@@ -28,6 +34,9 @@ interface RecordBadgeDao {
 
     @Query("SELECT * FROM record_badges WHERE id IN (:ids)")
     suspend fun getByIds(ids: IntArray): Array<RecordBadgeInfo>
+
+    @Query("SELECT id FROM record_badges WHERE name=:name")
+    suspend fun getIdByName(name: String): Int?
 
     companion object {
         const val GET_BY_ID_QUERY = "SELECT * FROM record_badges WHERE id=:id"

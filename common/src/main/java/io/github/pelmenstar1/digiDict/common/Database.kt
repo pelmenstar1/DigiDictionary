@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.common
 
 import android.database.CharArrayBuffer
+import android.database.Cursor
 import androidx.lifecycle.ViewModel
 import androidx.room.InvalidationTracker
 import androidx.room.RoomDatabase
@@ -37,6 +38,33 @@ inline fun ViewModel.onDatabaseTablesUpdated(
     }
 }
 
+inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
+    sql: String,
+    bindArgs: Array<Any>?,
+    progressReporter: ProgressReporter?,
+    convertCursor: (Cursor) -> T
+): Array<T> {
+    try {
+        val cursor = query(sql, bindArgs)
+
+        return cursor.use {
+            val count = it.count
+            val result = unsafeNewArray<T>(count)
+
+            trackLoopProgressWith(progressReporter, count) { i ->
+                cursor.moveToPosition(i)
+                result[i] = convertCursor(cursor)
+            }
+
+            result
+        }
+    } catch (th: Throwable) {
+        progressReporter?.reportError()
+        throw th
+    }
+}
+
+// TODO: Delete it
 fun CharArrayBuffer.asCharSequence(): CharSequence {
     return object : CharSequence {
         override val length: Int

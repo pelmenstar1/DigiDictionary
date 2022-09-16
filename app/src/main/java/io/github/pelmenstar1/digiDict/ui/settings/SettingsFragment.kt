@@ -5,21 +5,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.backup.RecordImportExportManager
-import io.github.pelmenstar1.digiDict.common.*
-import io.github.pelmenstar1.digiDict.common.ui.LoadingIndicatorDialog
+import io.github.pelmenstar1.digiDict.common.DataLoadState
+import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
 import io.github.pelmenstar1.digiDict.common.ui.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.transform
@@ -32,7 +31,7 @@ class SettingsFragment : Fragment() {
     @Inject
     lateinit var messageMapper: MessageMapper<SettingsMessage>
 
-    private var loadingProgressCollectionJob: Job? = null
+    private val progressIndicatorDialogManager = SimpleProgressIndicatorDialogManager()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,18 +44,16 @@ class SettingsFragment : Fragment() {
         val binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val contentContainer = binding.settingsContentContainer
 
-        RecordImportExportManager.init(this)
-
         SettingsInflater(context).inflate(descriptor, container = contentContainer).run {
             onValueChangedHandler = viewModel::changePreferenceValue
-            navController = findNavController()
+            val nc = findNavController().also { navController = it }
 
             bindActionHandler(ACTION_IMPORT) {
-                invokeWithLoadingIndicator { importData(context) }
+                nc.navigate(SettingsFragmentDirections.actionSettingsToImportConfiguration())
             }
 
             bindActionHandler(ACTION_EXPORT) {
-                invokeWithLoadingIndicator { exportData(context) }
+                nc.navigate(SettingsFragmentDirections.actionSettingsToExportConfiguration())
             }
 
             bindActionHandler(ACTION_DELETE_ALL_RECORDS) {
@@ -68,10 +65,8 @@ class SettingsFragment : Fragment() {
             launchMessageFlowCollector(vm.messageFlow, messageMapper, container)
 
             ls.launchFlowCollector(vm.operationErrorFlow.filterNotNull()) {
-                hideLoadingProgressDialog()
-
-                // Cancel the job, it's no longer needed.
-                loadingProgressCollectionJob?.cancel()
+                // Dismiss the dialog and cancel the job, they are no longer needed after an error.
+                progressIndicatorDialogManager.cancel()
             }
 
             ls.launchFlowCollector(
@@ -89,9 +84,7 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        findLoadingIndicatorDialog(childFragmentManager)?.also {
-            showOrBindLoadingIndicatorDialog()
-        }
+        progressIndicatorDialogManager.init(this, vm.operationProgressFlow)
 
         return binding.root
     }
@@ -104,68 +97,10 @@ class SettingsFragment : Fragment() {
 
     private inline fun invokeWithLoadingIndicator(action: SettingsViewModel.() -> Unit) {
         viewModel.action()
-        showOrBindLoadingIndicatorDialog()
-    }
-
-    private fun showOrBindLoadingIndicatorDialog() {
-        loadingProgressCollectionJob?.let {
-            if (it.isActive) {
-                debugLog(LOG_TAG) {
-                    info("loadingProgressCollectionJob is already started")
-                }
-
-                it.cancel()
-            }
-        }
-        var dialog: LoadingIndicatorDialog? = null
-
-        loadingProgressCollectionJob = lifecycleScope.launchFlowCollector(
-            viewModel.operationProgressFlow.cancelAfter { it == 100 }
-        ) { progress ->
-            if (progress == 100) {
-                dialog?.dismissNow()
-
-                // To be sure dialog won't be reused after it's dismissed.
-                dialog = null
-            } else if (progress != ProgressReporter.UNREPORTED) {
-                var tempDialog = dialog
-                if (tempDialog == null) {
-                    val fm = childFragmentManager
-
-                    // Try to find existing dialog to re-use it.
-                    tempDialog = findLoadingIndicatorDialog(fm)
-
-                    if (tempDialog == null) {
-                        // If there's no loading-indicator-dialog, show it.
-                        tempDialog = LoadingIndicatorDialog().also {
-                            it.showNow(fm, LOADING_PROGRESS_DIALOG_TAG)
-                        }
-                    }
-
-                    dialog = tempDialog
-                }
-
-                tempDialog.setProgress(progress)
-            }
-        }.also {
-            it.invokeOnCompletion { loadingProgressCollectionJob = null }
-        }
-    }
-
-    private fun hideLoadingProgressDialog() {
-        findLoadingIndicatorDialog(childFragmentManager)?.dismissNow()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        RecordImportExportManager.release()
+        progressIndicatorDialogManager.showDialog()
     }
 
     companion object {
-        private const val LOG_TAG = "SettingsFragment"
-        private const val LOADING_PROGRESS_DIALOG_TAG = "LoadingIndicatorDialog"
-
         private const val ACTION_IMPORT = 0
         private const val ACTION_EXPORT = 1
         private const val ACTION_DELETE_ALL_RECORDS = 2
@@ -252,10 +187,6 @@ class SettingsFragment : Fragment() {
                 action(ACTION_IMPORT, R.string.settings_import)
                 action(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
             }
-        }
-
-        internal fun findLoadingIndicatorDialog(fm: FragmentManager): LoadingIndicatorDialog? {
-            return fm.findFragmentByTag(LOADING_PROGRESS_DIALOG_TAG) as LoadingIndicatorDialog?
         }
     }
 }
