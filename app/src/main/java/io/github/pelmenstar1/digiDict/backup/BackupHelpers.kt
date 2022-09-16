@@ -69,7 +69,6 @@ object BackupHelpers {
      * Time complexity is around `log (n!)` and memory complexity is `n` where `n` is size of [records]
      */
     fun containsDuplicateExpressions(records: Array<out Record>): Boolean {
-        // TODO: Optimize time complexity by saving a hash of each string.
         val size = records.size
 
         val expressions = unsafeNewArray<String>(size)
