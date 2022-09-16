@@ -47,4 +47,5 @@
     <dimen name="exportFormatEntry_nameMarginBottom">5dp</dimen>
 
     <dimen name="importFormatSelectorDialog_entryPadding">8dp</dimen>
+    <dimen name="importExportConfigProgressIndicatorDialog_warningTopMargin">8dp</dimen>
 </resources>

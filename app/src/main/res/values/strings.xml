@@ -153,6 +153,7 @@
 
     <!-- Import/Export configuration related -->
     <string name="importExportConfig_selectFile">Select file</string>
+    <string name="importExportConfig_doNotCloseAppWarning">DO NOT close the application</string>
 
     <!-- Export configuration -->
     <string name="exportConfig_title">@string/settings_export</string>

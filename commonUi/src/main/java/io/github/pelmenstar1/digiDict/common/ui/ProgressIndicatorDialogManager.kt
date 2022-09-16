@@ -11,7 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class ProgressIndicatorDialogManager {
+abstract class ProgressIndicatorDialogManagerBase {
     private var progressCollectionJob: Job? = null
     private var coroutineScope: LifecycleCoroutineScope? = null
     private var progressFlow: Flow<Float>? = null
@@ -24,25 +24,25 @@ class ProgressIndicatorDialogManager {
         fragmentManager = fm
         progressFlow = flow
 
-        findLoadingIndicatorDialog(fm)?.also { dialog ->
-            showOrBindLoadingIndicatorDialog(dialog)
+        findProgressIndicatorDialog(fm)?.also { dialog ->
+            showOrBindProgressIndicatorDialog(dialog)
         }
     }
 
     fun cancel() {
         progressCollectionJob?.cancel()
-        hideLoadingProgressDialog()
+        hideProgressIndicatorDialog()
     }
 
     fun showDialog() {
-        showOrBindLoadingIndicatorDialog()
+        showOrBindProgressIndicatorDialog()
     }
 
-    private fun showOrBindLoadingIndicatorDialog(currentDialog: ProgressIndicatorDialog? = null) {
+    private fun showOrBindProgressIndicatorDialog(currentDialog: ProgressIndicatorDialogInterface? = null) {
         progressCollectionJob?.let {
             if (it.isActive) {
                 debugLog(TAG) {
-                    info("loadingProgressCollectionJob is already started")
+                    info("progressCollectionJob is already started")
                 }
 
                 it.cancel()
@@ -52,7 +52,7 @@ class ProgressIndicatorDialogManager {
         val scope = coroutineScope ?: throwInitNotCalled()
         val pFlow = progressFlow ?: throwInitNotCalled()
 
-        var dialog: ProgressIndicatorDialog? = currentDialog
+        var dialog: ProgressIndicatorDialogInterface? = currentDialog
 
         progressCollectionJob = scope.launch {
             pFlow.cancelAfter { it == 1f }.collect { progress ->
@@ -73,12 +73,12 @@ class ProgressIndicatorDialogManager {
                             val fm = fragmentManager ?: throwInitNotCalled()
 
                             // Try to find existing dialog to re-use it.
-                            tempDialog = findLoadingIndicatorDialog(fm)
+                            tempDialog = findProgressIndicatorDialog(fm)
 
                             if (tempDialog == null) {
                                 // If there's no loading-indicator-dialog, show it.
-                                tempDialog = ProgressIndicatorDialog().also {
-                                    it.showNow(fm, LOADING_PROGRESS_DIALOG_TAG)
+                                tempDialog = createDialog().also {
+                                    it.showNow(fm, PROGRESS_INDICATOR_DIALOG_TAG)
                                 }
                             }
 
@@ -94,20 +94,28 @@ class ProgressIndicatorDialogManager {
         }
     }
 
-    private fun hideLoadingProgressDialog() {
+    private fun hideProgressIndicatorDialog() {
         fragmentManager?.let { fm ->
-            findLoadingIndicatorDialog(fm)?.dismissNow()
+            findProgressIndicatorDialog(fm)?.dismissNow()
         }
     }
 
     private fun throwInitNotCalled(): Nothing = throw IllegalStateException("init() hasn't been called")
 
+    protected abstract fun createDialog(): ProgressIndicatorDialogInterface
+
     companion object {
         private const val TAG = "ProgressIndicatorDialogManager"
-        private const val LOADING_PROGRESS_DIALOG_TAG = "LoadingIndicatorDialog"
+        private const val PROGRESS_INDICATOR_DIALOG_TAG = "LoadingIndicatorDialog"
 
-        internal fun findLoadingIndicatorDialog(fm: FragmentManager): ProgressIndicatorDialog? {
-            return fm.findFragmentByTag(LOADING_PROGRESS_DIALOG_TAG) as ProgressIndicatorDialog?
+        internal fun findProgressIndicatorDialog(fm: FragmentManager): ProgressIndicatorDialogInterface? {
+            return fm.findFragmentByTag(PROGRESS_INDICATOR_DIALOG_TAG) as ProgressIndicatorDialogInterface?
         }
+    }
+}
+
+class SimpleProgressIndicatorDialogManager : ProgressIndicatorDialogManagerBase() {
+    override fun createDialog(): ProgressIndicatorDialogInterface {
+        return SimpleProgressIndicatorDialog()
     }
 }

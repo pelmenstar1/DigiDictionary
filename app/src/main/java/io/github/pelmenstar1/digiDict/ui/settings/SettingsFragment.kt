@@ -13,7 +13,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import io.github.pelmenstar1.digiDict.common.ui.ProgressIndicatorDialogManager
+import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
 import io.github.pelmenstar1.digiDict.common.ui.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
@@ -31,7 +31,7 @@ class SettingsFragment : Fragment() {
     @Inject
     lateinit var messageMapper: MessageMapper<SettingsMessage>
 
-    private val progressIndicatorDialogManager = ProgressIndicatorDialogManager()
+    private val progressIndicatorDialogManager = SimpleProgressIndicatorDialogManager()
 
     override fun onCreateView(
         inflater: LayoutInflater,

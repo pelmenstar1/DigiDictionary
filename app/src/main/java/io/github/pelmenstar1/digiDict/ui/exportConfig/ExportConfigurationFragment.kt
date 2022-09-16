@@ -15,16 +15,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.common.*
-import io.github.pelmenstar1.digiDict.common.ui.ProgressIndicatorDialogManager
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentExportConfigurationBinding
+import io.github.pelmenstar1.digiDict.ui.importExportConfig.ImportExportConfigProgressIndicatorDialogManager
 import java.util.*
 
 @AndroidEntryPoint
 class ExportConfigurationFragment : Fragment() {
     private val viewModel by viewModels<ExportConfigurationViewModel>()
     private val createDocumentContract = ActivityResultContracts.CreateDocument("*/*")
-    private val progressIndicatorDialogManager = ProgressIndicatorDialogManager()
+    private val progressIndicatorDialogManager = ImportExportConfigProgressIndicatorDialogManager()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()

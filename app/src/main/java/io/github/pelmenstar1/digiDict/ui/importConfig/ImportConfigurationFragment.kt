@@ -20,14 +20,14 @@ import io.github.pelmenstar1.digiDict.backup.importing.ImportException
 import io.github.pelmenstar1.digiDict.common.fileExtensionOrNull
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.NO_OP_DIALOG_ON_CLICK_LISTENER
-import io.github.pelmenstar1.digiDict.common.ui.ProgressIndicatorDialogManager
 import io.github.pelmenstar1.digiDict.databinding.FragmentImportConfigurationBinding
+import io.github.pelmenstar1.digiDict.ui.importExportConfig.ImportExportConfigProgressIndicatorDialogManager
 
 @AndroidEntryPoint
 class ImportConfigurationFragment : Fragment() {
     private val viewModel by viewModels<ImportConfigurationViewModel>()
     private val openDocumentContract = ActivityResultContracts.OpenDocument()
-    private val progressIndicatorDialogManager = ProgressIndicatorDialogManager()
+    private val progressIndicatorDialogManager = ImportExportConfigProgressIndicatorDialogManager()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vm = viewModel
