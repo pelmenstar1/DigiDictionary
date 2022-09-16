@@ -358,10 +358,6 @@ object BackupManager {
         return appDatabase.compileStatement("INSERT INTO record_to_badge_relations (recordId, badgeId) VALUES (?, ?)")
     }
 
-    private fun compileGetBadgeIdByName(appDatabase: AppDatabase): SupportSQLiteStatement {
-        return appDatabase.compileStatement("SELECT id FROM record_badges WHERE name=?")
-    }
-
     private fun getAllRecordsOrderByIdAsc(
         appDatabase: AppDatabase,
         progressReporter: ProgressReporter?

@@ -53,13 +53,13 @@ class BackupManagerTests {
         }
     }
 
-    private suspend fun File.export(db: AppDatabase, options: ExportOptions, format: BackupFormat) {
+    private fun File.export(db: AppDatabase, options: ExportOptions, format: BackupFormat) {
         outputStream().use {
             BackupManager.export(it, BackupManager.createBackupData(db, options), format)
         }
     }
 
-    private suspend fun File.importAndDeploy(db: AppDatabase, options: ImportOptions, format: BackupFormat) {
+    private fun File.importAndDeploy(db: AppDatabase, options: ImportOptions, format: BackupFormat) {
         val data = inputStream().use {
             BackupManager.import(it, format, options)
         }
@@ -130,7 +130,6 @@ class BackupManagerTests {
             val noIdNewBadges = createNoIdBadges(badgeCount, colorAddition = 1)
 
             badgeDao.insertAll(noIdNewBadges)
-            val newBadges = badgeDao.getAllOrderByIdAsc()
 
             file.importAndDeploy(db, ImportOptions(importBadges = true, replaceBadges = false), format)
 
@@ -140,7 +139,7 @@ class BackupManagerTests {
             assertEquals(recordsNoIdSet, importedRecordsInDb)
 
             // Check if badges are changed when we're in "preserve" mode (replaceBadges = false)
-            assertContentEqualsNoId(newBadges, importedBadges)
+            assertContentEqualsNoId(noIdNewBadges, importedBadges)
 
             repeat(badgeCount) {
                 val badgeId = importedBadges[it].id
