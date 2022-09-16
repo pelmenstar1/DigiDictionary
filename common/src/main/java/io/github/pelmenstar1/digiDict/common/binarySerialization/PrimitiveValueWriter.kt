@@ -249,6 +249,8 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
 
         trackLoopProgressWith(progressReporter, size) { i ->
             serializer.writeTo(this, values[i])
+
+            Thread.sleep(10)
         }
     }
 

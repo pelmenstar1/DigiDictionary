@@ -49,7 +49,7 @@ class SettingsFragment : Fragment() {
             val nc = findNavController().also { navController = it }
 
             bindActionHandler(ACTION_IMPORT) {
-
+                nc.navigate(SettingsFragmentDirections.actionSettingsToImportConfiguration())
             }
 
             bindActionHandler(ACTION_EXPORT) {

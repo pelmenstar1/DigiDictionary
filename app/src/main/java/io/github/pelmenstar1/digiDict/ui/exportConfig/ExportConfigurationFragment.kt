@@ -20,6 +20,7 @@ import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentExportConfigurationBinding
 import java.util.*
 
+// TODO: Fix progress dialog
 @AndroidEntryPoint
 class ExportConfigurationFragment : Fragment() {
     private val viewModel by viewModels<ExportConfigurationViewModel>()
@@ -63,23 +64,6 @@ class ExportConfigurationFragment : Fragment() {
             }
         }
 
-        showSnackbarEventHandlerOnError(
-            vm.exportAction,
-            container,
-            R.string.exportConfig_errorMessage,
-            anchorView = binding.exportConfigSelectFileButton
-        )
-
-        lifecycleScope.launchFlowCollector(vm.exportAction.successFlow) {
-            if (container != null) {
-                Snackbar
-                    .make(container, R.string.exportConfig_successMessage, Snackbar.LENGTH_LONG)
-                    .show()
-            }
-
-            findNavController().popBackStack()
-        }
-
         binding.exportConfigExportFormatPicker.let { picker ->
             picker.onItemSelected = { vm.selectedFormat = it }
             picker.setItems(EXPORT_FORMAT_ENTRIES)
@@ -99,6 +83,29 @@ class ExportConfigurationFragment : Fragment() {
 
         progressIndicatorDialogManager.init(this, vm.progressFlow)
 
+        lifecycleScope.run {
+            launchFlowCollector(vm.exportAction.successFlow) {
+                if (container != null) {
+                    Snackbar
+                        .make(container, R.string.exportConfig_successMessage, Snackbar.LENGTH_LONG)
+                        .show()
+                }
+
+                findNavController().popBackStack()
+            }
+
+            launchFlowCollector(vm.exportAction.errorFlow) {
+                if (container != null) {
+                    Snackbar
+                        .make(container, R.string.exportConfig_errorMessage, Snackbar.LENGTH_LONG)
+                        .setAnchorView(binding.exportConfigSelectFileButton)
+                        .show()
+                }
+
+                progressIndicatorDialogManager.cancel()
+            }
+        }
+
         return binding.root
     }
 
@@ -109,8 +116,8 @@ class ExportConfigurationFragment : Fragment() {
 
     companion object {
         private val EXPORT_FORMAT_ENTRIES = arrayOf(
-            ExportFormatEntry(BackupFormat.DDDB, "DDDB", R.string.exportConfig_ddbbDescription),
-            ExportFormatEntry(BackupFormat.JSON, "JSON", R.string.exportConfig_jsonDescription)
+            ExportFormatEntry(BackupFormat.DDDB, R.string.exportConfig_ddbbDescription),
+            ExportFormatEntry(BackupFormat.JSON, R.string.exportConfig_jsonDescription)
         )
 
         internal fun createFileName(locale: Locale, format: BackupFormat): String {

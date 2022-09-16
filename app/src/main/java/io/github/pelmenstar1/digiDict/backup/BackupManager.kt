@@ -13,7 +13,7 @@ import io.github.pelmenstar1.digiDict.backup.importing.DataImporter
 import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
 import io.github.pelmenstar1.digiDict.backup.importing.JsonDataImporter
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.fileExtensionOrNull
+import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
@@ -85,31 +85,24 @@ object BackupManager {
         progressReporter: ProgressReporter? = null
     ): BackupData {
         val importer = importers[format] ?: throw RuntimeException("No importer assigned for given format ($format)")
-        val data = importer.import(input, options, progressReporter?.subReporter(completed = 0f, target = .9f))
 
-        verifyImportData(data)
-        progressReporter?.end()
-
-        return data
+        return trackProgressWith(progressReporter) {
+            importer.import(input, options, progressReporter?.subReporter(completed = 0f, target = .9f)).also {
+                verifyImportData(it)
+            }
+        }
     }
 
     fun import(
         context: Context,
         uri: Uri,
+        format: BackupFormat,
         options: ImportOptions,
         progressReporter: ProgressReporter? = null
     ): BackupData {
         return uri.useAsFile(context, mode = "r") {
-            val format = getBackupFormatForUri(uri)
-
             import(FileInputStream(it), format, options, progressReporter)
         }
-    }
-
-    fun getBackupFormatForUri(uri: Uri): BackupFormat {
-        val ext = uri.fileExtensionOrNull() ?: throw RuntimeException("Invalid URI")
-
-        return BackupFormat.fromExtension(ext)
     }
 
     private inline fun <R> Uri.useAsFile(

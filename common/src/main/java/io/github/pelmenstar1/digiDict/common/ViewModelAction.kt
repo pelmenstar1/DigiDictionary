@@ -91,6 +91,17 @@ abstract class TwoArgumentViewModelAction<T1, T2>(
     protected abstract suspend fun invokeAction(arg1: T1, arg2: T2)
 }
 
+abstract class ThreeArgumentViewModelAction<T1, T2, T3>(
+    vm: ViewModel,
+    logTag: String
+) : ViewModelAction(vm, logTag) {
+    fun run(arg1: T1, arg2: T2, arg3: T3) {
+        runInternal { invokeAction(arg1, arg2, arg3) }
+    }
+
+    protected abstract suspend fun invokeAction(arg1: T1, arg2: T2, arg3: T3)
+}
+
 @JvmName("noArgViewModelAction")
 inline fun ViewModel.viewModelAction(
     logTag: String,
@@ -124,5 +135,17 @@ inline fun <T1, T2> ViewModel.viewModelAction(
 
     return object : TwoArgumentViewModelAction<T1, T2>(vm, logTag) {
         override suspend fun invokeAction(arg1: T1, arg2: T2) = action(arg1, arg2)
+    }
+}
+
+@JvmName("threeArgViewModelAction")
+inline fun <T1, T2, T3> ViewModel.viewModelAction(
+    logTag: String,
+    crossinline action: suspend (T1, T2, T3) -> Unit
+): ThreeArgumentViewModelAction<T1, T2, T3> {
+    val vm = this
+
+    return object : ThreeArgumentViewModelAction<T1, T2, T3>(vm, logTag) {
+        override suspend fun invokeAction(arg1: T1, arg2: T2, arg3: T3) = action(arg1, arg2, arg3)
     }
 }

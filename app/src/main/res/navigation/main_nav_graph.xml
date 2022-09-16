@@ -63,6 +63,10 @@
         <action
             android:id="@+id/action_settings_to_exportConfiguration"
             app:destination="@id/exportConfigurationFragment" />
+
+        <action
+            android:id="@+id/action_settings_to_importConfiguration"
+            app:destination="@id/importConfigurationFragment" />
     </fragment>
 
     <fragment
@@ -144,4 +148,9 @@
         android:id="@+id/exportConfigurationFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.exportConfig.ExportConfigurationFragment"
         android:label="@string/exportConfig_title" />
+
+    <fragment
+        android:id="@+id/importConfigurationFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.importConfig.ImportConfigurationFragment"
+        android:label="@string/importConfig_title" />
 </navigation>

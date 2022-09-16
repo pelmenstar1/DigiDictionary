@@ -55,12 +55,12 @@ class ExportFormatPicker @JvmOverloads constructor(
 
         val formats = unsafeNewArray<BackupFormat>(entries.size)
 
-        entries.forEachIndexed { index, (format, name, descId) ->
+        entries.forEachIndexed { index, (format, descId) ->
             formats[index] = format
 
             addView(ExportFormatEntryView(context).also {
                 it.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
-                it.name = name
+                it.name = format.shortName
                 it.description = res.getText(descId)
                 it.background = selectableItemBackground?.constantState?.newDrawable(res, theme)
                 it.tag = index

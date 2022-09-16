@@ -8,6 +8,7 @@ import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.backup.BackupManager
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import javax.inject.Inject
@@ -26,19 +27,20 @@ class ExportConfigurationViewModel @Inject constructor(
         val options = ExportOptions(exportBadges)
         val reporter = progressReporter
 
-        reporter.start()
-        val data = BackupManager.createBackupData(appDatabase, options)
+        trackProgressWith(reporter) {
+            val data = BackupManager.createBackupData(appDatabase, options)
 
-        // Treat extracting the data as half of the job.
-        reporter.onProgress(0.5f)
+            // Treat extracting the data as half of the job.
+            reporter.onProgress(0.5f)
 
-        BackupManager.export(
-            context,
-            uri,
-            data,
-            selectedFormat!!,
-            reporter.subReporter(completed = 0.5f, target = 1f)
-        )
+            BackupManager.export(
+                context,
+                uri,
+                data,
+                selectedFormat!!,
+                reporter.subReporter(completed = 0.5f, target = 1f)
+            )
+        }
     }
 
     companion object {

@@ -7,9 +7,9 @@ import androidx.lifecycle.lifecycleScope
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.cancelAfter
 import io.github.pelmenstar1.digiDict.common.debugLog
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 class ProgressIndicatorDialogManager {
     private var progressCollectionJob: Job? = null
@@ -54,33 +54,44 @@ class ProgressIndicatorDialogManager {
 
         var dialog: ProgressIndicatorDialog? = currentDialog
 
-        progressCollectionJob = scope.launchFlowCollector(
-            pFlow.cancelAfter { it == 1f }
-        ) { progress ->
-            if (progress == 1f) {
-                dialog?.dismissNow()
-
-                // To be sure dialog won't be reused after it's dismissed.
-                dialog = null
-            } else if (progress != ProgressReporter.UNREPORTED) {
-                var tempDialog = dialog
-                if (tempDialog == null) {
-                    val fm = fragmentManager ?: throwInitNotCalled()
-
-                    // Try to find existing dialog to re-use it.
-                    tempDialog = findLoadingIndicatorDialog(fm)
-
-                    if (tempDialog == null) {
-                        // If there's no loading-indicator-dialog, show it.
-                        tempDialog = ProgressIndicatorDialog().also {
-                            it.showNow(fm, LOADING_PROGRESS_DIALOG_TAG)
-                        }
-                    }
-
-                    dialog = tempDialog
+        progressCollectionJob = scope.launch {
+            pFlow.cancelAfter { it == 1f }.collect { progress ->
+                debugLog(TAG) {
+                    info("progress: $progress")
                 }
 
-                tempDialog.setProgress(progress)
+                when (progress) {
+                    1f -> {
+                        dialog?.dismissNow()
+
+                        // To be sure dialog won't be reused after it's dismissed.
+                        dialog = null
+                    }
+                    ProgressReporter.ERROR -> {
+                        dialog?.dismissNow()
+                    }
+                    ProgressReporter.UNREPORTED -> {}
+                    else -> {
+                        var tempDialog = dialog
+                        if (tempDialog == null) {
+                            val fm = fragmentManager ?: throwInitNotCalled()
+
+                            // Try to find existing dialog to re-use it.
+                            tempDialog = findLoadingIndicatorDialog(fm)
+
+                            if (tempDialog == null) {
+                                // If there's no loading-indicator-dialog, show it.
+                                tempDialog = ProgressIndicatorDialog().also {
+                                    it.showNow(fm, LOADING_PROGRESS_DIALOG_TAG)
+                                }
+                            }
+
+                            dialog = tempDialog
+                        }
+
+                        tempDialog.setProgress(progress)
+                    }
+                }
             }
         }.also {
             it.invokeOnCompletion { progressCollectionJob = null }

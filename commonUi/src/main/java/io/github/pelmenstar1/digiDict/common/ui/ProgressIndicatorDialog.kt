@@ -10,6 +10,7 @@ import androidx.annotation.FloatRange
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.github.pelmenstar1.digiDict.common.TransparentDrawable
+import io.github.pelmenstar1.digiDict.common.debugLog
 
 class ProgressIndicatorDialog : DialogFragment() {
     private var currentProgress = Float.NaN
@@ -35,6 +36,7 @@ class ProgressIndicatorDialog : DialogFragment() {
                 }
 
                 progress = (currentProgress * 100f + 0.5f).toInt()
+                max = 100
 
                 progressIndicator = this
             })
@@ -43,14 +45,11 @@ class ProgressIndicatorDialog : DialogFragment() {
 
     fun setProgress(@FloatRange(from = 0.0, to = 1.0) value: Float) {
         currentProgress = value
-        progressIndicator?.progress = (value * 100f + 0.5f).toInt()
+        progressIndicator?.progress = 25 //(value * 100f).toInt()
 
-        /*
         debugLog("ProgressIndicatorDialog") {
-            info("progress: ${(value * 100f + 0.5f).toInt()}")
+            info("setProgress(value=${(value * 100f).toInt()})")
         }
-
-         */
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

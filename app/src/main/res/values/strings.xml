@@ -163,4 +163,16 @@
     <string name="exportConfig_unexpectedUriMessage">Unexpected type of path was chosen, please choose a file</string>
     <string name="exportConfig_errorMessage">Unexpected error happened. Try again</string>
     <string name="exportConfig_unexpectedFileExtMessage">The extension of the file is expected to be ‘%1$s’ but the selected file‘s extension is ’%2$s’. The resulting file can become inaccessible. Do you want to proceed?</string>
+
+    <!-- Import configuration -->
+    <string name="importConfig_title">@string/settings_import</string>
+    <string name="importConfig_importBadges">Import badges</string>
+    <string name="importConfig_replaceBadges">Replace badges</string>
+    <string name="importConfig_replaceBadges_description">In checked state, if a badge stored now and a badge in the exported file have a same name, its color is replaced in favor of exported file\'s one. When the switch is off, the color won\'t be changed.</string>
+    <string name="importConfig_successMessage">The data was successfully imported</string>
+    <string name="importConfig_errorMessage_validation">The file is invalid and cannot be parsed and imported. Check whether you\'ve chosen a file that was exported by Digi Dictionary</string>
+    <string name="importConfig_errorMessage_internal">Internal error happened while importing the file. Try again</string>
+    <string name="importConfig_errorMessage_unknownVersion">The version of the file is unknown to current version of the application. Update Digi Dictionary to import this file.</string>
+
+    <string name="importFormatSelector_problemMessage">The format of the selected file can\'t be deduced. Please, select it manually</string>
 </resources>

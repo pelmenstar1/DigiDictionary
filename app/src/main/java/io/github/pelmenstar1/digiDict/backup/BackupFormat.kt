@@ -1,14 +1,14 @@
 package io.github.pelmenstar1.digiDict.backup
 
-enum class BackupFormat(@JvmField val extension: String) {
-    DDDB("dddb"),
-    JSON("json");
+enum class BackupFormat(@JvmField val extension: String, val shortName: String) {
+    DDDB("dddb", "DDDB"),
+    JSON("json", "JSON");
 
     companion object {
-        fun fromExtension(value: String) = when (value) {
+        fun fromExtensionOrNull(value: String) = when (value) {
             "dddb" -> DDDB
             "json" -> JSON
-            else -> throw RuntimeException("Invalid extension ($value)")
+            else -> null
         }
     }
 }

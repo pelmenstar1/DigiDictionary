@@ -45,4 +45,6 @@
     <dimen name="exportFormatEntry_indicatorSize">24dp</dimen>
     <dimen name="exportFormatEntry_indicatorMarginEnd">12dp</dimen>
     <dimen name="exportFormatEntry_nameMarginBottom">5dp</dimen>
+
+    <dimen name="importFormatSelectorDialog_entryPadding">8dp</dimen>
 </resources>

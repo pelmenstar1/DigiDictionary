@@ -39,10 +39,6 @@ class ProgressReporter {
         _progressFlow.value = _completed + _diff * value
     }
 
-    fun onProgress(current: Int, total: Int) {
-        onProgress(current.toFloat() / total.toFloat())
-    }
-
     fun start() {
         _progressFlow.value = _completed
     }
@@ -53,6 +49,10 @@ class ProgressReporter {
 
     fun reset() {
         _progressFlow.value = UNREPORTED
+    }
+
+    fun reportError() {
+        _progressFlow.value = ERROR
     }
 
     fun subReporter(completed: Float, target: Float): ProgressReporter {
@@ -71,6 +71,7 @@ class ProgressReporter {
 
     companion object {
         const val UNREPORTED = -1f
+        const val ERROR = -2f
     }
 }
 
@@ -84,11 +85,16 @@ inline fun <R> trackProgressWith(
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    reporter?.onProgress(startProgress)
-    val result = block()
-    reporter?.onProgress(endProgress)
+    try {
+        reporter?.onProgress(startProgress)
+        val result = block()
+        reporter?.onProgress(endProgress)
 
-    return result
+        return result
+    } catch (th: Throwable) {
+        reporter?.reportError()
+        throw th
+    }
 }
 
 inline fun <R> trackProgressWith(reporter: ProgressReporter?, block: () -> R): R {
@@ -96,11 +102,7 @@ inline fun <R> trackProgressWith(reporter: ProgressReporter?, block: () -> R): R
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    reporter?.start()
-    val result = block()
-    reporter?.end()
-
-    return result
+    return trackProgressWith(startProgress = 0f, endProgress = 1f, reporter, block)
 }
 
 inline fun trackLoopProgressWith(reporter: ProgressReporter?, size: Int, loopBody: (index: Int) -> Unit) {
@@ -110,8 +112,6 @@ inline fun trackLoopProgressWith(reporter: ProgressReporter?, size: Int, loopBod
 
     val fSize = size.toFloat()
 
-    // Simple reporter.start() could be used, but size might be 0 and then loopBody wouldn't be called at all,
-    // and we end up in situation when we didn't report about the end of the operation.
     trackProgressWith(reporter) {
         for (i in 0 until size) {
             loopBody(i)
