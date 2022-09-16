@@ -225,6 +225,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
                 out.write(bb, 0, alignedBufSize)
             }
 
+            // TODO: Fix code duplication.
             // Write suffix if it exists.
             if (remElements != 0) {
                 elemBuffer.position(0)
