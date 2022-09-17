@@ -147,6 +147,7 @@
     <string name="settings_widgetTitle">Widget</string>
     <string name="settings_linkToManageRemoteDictProviders">Manage remote. dict providers</string>
     <string name="settings_linkToManageRecordBadges">Manage record badges</string>
+    <string name="settings_miscGroup">Miscellaneous</string>
 
     <!-- List widget -->
     <string name="listWidget_description">Widget which shows you most recent expressions you added</string>

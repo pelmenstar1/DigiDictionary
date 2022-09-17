@@ -181,6 +181,9 @@ class SettingsFragment : Fragment() {
                     R.string.settings_import,
                     directions = SettingsFragmentDirections.actionSettingsToImportConfiguration()
                 )
+            }
+
+            group(R.string.settings_miscGroup) {
                 actionItem(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
             }
         }
