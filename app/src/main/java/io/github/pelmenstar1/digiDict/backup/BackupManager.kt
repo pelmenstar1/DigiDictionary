@@ -15,13 +15,9 @@ import io.github.pelmenstar1.digiDict.backup.importing.DataImporter
 import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
 import io.github.pelmenstar1.digiDict.backup.importing.JsonDataImporter
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.queryArrayWithProgressReporter
 import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
-import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
+import io.github.pelmenstar1.digiDict.data.*
 import java.io.*
 import java.util.*
 
@@ -47,26 +43,24 @@ object BackupManager {
 
         return trackProgressWith(progressReporter) {
             if (options.exportBadges) {
-                records = getAllRecordsOrderByIdAsc(
-                    appDatabase,
+                records = appDatabase.getAllRecordsOrderByIdAsc(
                     progressReporter?.subReporter(completed = 0f, target = .33f)
                 )
-                badges = getAllRecordBadgesOrderByIdAsc(
-                    appDatabase,
+
+                badges = appDatabase.getAllRecordBadgesOrderByIdAsc(
                     progressReporter?.subReporter(completed = .33f, target = .67f)
                 )
-                val recordToBadgeRelations = getAllRecordToBadgeRelations(
-                    appDatabase,
+
+                val recordToBadgeRelations = appDatabase.getAllRecordToBadgeRelations(
                     progressReporter?.subReporter(completed = .67f, target = 1f)
                 )
-                val recordIdToOrdinalMap = IdToOrdinalMap(records)
 
                 badgeToMultipleRecordEntries = BackupHelpers.groupRecordToBadgeRelations(
                     recordToBadgeRelations,
-                    recordIdToOrdinalMap
+                    IdToOrdinalMap(records)
                 )
             } else {
-                records = getAllRecordsOrderByIdAsc(appDatabase, progressReporter)
+                records = appDatabase.getAllRecordsOrderByIdAsc(progressReporter)
                 badges = emptyArray()
                 badgeToMultipleRecordEntries = emptyArray()
             }
@@ -178,9 +172,9 @@ object BackupManager {
                         recordToBadgeRelationReporter
                     )
                 } else {
-                    compileInsertRecordStatement(appDatabase).use {
+                    appDatabase.compileInsertRecordStatement().use {
                         trackLoopProgressWith(progressReporter, records) { _, record ->
-                            bindRecordToInsertStatement(it, record)
+                            it.bindRecordToInsertStatement(record)
                             it.executeInsert()
                         }
                     }
@@ -221,8 +215,8 @@ object BackupManager {
         appDatabase,
         records,
         progressReporter,
-        this::compileInsertRecordStatement,
-        this::bindRecordToInsertStatement
+        AppDatabase::compileInsertRecordStatement,
+        SupportSQLiteStatement::bindRecordToInsertStatement
     )
 
     private fun insertOrReplaceRecordBadgesAndSaveSortedIds(
@@ -233,8 +227,8 @@ object BackupManager {
         appDatabase,
         badges,
         progressReporter,
-        this::compileInsertOrReplaceRecordBadgeStatement,
-        this::bindRecordBadgeToInsertStatement
+        AppDatabase::compileInsertOrReplaceRecordBadgeStatement,
+        SupportSQLiteStatement::bindRecordBadgeToInsertStatement
     )
 
     private fun insertRecordBadgesAndSaveSortedIds(
@@ -275,11 +269,11 @@ object BackupManager {
                         var insertStatement = insertBadgeStatement
 
                         if (insertStatement == null) {
-                            insertStatement = compileInsertRecordBadgeStatement(appDatabase)
+                            insertStatement = appDatabase.compileInsertRecordBadgeStatement()
                             insertBadgeStatement = insertStatement
                         }
 
-                        bindRecordBadgeToInsertStatement(insertStatement, badge)
+                        insertStatement.bindRecordBadgeToInsertStatement(badge)
                         ids[i] = insertStatement.executeInsert().toInt()
                     }
                 }
@@ -302,7 +296,7 @@ object BackupManager {
         sortedBadgeIds: IntArray,
         progressReporter: ProgressReporter?
     ) {
-        return compileInsertRecordToBadgeRelation(appDatabase).use { statement ->
+        return appDatabase.compileInsertRecordToBadgeRelation().use { statement ->
             val totalSize = entries.sumOf { it.recordOrdinals.size }
             val fTotalSize = totalSize.toFloat()
             var seqIndex = 0
@@ -322,93 +316,6 @@ object BackupManager {
                     }
                 }
             }
-        }
-    }
-
-    private fun compileInsertRecordStatement(appDatabase: AppDatabase): SupportSQLiteStatement {
-        return appDatabase.compileStatement("INSERT OR REPLACE INTO records (expression, meaning, additionalNotes, score, dateTime) VALUES (?,?,?,?,?)")
-    }
-
-    private fun bindRecordToInsertStatement(statement: SupportSQLiteStatement, record: Record) {
-        statement.also {
-            it.bindString(1, record.expression)
-            it.bindString(2, record.meaning)
-            it.bindString(3, record.additionalNotes)
-            it.bindLong(4, record.score.toLong())
-            it.bindLong(5, record.epochSeconds)
-        }
-    }
-
-    private fun compileInsertOrReplaceRecordBadgeStatement(appDatabase: AppDatabase): SupportSQLiteStatement {
-        return appDatabase.compileStatement("INSERT OR REPLACE INTO record_badges (name, outlineColor) VALUES (?,?)")
-    }
-
-    private fun compileInsertRecordBadgeStatement(appDatabase: AppDatabase): SupportSQLiteStatement {
-        return appDatabase.compileStatement("INSERT INTO record_badges (name, outlineColor) VALUES (?,?)")
-    }
-
-    private fun bindRecordBadgeToInsertStatement(statement: SupportSQLiteStatement, badge: RecordBadgeInfo) {
-        statement.also {
-            it.bindString(1, badge.name)
-            it.bindLong(2, badge.outlineColor.toLong())
-        }
-    }
-
-    private fun compileInsertRecordToBadgeRelation(appDatabase: AppDatabase): SupportSQLiteStatement {
-        return appDatabase.compileStatement("INSERT INTO record_to_badge_relations (recordId, badgeId) VALUES (?, ?)")
-    }
-
-    private fun getAllRecordsOrderByIdAsc(
-        appDatabase: AppDatabase,
-        progressReporter: ProgressReporter?
-    ): Array<Record> {
-        return appDatabase.queryArrayWithProgressReporter(
-            "SELECT id, expression, meaning, additionalNotes, score, dateTime FROM records ORDER BY id ASC",
-            null,
-            progressReporter
-        ) { c ->
-            val id = c.getInt(0)
-            val expr = c.getString(1)
-            val meaning = c.getString(2)
-            val notes = c.getString(3)
-            val score = c.getInt(4)
-            val epochSeconds = c.getLong(5)
-
-            Record(id, expr, meaning, notes, score, epochSeconds)
-        }
-    }
-
-    private fun getAllRecordBadgesOrderByIdAsc(
-        appDatabase: AppDatabase,
-        progressReporter: ProgressReporter?
-    ): Array<RecordBadgeInfo> {
-        return appDatabase.queryArrayWithProgressReporter(
-            "SELECT id, name, outlineColor FROM record_badges ORDER BY id ASC",
-            null,
-            progressReporter
-        ) { c ->
-            val id = c.getInt(0)
-            val name = c.getString(1)
-            val outlineColor = c.getInt(2)
-
-            RecordBadgeInfo(id, name, outlineColor)
-        }
-    }
-
-    private fun getAllRecordToBadgeRelations(
-        appDatabase: AppDatabase,
-        progressReporter: ProgressReporter?
-    ): Array<RecordToBadgeRelation> {
-        return appDatabase.queryArrayWithProgressReporter(
-            "SELECT recordId, badgeId FROM record_to_badge_relations ORDER BY badgeId ASC",
-            null,
-            progressReporter
-        ) { c ->
-            val recordId = c.getInt(0)
-            val badgeId = c.getInt(1)
-
-            // relationId is not used anywhere, so let it be zero.
-            RecordToBadgeRelation(0, recordId, badgeId)
         }
     }
 }
