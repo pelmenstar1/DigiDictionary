@@ -26,7 +26,7 @@ import kotlin.math.min
 
 private typealias ItemContentInflaterHashMap = HashMap<
         Class<out SettingsDescriptor.ItemContent<Any>>,
-        SettingsInflater.ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>>>
+        SettingsInflater.ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View>>
 
 class SettingsInflater(private val context: Context) {
     @Suppress("UNCHECKED_CAST")
@@ -309,14 +309,15 @@ class SettingsInflater(private val context: Context) {
         @JvmField val nameVerticalMargin: Int
     )
 
-    interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>> {
+    interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>, TView : View> {
         val needsRightPadding: Boolean
 
-        fun createView(context: Context, content: TContent, onValueChanged: (T) -> Unit): View
-        fun setValue(view: View, content: TContent, value: T)
+        fun createView(context: Context, content: TContent, onValueChanged: (T) -> Unit): TView
+        fun setValue(view: TView, content: TContent, value: T)
     }
 
-    private object SwitchContentInflater : ItemContentInflater<Boolean, SettingsDescriptor.SwitchItemContent> {
+    private object SwitchContentInflater :
+        ItemContentInflater<Boolean, SettingsDescriptor.SwitchItemContent, SwitchMaterial> {
         @Suppress("UNCHECKED_CAST")
         private val onCheckedChangedListener = CompoundButton.OnCheckedChangeListener { view, isChecked ->
             (view.tag as (Boolean) -> Unit).also {
@@ -331,7 +332,7 @@ class SettingsInflater(private val context: Context) {
             context: Context,
             content: SettingsDescriptor.SwitchItemContent,
             onValueChanged: (Boolean) -> Unit
-        ): View {
+        ): SwitchMaterial {
             return SwitchMaterial(context).also {
                 it.tag = onValueChanged
 
@@ -339,12 +340,13 @@ class SettingsInflater(private val context: Context) {
             }
         }
 
-        override fun setValue(view: View, content: SettingsDescriptor.SwitchItemContent, value: Boolean) {
-            (view as SwitchMaterial).isChecked = value
+        override fun setValue(view: SwitchMaterial, content: SettingsDescriptor.SwitchItemContent, value: Boolean) {
+            view.isChecked = value
         }
     }
 
-    private object RangeSpinnerInflater : ItemContentInflater<Int, SettingsDescriptor.RangeSpinnerItemContent> {
+    private object RangeSpinnerInflater :
+        ItemContentInflater<Int, SettingsDescriptor.RangeSpinnerItemContent, AppCompatSpinner> {
         private class Tag(
             @JvmField val start: Int,
             @JvmField val endInclusive: Int,
@@ -373,7 +375,7 @@ class SettingsInflater(private val context: Context) {
             context: Context,
             content: SettingsDescriptor.RangeSpinnerItemContent,
             onValueChanged: (Int) -> Unit
-        ): View {
+        ): AppCompatSpinner {
             val start = content.start
             val end = content.endInclusive
             val step = content.step
@@ -395,7 +397,7 @@ class SettingsInflater(private val context: Context) {
 
         }
 
-        override fun setValue(view: View, content: SettingsDescriptor.RangeSpinnerItemContent, value: Int) {
+        override fun setValue(view: AppCompatSpinner, content: SettingsDescriptor.RangeSpinnerItemContent, value: Int) {
             val start = content.start
             val end = content.endInclusive
             val step = content.step
@@ -403,7 +405,7 @@ class SettingsInflater(private val context: Context) {
             val constrainedValue = value.coerceIn(start, end)
             val position = (constrainedValue - start) / step
 
-            (view as AppCompatSpinner).setSelection(position)
+            view.setSelection(position)
         }
     }
 
@@ -434,13 +436,13 @@ class SettingsInflater(private val context: Context) {
         }
 
         private inline fun <reified TContent : SettingsDescriptor.ItemContent<*>> ItemContentInflaterHashMap.put(
-            value: ItemContentInflater<*, TContent>
+            value: ItemContentInflater<*, TContent, out View>
         ) {
-            put(TContent::class.java, value as ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>>)
+            put(TContent::class.java, value as ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View>)
         }
 
-        internal fun <TValue : Any, TContent : SettingsDescriptor.ItemContent<TValue>> TContent.getInflater(): ItemContentInflater<TValue, TContent> {
-            return itemInflaters[javaClass] as ItemContentInflater<TValue, TContent>
+        internal fun <TValue : Any, TContent : SettingsDescriptor.ItemContent<TValue>> TContent.getInflater(): ItemContentInflater<TValue, TContent, View> {
+            return itemInflaters[javaClass] as ItemContentInflater<TValue, TContent, View>
         }
 
         fun applySnapshot(snapshot: AppPreferences.Snapshot, container: LinearLayout) {
