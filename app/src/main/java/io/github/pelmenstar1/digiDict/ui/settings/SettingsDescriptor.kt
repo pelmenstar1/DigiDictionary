@@ -13,7 +13,7 @@ import io.github.pelmenstar1.digiDict.prefs.AppPreferences
  *   appropriate [AppPreferences.Entry] which the item represents.
  * - Action groups. Action has a name and a perform lambda. Action is represented by a button.
  */
-class SettingsDescriptor(val groups: List<Group>) {
+class SettingsDescriptor(val groups: List<ItemGroup>) {
     object ItemContentBuilder {
         fun switch(): ItemContent<Boolean> = SwitchItemContent
 
@@ -54,17 +54,13 @@ class SettingsDescriptor(val groups: List<Group>) {
         val directions: NavDirections
     ) : Item
 
-    class Action(
+    class ActionItem(
         val id: Int,
-        @StringRes val nameRes: Int
-    )
+        @StringRes val nameRes: Int,
+        @DrawableRes val iconRes: Int
+    ) : Item
 
-    sealed interface Group {
-        @get:StringRes
-        val titleRes: Int
-    }
-
-    class ItemGroup(@StringRes override val titleRes: Int, val items: List<Item>) : Group {
+    class ItemGroup(@StringRes val titleRes: Int, val items: List<Item>) {
         // TODO: Implement as inline-class
         class Builder(@StringRes private val titleRes: Int) {
             private val items = ArrayList<Item>(4)
@@ -100,39 +96,28 @@ class SettingsDescriptor(val groups: List<Group>) {
                 items.add(LinkItem(nameRes, iconRes, directions))
             }
 
-            fun build() = ItemGroup(titleRes, items)
-        }
-    }
-
-    class ActionGroup(@StringRes override val titleRes: Int, val actions: List<Action>) : Group {
-        // TODO: Implement as inline-class
-        class Builder(@StringRes private val titleRes: Int) {
-            private val actions = ArrayList<Action>(4)
-
-            fun action(id: Int, @StringRes nameRes: Int) {
-                actions.add(Action(id, nameRes))
+            fun actionItem(
+                id: Int,
+                @StringRes nameRes: Int,
+                @DrawableRes iconRes: Int = -1
+            ) {
+                items.add(ActionItem(id, nameRes, iconRes))
             }
 
-            fun build() = ActionGroup(titleRes, actions)
+            fun build() = ItemGroup(titleRes, items)
         }
     }
 
     // TODO: Implement as inline-class
     class Builder {
-        private val groups = ArrayList<Group>(4)
+        private val groups = ArrayList<ItemGroup>(4)
 
-        fun group(group: Group) {
+        fun group(group: ItemGroup) {
             groups.add(group)
         }
 
-        inline fun itemGroup(@StringRes titleRes: Int, items: ItemGroup.Builder.() -> Unit) {
+        inline fun group(@StringRes titleRes: Int, items: ItemGroup.Builder.() -> Unit) {
             val builder = ItemGroup.Builder(titleRes).also(items)
-
-            group(builder.build())
-        }
-
-        inline fun actionGroup(@StringRes titleRes: Int, actions: ActionGroup.Builder.() -> Unit) {
-            val builder = ActionGroup.Builder(titleRes).also(actions)
 
             group(builder.build())
         }

@@ -15,7 +15,6 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
@@ -36,11 +35,11 @@ class SettingsInflater(private val context: Context) {
 
         val titleViewInfo = createTitleViewInfo()
         val itemContainerViewInfo = createItemContainerViewInfo()
-        val actionViewInfo = createActionViewInfo()
+        val actionItemViewInfo = createActionItemViewInfo()
 
         val actionOnClickListener = View.OnClickListener {
-            val actionId = it.tag as Int
-            controller.performAction(actionId)
+            val item = it.tag as SettingsDescriptor.ActionItem
+            controller.performAction(item.id)
         }
 
         val linkOnClickListener = View.OnClickListener {
@@ -55,31 +54,25 @@ class SettingsInflater(private val context: Context) {
                 container.addView(it)
             }
 
-            when (group) {
-                is SettingsDescriptor.ItemGroup -> {
-                    group.items.forEachWithNoIterator { item ->
-                        val itemContainer = when (item) {
-                            is SettingsDescriptor.ContentItem<*> -> {
-                                createContentItemContainer(controller, item, itemContainerViewInfo)
-                            }
-                            is SettingsDescriptor.LinkItem -> {
-                                createLinkItemContainer(item, itemContainerViewInfo, linkOnClickListener)
-                            }
-                        }
-
-                        container.addView(itemContainer)
+            group.items.forEachWithNoIterator { item ->
+                val itemContainer = when (item) {
+                    is SettingsDescriptor.ContentItem<*> -> {
+                        createContentItemContainer(controller, item, itemContainerViewInfo)
+                    }
+                    is SettingsDescriptor.LinkItem -> {
+                        createLinkItemContainer(item, itemContainerViewInfo, linkOnClickListener)
+                    }
+                    is SettingsDescriptor.ActionItem -> {
+                        createActionItemContainer(
+                            item,
+                            itemContainerViewInfo,
+                            actionItemViewInfo,
+                            actionOnClickListener
+                        )
                     }
                 }
-                is SettingsDescriptor.ActionGroup -> {
-                    group.actions.forEachWithNoIterator { action ->
-                        createActionButton(action.nameRes, actionViewInfo).also {
-                            it.tag = action.id
-                            it.setOnClickListener(actionOnClickListener)
 
-                            container.addView(it)
-                        }
-                    }
-                }
+                container.addView(itemContainer)
             }
         }
 
@@ -131,6 +124,14 @@ class SettingsInflater(private val context: Context) {
         val nameMarginStart = res.getDimensionPixelOffset(R.dimen.settingItemContainer_nameMarginStart)
 
         return ItemContainerViewInfo(padding, iconSize, nameMarginStart)
+    }
+
+    private fun createActionItemViewInfo(): ActionItemViewInfo {
+        val res = context.resources
+
+        val nameVerticalPadding = res.getDimensionPixelOffset(R.dimen.settings_actionItemNameVerticalMargin)
+
+        return ActionItemViewInfo(nameVerticalPadding)
     }
 
     private fun createContentItemContainer(
@@ -218,6 +219,51 @@ class SettingsInflater(private val context: Context) {
         }
     }
 
+    private fun createActionItemContainer(
+        item: SettingsDescriptor.ActionItem,
+        containerInfo: ItemContainerViewInfo,
+        actionInfo: ActionItemViewInfo,
+        onClickListener: View.OnClickListener
+    ): ViewGroup {
+        return LinearLayout(context).apply {
+            layoutParams = ITEM_CONTAINER_LAYOUT_PARAMS
+            orientation = LinearLayout.HORIZONTAL
+
+            // Tag is needed for click listener
+            tag = item
+
+            setPadding(containerInfo.padding)
+
+            val iconRes = item.iconRes
+            if (iconRes >= 0) {
+                addView(createItemIconView(iconRes, containerInfo))
+            }
+
+            addView(MaterialTextView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    val verticalMargin = actionInfo.nameVerticalMargin
+
+                    gravity = Gravity.CENTER_VERTICAL
+
+                    // If there's no icon, name text-view should be on the same place.
+                    marginStart = containerInfo.nameMarginStart + if (iconRes >= 0) 0 else containerInfo.iconSize
+                    topMargin = verticalMargin
+                    bottomMargin = verticalMargin
+
+                    weight = 1f
+                }
+
+                setTextAppearance { BodyLarge }
+                setText(item.nameRes)
+            })
+
+            setOnClickListener(onClickListener)
+        }
+    }
+
     private fun createItemIconView(@DrawableRes iconRes: Int, info: ItemContainerViewInfo): AppCompatImageView {
         return AppCompatImageView(context).apply {
             val size = info.iconSize
@@ -247,26 +293,6 @@ class SettingsInflater(private val context: Context) {
         }
     }
 
-    private fun createActionViewInfo(): ActionViewInfo {
-        val marginTop = context.resources.getDimensionPixelOffset(R.dimen.settings_actionMarginTop)
-
-        return ActionViewInfo(marginTop)
-    }
-
-    private fun createActionButton(@StringRes nameRes: Int, info: ActionViewInfo): MaterialButton {
-        return MaterialButton(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-            ).also {
-                it.gravity = Gravity.CENTER_HORIZONTAL
-                it.topMargin = info.marginTop
-            }
-
-            setText(nameRes)
-        }
-    }
-
     private class TitleViewInfo(
         @JvmField @ColorInt val background: Int,
         @JvmField val typeface: Typeface?,
@@ -279,8 +305,8 @@ class SettingsInflater(private val context: Context) {
         @JvmField val nameMarginStart: Int
     )
 
-    private class ActionViewInfo(
-        @JvmField val marginTop: Int
+    private class ActionItemViewInfo(
+        @JvmField val nameVerticalMargin: Int
     )
 
     interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>> {

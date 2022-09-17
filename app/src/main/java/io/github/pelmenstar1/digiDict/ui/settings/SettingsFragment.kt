@@ -46,15 +46,7 @@ class SettingsFragment : Fragment() {
 
         SettingsInflater(context).inflate(descriptor, container = contentContainer).run {
             onValueChangedHandler = viewModel::changePreferenceValue
-            val nc = findNavController().also { navController = it }
-
-            bindActionHandler(ACTION_IMPORT) {
-                nc.navigate(SettingsFragmentDirections.actionSettingsToImportConfiguration())
-            }
-
-            bindActionHandler(ACTION_EXPORT) {
-                nc.navigate(SettingsFragmentDirections.actionSettingsToExportConfiguration())
-            }
+            navController = findNavController()
 
             bindActionHandler(ACTION_DELETE_ALL_RECORDS) {
                 requestDeleteAllRecords()
@@ -101,19 +93,17 @@ class SettingsFragment : Fragment() {
     }
 
     companion object {
-        private const val ACTION_IMPORT = 0
-        private const val ACTION_EXPORT = 1
-        private const val ACTION_DELETE_ALL_RECORDS = 2
+        private const val ACTION_DELETE_ALL_RECORDS = 0
 
         private val descriptor = settingsDescriptor {
-            itemGroup(R.string.settings_generalGroup) {
+            group(R.string.settings_generalGroup) {
                 linkItem(
                     nameRes = R.string.settings_linkToManageRecordBadges,
                     directions = SettingsFragmentDirections.actionSettingsToManageRecordBadges()
                 )
             }
 
-            itemGroup(R.string.quiz) {
+            group(R.string.quiz) {
                 item(
                     nameRes = R.string.settings_scorePointsPerCorrectAnswer,
                     iconRes = R.drawable.ic_points_per_correct_answer,
@@ -131,7 +121,7 @@ class SettingsFragment : Fragment() {
                 }
             }
 
-            itemGroup(R.string.remoteDictProviderShort) {
+            group(R.string.remoteDictProviderShort) {
                 item(
                     nameRes = R.string.settings_openBrowserInApp,
                     iconRes = R.drawable.ic_open_browser_in_app,
@@ -146,7 +136,7 @@ class SettingsFragment : Fragment() {
                 )
             }
 
-            itemGroup(R.string.remindRecords_label) {
+            group(R.string.remindRecords_label) {
                 item(
                     nameRes = R.string.settings_remindMaxItems,
                     iconRes = R.drawable.ic_list_numbered,
@@ -168,7 +158,7 @@ class SettingsFragment : Fragment() {
                 }
             }
 
-            itemGroup(R.string.settings_widgetTitle) {
+            group(R.string.settings_widgetTitle) {
                 item(
                     nameRes = R.string.settings_widgetListMaxSize,
                     iconRes = R.drawable.ic_widget_list_max_size,
@@ -182,10 +172,16 @@ class SettingsFragment : Fragment() {
                 }
             }
 
-            actionGroup(R.string.settings_backupTitle) {
-                action(ACTION_EXPORT, R.string.settings_export)
-                action(ACTION_IMPORT, R.string.settings_import)
-                action(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
+            group(R.string.settings_backupTitle) {
+                linkItem(
+                    R.string.settings_export,
+                    directions = SettingsFragmentDirections.actionSettingsToExportConfiguration()
+                )
+                linkItem(
+                    R.string.settings_import,
+                    directions = SettingsFragmentDirections.actionSettingsToImportConfiguration()
+                )
+                actionItem(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
             }
         }
     }
