@@ -7,11 +7,7 @@ import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 
 /**
  * Describes semantics of the settings. The main element of the descriptor is a group.
- * The group contains items or actions from the same area.
- * Groups are divided into two types:
- * - Item groups. Item has an icon, a name and a content. Also the item is connected to
- *   appropriate [AppPreferences.Entry] which the item represents.
- * - Action groups. Action has a name and a perform lambda. Action is represented by a button.
+ * The group contains items from the same area.
  */
 class SettingsDescriptor(val groups: List<ItemGroup>) {
     object ItemContentBuilder {
@@ -61,10 +57,8 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
     ) : Item
 
     class ItemGroup(@StringRes val titleRes: Int, val items: List<Item>) {
-        // TODO: Implement as inline-class
-        class Builder(@StringRes private val titleRes: Int) {
-            private val items = ArrayList<Item>(4)
-
+        @JvmInline
+        value class ItemListBuilder(private val items: MutableList<Item>) {
             fun <T : Any> item(
                 @StringRes nameRes: Int,
                 @DrawableRes iconRes: Int,
@@ -103,33 +97,27 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
             ) {
                 items.add(ActionItem(id, nameRes, iconRes))
             }
-
-            fun build() = ItemGroup(titleRes, items)
         }
     }
 
-    // TODO: Implement as inline-class
-    class Builder {
-        private val groups = ArrayList<ItemGroup>(4)
-
+    @JvmInline
+    value class GroupListBuilder(private val groups: MutableList<ItemGroup>) {
         fun group(group: ItemGroup) {
             groups.add(group)
         }
 
-        inline fun group(@StringRes titleRes: Int, items: ItemGroup.Builder.() -> Unit) {
-            val builder = ItemGroup.Builder(titleRes).also(items)
+        inline fun group(@StringRes titleRes: Int, itemsBlock: ItemGroup.ItemListBuilder.() -> Unit) {
+            val items = ArrayList<Item>()
+            ItemGroup.ItemListBuilder(items).also(itemsBlock)
 
-            group(builder.build())
-        }
-
-        fun build(): SettingsDescriptor {
-            return SettingsDescriptor(groups)
+            group(ItemGroup(titleRes, items))
         }
     }
 }
 
-inline fun settingsDescriptor(groups: SettingsDescriptor.Builder.() -> Unit): SettingsDescriptor {
-    val builder = SettingsDescriptor.Builder().also(groups)
+inline fun settingsDescriptor(groupsBuilder: SettingsDescriptor.GroupListBuilder.() -> Unit): SettingsDescriptor {
+    val groups = ArrayList<SettingsDescriptor.ItemGroup>()
+    SettingsDescriptor.GroupListBuilder(groups).also(groupsBuilder)
 
-    return builder.build()
+    return SettingsDescriptor(groups)
 }
