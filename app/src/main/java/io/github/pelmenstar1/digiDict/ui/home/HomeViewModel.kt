@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import kotlinx.coroutines.Dispatchers
@@ -29,20 +30,24 @@ class HomeViewModel @Inject constructor(
         }
     ).flow.cachedIn(viewModelScope)
 
-    private val recordDao = appDatabase.recordDao()
+    private val searchProgressReporter = ProgressReporter()
+    val searchProgressFlow = searchProgressReporter.progressFlow
 
     private val searchStateManager = DataLoadStateManager<FilteredArray<ConciseRecordWithBadges>>(TAG)
+
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {
             // This makes getAllConciseRecordsWithSearchInfoAndBadges() being invoked once
             // value of isActiveFlow is true. When value is changed from true to false,
-            // filter { it } will prevent false to trigger collection.
+            // filterTrue() will prevent false to trigger collection.
             val recordFlow = GlobalSearchQueryProvider
                 .isActiveFlow
                 .filterTrue()
                 .distinctUntilChanged()
                 .map {
-                    recordDao.getAllConciseRecordsWithBadges()
+                    trackProgressWith(searchProgressReporter) {
+                        appDatabase.getAllConciseRecordsWithBadges(searchProgressReporter)
+                    }
                 }
 
             recordFlow.combine(GlobalSearchQueryProvider.queryFlow) { records, query ->

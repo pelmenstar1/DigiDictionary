@@ -95,6 +95,7 @@ class HomeFragment : Fragment() {
             ) {
                 when (it) {
                     is DataLoadState.Loading -> {
+                        loadingIndicator.isIndeterminate = false
                         loadingIndicator.visibility = View.VISIBLE
                         errorContainer.visibility = View.GONE
                         recyclerView.visibility = View.GONE
@@ -126,8 +127,13 @@ class HomeFragment : Fragment() {
                 }
             }
 
+            launchFlowCollector(viewModel.searchProgressFlow) { progress ->
+                loadingIndicator.progress = (progress * 100f + 0.5f).toInt()
+            }
+
             launchFlowCollector(
-                pagingAdapter.loadStateFlow
+                pagingAdapter
+                    .loadStateFlow
                     .combineTransform(GlobalSearchQueryProvider.isActiveFlow) { state, isActive ->
                         // While search is active, UI should not respond to pagingAdapter state,
                         // as it's not on the screen.
@@ -138,6 +144,7 @@ class HomeFragment : Fragment() {
             ) {
                 val refresh = it.refresh
 
+                loadingIndicator.isIndeterminate = true
                 loadingIndicator.isVisible = refresh is LoadState.Loading
                 errorContainer.isVisible = refresh is LoadState.Error
                 recyclerView.isVisible = refresh is LoadState.NotLoading && !refresh.endOfPaginationReached
