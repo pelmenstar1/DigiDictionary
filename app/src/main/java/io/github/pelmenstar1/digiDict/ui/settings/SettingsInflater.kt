@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.ui.settings
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -20,6 +21,7 @@ import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
+import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import kotlin.math.min
@@ -33,9 +35,11 @@ class SettingsInflater(private val context: Context) {
     fun inflate(descriptor: SettingsDescriptor, container: LinearLayout): SettingsController {
         val controller = SettingsController()
 
+        val selectableItemBackground = context.getSelectableItemBackground()
+
         val titleViewInfo = createTitleViewInfo()
         val itemContainerViewInfo = createItemContainerViewInfo()
-        val actionItemViewInfo = createActionItemViewInfo()
+        val actionItemViewInfo = createActionItemViewInfo(selectableItemBackground)
 
         val actionOnClickListener = View.OnClickListener {
             val item = it.tag as SettingsDescriptor.ActionItem
@@ -60,7 +64,12 @@ class SettingsInflater(private val context: Context) {
                         createContentItemContainer(controller, item, itemContainerViewInfo)
                     }
                     is SettingsDescriptor.LinkItem -> {
-                        createLinkItemContainer(item, itemContainerViewInfo, linkOnClickListener)
+                        createLinkItemContainer(
+                            item,
+                            itemContainerViewInfo,
+                            selectableItemBackground,
+                            linkOnClickListener
+                        )
                     }
                     is SettingsDescriptor.ActionItem -> {
                         createActionItemContainer(
@@ -126,12 +135,12 @@ class SettingsInflater(private val context: Context) {
         return ItemContainerViewInfo(padding, iconSize, nameMarginStart)
     }
 
-    private fun createActionItemViewInfo(): ActionItemViewInfo {
+    private fun createActionItemViewInfo(selectableItemBackground: Drawable?): ActionItemViewInfo {
         val res = context.resources
 
         val nameVerticalPadding = res.getDimensionPixelOffset(R.dimen.settings_actionItemNameVerticalMargin)
 
-        return ActionItemViewInfo(nameVerticalPadding)
+        return ActionItemViewInfo(nameVerticalPadding, selectableItemBackground)
     }
 
     private fun createContentItemContainer(
@@ -174,21 +183,23 @@ class SettingsInflater(private val context: Context) {
     private fun createLinkItemContainer(
         item: SettingsDescriptor.LinkItem,
         info: ItemContainerViewInfo,
+        selectableItemBackground: Drawable?,
         onClickListener: View.OnClickListener
     ): ViewGroup {
+        val res = context.resources
+
         return LinearLayout(context).apply {
             layoutParams = ITEM_CONTAINER_LAYOUT_PARAMS
-            orientation = LinearLayout.HORIZONTAL
 
             // Tag is needed for click listener
             tag = item
 
+            orientation = LinearLayout.HORIZONTAL
+            background = selectableItemBackground?.constantState?.newDrawable(res, context.theme)
             setPadding(info.padding)
 
             val iconRes = item.iconRes
-            if (iconRes >= 0) {
-                addView(createItemIconView(iconRes, info))
-            }
+            addItemIconViewIfResValid(iconRes, info)
 
             addView(MaterialTextView(context).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -203,7 +214,7 @@ class SettingsInflater(private val context: Context) {
                 }
 
                 setTextAppearance { BodyLarge }
-                setText(item.nameRes)
+                text = res.getText(item.nameRes)
             })
 
             addView(AppCompatImageView(context).apply {
@@ -225,19 +236,20 @@ class SettingsInflater(private val context: Context) {
         actionInfo: ActionItemViewInfo,
         onClickListener: View.OnClickListener
     ): ViewGroup {
+        val res = context.resources
+
         return LinearLayout(context).apply {
             layoutParams = ITEM_CONTAINER_LAYOUT_PARAMS
-            orientation = LinearLayout.HORIZONTAL
 
             // Tag is needed for click listener
             tag = item
 
+            orientation = LinearLayout.HORIZONTAL
+            background = actionInfo.selectableItemBackground?.constantState?.newDrawable(res, context.theme)
             setPadding(containerInfo.padding)
 
             val iconRes = item.iconRes
-            if (iconRes >= 0) {
-                addView(createItemIconView(iconRes, containerInfo))
-            }
+            addItemIconViewIfResValid(iconRes, containerInfo)
 
             addView(MaterialTextView(context).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -257,10 +269,16 @@ class SettingsInflater(private val context: Context) {
                 }
 
                 setTextAppearance { BodyLarge }
-                setText(item.nameRes)
+                text = res.getText(item.nameRes)
             })
 
             setOnClickListener(onClickListener)
+        }
+    }
+
+    private fun ViewGroup.addItemIconViewIfResValid(@DrawableRes iconRes: Int, info: ItemContainerViewInfo) {
+        if (iconRes >= 0) {
+            addView(createItemIconView(iconRes, info))
         }
     }
 
@@ -306,7 +324,8 @@ class SettingsInflater(private val context: Context) {
     )
 
     private class ActionItemViewInfo(
-        @JvmField val nameVerticalMargin: Int
+        @JvmField val nameVerticalMargin: Int,
+        @JvmField val selectableItemBackground: Drawable?
     )
 
     interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>, TView : View> {

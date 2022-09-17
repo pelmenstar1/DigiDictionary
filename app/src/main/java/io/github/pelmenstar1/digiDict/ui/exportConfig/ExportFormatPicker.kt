@@ -1,15 +1,13 @@
 package io.github.pelmenstar1.digiDict.ui.exportConfig
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
-import androidx.core.content.res.ResourcesCompat
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
+import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
@@ -51,7 +49,7 @@ class ExportFormatPicker @JvmOverloads constructor(
         val context = context
         val res = context.resources
         val theme = context.theme
-        val selectableItemBackground = getSelectableItemBackground(context)
+        val selectableItemBackground = context.getSelectableItemBackground()
 
         val formats = unsafeNewArray<BackupFormat>(entries.size)
 
@@ -73,20 +71,4 @@ class ExportFormatPicker @JvmOverloads constructor(
     }
 
     private fun getEntryViewAt(index: Int) = getTypedViewAt<ExportFormatEntryView>(index)
-
-    companion object {
-        internal fun getSelectableItemBackground(context: Context): Drawable? {
-            val theme = context.theme
-            val typedValue = TypedValue()
-
-            val isResolved =
-                theme.resolveAttribute(com.google.android.material.R.attr.selectableItemBackground, typedValue, true)
-
-            return if (isResolved) {
-                ResourcesCompat.getDrawable(context.resources, typedValue.resourceId, theme)
-            } else {
-                null
-            }
-        }
-    }
 }
