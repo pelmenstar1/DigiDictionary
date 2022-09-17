@@ -19,7 +19,6 @@ import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.manageRecordBadges.AddEditBadgeInputMessage
-import io.github.pelmenstar1.digiDict.ui.settings.SettingsMessage
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -89,12 +88,6 @@ class AppModule {
     @Singleton
     fun providesAddExpressionMessageMapper(@ApplicationContext context: Context): MessageMapper<AddEditRecordMessage> {
         return AddEditRecordMessage.defaultMapper(context)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSettingsMessageMapper(@ApplicationContext context: Context): MessageMapper<SettingsMessage> {
-        return SettingsMessage.defaultMapper(context)
     }
 
     @Provides

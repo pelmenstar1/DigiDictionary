@@ -8,28 +8,24 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
-import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.showLifecycleAwareSnackbar
+import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
-import io.github.pelmenstar1.digiDict.common.ui.launchMessageFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.transform
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
     internal val viewModel by viewModels<SettingsViewModel>()
-
-    @Inject
-    lateinit var messageMapper: MessageMapper<SettingsMessage>
 
     private val progressIndicatorDialogManager = SimpleProgressIndicatorDialogManager()
 
@@ -54,12 +50,14 @@ class SettingsFragment : Fragment() {
         }
 
         lifecycleScope.also { ls ->
-            launchMessageFlowCollector(vm.messageFlow, messageMapper, container)
-
-            ls.launchFlowCollector(vm.operationErrorFlow.filterNotNull()) {
-                // Dismiss the dialog and cancel the job, they are no longer needed after an error.
-                progressIndicatorDialogManager.cancel()
+            ls.launchFlowCollector(vm.deleteAllRecordsAction.successFlow) {
+                if (container != null) {
+                    Snackbar.make(container, R.string.settings_deleteAllSuccess, Snackbar.LENGTH_LONG)
+                        .showLifecycleAwareSnackbar(lifecycle)
+                }
             }
+
+            showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
 
             ls.launchFlowCollector(
                 vm.dataStateFlow.transform {
@@ -83,13 +81,9 @@ class SettingsFragment : Fragment() {
 
     private fun requestDeleteAllRecords() {
         showAlertDialog(messageId = R.string.settings_deleteAllRecordsDialogMessage) {
-            invokeWithLoadingIndicator { deleteAllRecords() }
+            viewModel.deleteAllRecordsAction.run()
+            progressIndicatorDialogManager.showDialog()
         }
-    }
-
-    private inline fun invokeWithLoadingIndicator(action: SettingsViewModel.() -> Unit) {
-        viewModel.action()
-        progressIndicatorDialogManager.showDialog()
     }
 
     companion object {

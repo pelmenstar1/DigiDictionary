@@ -97,6 +97,7 @@ class ImportConfigurationFragment : Fragment() {
                     .setPositiveButton(android.R.string.ok, NO_OP_DIALOG_ON_CLICK_LISTENER)
                     .show()
 
+                // TODO: Investigate if it's even required to manually dismiss the dialog and cancel the underlying Job.
                 progressIndicatorDialogManager.cancel()
             }
         }
