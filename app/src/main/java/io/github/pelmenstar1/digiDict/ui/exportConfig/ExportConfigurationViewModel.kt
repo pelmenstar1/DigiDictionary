@@ -32,7 +32,7 @@ class ExportConfigurationViewModel @Inject constructor(
             val data = BackupManager.createBackupData(
                 appDatabase,
                 options,
-                reporter.subReporter(completed = 0f, target = .5f)  // Treat extracting the data as half of the job.
+                reporter.subReporter(completed = 0, target = 50)  // Treat extracting the data as half of the job.
             )
 
             BackupManager.export(
@@ -40,7 +40,7 @@ class ExportConfigurationViewModel @Inject constructor(
                 uri,
                 data,
                 selectedFormat!!,
-                reporter.subReporter(completed = 0.5f, target = 1f)
+                reporter.subReporter(completed = 50, target = 100)
             )
         }
     }

@@ -6,24 +6,24 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 class ProgressReporter {
-    private val _progressFlow: MutableStateFlow<Float>
+    private val _progressFlow: MutableStateFlow<Int>
 
-    val progressFlow: StateFlow<Float>
+    val progressFlow: StateFlow<Int>
         get() = _progressFlow
 
-    private val _completed: Float
-    private val _target: Float
-    private val _diff: Float
+    private val _completed: Int
+    private val _target: Int
+    private val _diff: Int
 
     constructor() {
         _progressFlow = MutableStateFlow(UNREPORTED)
 
-        _completed = 0f
-        _target = 1f
-        _diff = 1f
+        _completed = 0
+        _target = 100
+        _diff = 100
     }
 
-    private constructor(pFlow: MutableStateFlow<Float>, completed: Float, target: Float) {
+    private constructor(pFlow: MutableStateFlow<Int>, completed: Int, target: Int) {
         _progressFlow = pFlow
 
         _completed = completed
@@ -31,12 +31,21 @@ class ProgressReporter {
         _diff = target - completed
     }
 
-    fun onProgress(value: Float) {
-        if (value !in 0f..1f) {
-            throw IllegalArgumentException("value is out of range")
+    fun onProgress(value: Int) {
+        if (value !in 0..100) {
+            throw IllegalArgumentException("Value is out of bounds")
         }
 
-        _progressFlow.value = _completed + _diff * value
+        _progressFlow.value = _completed + (_diff * value) / 100
+    }
+
+    fun onProgress(current: Int, total: Int) {
+        val newProgress = _completed + (_diff * current) / total
+        if (newProgress !in 0..100) {
+            throw IllegalArgumentException("Illegal current and total: current=$current, total=$total")
+        }
+
+        _progressFlow.value = newProgress
     }
 
     fun start() {
@@ -55,29 +64,28 @@ class ProgressReporter {
         _progressFlow.value = ERROR
     }
 
-    fun subReporter(completed: Float, target: Float): ProgressReporter {
+    fun subReporter(completed: Int, target: Int): ProgressReporter {
         when {
-            completed !in 0f..1f -> throw IllegalArgumentException("completed is out of range")
-            target <= 0f || target > 1f -> throw IllegalArgumentException("target is out of range")
-            completed >= target -> throw IllegalArgumentException("completed >= target")
+            completed !in 0..100 -> throw IllegalArgumentException("completed is out of range")
+            target < 0 || target > 100 -> throw IllegalArgumentException("target is out of range")
+            completed > target -> throw IllegalArgumentException("completed > target")
         }
 
         val currentDiff = _diff
-        val completedDelta = currentDiff * completed
-        val targetDelta = currentDiff * (1f - target)
+        val completedDelta = (currentDiff * completed) / 100
+        val targetDelta = (currentDiff * (100 - target)) / 100
 
         return ProgressReporter(_progressFlow, _completed + completedDelta, _target - targetDelta)
     }
 
     companion object {
-        const val UNREPORTED = -1f
-        const val ERROR = -2f
+        const val UNREPORTED = -1
+        const val ERROR = -2
     }
 }
 
 inline fun <R> trackProgressWith(
-    startProgress: Float,
-    endProgress: Float,
+    startProgress: Int, endProgress: Int,
     reporter: ProgressReporter?,
     block: () -> R
 ): R {
@@ -102,7 +110,7 @@ inline fun <R> trackProgressWith(reporter: ProgressReporter?, block: () -> R): R
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
 
-    return trackProgressWith(startProgress = 0f, endProgress = 1f, reporter, block)
+    return trackProgressWith(startProgress = 0, endProgress = 100, reporter, block)
 }
 
 inline fun trackLoopProgressWith(reporter: ProgressReporter?, size: Int, loopBody: (index: Int) -> Unit) {
@@ -110,12 +118,10 @@ inline fun trackLoopProgressWith(reporter: ProgressReporter?, size: Int, loopBod
         callsInPlace(loopBody, InvocationKind.UNKNOWN)
     }
 
-    val fSize = size.toFloat()
-
     trackProgressWith(reporter) {
         for (i in 0 until size) {
             loopBody(i)
-            reporter?.onProgress(i / fSize)
+            reporter?.onProgress(i + 1, size)
         }
     }
 }
@@ -143,11 +149,10 @@ inline fun trackLoopProgressWithSubReporters(
         callsInPlace(loopBody, InvocationKind.UNKNOWN)
     }
 
-    val fSize = size.toFloat()
-
     trackProgressWith(reporter) {
         for (i in 0 until size) {
-            val subReporter = reporter?.subReporter(i / fSize, (i + 1) / fSize)
+            val iMulSize = i * size
+            val subReporter = reporter?.subReporter(iMulSize / 100, (iMulSize + size) / 100)
 
             loopBody(i, subReporter)
         }

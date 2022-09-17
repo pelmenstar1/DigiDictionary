@@ -128,7 +128,7 @@ class HomeFragment : Fragment() {
             }
 
             launchFlowCollector(viewModel.searchProgressFlow) { progress ->
-                loadingIndicator.progress = (progress * 100f + 0.5f).toInt()
+                loadingIndicator.progress = progress
             }
 
             launchFlowCollector(

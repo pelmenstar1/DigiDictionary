@@ -14,10 +14,10 @@ import kotlinx.coroutines.launch
 abstract class ProgressIndicatorDialogManagerBase {
     private var progressCollectionJob: Job? = null
     private var coroutineScope: LifecycleCoroutineScope? = null
-    private var progressFlow: Flow<Float>? = null
+    private var progressFlow: Flow<Int>? = null
     private var fragmentManager: FragmentManager? = null
 
-    fun init(fragment: Fragment, flow: Flow<Float>) {
+    fun init(fragment: Fragment, flow: Flow<Int>) {
         val fm = fragment.childFragmentManager
 
         coroutineScope = fragment.lifecycleScope
@@ -55,9 +55,9 @@ abstract class ProgressIndicatorDialogManagerBase {
         var dialog: ProgressIndicatorDialogInterface? = currentDialog
 
         progressCollectionJob = scope.launch {
-            pFlow.cancelAfter { it == 1f }.collect { progress ->
+            pFlow.cancelAfter { it == 100 }.collect { progress ->
                 when (progress) {
-                    1f -> {
+                    100 -> {
                         dialog?.dismissNow()
 
                         // To be sure dialog won't be reused after it's dismissed.
@@ -85,7 +85,7 @@ abstract class ProgressIndicatorDialogManagerBase {
                             dialog = tempDialog
                         }
 
-                        tempDialog.setProgress((progress * 100f + 0.5f).toInt())
+                        tempDialog.setProgress(progress)
                     }
                 }
             }

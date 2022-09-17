@@ -40,14 +40,14 @@ class ImportConfigurationViewModel @Inject constructor(
             val data = BackupManager.import(
                 context,
                 source, format, options,
-                reporter.subReporter(completed = 0f, target = .5f) // Treat reading the data as half of the job.
+                reporter.subReporter(completed = 0, target = 50) // Treat reading the data as half of the job.
             )
 
             BackupManager.deployImportData(
                 data,
                 options,
                 appDatabase,
-                reporter.subReporter(completed = .5f, target = 1f)
+                reporter.subReporter(completed = 50, target = 100)
             )
         }
     }

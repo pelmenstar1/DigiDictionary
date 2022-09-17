@@ -44,15 +44,15 @@ object BackupManager {
         return trackProgressWith(progressReporter) {
             if (options.exportBadges) {
                 records = appDatabase.getAllRecordsOrderByIdAsc(
-                    progressReporter?.subReporter(completed = 0f, target = .33f)
+                    progressReporter?.subReporter(completed = 0, target = 33)
                 )
 
                 badges = appDatabase.getAllRecordBadgesOrderByIdAsc(
-                    progressReporter?.subReporter(completed = .33f, target = .67f)
+                    progressReporter?.subReporter(completed = 33, target = 67)
                 )
 
                 val recordToBadgeRelations = appDatabase.getAllRecordToBadgeRelations(
-                    progressReporter?.subReporter(completed = .67f, target = 1f)
+                    progressReporter?.subReporter(completed = 67, target = 100)
                 )
 
                 badgeToMultipleRecordEntries = BackupHelpers.groupRecordToBadgeRelations(
@@ -101,7 +101,7 @@ object BackupManager {
         val importer = importers[format] ?: throw RuntimeException("No importer assigned for given format ($format)")
 
         return trackProgressWith(progressReporter) {
-            importer.import(input, options, progressReporter?.subReporter(completed = 0f, target = .9f)).also {
+            importer.import(input, options, progressReporter?.subReporter(completed = 0, target = 90)).also {
                 verifyImportData(it)
             }
         }
@@ -153,9 +153,9 @@ object BackupManager {
                 if (options.importBadges && badges.isNotEmpty()) {
                     val replaceBadges = options.replaceBadges
 
-                    val recordReporter = progressReporter?.subReporter(completed = 0f, target = .33f)
-                    val badgeReporter = progressReporter?.subReporter(completed = .33f, target = .67f)
-                    val recordToBadgeRelationReporter = progressReporter?.subReporter(completed = .67f, target = 1f)
+                    val recordReporter = progressReporter?.subReporter(completed = 0, target = 33)
+                    val badgeReporter = progressReporter?.subReporter(completed = 33, target = 67)
+                    val recordToBadgeRelationReporter = progressReporter?.subReporter(completed = 67, target = 100)
 
                     val sortedRecordIds = insertRecordsAndSaveSortedIds(appDatabase, records, recordReporter)
                     val sortedBadgeIds = if (replaceBadges) {
@@ -295,7 +295,6 @@ object BackupManager {
     ) {
         return appDatabase.compileInsertRecordToBadgeRelation().use { statement ->
             val totalSize = entries.sumOf { it.recordOrdinals.size }
-            val fTotalSize = totalSize.toFloat()
             var seqIndex = 0
 
             trackProgressWith(progressReporter) {
@@ -309,7 +308,7 @@ object BackupManager {
                         statement.executeInsert()
 
                         seqIndex++
-                        progressReporter?.onProgress(seqIndex / fTotalSize)
+                        progressReporter?.onProgress(seqIndex, totalSize)
                     }
                 }
             }
