@@ -6,7 +6,7 @@ import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.github.pelmenstar1.digiDict.common.getLazyValue
-import io.github.pelmenstar1.digiDict.common.runInTransitionBlocking
+import io.github.pelmenstar1.digiDict.common.runInTransactionBlocking
 
 @Database(
     entities = [
@@ -61,7 +61,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     object Migration_3_4 : Migration(3, 4) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            database.runInTransitionBlocking {
+            database.runInTransactionBlocking {
                 execSQL("CREATE TABLE IF NOT EXISTS remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL)")
                 execSQL("CREATE TABLE IF NOT EXISTS `remote_dict_provider_stats` (`id` INTEGER NOT NULL, `visitCount` INTEGER NOT NULL, PRIMARY KEY(`id`))")
 
@@ -72,7 +72,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     object Migration_4_5 : Migration(4, 5) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            database.runInTransitionBlocking {
+            database.runInTransactionBlocking {
                 execSQL("DROP TABLE remote_dict_providers")
                 execSQL("DROP TABLE remote_dict_provider_stats")
                 execSQL("CREATE TABLE remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL, urlEncodingRules TEXT NOT NULL)")
@@ -103,7 +103,7 @@ abstract class AppDatabase : RoomDatabase() {
         internal fun SupportSQLiteDatabase.insertRemoteDictProviders_4(providers: Array<out RemoteDictionaryProviderInfo>) {
             val statement = compileStatement("INSERT INTO remote_dict_providers (name, schema) VALUES(?, ?)")
 
-            runInTransitionBlocking {
+            runInTransactionBlocking {
                 providers.forEach {
                     // Binding is 1-based.
                     statement.bindString(1, it.name)
@@ -119,7 +119,7 @@ abstract class AppDatabase : RoomDatabase() {
             val statement =
                 compileStatement("INSERT INTO remote_dict_providers (name, schema, urlEncodingRules) VALUES(?, ?, ?)")
 
-            runInTransitionBlocking {
+            runInTransactionBlocking {
                 providers.forEach {
                     // Binding is 1-based.
                     statement.bindString(1, it.name)
