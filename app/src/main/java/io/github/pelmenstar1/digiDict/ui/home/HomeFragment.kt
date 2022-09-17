@@ -93,7 +93,6 @@ class HomeFragment : Fragment() {
                     .filterTrue()
                     .flatMapConcat { viewModel.searchStateFlow }
             ) {
-
                 when (it) {
                     is DataLoadState.Loading -> {
                         loadingIndicator.visibility = View.VISIBLE

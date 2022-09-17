@@ -13,6 +13,7 @@ import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -39,6 +40,7 @@ class HomeViewModel @Inject constructor(
             val recordFlow = GlobalSearchQueryProvider
                 .isActiveFlow
                 .filterTrue()
+                .distinctUntilChanged()
                 .map {
                     recordDao.getAllConciseRecordsWithBadges()
                 }

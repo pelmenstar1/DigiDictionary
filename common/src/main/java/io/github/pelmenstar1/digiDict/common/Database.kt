@@ -20,7 +20,7 @@ inline fun <T : SupportSQLiteDatabase> T.runInTransactionBlocking(block: T.() ->
 
 inline fun ViewModel.onDatabaseTablesUpdated(
     db: RoomDatabase,
-    tables: Array<String>,
+    tables: Array<out String>,
     crossinline callback: () -> Unit
 ) {
     val observer = object : InvalidationTracker.Observer(tables) {
