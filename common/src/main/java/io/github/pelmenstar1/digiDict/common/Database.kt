@@ -43,10 +43,10 @@ inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
     progressReporter: ProgressReporter?,
     convertCursor: (Cursor) -> T
 ): Array<T> {
-    try {
+    return trackProgressWith(progressReporter) {
         val cursor = query(sql, bindArgs)
 
-        return cursor.use {
+        cursor.use {
             val count = it.count
             val result = unsafeNewArray<T>(count)
 
@@ -57,8 +57,5 @@ inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
 
             result
         }
-    } catch (th: Throwable) {
-        progressReporter?.reportError()
-        throw th
     }
 }

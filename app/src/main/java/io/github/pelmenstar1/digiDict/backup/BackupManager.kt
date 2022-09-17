@@ -145,7 +145,7 @@ object BackupManager {
         progressReporter: ProgressReporter? = null
     ) {
         appDatabase.runInTransaction {
-            try {
+            trackProgressWith(progressReporter) {
                 val records = data.records
                 val badges = data.badges
                 val badgeToMultipleRecordEntries = data.badgeToMultipleRecordEntries
@@ -179,9 +179,6 @@ object BackupManager {
                         }
                     }
                 }
-            } catch (th: Throwable) {
-                progressReporter?.reportError()
-                throw th
             }
         }
     }
