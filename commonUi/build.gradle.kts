@@ -44,6 +44,7 @@ dependencies {
 
     implementation(libs.bundles.kotlinx.coroutines)
     implementation(libs.bundles.androidx.lifecycle)
+    implementation(libs.bundles.androidx.nav)
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.appcompat)

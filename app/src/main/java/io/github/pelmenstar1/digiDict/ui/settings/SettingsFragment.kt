@@ -16,6 +16,8 @@ import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
+import io.github.pelmenstar1.digiDict.common.ui.settings.SettingsInflater
+import io.github.pelmenstar1.digiDict.common.ui.settings.settingsDescriptor
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
 import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
@@ -40,7 +42,8 @@ class SettingsFragment : Fragment() {
         val binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val contentContainer = binding.settingsContentContainer
 
-        SettingsInflater(context).inflate(descriptor, container = contentContainer).run {
+        val settingsInflater = SettingsInflater<DigiDictAppPreferences.Entries>(context)
+        settingsInflater.inflate(descriptor, container = contentContainer).apply {
             onValueChangedHandler = viewModel::changePreferenceValue
             navController = findNavController()
 
@@ -70,7 +73,7 @@ class SettingsFragment : Fragment() {
             }
 
             binding.settingsContainer.setupLoadStateFlow(ls, vm) { snapshot ->
-                SettingsInflater.applySnapshot(snapshot, contentContainer)
+                settingsInflater.applySnapshot(snapshot, contentContainer)
             }
         }
 

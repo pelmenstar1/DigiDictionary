@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.settings
+package io.github.pelmenstar1.digiDict.common.ui.settings
 
 import android.content.Context
 import android.graphics.Typeface
@@ -17,23 +17,23 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
-import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.TransparentDrawable
 import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
 import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
+import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
-import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
+import io.github.pelmenstar1.digiDict.common.ui.R
 import kotlin.math.min
 
 private typealias ItemContentInflaterHashMap = HashMap<
         Class<out SettingsDescriptor.ItemContent<Any>>,
         SettingsInflater.ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View>>
 
-class SettingsInflater(private val context: Context) {
+class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: Context) {
     @Suppress("UNCHECKED_CAST")
-    fun inflate(descriptor: SettingsDescriptor, container: LinearLayout): SettingsController {
-        val controller = SettingsController()
+    fun inflate(descriptor: SettingsDescriptor, container: LinearLayout): SettingsController<TEntries> {
+        val controller = SettingsController<TEntries>()
 
         val selectableItemBackground = context.getSelectableItemBackground()
         val bodyMediumTextAppearance = TextAppearance(context) { BodyMedium }
@@ -63,8 +63,12 @@ class SettingsInflater(private val context: Context) {
 
             group.items.forEachWithNoIterator { item ->
                 val itemContainer = when (item) {
-                    is SettingsDescriptor.ContentItem<*> -> {
-                        createContentItemContainer(controller, item, itemContainerViewInfo)
+                    is SettingsDescriptor.ContentItem<*, *> -> {
+                        createContentItemContainer(
+                            controller,
+                            item as SettingsDescriptor.ContentItem<out Any, TEntries>,
+                            itemContainerViewInfo
+                        )
                     }
                     is SettingsDescriptor.LinkItem -> {
                         createLinkItemContainer(
@@ -89,6 +93,23 @@ class SettingsInflater(private val context: Context) {
         }
 
         return controller
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun applySnapshot(snapshot: AppPreferences.Snapshot<TEntries>, container: LinearLayout) {
+        for (i in 0 until container.childCount) {
+            val itemContainer = container.getChildAt(i)
+            val tag = itemContainer.tag
+
+            if (tag is SettingsDescriptor.ContentItem<*, *>) {
+                val item = tag as SettingsDescriptor.ContentItem<Any, TEntries>
+                val value = snapshot[item.preferenceEntry]
+                val contentView = (itemContainer as ViewGroup).getChildAt(ITEM_CONTENT_INDEX_IN_CONTAINER)
+                val content = item.content
+
+                content.getInflater().setValue(contentView, content, value)
+            }
+        }
     }
 
     private fun getTitleBackground(context: Context): Drawable {
@@ -185,8 +206,8 @@ class SettingsInflater(private val context: Context) {
     }
 
     private fun createContentItemContainer(
-        controller: SettingsController,
-        item: SettingsDescriptor.ContentItem<out Any>,
+        controller: SettingsController<TEntries>,
+        item: SettingsDescriptor.ContentItem<out Any, TEntries>,
         info: ItemContainerViewInfo
     ): ViewGroup {
         val content = item.content
@@ -499,20 +520,6 @@ class SettingsInflater(private val context: Context) {
             return itemInflaters[javaClass] as ItemContentInflater<TValue, TContent, View>
         }
 
-        fun applySnapshot(snapshot: DigiDictAppPreferences.Snapshot, container: LinearLayout) {
-            for (i in 0 until container.childCount) {
-                val itemContainer = container.getChildAt(i)
-                val tag = itemContainer.tag
 
-                if (tag is SettingsDescriptor.ContentItem<*>) {
-                    val item = tag as SettingsDescriptor.ContentItem<Any>
-                    val value = snapshot[item.preferenceEntry]
-                    val contentView = (itemContainer as ViewGroup).getChildAt(ITEM_CONTENT_INDEX_IN_CONTAINER)
-                    val content = item.content
-
-                    content.getInflater().setValue(contentView, content, value)
-                }
-            }
-        }
     }
 }

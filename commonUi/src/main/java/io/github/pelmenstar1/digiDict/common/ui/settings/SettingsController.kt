@@ -1,22 +1,21 @@
-package io.github.pelmenstar1.digiDict.ui.settings
+package io.github.pelmenstar1.digiDict.common.ui.settings
 
 import android.util.SparseArray
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 
-class SettingsController {
+class SettingsController<TEntries : AppPreferences.Entries> {
     private val actionHandlers = SparseArray<() -> Unit>()
 
     var navController: NavController? = null
-    var onValueChangedHandler: ((AppPreferences.Entry<Any, DigiDictAppPreferences.Entries>, Any) -> Unit)? = null
+    var onValueChangedHandler: ((AppPreferences.Entry<Any, TEntries>, Any) -> Unit)? = null
 
     fun bindActionHandler(id: Int, handler: () -> Unit) {
         actionHandlers.put(id, handler)
     }
 
-    fun <T : Any> onValueChanged(entry: AppPreferences.Entry<T, DigiDictAppPreferences.Entries>, newValue: T) {
+    fun <TValue : Any> onValueChanged(entry: AppPreferences.Entry<TValue, TEntries>, newValue: TValue) {
         onValueChangedHandler?.invoke(entry, newValue)
     }
 

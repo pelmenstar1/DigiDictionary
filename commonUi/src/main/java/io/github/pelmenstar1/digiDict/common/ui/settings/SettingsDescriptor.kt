@@ -1,10 +1,9 @@
-package io.github.pelmenstar1.digiDict.ui.settings
+package io.github.pelmenstar1.digiDict.common.ui.settings
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.navigation.NavDirections
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 
 /**
  * Describes semantics of the settings. The main element of the descriptor is a group.
@@ -38,11 +37,11 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
 
     sealed interface Item
 
-    class ContentItem<T : Any>(
+    class ContentItem<TValue : Any, TEntries : AppPreferences.Entries>(
         @StringRes val nameRes: Int,
         @DrawableRes val iconRes: Int,
-        val preferenceEntry: AppPreferences.Entry<T, DigiDictAppPreferences.Entries>,
-        val content: ItemContent<T>
+        val preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
+        val content: ItemContent<TValue>
     ) : Item
 
     class LinkItem(
@@ -60,27 +59,13 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
     class ItemGroup(@StringRes val titleRes: Int, val items: List<Item>) {
         @JvmInline
         value class ItemListBuilder(private val items: MutableList<Item>) {
-            fun <T : Any> item(
+            fun <TValue : Any, TEntries : AppPreferences.Entries> item(
                 @StringRes nameRes: Int,
                 @DrawableRes iconRes: Int,
-                preferenceEntry: AppPreferences.Entry<T, DigiDictAppPreferences.Entries>,
-                content: ItemContent<T>,
+                preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
+                content: ItemContent<TValue>,
             ) {
                 items.add(ContentItem(nameRes, iconRes, preferenceEntry, content))
-            }
-
-            inline fun <T : Any> item(
-                @StringRes nameRes: Int,
-                @DrawableRes iconRes: Int,
-                preferenceEntry: DigiDictAppPreferences.Entries.() -> AppPreferences.Entry<T, DigiDictAppPreferences.Entries>,
-                content: ItemContentBuilder.() -> ItemContent<T>,
-            ) {
-                item(
-                    nameRes,
-                    iconRes,
-                    DigiDictAppPreferences.Entries.preferenceEntry(),
-                    ItemContentBuilder.content(),
-                )
             }
 
             fun linkItem(
