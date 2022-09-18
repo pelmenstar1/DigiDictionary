@@ -4,11 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.common.preferences.get
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.get
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,7 +17,7 @@ import javax.inject.Inject
 class ChooseRemoteDictionaryProviderViewModel @Inject constructor(
     private val remoteDictProviderDao: RemoteDictionaryProviderDao,
     private val remoteDictProviderStatsDao: RemoteDictionaryProviderStatsDao,
-    private val appPreferences: AppPreferences
+    private val appPreferences: DigiDictAppPreferences
 ) : ViewModel() {
     suspend fun getAllProviders() = remoteDictProviderDao.getAll()
     suspend fun useCustomTabs() = appPreferences.get { useCustomTabs }

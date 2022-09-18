@@ -23,7 +23,7 @@ import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
 import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import kotlin.math.min
 
 private typealias ItemContentInflaterHashMap = HashMap<
@@ -499,7 +499,7 @@ class SettingsInflater(private val context: Context) {
             return itemInflaters[javaClass] as ItemContentInflater<TValue, TContent, View>
         }
 
-        fun applySnapshot(snapshot: AppPreferences.Snapshot, container: LinearLayout) {
+        fun applySnapshot(snapshot: DigiDictAppPreferences.Snapshot, container: LinearLayout) {
             for (i in 0 until container.childCount) {
                 val itemContainer = container.getChildAt(i)
                 val tag = itemContainer.tag

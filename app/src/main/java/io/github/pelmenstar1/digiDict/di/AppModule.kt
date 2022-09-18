@@ -11,8 +11,7 @@ import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.*
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.DataStoreAppPreferences
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
@@ -33,8 +32,8 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideAppPreferences(@ApplicationContext context: Context): AppPreferences {
-        return DataStoreAppPreferences(context.dataStorePreferences)
+    fun provideAppPreferences(@ApplicationContext context: Context): DigiDictAppPreferences {
+        return DigiDictAppPreferences(context.dataStorePreferences)
     }
 
     @Provides

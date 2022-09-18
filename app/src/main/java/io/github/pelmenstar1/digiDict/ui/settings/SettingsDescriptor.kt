@@ -3,7 +3,8 @@ package io.github.pelmenstar1.digiDict.ui.settings
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.navigation.NavDirections
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 
 /**
  * Describes semantics of the settings. The main element of the descriptor is a group.
@@ -40,7 +41,7 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
     class ContentItem<T : Any>(
         @StringRes val nameRes: Int,
         @DrawableRes val iconRes: Int,
-        val preferenceEntry: AppPreferences.Entry<T>,
+        val preferenceEntry: AppPreferences.Entry<T, DigiDictAppPreferences.Entries>,
         val content: ItemContent<T>
     ) : Item
 
@@ -62,7 +63,7 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
             fun <T : Any> item(
                 @StringRes nameRes: Int,
                 @DrawableRes iconRes: Int,
-                preferenceEntry: AppPreferences.Entry<T>,
+                preferenceEntry: AppPreferences.Entry<T, DigiDictAppPreferences.Entries>,
                 content: ItemContent<T>,
             ) {
                 items.add(ContentItem(nameRes, iconRes, preferenceEntry, content))
@@ -71,13 +72,13 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
             inline fun <T : Any> item(
                 @StringRes nameRes: Int,
                 @DrawableRes iconRes: Int,
-                preferenceEntry: AppPreferences.Entries.() -> AppPreferences.Entry<T>,
+                preferenceEntry: DigiDictAppPreferences.Entries.() -> AppPreferences.Entry<T, DigiDictAppPreferences.Entries>,
                 content: ItemContentBuilder.() -> ItemContent<T>,
             ) {
                 item(
                     nameRes,
                     iconRes,
-                    AppPreferences.Entries.preferenceEntry(),
+                    DigiDictAppPreferences.Entries.preferenceEntry(),
                     ItemContentBuilder.content(),
                 )
             }

@@ -18,7 +18,7 @@ import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentSettingsBinding
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.transform
@@ -61,7 +61,7 @@ class SettingsFragment : Fragment() {
 
             ls.launchFlowCollector(
                 vm.dataStateFlow.transform {
-                    if (it is DataLoadState.Success<AppPreferences.Snapshot>) {
+                    if (it is DataLoadState.Success<DigiDictAppPreferences.Snapshot>) {
                         emit(it.value.widgetListMaxSize)
                     }
                 }.distinctUntilChanged()

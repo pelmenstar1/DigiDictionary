@@ -10,7 +10,7 @@ import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import kotlin.random.Random
@@ -18,7 +18,7 @@ import kotlin.random.Random
 @HiltViewModel
 class QuizViewModel @Inject constructor(
     private val recordDao: RecordDao,
-    private val appPreferences: AppPreferences,
+    private val appPreferences: DigiDictAppPreferences,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : SingleDataLoadStateViewModel<Array<ConciseRecordWithBadges>>(TAG) {
     override val canRefreshAfterSuccess: Boolean

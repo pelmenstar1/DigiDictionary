@@ -5,7 +5,7 @@ import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import kotlin.random.Random
@@ -13,7 +13,7 @@ import kotlin.random.Random
 @HiltViewModel
 class RemindRecordsViewModel @Inject constructor(
     private val recordDao: RecordDao,
-    appPreferences: AppPreferences
+    appPreferences: DigiDictAppPreferences
 ) : SingleDataLoadStateViewModel<Array<ConciseRecordWithBadges>>(TAG) {
     override val canRefreshAfterSuccess: Boolean
         get() = true

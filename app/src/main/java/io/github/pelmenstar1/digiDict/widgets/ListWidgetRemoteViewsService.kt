@@ -6,9 +6,9 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.preferences.get
 import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
-import io.github.pelmenstar1.digiDict.prefs.get
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
@@ -19,7 +19,7 @@ class ListWidgetRemoteViewsService : RemoteViewsService() {
     lateinit var recordDao: RecordDao
 
     @Inject
-    lateinit var appPreferences: AppPreferences
+    lateinit var appPreferences: DigiDictAppPreferences
 
     override fun onGetViewFactory(intent: Intent?): RemoteViewsFactory {
         return ListWidgetRemoteViewsFactory(applicationContext, recordDao, appPreferences)
@@ -29,7 +29,7 @@ class ListWidgetRemoteViewsService : RemoteViewsService() {
 class ListWidgetRemoteViewsFactory(
     private val context: Context,
     private val recordDao: RecordDao,
-    private val appPreferences: AppPreferences
+    private val appPreferences: DigiDictAppPreferences
 ) : RemoteViewsService.RemoteViewsFactory {
     private var records: Array<RecordDao.IdExpressionMeaningRecord>? = null
 
