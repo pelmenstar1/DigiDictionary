@@ -100,8 +100,6 @@ class ExportConfigurationFragment : Fragment() {
                         .setAnchorView(binding.exportConfigSelectFileButton)
                         .show()
                 }
-
-                progressIndicatorDialogManager.cancel()
             }
         }
 

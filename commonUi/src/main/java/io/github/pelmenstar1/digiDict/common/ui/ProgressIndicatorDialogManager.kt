@@ -29,11 +29,6 @@ abstract class ProgressIndicatorDialogManagerBase {
         }
     }
 
-    fun cancel() {
-        progressCollectionJob?.cancel()
-        hideProgressIndicatorDialog()
-    }
-
     fun showDialog() {
         showOrBindProgressIndicatorDialog()
     }
@@ -55,7 +50,7 @@ abstract class ProgressIndicatorDialogManagerBase {
         var dialog: ProgressIndicatorDialogInterface? = currentDialog
 
         progressCollectionJob = scope.launch {
-            pFlow.cancelAfter { it == 100 }.collect { progress ->
+            pFlow.cancelAfter { it == 100 || it == ProgressReporter.ERROR }.collect { progress ->
                 when (progress) {
                     100 -> {
                         dialog?.dismissNow()
@@ -91,12 +86,6 @@ abstract class ProgressIndicatorDialogManagerBase {
             }
         }.also {
             it.invokeOnCompletion { progressCollectionJob = null }
-        }
-    }
-
-    private fun hideProgressIndicatorDialog() {
-        fragmentManager?.let { fm ->
-            findProgressIndicatorDialog(fm)?.dismissNow()
         }
     }
 
