@@ -3,7 +3,12 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/android_projects/digiDict/app/src/main/res/drawable/ic_baseline_help_24.xml" value="0.211" />
+        <entry key="..\:/android_projects/digiDict/app/src/main/res/drawable/ic_selected.xml" value="0.211" />
         <entry key="..\:/android_projects/digiDict/app/src/main/res/layout/activity_list_widget_conf.xml" value="0.1" />
+        <entry key="..\:/android_projects/digiDict/app/src/main/res/layout/dialog_import_format_selector.xml" value="0.18604651162790697" />
+        <entry key="..\:/android_projects/digiDict/app/src/main/res/layout/fragment_export_configuration.xml" value="0.1" />
+        <entry key="..\:/android_projects/digiDict/app/src/main/res/layout/fragment_import_configuration.xml" value="0.2" />
       </map>
     </option>
   </component>

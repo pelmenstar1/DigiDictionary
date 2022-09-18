@@ -10,8 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
+import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
-import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 
 class ImportFormatSelectorDialogAdapter(
     val onItemClickListener: (BackupFormat) -> Unit
@@ -34,6 +35,7 @@ class ImportFormatSelectorDialogAdapter(
     }
 
     private var items: Array<out BackupFormat> = emptyArray()
+    private var bodyMediumTextAppearance: TextAppearance? = null
 
     @SuppressLint("NotifyDataSetChanged")
     fun submitItems(items: Array<out BackupFormat>) {
@@ -46,7 +48,13 @@ class ImportFormatSelectorDialogAdapter(
     override fun getItemCount() = items.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val textView = createTextView(parent.context)
+        val context = parent.context
+        val textAppearance = getLazyValue(
+            bodyMediumTextAppearance,
+            { TextAppearance(context) { BodyMedium } },
+            { bodyMediumTextAppearance = it }
+        )
+        val textView = createTextView(context, textAppearance)
 
         return ViewHolder(textView)
     }
@@ -61,13 +69,13 @@ class ImportFormatSelectorDialogAdapter(
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        internal fun createTextView(context: Context): TextView {
+        internal fun createTextView(context: Context, textAppearance: TextAppearance): TextView {
             return MaterialTextView(context).apply {
                 layoutParams = ITEM_LAYOUT_PARAMS
 
                 textAlignment = TextView.TEXT_ALIGNMENT_CENTER
                 setPaddingRes(R.dimen.importFormatSelectorDialog_entryPadding)
-                setTextAppearance { BodyMedium }
+                textAppearance.apply(this)
             }
         }
     }

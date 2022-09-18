@@ -22,7 +22,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
 import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
-import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
+import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.prefs.AppPreferences
 import kotlin.math.min
 
@@ -36,9 +36,11 @@ class SettingsInflater(private val context: Context) {
         val controller = SettingsController()
 
         val selectableItemBackground = context.getSelectableItemBackground()
+        val bodyMediumTextAppearance = TextAppearance(context) { BodyMedium }
+        val bodyLargeTextAppearance = TextAppearance(context) { BodyLarge }
 
-        val titleViewInfo = createTitleViewInfo()
-        val itemContainerViewInfo = createItemContainerViewInfo()
+        val titleViewInfo = createTitleViewInfo(bodyMediumTextAppearance)
+        val itemContainerViewInfo = createItemContainerViewInfo(bodyLargeTextAppearance)
         val actionItemViewInfo = createActionItemViewInfo(selectableItemBackground)
         val linkItemViewInfo = createLinkItemViewInfo(itemContainerViewInfo, selectableItemBackground)
 
@@ -107,15 +109,17 @@ class SettingsInflater(private val context: Context) {
         }
     }
 
-    private fun createTitleViewInfo(): TitleViewInfo {
+    private fun createTitleViewInfo(textAppearance: TextAppearance): TitleViewInfo {
         val background = getTitleBackground(context)
+
+        // TODO: Try to load font in async way
         val typeface = ResourcesCompat.getFont(context, R.font.oswald_regular)
         val padding = context.resources.getDimensionPixelOffset(R.dimen.settings_titlePadding)
 
-        return TitleViewInfo(background, typeface, padding)
+        return TitleViewInfo(background, typeface, padding, textAppearance)
     }
 
-    private fun createItemContainerViewInfo(): ItemContainerViewInfo {
+    private fun createItemContainerViewInfo(nameTextAppearance: TextAppearance): ItemContainerViewInfo {
         val res = context.resources
 
         val padding = res.getDimensionPixelOffset(R.dimen.settingItemContainer_padding)
@@ -136,7 +140,14 @@ class SettingsInflater(private val context: Context) {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        return ItemContainerViewInfo(padding, iconSize, nameMarginStart, nameLayoutParams, iconLayoutParams)
+        return ItemContainerViewInfo(
+            padding,
+            iconSize,
+            nameMarginStart,
+            nameLayoutParams,
+            iconLayoutParams,
+            nameTextAppearance
+        )
     }
 
     private fun createLinkItemViewInfo(
@@ -167,8 +178,10 @@ class SettingsInflater(private val context: Context) {
             layoutParams = TITLE_LAYOUT_PARAMS
 
             setPadding(info.padding)
-            setTextAppearance { BodyMedium }
+            info.textAppearance.apply(this)
             info.typeface?.also { typeface = it }
+
+            // TODO: Set Drawable here, not int, to avoid Drawable allocation on each call.
             setBackgroundColor(info.background)
         }
     }
@@ -243,7 +256,7 @@ class SettingsInflater(private val context: Context) {
                     weight = 1f
                 }
 
-                setTextAppearance { BodyLarge }
+                containerInfo.nameTextAppearance.apply(this)
                 text = res.getText(item.nameRes)
             })
 
@@ -294,7 +307,7 @@ class SettingsInflater(private val context: Context) {
                     weight = 1f
                 }
 
-                setTextAppearance { BodyLarge }
+                containerInfo.nameTextAppearance.apply(this)
                 text = res.getText(item.nameRes)
             })
 
@@ -320,7 +333,7 @@ class SettingsInflater(private val context: Context) {
         return MaterialTextView(context).apply {
             layoutParams = info.nameLayoutParams
 
-            setTextAppearance { BodyLarge }
+            info.nameTextAppearance.apply(this)
             setText(nameRes)
         }
     }
@@ -329,6 +342,7 @@ class SettingsInflater(private val context: Context) {
         @JvmField @ColorInt val background: Int,
         @JvmField val typeface: Typeface?,
         @JvmField val padding: Int,
+        @JvmField val textAppearance: TextAppearance
     )
 
     private class ItemContainerViewInfo(
@@ -336,7 +350,8 @@ class SettingsInflater(private val context: Context) {
         @JvmField val iconSize: Int,
         @JvmField val nameMarginStart: Int,
         @JvmField val nameLayoutParams: LinearLayout.LayoutParams,
-        @JvmField val iconLayoutParams: LinearLayout.LayoutParams
+        @JvmField val iconLayoutParams: LinearLayout.LayoutParams,
+        @JvmField val nameTextAppearance: TextAppearance
     )
 
     private class LinkItemViewInfo(
