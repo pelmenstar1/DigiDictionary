@@ -252,3 +252,7 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
         }
     }
 }
+
+inline fun TextAppearance(context: Context, select: MaterialTextAppearanceSelector.() -> Int): TextAppearance {
+    return TextAppearance(context, MaterialTextAppearanceSelector.select())
+}

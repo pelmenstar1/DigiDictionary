@@ -8,6 +8,7 @@ import androidx.core.view.setPadding
 import androidx.core.widget.TextViewCompat
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputLayout
+import io.github.pelmenstar1.digiDict.common.textAppearance.MaterialTextAppearanceSelector
 
 fun TextInputLayout.setText(text: CharSequence) {
     editText?.setText(text)
@@ -57,12 +58,6 @@ fun <T : View> ViewGroup.getTypedViewAt(index: Int) = getChildAt(index) as T
 
 fun View.setPaddingRes(@DimenRes resId: Int) {
     setPadding(resources.getDimensionPixelOffset(resId))
-}
-
-object MaterialTextAppearanceSelector {
-    val BodyLarge = com.google.android.material.R.style.TextAppearance_Material3_BodyLarge
-    val BodyMedium = com.google.android.material.R.style.TextAppearance_Material3_BodyMedium
-    val BodySmall = com.google.android.material.R.style.TextAppearance_Material3_BodySmall
 }
 
 inline fun TextView.setTextAppearance(block: MaterialTextAppearanceSelector.() -> Int) {

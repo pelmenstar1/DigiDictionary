@@ -11,7 +11,7 @@ import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.ui.MaterialTextAppearanceSelector
+import io.github.pelmenstar1.digiDict.common.textAppearance.MaterialTextAppearanceSelector
 import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 
