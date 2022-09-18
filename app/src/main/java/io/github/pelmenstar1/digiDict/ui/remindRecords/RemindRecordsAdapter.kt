@@ -5,11 +5,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
+import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
+import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
 
 class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolder>() {
-    class ViewHolder(context: Context) : ConciseRecordWithBadgesViewHolder(context) {
+    class ViewHolder(
+        context: Context,
+        staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
+    ) : ConciseRecordWithBadgesViewHolder(context, staticInfo) {
         fun setRevealed(state: Boolean) {
             // Use INVISIBLE instead of GONE to reduce jumps on revealing.
             val visibility = if (state) View.VISIBLE else View.INVISIBLE
@@ -29,6 +34,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     }
 
     private var items = emptyArray<ConciseRecordWithBadges>()
+    private var staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo? = null
 
     private var _revealedStates = FixedBitSet.EMPTY
     var revealedStates: FixedBitSet
@@ -63,7 +69,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
         items = newItems
 
         when {
-            oldSize == 0 && newSize >= 0 -> {
+            oldSize == 0 && newSize > 0 -> {
                 notifyItemRangeInserted(0, newSize)
             }
             // Almost impossible situation but should be handled.
@@ -86,7 +92,14 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(parent.context)
+        val context = parent.context
+        val si = getLazyValue(
+            staticInfo,
+            { ConciseRecordWithBadgesViewHolderStaticInfo(context) },
+            { staticInfo = it }
+        )
+
+        return ViewHolder(context, si)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
