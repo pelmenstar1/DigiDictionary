@@ -162,7 +162,7 @@
     <string name="exportConfig_ddbbDescription">A special format for Digi Dictionary - DDDB (Digi Dictionary database). Faster exporting and importing, more compact but not human-readable - it is a binary format.</string>
     <string name="exportConfig_jsonDescription">JSON (JavaScript object notation) - slower exporting and importing. The encoded file is human-readable - you can open it in any text editor and easily the content.</string>
     <string name="exportConfig_successMessage">The data was successfully exported</string>
-    <string name="exportConfig_unexpectedUriMessage">Unexpected type of path was chosen, please choose a file</string>
+    <!--<string name="exportConfig_unexpectedUriMessage">Unexpected type of path was chosen, please choose a file</string>-->
     <string name="exportConfig_errorMessage">Unexpected error happened. Try again</string>
     <string name="exportConfig_unexpectedFileExtMessage">The extension of the file is expected to be ‘%1$s’ but the selected file‘s extension is ’%2$s’. The resulting file can become inaccessible. Do you want to proceed?</string>
 

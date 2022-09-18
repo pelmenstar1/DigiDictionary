@@ -33,19 +33,17 @@ class ExportConfigurationFragment : Fragment() {
         val binding = FragmentExportConfigurationBinding.inflate(inflater, container, false)
         val createDocLauncher = registerForActivityResult(createDocumentContract) { uri ->
             if (uri != null) {
+                debugLog(TAG) {
+                    info("Trying to export data to URI: $uri")
+                }
+
                 val extension = uri.fileExtensionOrNull()
 
-                if (extension == null) {
-                    if (container != null) {
-                        Snackbar.make(container, R.string.exportConfig_unexpectedUriMessage, Snackbar.LENGTH_LONG)
-                            .setAnchorView(binding.exportConfigSelectFileButton)
-                            .show()
-                    }
-                } else {
+                if (extension != null) {
                     // selectedFormat can't be null here, see a check in exportConfigSelectFileButton's on click listener.
                     val expectedExtension = vm.selectedFormat!!.extension
 
-                    if (extension == expectedExtension) {
+                    if (extension.equals(expectedExtension, ignoreCase = true)) {
                         startExport(uri)
                     } else {
                         val message = resources.getString(
@@ -59,6 +57,8 @@ class ExportConfigurationFragment : Fragment() {
                             positionButtonAction = { startExport(uri) }
                         )
                     }
+                } else {
+                    startExport(uri)
                 }
             }
         }
@@ -114,6 +114,8 @@ class ExportConfigurationFragment : Fragment() {
     }
 
     companion object {
+        private const val TAG = "ExportConfigFragment"
+
         private val EXPORT_FORMAT_ENTRIES = arrayOf(
             ExportFormatEntry(BackupFormat.DDDB, R.string.exportConfig_ddbbDescription),
             ExportFormatEntry(BackupFormat.JSON, R.string.exportConfig_jsonDescription)
