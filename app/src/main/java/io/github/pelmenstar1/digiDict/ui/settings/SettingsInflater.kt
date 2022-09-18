@@ -1,15 +1,14 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.AppCompatImageView
@@ -19,6 +18,7 @@ import androidx.core.view.setPadding
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.TransparentDrawable
 import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
 import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
@@ -91,8 +91,7 @@ class SettingsInflater(private val context: Context) {
         return controller
     }
 
-    @ColorInt
-    private fun getTitleBackground(context: Context): Int {
+    private fun getTitleBackground(context: Context): Drawable {
         val theme = context.theme
 
         val typedValue = TypedValue()
@@ -103,9 +102,9 @@ class SettingsInflater(private val context: Context) {
         )
 
         return if (resolved) {
-            typedValue.data
+            ColorDrawable(typedValue.data)
         } else {
-            Color.TRANSPARENT
+            TransparentDrawable
         }
     }
 
@@ -181,8 +180,7 @@ class SettingsInflater(private val context: Context) {
             info.textAppearance.apply(this)
             info.typeface?.also { typeface = it }
 
-            // TODO: Set Drawable here, not int, to avoid Drawable allocation on each call.
-            setBackgroundColor(info.background)
+            background = info.backgroundDrawable
         }
     }
 
@@ -339,7 +337,7 @@ class SettingsInflater(private val context: Context) {
     }
 
     private class TitleViewInfo(
-        @JvmField @ColorInt val background: Int,
+        @JvmField val backgroundDrawable: Drawable,
         @JvmField val typeface: Typeface?,
         @JvmField val padding: Int,
         @JvmField val textAppearance: TextAppearance
