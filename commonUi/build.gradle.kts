@@ -4,6 +4,7 @@ plugins {
 }
 
 android {
+    namespace = "io.github.pelmenstar1.digiDict.common.ui"
     compileSdk = 32
 
     defaultConfig {

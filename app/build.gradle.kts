@@ -14,6 +14,7 @@ val keystoreProperties = Properties()
 keystoreProperties.load(keystorePropertiesFile.inputStream())
 
 android {
+    namespace = "io.github.pelmenstar1.digiDict"
     compileSdk = 32
 
     signingConfigs {
