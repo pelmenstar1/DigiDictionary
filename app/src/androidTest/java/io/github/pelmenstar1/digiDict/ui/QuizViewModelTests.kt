@@ -9,11 +9,11 @@ import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
-import io.github.pelmenstar1.digiDict.prefs.AppPreferences
+import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.ui.quiz.QuizMode
 import io.github.pelmenstar1.digiDict.ui.quiz.QuizViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
-import io.github.pelmenstar1.digiDict.utils.ReadonlyAppPreferences
+import io.github.pelmenstar1.digiDict.utils.ReadonlyDigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.utils.reset
 import io.github.pelmenstar1.digiDict.utils.use
 import kotlinx.coroutines.flow.first
@@ -34,7 +34,7 @@ class QuizViewModelTests {
 
     private fun createViewModel(
         recordDao: RecordDao = db.recordDao(),
-        appPreferences: AppPreferences = ReadonlyAppPreferences(DEFAULT_SNAPSHOT),
+        appPreferences: DigiDictAppPreferences = ReadonlyDigiDictAppPreferences(DEFAULT_SNAPSHOT),
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider
     ): QuizViewModel {
         return QuizViewModel(recordDao, appPreferences, currentEpochSecondsProvider)
@@ -91,8 +91,8 @@ class QuizViewModelTests {
     }
 
     companion object {
-        private val DEFAULT_SNAPSHOT = AppPreferences.Entries.run {
-            AppPreferences.Snapshot(
+        private val DEFAULT_SNAPSHOT = DigiDictAppPreferences.Entries.run {
+            DigiDictAppPreferences.Snapshot(
                 scorePointsPerCorrectAnswer = scorePointsPerCorrectAnswer.defaultValue,
                 scorePointsPerWrongAnswer = scorePointsPerWrongAnswer.defaultValue,
                 useCustomTabs = useCustomTabs.defaultValue,
