@@ -1,9 +1,14 @@
 package io.github.pelmenstar1.digiDict
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.data.ConciseRecord
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import org.junit.Test
+import org.junit.runner.RunWith
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
+@RunWith(AndroidJUnit4::class)
 class RecordSearchUtilTests {
     @Test
     fun filterPredicateOnTextRangeTest() {
@@ -103,6 +108,51 @@ class RecordSearchUtilTests {
             text = "/// dll lll",
             query = "ll",
             expected = true
+        )
+    }
+
+    @Test
+    fun filterPredicate() {
+        fun testCase(expr: String, meaning: String, query: String) {
+            val record = ConciseRecord(id = 0, expr, meaning, score = 0)
+
+            assertTrue(RecordSearchUtil.filterPredicate(record, query))
+        }
+
+        testCase(
+            expr = "Wow that's cool",
+            meaning = "CMeaning",
+            query = "COOL"
+        )
+
+        testCase(
+            expr = "First word",
+            meaning = "CMeaning",
+            query = "fir"
+        )
+
+        testCase(
+            expr = "Expression",
+            meaning = "CCommon meaning",
+            query = "COMMON"
+        )
+
+        testCase(
+            expr = "Expression",
+            meaning = "CCommon meaning",
+            query = "meaning"
+        )
+
+        testCase(
+            expr = "Expression",
+            meaning = "L2@Mean\nKind",
+            query = "mEa"
+        )
+
+        testCase(
+            expr = "Expression",
+            meaning = "L2@Mean\nKind",
+            query = "kin"
         )
     }
 

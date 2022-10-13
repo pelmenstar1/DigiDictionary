@@ -21,7 +21,8 @@ object RecordSearchUtil {
         }
     }
 
-    private fun filterPredicate(record: ConciseRecord, query: String): Boolean {
+    @TestOnly
+    fun filterPredicate(record: ConciseRecord, query: String): Boolean {
         val expr = record.expression
         val meaning = record.meaning
 
@@ -31,7 +32,7 @@ object RecordSearchUtil {
 
         when (meaning[0]) {
             ComplexMeaning.COMMON_MARKER -> {
-                if (filterPredicateOnTextRange(meaning, 0, meaning.length, query)) {
+                if (filterPredicateOnTextRange(meaning, 1, meaning.length, query)) {
                     return true
                 }
             }
