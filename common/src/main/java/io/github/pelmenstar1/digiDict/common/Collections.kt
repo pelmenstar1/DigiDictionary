@@ -151,7 +151,17 @@ inline fun <T> Array<out T>.mapToIntArray(block: (T) -> Int): IntArray {
 }
 
 inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {
+    // TODO: Suppress a warning
     for (i in 0 until size) {
         block(this[i])
     }
+}
+
+fun IntArray.sum(start: Int = 0, end: Int = size): Int {
+    var acc = 0
+    for (i in start until end) {
+        acc += this[i]
+    }
+
+    return acc
 }
