@@ -18,18 +18,39 @@ fun Int.decimalDigitCount(): Int {
     }
 }
 
-fun StringBuilder.appendPaddedTwoDigit(number: Int) {
+private fun validateTwoDigitNumber(number: Int) {
     require(number in 0..99) { "Number is out of range [0; 99]" }
+}
+
+private inline fun paddedTwoDigitHelper(number: Int, block: (d1: Char, d2: Char) -> Unit) {
+    validateTwoDigitNumber(number)
 
     val d1 = number / 10
     val d2 = number - d1 * 10
 
-    append('0' + d1)
-    append('0' + d2)
+    block('0' + d1, '0' + d2)
 }
 
-fun StringBuilder.appendPaddedFourDigit(number: Int) {
+fun StringBuilder.appendPaddedTwoDigit(number: Int) {
+    paddedTwoDigitHelper(number) { d1, d2 ->
+        append(d1)
+        append(d2)
+    }
+}
+
+fun CharArray.writePaddedTwoDigit(number: Int, offset: Int) {
+    paddedTwoDigitHelper(number) { d1, d2 ->
+        this[offset] = d1
+        this[offset + 1] = d2
+    }
+}
+
+private fun validateFourDigitNumber(number: Int) {
     require(number in 0..9999) { "Number is out of range [0; 9999]" }
+}
+
+private inline fun paddedFourDigitHelper(number: Int, block: (d1: Char, d2: Char, d3: Char, d4: Char) -> Unit) {
+    validateFourDigitNumber(number)
 
     var t = number
     val d1 = t / 1000
@@ -41,10 +62,26 @@ fun StringBuilder.appendPaddedFourDigit(number: Int) {
     val d3 = t / 10
     val d4 = t - d3 * 10
 
-    append('0' + d1)
-    append('0' + d2)
-    append('0' + d3)
-    append('0' + d4)
+    block('0' + d1, '0' + d2, '0' + d3, '0' + d4)
+}
+
+
+fun StringBuilder.appendPaddedFourDigit(number: Int) {
+    paddedFourDigitHelper(number) { d1, d2, d3, d4 ->
+        append(d1)
+        append(d2)
+        append(d3)
+        append(d4)
+    }
+}
+
+fun CharArray.writePaddedFourDigit(number: Int, offset: Int) {
+    paddedFourDigitHelper(number) { d1, d2, d3, d4 ->
+        this[offset] = d1
+        this[offset + 1] = d2
+        this[offset + 2] = d3
+        this[offset + 3] = d4
+    }
 }
 
 /**

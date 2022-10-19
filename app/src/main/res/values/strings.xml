@@ -120,6 +120,15 @@
     <string name="stats_recordsAdded_last24Hours">Records added in last 24 hours</string>
     <string name="stats_recordsAdded_last7Days">Records added in last 7 days</string>
     <string name="stats_recordsAdded_last31Days">Records added in last 31 days</string>
+    <string name="stats_general">General</string>
+    <string name="stats_charts">Charts</string>
+    <string name="stats_chart_last7DaysCaption">Last 7 days</string>
+    <string name="stats_chart_last31DaysCaption">Last 31 days</string>
+    <string name="stats_chart_lastDaysDataSetLabel">Records added</string>
+    <string name="stats_chart_thisYearCaption">This year</string>
+    <string name="stats_chart_minLabel">Minimum</string>
+    <string name="stats_chart_maxLabel">Maximum</string>
+    <string name="stats_chart_avgLabel">Average</string>
 
     <!-- Settings fragment -->
     <string name="settings">Settings</string>
