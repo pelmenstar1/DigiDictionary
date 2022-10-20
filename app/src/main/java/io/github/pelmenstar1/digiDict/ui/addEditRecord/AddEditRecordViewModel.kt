@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.common.time.get
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +79,7 @@ class AddEditRecordViewModel @Inject constructor(
         val additionalNotes = additionalNotes.trimToString()
         val rawMeaning = getMeaning.invokeOrThrow().rawText
         val badges = getBadges.invokeOrThrow()
-        val epochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
+        val epochSeconds = currentEpochSecondsProvider.get { Utc }
 
         val recordId: Int
         if (currentRecordId >= 0) {

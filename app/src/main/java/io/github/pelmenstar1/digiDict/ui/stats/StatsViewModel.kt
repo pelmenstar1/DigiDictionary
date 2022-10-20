@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.ui.stats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.common.time.get
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.stats.CommonStats
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
@@ -19,8 +20,7 @@ class StatsViewModel @Inject constructor(
         get() = false
 
     override fun DataLoadStateManager.FlowBuilder<CommonStats>.buildDataFlow() = fromAction {
-        // TODO: Fix problem with timezones
-        val currentEpochSeconds = currentEpochSecondsProvider.currentEpochSeconds()
+        val currentEpochSeconds = currentEpochSecondsProvider.get { Local }
 
         withContext(Dispatchers.IO) {
             statsProvider.compute(currentEpochSeconds)
