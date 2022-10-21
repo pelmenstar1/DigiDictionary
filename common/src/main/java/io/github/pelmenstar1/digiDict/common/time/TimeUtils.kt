@@ -37,28 +37,74 @@ object TimeUtils {
         return (year and 3) == 0 && (year % 100 != 0 || year % 400 == 0)
     }
 
-    private fun calculateDayOfMonthEstimation(zeroDay: Long, yearEst: Long): Long {
-        return zeroDay - (365 * yearEst + yearEst / 4 - yearEst / 100 + yearEst / 400)
+    private fun calculateYearEstimation(zeroDay: Long): Long {
+        return (400L * zeroDay + 591L) / DAYS_PER_CYCLE
     }
 
+    private fun calculateDayOfMonthEstimation(zeroDay: Long, yearEst: Long): Long {
+        return zeroDay - (365L * yearEst + yearEst / 4L - yearEst / 100L + yearEst / 400L)
+    }
+
+    private fun validateEpochDay(value: Long) {
+        if (value < 0) {
+            throw IllegalArgumentException("epochDay can't be negative")
+        }
+    }
+
+    // TODO: Add tests for the methods below
+
     /**
-     * Returns a month (1-based) calculated from epoch day.
+     * Returns a month (1-based) calculated from given epoch day.
      */
     fun getMonthFromEpochDay(epochDay: Long): Int {
-        var zeroDay = epochDay + DAYS_0000_TO_1970 - 60
+        validateEpochDay(epochDay)
 
-        if (zeroDay < 0L) {
-            val adjustCycles = (zeroDay + 1L) / DAYS_PER_CYCLE - 1L
-            zeroDay += -adjustCycles * DAYS_PER_CYCLE
-        }
-
-        val yearEst = (400L * zeroDay + 591L) / DAYS_PER_CYCLE
-
+        val zeroDay = epochDay + DAYS_0000_TO_1970 - 60
+        val yearEst = calculateYearEstimation(zeroDay)
         var doyEst = calculateDayOfMonthEstimation(zeroDay, yearEst)
+
         if (doyEst < 0) {
             doyEst = calculateDayOfMonthEstimation(zeroDay, yearEst - 1)
         }
 
         return ((doyEst.toInt() * 5 + 2) / 153 + 2) % 12 + 1
+    }
+
+    /**
+     * Returns a year calculated from given epoch day
+     */
+    fun getYearFromEpochDay(epochDay: Long): Int {
+        validateEpochDay(epochDay)
+
+        val zeroDay = epochDay + DAYS_0000_TO_1970 - 60
+
+        var yearEst = calculateYearEstimation(zeroDay)
+        var doyEst = calculateDayOfMonthEstimation(zeroDay, yearEst)
+
+        if (doyEst < 0) {
+            yearEst--
+            doyEst = calculateDayOfMonthEstimation(zeroDay, yearEst)
+        }
+
+        val marchMonth0 = (doyEst.toInt() * 5 + 2) / 153
+
+        yearEst += (marchMonth0 / 10).toLong()
+        return yearEst.toInt()
+    }
+
+    /**
+     * Converts a date on start of the given year to epoch days.
+     */
+    fun yearToEpochDay(year: Int): Long {
+        if (year < 0) {
+            throw IllegalArgumentException("year can't be negative")
+        }
+
+        val y = year.toLong()
+
+        var total = 365L * y
+        total += (y + 3L) / 4L - (y + 99L) / 100L + (y + 399L) / 400L
+
+        return total - DAYS_0000_TO_1970
     }
 }

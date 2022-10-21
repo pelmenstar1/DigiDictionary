@@ -9,7 +9,6 @@ import io.github.pelmenstar1.digiDict.common.sum
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import java.util.*
 
 interface AdditionStatsProvider {
     fun compute(currentEpochSeconds: Long): AdditionStats
@@ -70,7 +69,7 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
                 val last31Days = perDayForLast31Days.sum()
 
                 val monthStatsEntries =
-                    computeMonthAdditionStatsEntries(db, fromEpochSecondsAggregateQuery, currentEpochSeconds)
+                    computeMonthAdditionStatsEntries(db, fromEpochSecondsAggregateQuery, currentEpochDay)
 
                 AdditionStats(
                     last24Hours,
@@ -86,14 +85,12 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
     private fun computeMonthAdditionStatsEntries(
         db: RoomDatabase,
         fromEpochSecondsQuery: FromEpochSecondsAggregateCountQuery,
-        currentEpochSeconds: Long
+        currentEpochDay: Long
     ): Array<MonthAdditionStats> {
-        val calendar = Calendar.getInstance().also { it.timeInMillis = currentEpochSeconds * 1000L }
-        val year = calendar[Calendar.YEAR]
+        val year = TimeUtils.getYearFromEpochDay(currentEpochDay)
+        val alignedYearEpochDay = TimeUtils.yearToEpochDay(year)
 
-        calendar.set(year, 0, 0, 0, 0, 0)
-
-        fromEpochSecondsQuery.bindStartEpochSeconds(calendar.timeInMillis / 1000)
+        fromEpochSecondsQuery.bindStartEpochSeconds(alignedYearEpochDay * SECONDS_IN_DAY)
 
         return db.query(fromEpochSecondsQuery).use { cursor ->
             Array(12) { i ->
