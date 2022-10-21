@@ -3,11 +3,14 @@ package io.github.pelmenstar1.digiDict
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.debugLog
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_HOUR
+import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
+import io.github.pelmenstar1.digiDict.stats.MonthAdditionStats
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset
 import kotlinx.coroutines.test.runTest
@@ -15,6 +18,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.*
+import kotlin.random.Random
 import kotlin.test.assertEquals
 
 @RunWith(AndroidJUnit4::class)
@@ -23,19 +28,62 @@ class DbCommonStatsProviderTests {
         private val list = ArrayList<Record>()
 
         fun record(epochSeconds: Long) {
-            list.add(
-                Record(
-                    id = 0,
-                    expression = list.size.toString(),
-                    meaning = "CMeaning",
-                    additionalNotes = "AdditionalNotes",
-                    score = 0,
-                    epochSeconds = epochSeconds
-                )
-            )
+            list.add(createRecord(list.size.toString(), epochSeconds))
         }
 
         fun toArray(): Array<Record> = list.toTypedArray()
+    }
+
+    private class MonthDataEmitter(private val year: Int) {
+        private val records = ArrayList<Record>()
+
+        val expectedMonthStatsEntries = HashMap<Int, MonthAdditionStats>()
+
+        fun month(month: Int, emitRecords: DayRecordEmitter.() -> Unit, expectedMonthStats: MonthAdditionStats) {
+            DayRecordEmitter(year, month, records).emitRecords()
+
+            expectedMonthStatsEntries[month] = expectedMonthStats
+        }
+
+        fun getRecords(): Array<Record> = records.toTypedArray()
+    }
+
+    private class DayRecordEmitter(
+        private val year: Int,
+        private val month: Int,
+        private val outRecords: MutableList<Record>
+    ) {
+        private val random = Random(month)
+
+        fun day(dayOfMonth: Int, count: Int) {
+            val startOfDayEpochSeconds = Calendar.getInstance(TimeZone.getTimeZone("UTC")).let {
+                it.clear()
+                it.set(year, month - 1, dayOfMonth)
+
+                it.timeInMillis / 1000
+            }
+
+            var remainingCount = count
+            if (remainingCount > 0) {
+                addRecord(startOfDayEpochSeconds + 0)
+                remainingCount--
+            }
+
+            if (remainingCount > 0) {
+                addRecord(startOfDayEpochSeconds + SECONDS_IN_DAY - 1)
+                remainingCount--
+            }
+
+            repeat(remainingCount) {
+                val recordEpochSeconds = startOfDayEpochSeconds + random.nextInt(1, (SECONDS_IN_DAY - 1).toInt())
+
+                addRecord(recordEpochSeconds)
+            }
+        }
+
+        private fun addRecord(epochSeconds: Long) {
+            outRecords.add(createRecord(expression = outRecords.size.toString(), epochSeconds))
+        }
     }
 
     private data class DayCount(val day: Int, val count: Int)
@@ -259,5 +307,108 @@ class DbCommonStatsProviderTests {
                 )
             )
         )
+    }
+
+    @Test
+    fun computeTest_alignedYear() = runTest {
+        val dao = db.recordDao()
+        val commonStatsProvider = DbCommonStatsProvider(db)
+
+        suspend fun testCase(block: MonthDataEmitter.() -> Unit) {
+            db.reset()
+
+            val currentEpochSeconds = System.currentTimeMillis() / 1000
+            val currentYear = TimeUtils.getYearFromEpochDay(currentEpochSeconds / SECONDS_IN_DAY)
+            val emitter = MonthDataEmitter(currentYear)
+            val records = emitter.also(block).getRecords()
+
+            dao.insertAll(records)
+            debugLog("DbCommonStatsProviderTests") {
+                info(records.map { it.epochSeconds }.joinToString())
+            }
+
+
+            val actualAdditionStats = commonStatsProvider.compute(currentEpochSeconds).additionStats
+            val expectedMonthEntries = emitter.expectedMonthStatsEntries
+
+            for (i in 0 until 12) {
+                val actualMonthStats = actualAdditionStats.monthStatsEntriesForAlignedYear[i]
+                val expectedMonthStats = expectedMonthEntries[i + 1] // key is 1-based month here
+
+                if (expectedMonthStats != null) {
+                    assertEquals(expectedMonthStats, actualMonthStats)
+                } else {
+                    assertEquals(0, actualMonthStats.min)
+                    assertEquals(0, actualMonthStats.max)
+                }
+            }
+        }
+
+        testCase {
+            month(
+                month = 1,
+                emitRecords = {
+                    day(dayOfMonth = 1, count = 10)
+                    day(dayOfMonth = 2, count = 5)
+                    day(dayOfMonth = 27, count = 1)
+                    day(dayOfMonth = 31, count = 2) // January always has 31 days
+                },
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 10)
+            )
+        }
+
+        testCase {
+            month(
+                month = 3,
+                emitRecords = {
+                    // emit records for all 31 days
+                    day(dayOfMonth = 1, count = 5)
+                    for (i in 0 until 30) {
+                        day(dayOfMonth = i + 2, count = 2)
+                    }
+                },
+                expectedMonthStats = MonthAdditionStats(min = 2, max = 5)
+            )
+        }
+
+        testCase {
+            month(
+                month = 4,
+                emitRecords = {
+                    day(dayOfMonth = 5, count = 2)
+                    day(dayOfMonth = 27, count = 1)
+                },
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 2)
+            )
+            month(
+                month = 5,
+                emitRecords = {
+                    day(dayOfMonth = 2, count = 50)
+                    day(dayOfMonth = 3, count = 3)
+                },
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 50)
+            )
+
+            month(
+                month = 11,
+                emitRecords = {
+                    day(dayOfMonth = 1, count = 7)
+                },
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 7)
+            )
+        }
+    }
+
+    companion object {
+        internal fun createRecord(expression: String, epochSeconds: Long): Record {
+            return Record(
+                id = 0,
+                expression = expression,
+                meaning = "CMeaning",
+                additionalNotes = "AdditionalNotes",
+                score = 0,
+                epochSeconds = epochSeconds
+            )
+        }
     }
 }
