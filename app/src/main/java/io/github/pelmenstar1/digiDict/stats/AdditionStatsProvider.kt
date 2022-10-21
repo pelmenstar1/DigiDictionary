@@ -94,17 +94,20 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
 
         return db.query(fromEpochSecondsQuery).use { cursor ->
             Array(12) { i ->
-                computeMonthAdditionStatsEntry(cursor, month = i + 1)
+                computeMonthAdditionStatsEntry(cursor, year, month = i + 1)
             }
         }
     }
 
     private fun computeMonthAdditionStatsEntry(
         cursor: Cursor,
+        year: Int,
         month: Int
     ): MonthAdditionStats {
-        var min = 0
-        var max = 0
+        var min = Int.MAX_VALUE
+        var max = Int.MIN_VALUE
+
+        var daysIterated = 0
 
         while (cursor.moveToNext()) {
             val epochDay = cursor.getLong(0)
@@ -123,6 +126,19 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
 
             if (addedRecords > max) {
                 max = addedRecords
+            }
+
+            daysIterated++
+        }
+
+        if (daysIterated == 0) {
+            min = 0
+            max = 0
+        } else {
+            val daysInMonth = TimeUtils.getDaysInMonth(year, month)
+
+            if (daysIterated != daysInMonth) {
+                min = 0
             }
         }
 
