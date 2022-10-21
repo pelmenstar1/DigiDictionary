@@ -32,7 +32,14 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
         override fun getArgCount() = 1
     }
 
-    private fun SupportSQLiteStatement.bindDayRangeAndExecuteToInt(startEpochDay: Long): Int {
+    private fun SupportSQLiteStatement.bindEpochSecondsAndQueryForInt(value: Long): Int {
+        // Binding index is 1-based.
+        bindLong(1, value)
+
+        return simpleQueryForLong().toInt()
+    }
+
+    private fun SupportSQLiteStatement.bindDayRangeAndQueryForInt(startEpochDay: Long): Int {
         val startEpochSeconds = startEpochDay * SECONDS_IN_DAY
 
         // Binding index is 1-based.
@@ -42,34 +49,38 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
         return simpleQueryForLong().toInt()
     }
 
+    private fun compileFromEpochSecondsStatement() =
+        appDatabase.compileStatement("SELECT COUNT(*) FROM records WHERE dateTime >= ?")
+
+    private fun compileDayRangeStatement() =
+        appDatabase.compileStatement("SELECT COUNT(*) FROM records WHERE dateTime >= ? AND dateTime < ?")
+
     override fun compute(currentEpochSeconds: Long): AdditionStats {
         val currentEpochDay = currentEpochSeconds / SECONDS_IN_DAY
 
-        val db = appDatabase
-
         val fromEpochSecondsAggregateQuery = FromEpochSecondsAggregateCountQuery()
-        val fromEpochSecondsStatement = db.compileStatement("SELECT COUNT(*) FROM records WHERE dateTime >= ?")
 
-        return fromEpochSecondsStatement.use {
-            val dayRangeStatement =
-                db.compileStatement("SELECT COUNT(*) FROM records WHERE dateTime >= ? AND dateTime < ?")
-
-            dayRangeStatement.use {
-                fromEpochSecondsStatement.bindLong(1, currentEpochSeconds - SECONDS_IN_DAY)
-                val last24Hours = fromEpochSecondsStatement.simpleQueryForLong().toInt()
+        return compileFromEpochSecondsStatement().use { fromEpochSecondsStatement ->
+            compileDayRangeStatement().use { dayRangeStatement ->
+                val last24Hours = fromEpochSecondsStatement.bindEpochSecondsAndQueryForInt(
+                    currentEpochSeconds - SECONDS_IN_DAY
+                )
 
                 // We need to take off one day to make this work as expected
                 // because currentEpochDays points to the start of the day.
                 val last31DayBound = currentEpochDay - 30
                 val perDayForLast31Days = IntArray(31) { i ->
-                    dayRangeStatement.bindDayRangeAndExecuteToInt(last31DayBound + i)
+                    dayRangeStatement.bindDayRangeAndQueryForInt(last31DayBound + i)
                 }
 
                 val last7Days = perDayForLast31Days.sum(start = 24)
                 val last31Days = perDayForLast31Days.sum()
 
-                val monthStatsEntries =
-                    computeMonthAdditionStatsEntries(db, fromEpochSecondsAggregateQuery, currentEpochDay)
+                val monthStatsEntries = computeMonthAdditionStatsEntries(
+                    appDatabase,
+                    fromEpochSecondsAggregateQuery,
+                    currentEpochDay
+                )
 
                 AdditionStats(
                     last24Hours,
