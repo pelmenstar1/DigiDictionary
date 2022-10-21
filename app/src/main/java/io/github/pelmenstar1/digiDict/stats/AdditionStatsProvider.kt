@@ -1,8 +1,11 @@
 package io.github.pelmenstar1.digiDict.stats
 
+import android.database.Cursor
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteProgram
+import androidx.sqlite.db.SupportSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteStatement
 import io.github.pelmenstar1.digiDict.common.sum
-import io.github.pelmenstar1.digiDict.common.time.MILLIS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.AppDatabase
@@ -13,11 +16,21 @@ interface AdditionStatsProvider {
 }
 
 class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionStatsProvider {
-    private fun SupportSQLiteStatement.bindEpochSecondsAndExecuteToInt(value: Long): Int {
-        // Binding index is 1-based.
-        bindLong(1, value)
+    private class FromEpochSecondsAggregateCountQuery : SupportSQLiteQuery {
+        private var startEpochSeconds = 0L
 
-        return simpleQueryForLong().toInt()
+        override fun getSql() =
+            "SELECT dateTime / 86400, COUNT(dateTime / 86400) FROM records WHERE dateTime >= ? GROUP BY dateTime / 86400 ORDER BY dateTime / 86400 ASC"
+
+        fun bindStartEpochSeconds(value: Long) {
+            startEpochSeconds = value
+        }
+
+        override fun bindTo(statement: SupportSQLiteProgram) {
+            statement.bindLong(1, startEpochSeconds)
+        }
+
+        override fun getArgCount() = 1
     }
 
     private fun SupportSQLiteStatement.bindDayRangeAndExecuteToInt(startEpochDay: Long): Int {
@@ -34,6 +47,8 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
         val currentEpochDay = currentEpochSeconds / SECONDS_IN_DAY
 
         val db = appDatabase
+
+        val fromEpochSecondsAggregateQuery = FromEpochSecondsAggregateCountQuery()
         val fromEpochSecondsStatement = db.compileStatement("SELECT COUNT(*) FROM records WHERE dateTime >= ?")
 
         return fromEpochSecondsStatement.use {
@@ -41,13 +56,12 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
                 db.compileStatement("SELECT COUNT(*) FROM records WHERE dateTime >= ? AND dateTime < ?")
 
             dayRangeStatement.use {
-                val last24Hours =
-                    fromEpochSecondsStatement.bindEpochSecondsAndExecuteToInt(currentEpochSeconds - SECONDS_IN_DAY)
+                fromEpochSecondsStatement.bindLong(1, currentEpochSeconds - SECONDS_IN_DAY)
+                val last24Hours = fromEpochSecondsStatement.simpleQueryForLong().toInt()
 
                 // We need to take off one day to make this work as expected
                 // because currentEpochDays points to the start of the day.
                 val last31DayBound = currentEpochDay - 30
-
                 val perDayForLast31Days = IntArray(31) { i ->
                     dayRangeStatement.bindDayRangeAndExecuteToInt(last31DayBound + i)
                 }
@@ -55,7 +69,8 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
                 val last7Days = perDayForLast31Days.sum(start = 24)
                 val last31Days = perDayForLast31Days.sum()
 
-                val monthStatsEntries = computeMonthAdditionStatsEntries(dayRangeStatement, currentEpochSeconds)
+                val monthStatsEntries =
+                    computeMonthAdditionStatsEntries(db, fromEpochSecondsAggregateQuery, currentEpochSeconds)
 
                 AdditionStats(
                     last24Hours,
@@ -69,7 +84,8 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
     }
 
     private fun computeMonthAdditionStatsEntries(
-        dayRangeStatement: SupportSQLiteStatement,
+        db: RoomDatabase,
+        fromEpochSecondsQuery: FromEpochSecondsAggregateCountQuery,
         currentEpochSeconds: Long
     ): Array<MonthAdditionStats> {
         val calendar = Calendar.getInstance().also { it.timeInMillis = currentEpochSeconds * 1000L }
@@ -77,28 +93,34 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
 
         calendar.set(year, 0, 0, 0, 0, 0)
 
-        var epochDay = calendar.timeInMillis / MILLIS_IN_DAY
+        fromEpochSecondsQuery.bindStartEpochSeconds(calendar.timeInMillis / 1000)
 
-        return Array(12) { i ->
-            val daysInMonth = TimeUtils.getDaysInMonth(year, i + 1)
-            val entry = computeMonthAdditionStatsEntry(dayRangeStatement, epochDay, daysInMonth)
-            epochDay += daysInMonth
-
-            entry
+        return db.query(fromEpochSecondsQuery).use { cursor ->
+            Array(12) { i ->
+                computeMonthAdditionStatsEntry(cursor, year, month = i + 1)
+            }
         }
     }
 
     private fun computeMonthAdditionStatsEntry(
-        dayRangeStatement: SupportSQLiteStatement,
-        startEpochDay: Long,
-        daysInMonth: Int
+        cursor: Cursor,
+        year: Int,
+        month: Int
     ): MonthAdditionStats {
-        var min = Int.MAX_VALUE
-        var max = Int.MIN_VALUE
+        var min = 0
+        var max = 0
         var total = 0
 
-        for (i in 0 until daysInMonth) {
-            val addedRecords = dayRangeStatement.bindDayRangeAndExecuteToInt(startEpochDay + i)
+        while (cursor.moveToNext()) {
+            val epochDay = cursor.getLong(0)
+            val epochDayMonth = TimeUtils.getMonthFromEpochDay(epochDay)
+
+            if (epochDayMonth != month) {
+                cursor.moveToPrevious()
+                break
+            }
+
+            val addedRecords = cursor.getInt(1)
 
             if (addedRecords < min) {
                 min = addedRecords
@@ -111,7 +133,7 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
             total += addedRecords
         }
 
-        val avg = total.toFloat() / daysInMonth
+        val avg = total.toFloat() / TimeUtils.getDaysInMonth(year, month)
 
         return MonthAdditionStats(min, max, avg, total)
     }

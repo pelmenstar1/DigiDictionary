@@ -111,11 +111,11 @@ class DbCommonStatsProviderTests {
                 // Edge case.
                 record(epochSeconds - SECONDS_IN_DAY + 1) // day 0
 
-                /* 7 records in range of a week. */
+                /* 6 records in range of a week. */
                 record(epochSeconds - 2 * SECONDS_IN_DAY) // day 2
                 record(epochSeconds - 6 * SECONDS_IN_DAY) // day 5
 
-                /* 9 records in range of 31 days. */
+                /* 7 records in range of 31 days. */
                 record(epochSeconds - 9 * SECONDS_IN_DAY) // day 8
             },
             expectedCount = 7,
