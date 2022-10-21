@@ -12,15 +12,5 @@ data class MonthAdditionStats(
     /**
      * The greatest amount of added records in a day within the month.
      */
-    val max: Int,
-
-    /**
-     * Average amount of added records in a day within the month.
-     */
-    val average: Float,
-
-    /**
-     * Total amount of added records within the month.
-     */
-    val total: Int
+    val max: Int
 )

@@ -128,7 +128,6 @@
     <string name="stats_chart_thisYearCaption">This year</string>
     <string name="stats_chart_minLabel">Minimum</string>
     <string name="stats_chart_maxLabel">Maximum</string>
-    <string name="stats_chart_avgLabel">Average</string>
 
     <!-- Settings fragment -->
     <string name="settings">Settings</string>
