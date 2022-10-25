@@ -117,6 +117,7 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
     ): MonthAdditionStats {
         var min = Int.MAX_VALUE
         var max = Int.MIN_VALUE
+        var total = 0
 
         var daysIterated = 0
 
@@ -140,19 +141,19 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
             }
 
             daysIterated++
+            total += addedRecords
         }
 
+        val daysInMonth = TimeUtils.getDaysInMonth(year, month)
         if (daysIterated == 0) {
             min = 0
             max = 0
-        } else {
-            val daysInMonth = TimeUtils.getDaysInMonth(year, month)
-
-            if (daysIterated != daysInMonth) {
-                min = 0
-            }
+        } else if (daysIterated != daysInMonth) {
+            min = 0
         }
 
-        return MonthAdditionStats(min, max)
+        val avg = total.toFloat() / daysInMonth
+
+        return MonthAdditionStats(min, max, avg, total)
     }
 }

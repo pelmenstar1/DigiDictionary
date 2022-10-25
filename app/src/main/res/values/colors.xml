@@ -38,4 +38,5 @@
     <color name="stats_last_days_chart_color">@color/color_primary</color>
     <color name="stats_chart_min_color">#1E88E5</color>
     <color name="stats_chart_max_color">#E53935</color>
+    <color name="stats_chart_avg_color">#FFB300</color>
 </resources>

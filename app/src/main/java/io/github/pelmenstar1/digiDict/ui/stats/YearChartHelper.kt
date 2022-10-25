@@ -22,8 +22,10 @@ object YearChartHelper {
         @ColorInt val textColor: Int,
         @ColorInt val minColor: Int,
         @ColorInt val maxColor: Int,
+        @ColorInt val avgColor: Int,
         val minLabel: String,
         val maxLabel: String,
+        val avgLabel: String
     )
 
     private class MonthValueFormatter(context: Context) : ValueFormatter() {
@@ -41,18 +43,22 @@ object YearChartHelper {
         val textColor = ResourcesCompat.getColor(res, R.color.stats_chart_text_color, theme)
         val minColor = ResourcesCompat.getColor(res, R.color.stats_chart_min_color, theme)
         val maxColor = ResourcesCompat.getColor(res, R.color.stats_chart_max_color, theme)
+        val avgColor = ResourcesCompat.getColor(res, R.color.stats_chart_avg_color, theme)
 
         val minLabel = res.getString(R.string.stats_chart_minLabel)
         val maxLabel = res.getString(R.string.stats_chart_maxLabel)
+        val avgLabel = res.getString(R.string.stats_chart_avgLabel)
 
-        return ChartOptions(textColor, minColor, maxColor, minLabel, maxLabel)
+        return ChartOptions(textColor, minColor, maxColor, avgColor, minLabel, maxLabel, avgLabel)
     }
 
     private fun createChartData(rawData: Array<out MonthAdditionStats>, options: ChartOptions): LineData {
         return LineData(
-            createChartDataSet(rawData, options, { min }, { minLabel }, { minColor }),
-            createChartDataSet(rawData, options, { max }, { maxLabel }, { maxColor })
-        )
+            createChartDataSet(rawData, options, { min.toFloat() }, { minLabel }, { minColor }),
+            createChartDataSet(rawData, options, { max.toFloat() }, { maxLabel }, { maxColor }),
+            createChartDataSet(rawData, options, { average }, { avgLabel }, { avgColor })
+        ).apply {
+        }
     }
 
     private fun LineDataSet.setupColors(dataColor: Int, textColor: Int) {
@@ -65,14 +71,14 @@ object YearChartHelper {
     private inline fun createChartDataSet(
         rawData: Array<out MonthAdditionStats>,
         options: ChartOptions,
-        dataSelector: MonthAdditionStats.() -> Int,
+        dataSelector: MonthAdditionStats.() -> Float,
         labelSelector: ChartOptions.() -> String,
         colorSelector: ChartOptions.() -> Int
     ): LineDataSet {
         val entries = ArrayList<Entry>(12)
 
         for (i in 0 until 12) {
-            val entry = Entry(i.toFloat(), rawData[i].dataSelector().toFloat())
+            val entry = Entry(i.toFloat(), rawData[i].dataSelector())
 
             entries.add(entry)
         }
@@ -116,7 +122,10 @@ object YearChartHelper {
                 textColor = options.textColor
             }
 
-            axisLeft.textColor = options.textColor
+            axisLeft.apply {
+                textColor = options.textColor
+            }
+
             axisRight.isEnabled = false
 
             legend.textColor = options.textColor
