@@ -69,6 +69,8 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
                 // We need to take off one day to make this work as expected
                 // because currentEpochDays points to the start of the day.
                 val last31DayBound = currentEpochDay - 30
+
+                // TODO: Probably it can be done in one query to sqlite and some postprocessing
                 val perDayForLast31Days = IntArray(31) { i ->
                     dayRangeStatement.bindDayRangeAndQueryForInt(last31DayBound + i)
                 }
