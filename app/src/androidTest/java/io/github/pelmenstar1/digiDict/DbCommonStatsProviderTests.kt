@@ -337,18 +337,15 @@ class DbCommonStatsProviderTests {
                 val actualMin = actualMonthStats.min
                 val actualMax = actualMonthStats.max
                 val actualAvg = actualMonthStats.average
-                val actualTotal = actualMonthStats.total
 
                 if (expectedMonthStats != null) {
                     assertEquals(expectedMonthStats.min, actualMin)
                     assertEquals(expectedMonthStats.max, actualMax)
                     assertEquals(expectedMonthStats.average, actualAvg, 0.01f)
-                    assertEquals(expectedMonthStats.total, actualTotal)
                 } else {
                     assertEquals(0, actualMin)
                     assertEquals(0, actualMax)
                     assertEquals(0f, actualAvg)
-                    assertEquals(0, actualTotal)
                 }
             }
         }
@@ -362,7 +359,7 @@ class DbCommonStatsProviderTests {
                     day(dayOfMonth = 27, count = 1)
                     day(dayOfMonth = 31, count = 2) // January always has 31 days
                 },
-                expectedMonthStats = MonthAdditionStats(min = 0, max = 10, average = 0.58f, total = 18)
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 10, average = 0.58f)
             )
         }
 
@@ -376,7 +373,7 @@ class DbCommonStatsProviderTests {
                         day(dayOfMonth = i + 2, count = 2)
                     }
                 },
-                expectedMonthStats = MonthAdditionStats(min = 2, max = 5, average = 2.096f, total = 65)
+                expectedMonthStats = MonthAdditionStats(min = 2, max = 5, average = 2.096f)
             )
         }
 
@@ -387,7 +384,7 @@ class DbCommonStatsProviderTests {
                     day(dayOfMonth = 5, count = 2)
                     day(dayOfMonth = 27, count = 1)
                 },
-                expectedMonthStats = MonthAdditionStats(min = 0, max = 2, average = 0.1f, total = 3)
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 2, average = 0.1f)
             )
             month(
                 month = 5,
@@ -395,7 +392,7 @@ class DbCommonStatsProviderTests {
                     day(dayOfMonth = 2, count = 50)
                     day(dayOfMonth = 3, count = 3)
                 },
-                expectedMonthStats = MonthAdditionStats(min = 0, max = 50, average = 1.7096f, total = 53)
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 50, average = 1.7096f)
             )
 
             month(
@@ -403,7 +400,7 @@ class DbCommonStatsProviderTests {
                 emitRecords = {
                     day(dayOfMonth = 1, count = 7)
                 },
-                expectedMonthStats = MonthAdditionStats(min = 0, max = 7, average = 0.225f, total = 7)
+                expectedMonthStats = MonthAdditionStats(min = 0, max = 7, average = 0.225f)
             )
         }
     }

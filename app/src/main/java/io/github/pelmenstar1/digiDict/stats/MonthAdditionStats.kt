@@ -17,10 +17,5 @@ data class MonthAdditionStats(
     /**
      * Average amount of added records in a day within the month.
      */
-    val average: Float,
-
-    /**
-     * Total amount of added records within the month.
-     */
-    val total: Int
+    val average: Float
 )

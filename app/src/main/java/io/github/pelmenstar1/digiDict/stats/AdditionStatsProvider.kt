@@ -154,6 +154,6 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
 
         val avg = total.toFloat() / daysInMonth
 
-        return MonthAdditionStats(min, max, avg, total)
+        return MonthAdditionStats(min, max, avg)
     }
 }
