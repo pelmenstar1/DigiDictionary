@@ -1,6 +1,9 @@
 package io.github.pelmenstar1.digiDict.ui.stats
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.view.MotionEvent
+import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.content.res.ResourcesCompat
 import com.github.mikephil.charting.charts.LineChart
@@ -12,6 +15,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLocaleCompat
 import io.github.pelmenstar1.digiDict.stats.MonthAdditionStats
 import java.text.DateFormatSymbols
+
 
 object YearChartHelper {
     private class ChartOptions(
@@ -80,6 +84,27 @@ object YearChartHelper {
         }
     }
 
+    // When it's set on a LineChart, it allows outer ScrollView to be scrolled when the chart is fully zoomed out
+    @SuppressLint("ClickableViewAccessibility")
+    private fun createYearChartTouchListener() = View.OnTouchListener { c, event ->
+        val chart = c as LineChart
+
+        chart.parent?.also { parent ->
+            if (chart.scaleY > 1f) {
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        parent.requestDisallowInterceptTouchEvent(true)
+                    }
+                    MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
+                        parent.requestDisallowInterceptTouchEvent(false)
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
     fun setupChart(chart: LineChart, rawData: Array<out MonthAdditionStats>) {
         val context = chart.context
         val options = createChartOptions(context)
@@ -101,6 +126,8 @@ object YearChartHelper {
             isHighlightPerDragEnabled = false
 
             data = createChartData(rawData, options)
+
+            setOnTouchListener(createYearChartTouchListener())
         }
     }
 }
