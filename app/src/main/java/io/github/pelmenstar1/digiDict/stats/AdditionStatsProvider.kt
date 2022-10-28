@@ -18,6 +18,9 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
     private class FromEpochSecondsAggregateCountQuery : SupportSQLiteQuery {
         private var startEpochSeconds = 0L
 
+        // This query returns an epoch day and corresponding amount of added records during that day
+        // starting from given epoch seconds (parameter 1).
+        // It's based on a fact that division is truncating: (E + a) / 86400 = E / 86400 if a is in [0; 86400)
         override fun getSql() =
             "SELECT dateTime / 86400, COUNT(dateTime / 86400) FROM records WHERE dateTime >= ? GROUP BY dateTime / 86400 ORDER BY dateTime / 86400 ASC"
 
@@ -112,11 +115,21 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
         }
     }
 
+    /**
+     * Computes [MonthAdditionStats] instance.
+     *
+     * @param cursor [Cursor] that should be returned by [FromEpochSecondsAggregateCountQuery] query
+     * @param year year of the particular month to calculate the statistics for
+     * @param month month index (1-based) of the particular month to calculate the statistics for
+     */
     private fun computeMonthAdditionStatsEntry(
         cursor: Cursor,
         year: Int,
         month: Int
     ): MonthAdditionStats {
+        // As we don't know exactly any element from cursor now, min and max should contain some impossible values for them
+        // to be replaced by real values later. It's an essential detail because if all elements in cursor > 1 and we set
+        // min to 0, then it will be calculated wrong.
         var min = Int.MAX_VALUE
         var max = Int.MIN_VALUE
         var total = 0
@@ -127,7 +140,10 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
             val epochDay = cursor.getLong(0)
             val epochDayMonth = TimeUtils.getMonthFromEpochDay(epochDay)
 
+            // If we're iterating next month, we should stop - we've calculated everything we need, there's no
+            // more information about specified month.
             if (epochDayMonth != month) {
+                // Step back as we're on the 'wrong' territory.
                 cursor.moveToPrevious()
                 break
             }
@@ -147,11 +163,18 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
         }
 
         val daysInMonth = TimeUtils.getDaysInMonth(year, month)
+
+        // If 0 days were processed, min and max are 0 as well.
         if (daysIterated == 0) {
             min = 0
             max = 0
-        } else if (daysIterated != daysInMonth) {
-            min = 0
+        } else {
+            // FromEpochSecondsAggregateCountQuery doesn't report the days during which no records were added.
+            // If we've iterated less days than days in the month, it means that some of the elements
+            // are zero, so minimum value of amount of added days during the month is zero.
+            if (daysIterated != daysInMonth) {
+                min = 0
+            }
         }
 
         val avg = total.toFloat() / daysInMonth
