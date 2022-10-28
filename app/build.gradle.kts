@@ -114,6 +114,8 @@ dependencies {
     implementation(libs.androidx.viewpager)
     implementation(libs.androidx.datastore.prefs)
 
+    implementation(libs.mpandroidchart)
+
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.bundles.kotlin.test.junit)

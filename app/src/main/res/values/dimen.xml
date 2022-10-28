@@ -42,4 +42,7 @@
 
     <dimen name="importFormatSelectorDialog_entryPadding">8dp</dimen>
     <dimen name="importExportConfigProgressIndicatorDialog_warningTopMargin">8dp</dimen>
+
+    <dimen name="stats_chartMarginHorizontal">10dp</dimen>
+    <dimen name="stats_chartHeight">300dp</dimen>
 </resources>

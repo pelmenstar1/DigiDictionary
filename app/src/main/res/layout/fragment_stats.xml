@@ -7,49 +7,99 @@
     android:layout_height="match_parent"
     app:errorText="@string/stats_failedToComputeStats">
 
-    <LinearLayout
-        android:id="@+id/stats_contentContainer"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="8dp"
         android:visibility="gone"
         tools:visibility="visible">
 
-        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
-            android:id="@+id/stats_countView"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            app:prefix="@string/stats_count"
-            tools:text="@string/stats_count" />
+            android:orientation="vertical"
+            android:padding="8dp">
 
-        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
-            android:id="@+id/stats_recordsAddedLast24HoursView"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            app:prefix="@string/stats_recordsAdded_last24Hours"
-            tools:text="@string/stats_recordsAdded_last24Hours" />
+            <TextView
+                style="@style/TextAppearance.Material3.HeadlineMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="5dp"
+                android:text="@string/stats_additionStatsHeader" />
 
-        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
-            android:id="@+id/stats_recordsAddedLast7DaysView"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            app:prefix="@string/stats_recordsAdded_last7Days"
-            tools:text="@string/stats_recordsAdded_last7Days" />
+            <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+                android:id="@+id/stats_countView"
+                style="@style/TextAppearance.DigiDictionary.Stats.GeneralText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:prefix="@string/stats_recordsAdded_wholeTime"
+                tools:text="@string/stats_recordsAdded_wholeTime" />
 
-        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
-            android:id="@+id/stats_recordsAddedLast31DaysView"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="false"
-            app:prefix="@string/stats_recordsAdded_last31Days"
-            tools:text="@string/stats_recordsAdded_last31Days" />
-    </LinearLayout>
+            <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+                android:id="@+id/stats_recordsAddedLast24HoursView"
+                style="@style/TextAppearance.DigiDictionary.Stats.GeneralText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:prefix="@string/stats_recordsAdded_last24Hours"
+                tools:text="@string/stats_recordsAdded_last24Hours" />
+
+            <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+                android:id="@+id/stats_recordsAddedLast7DaysView"
+                style="@style/TextAppearance.DigiDictionary.Stats.GeneralText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:prefix="@string/stats_recordsAdded_last7Days"
+                tools:text="@string/stats_recordsAdded_last7Days" />
+
+            <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+                android:id="@+id/stats_recordsAddedLast31DaysView"
+                style="@style/TextAppearance.DigiDictionary.Stats.GeneralText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:prefix="@string/stats_recordsAdded_last31Days"
+                tools:text="@string/stats_recordsAdded_last31Days" />
+
+            <TextView
+                style="@style/TextAppearance.Material3.HeadlineSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:text="@string/stats_charts" />
+
+            <TextView
+                style="@style/TextAppearance.DigiDictionary.Stats.ChartCaption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/stats_chart_last7DaysCaption" />
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/stats_last7DaysChart"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stats_chartHeight" />
+
+            <TextView
+                style="@style/TextAppearance.DigiDictionary.Stats.ChartCaption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/stats_chart_last31DaysCaption" />
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/stats_last31DaysChart"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stats_chartHeight" />
+
+            <TextView
+                style="@style/TextAppearance.DigiDictionary.Stats.ChartCaption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/stats_chart_thisYearCaption" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/stats_thisYearChart"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/stats_chartHeight" />
+        </LinearLayout>
+    </ScrollView>
 </io.github.pelmenstar1.digiDict.common.ui.DataLoadStateContainer>
