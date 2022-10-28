@@ -6,15 +6,12 @@
         <item name="android:background">@drawable/widget_list_background</item>
     </style>
 
-    <style name="TextAppearance.DigiDictionary.Stats.Headline" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:layout_gravity">center_horizontal</item>
-    </style>
-
     <style name="TextAppearance.DigiDictionary.Stats.GeneralText" parent="TextAppearance.Material3.BodyLarge">
         <item name="android:textIsSelectable">false</item>
     </style>
 
     <style name="TextAppearance.DigiDictionary.Stats.ChartCaption" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_marginBottom">5dp</item>
         <item name="android:layout_gravity">center_horizontal</item>
     </style>
