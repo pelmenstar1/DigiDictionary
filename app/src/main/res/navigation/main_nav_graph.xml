@@ -38,6 +38,13 @@
             android:name="recordId"
             android:defaultValue="-1"
             app:argType="integer" />
+
+        <argument
+            android:name="initialExpression"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+
         <action
             android:id="@+id/action_addEditRecord_to_chooseRemoteDictionaryProvider"
             app:destination="@id/chooseRemoteDictionaryProviderFragment" />

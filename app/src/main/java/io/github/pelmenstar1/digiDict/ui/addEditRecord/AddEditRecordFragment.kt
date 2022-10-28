@@ -53,8 +53,6 @@ class AddEditRecordFragment : Fragment() {
 
         vm.currentRecordId = recordId
 
-        // Init errors only after currentRecordId is set.
-        vm.initErrors()
         popBackStackOnSuccess(vm.addOrEditAction, navController)
         showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
 
@@ -96,6 +94,13 @@ class AddEditRecordFragment : Fragment() {
         initMeaningInteraction()
         initBadgeInteraction()
         initViews()
+
+        args.initialExpression?.let {
+            binding.addRecordExpressionInputLayout.setText(it)
+        }
+
+        // Init errors only after currentRecordId and initial expression are set.
+        vm.initErrors()
 
         return binding.root
     }
