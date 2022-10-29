@@ -150,8 +150,11 @@ inline fun <T> Array<out T>.mapToIntArray(block: (T) -> Int): IntArray {
     return IntArray(size) { block(this[it]) }
 }
 
+/**
+ * Same as [Iterable.forEach] but does not create an [Iterator] and directly accesses the elements of the [List].
+ */
+@Suppress("ReplaceManualRangeWithIndicesCalls")
 inline fun <T> List<T>.forEachWithNoIterator(block: (T) -> Unit) {
-    // TODO: Suppress a warning
     for (i in 0 until size) {
         block(this[i])
     }
