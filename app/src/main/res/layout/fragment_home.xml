@@ -46,7 +46,6 @@
 
         </LinearLayout>
 
-        <!-- TODO: Simplify it -->
         <include layout="@layout/home_loading_error_and_progress_merge" />
     </FrameLayout>
 
