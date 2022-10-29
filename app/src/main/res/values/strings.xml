@@ -8,6 +8,7 @@
     <string name="edit">Edit</string>
     <string name="applyChanges">Apply</string>
     <string name="empty">Empty</string>
+    <string name="search">Search</string>
     <string name="emptyTextError">Text can\'t be empty</string>
 
     <string name="dbError">Internal error</string>
@@ -109,11 +110,6 @@
     <string name="quizNav_last24Hours">Last 24 hours</string>
     <string name="quizNav_last48Hours">Last 48 hours</string>
     <string name="quizNav_all">All</string>
-
-    <!-- Search fragment -->
-    <!-- TODO: Consolidate search_* with home fragment as they're logically connected -->
-    <string name="search">Search</string>
-    <string name="search_error">An error happened during the search</string>
 
     <!-- Stats fragment -->
     <string name="stats">Statistics</string>
