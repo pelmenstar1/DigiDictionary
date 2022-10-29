@@ -127,19 +127,21 @@ class AddEditRecordViewModel @Inject constructor(
     // setExpressionInternal shouldn't be called when there's 'current record' and it's not loaded.
     // It's not critical except 'check expression job' will be started earlier than it should be.
     private fun setExpressionInternal(value: String) {
-        _expression = value
+        if (value.isNotEmpty()) {
+            _expression = value
 
-        startCheckExprJobIfNecessary()
+            startCheckExprJobIfNecessary()
 
-        validity.update {
-            val prevValue = it ?: 0
+            validity.update {
+                val prevValue = it ?: 0
 
-            prevValue
-                .withBit(EXPRESSION_VALIDITY_BIT, false)
-                .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, true)
+                prevValue
+                    .withBit(EXPRESSION_VALIDITY_BIT, false)
+                    .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, true)
+            }
+
+            checkExpressionChannel.trySend(value)
         }
-
-        checkExpressionChannel.trySend(value)
     }
 
     // Must not be started if there's current record and it's null at the moment of calling method
@@ -173,6 +175,7 @@ class AddEditRecordViewModel @Inject constructor(
                             containsLetterOrDigit &&
                             (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
 
+                    // TODO: Remove possible add button blinking when checking takes too long
                     validity.update {
                         val prevValue = it ?: 0
 

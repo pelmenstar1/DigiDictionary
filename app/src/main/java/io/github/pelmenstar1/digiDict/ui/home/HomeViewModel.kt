@@ -8,10 +8,10 @@ import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
+import io.github.pelmenstar1.digiDict.ui.home.search.SearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -33,7 +33,7 @@ class HomeViewModel @Inject constructor(
     private val searchProgressReporter = ProgressReporter()
     val searchProgressFlow = searchProgressReporter.progressFlow
 
-    private val searchStateManager = DataLoadStateManager<FilteredArray<ConciseRecordWithBadges>>(TAG)
+    private val searchStateManager = DataLoadStateManager<SearchResult>(TAG)
 
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {
@@ -51,13 +51,17 @@ class HomeViewModel @Inject constructor(
                 }
 
             recordFlow.combine(GlobalSearchQueryProvider.queryFlow) { records, query ->
+                val isMeaningfulQuery = query.containsLetterOrDigit()
+
                 // Search can only be performed if query contains at least one letter or digit.
-                // Otherwise, there's no sense in it.
-                if (query.containsLetterOrDigit()) {
+                // Otherwise, there's no sense in it because such expressions and meanings are forbidden
+                val result = if (isMeaningfulQuery) {
                     RecordSearchUtil.filter(records, query)
                 } else {
                     FilteredArray.empty()
                 }
+
+                SearchResult(query, isMeaningfulQuery, result)
             }.flowOn(Dispatchers.Default)
         }
     }

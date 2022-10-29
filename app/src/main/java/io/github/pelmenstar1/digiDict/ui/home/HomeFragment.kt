@@ -63,6 +63,7 @@ class HomeFragment : Fragment() {
         }
 
         val recyclerView = binding.homeRecyclerView
+
         val addRecordButton = binding.homeAddRecord.also {
             it.setOnClickListener {
                 val directions = HomeFragmentDirections.actionHomeToAddEditRecord()
@@ -70,6 +71,19 @@ class HomeFragment : Fragment() {
                 navController.navigate(directions)
             }
         }
+
+        // homeSearchAddRecordButton is little bit different from addRecordButton that's placed on the center bottom of the screen.
+        // This button is visible when there's no results in search and suggests a user to add a new record.
+        binding.homeSearchAddRecordButton.also {
+            it.setOnClickListener {
+                val directions = HomeFragmentDirections.actionHomeToAddEditRecord(
+                    initialExpression = GlobalSearchQueryProvider.query.toString()
+                )
+
+                navController.navigate(directions)
+            }
+        }
+        val searchAddRecordContainer = binding.homeSearchAddRecordContainer
 
         val loadStatePagingAdapter = pagingAdapter.withLoadStateHeaderAndFooter(
             HomeLoadStateAdapter(retryLambda),
@@ -106,11 +120,16 @@ class HomeFragment : Fragment() {
                         recyclerView.visibility = View.GONE
                     }
                     is DataLoadState.Success -> {
+                        val result = it.value
+
                         recyclerView.visibility = View.VISIBLE
                         loadingIndicator.visibility = View.GONE
                         errorContainer.visibility = View.GONE
 
-                        searchAdapter.submitData(it.value)
+                        // If query is not meaningful (contains no letters or digits), 'add record button' is not shown
+                        // because such expressions are forbidden.
+                        searchAddRecordContainer.isVisible = result.data.size == 0 && result.isMeaningfulQuery
+                        searchAdapter.submitData(result.data)
                     }
                 }
             }
@@ -120,6 +139,11 @@ class HomeFragment : Fragment() {
 
                 // While search is active, there's no sense to add new record.
                 addRecordButton.isVisible = !isActive
+
+                // Hide the 'add record container' because when we start searching, the initial query is an empty string
+                // which means there's no sense to show it (as query is empty). When searching ends, there's no sense
+                // to keep it on the screen as well.
+                searchAddRecordContainer.visibility = View.GONE
 
                 if (!isActive) {
                     // In the next time search is active, adapter should contain no elements as in the initial state.
