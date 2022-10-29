@@ -50,6 +50,7 @@
     <!-- Home fragment -->
     <string name="home_label">Home</string>
     <string name="home_loadingError">There was an error during the loading of the records.</string>
+    <string name="home_searchNoResultsMessage">No results? Add a record then.</string>
 
     <!-- Remind records fragment -->
     <string name="remindRecords_labelInFragment">Remind</string>
@@ -110,6 +111,7 @@
     <string name="quizNav_all">All</string>
 
     <!-- Search fragment -->
+    <!-- TODO: Consolidate search_* with home fragment as they're logically connected -->
     <string name="search">Search</string>
     <string name="search_error">An error happened during the search</string>
 
