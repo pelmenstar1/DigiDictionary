@@ -73,8 +73,7 @@ class AddEditRecordViewModelTests {
 
     private suspend fun AddEditRecordViewModel.getValidity(): Int {
         return validity
-            .filterNotNull()
-            .filter { (it and AddEditRecordViewModel.EXPRESSION_VALIDITY_NOT_CHOSEN_BIT) == 0 }
+            .filter { (it and AddEditRecordViewModel.VALIDITY_COMPUTED_BIT) != 0 }
             .first()
     }
 

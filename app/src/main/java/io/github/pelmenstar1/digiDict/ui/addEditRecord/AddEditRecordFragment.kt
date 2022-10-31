@@ -22,6 +22,7 @@ import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -183,10 +184,12 @@ class AddEditRecordFragment : Fragment() {
 
         binding.addRecordMeaningListInteraction.also {
             it.onErrorStateChanged = { isError ->
-                vm.validity.withBitNullable(
-                    AddEditRecordViewModel.MEANING_VALIDITY_BIT,
-                    !isError
-                )
+                vm.validity.update { prevValue ->
+                    prevValue.withBit(
+                        AddEditRecordViewModel.MEANING_VALIDITY_BIT,
+                        !isError
+                    )
+                }
             }
 
             // Only if there's no 'current record', specify error state for meaning list.

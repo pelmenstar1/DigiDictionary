@@ -24,7 +24,9 @@ class AddEditRecordViewModel @Inject constructor(
     private val listAppWidgetUpdater: AppWidgetUpdater,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : ViewModel() {
-    val validity = MutableStateFlow<Int?>(null)
+    // By default, expression and meaning are invalid but it's "real" validity state for expression and meaning, so
+    // VALIDITY_COMPUTED_BIT should be set.
+    val validity = MutableStateFlow(VALIDITY_COMPUTED_BIT)
 
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
     val expressionErrorFlow = _expressionErrorFlow.asStateFlow()
@@ -46,8 +48,9 @@ class AddEditRecordViewModel @Inject constructor(
         fromFlow {
             currentRecordIdFlow.filterNotNull().map { id ->
                 recordDao.getRecordWithBadgesById(id).also {
-                    validity.updateNullable {
-                        it.withBit(EXPRESSION_VALIDITY_BIT, true).withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, false)
+                    validity.update {
+                        it.withBit(EXPRESSION_VALIDITY_BIT, true)
+                            .withBit(VALIDITY_COMPUTED_BIT, true)
                     }
 
                     startCheckExprJobIfNecessary()
@@ -132,11 +135,8 @@ class AddEditRecordViewModel @Inject constructor(
         startCheckExprJobIfNecessary()
 
         validity.update {
-            val prevValue = it ?: 0
-
-            prevValue
-                .withBit(EXPRESSION_VALIDITY_BIT, false)
-                .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, true)
+            it.withBit(EXPRESSION_VALIDITY_BIT, false)
+                .withBit(VALIDITY_COMPUTED_BIT, false)
         }
 
         checkExpressionChannel.trySend(value)
@@ -164,28 +164,25 @@ class AddEditRecordViewModel @Inject constructor(
                     val expr = checkExpressionChannel.receive()
 
                     val isBlank = expr.isBlank()
-                    val containsLetterOrDigit = expr.any { it.isLetterOrDigit() }
+                    val isMeaningfulExpr = expr.containsLetterOrDigit()
 
                     // If we are is edit mode (currentRecordExpression is not null then),
                     // input expression shouldn't be considered as "existing"
                     // even if it does exist to allow editing meaning, origin or notes and not expression.
                     val isValid = !isBlank &&
-                            containsLetterOrDigit &&
+                            isMeaningfulExpr &&
                             (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
 
                     // TODO: Remove possible add button blinking when checking takes too long
                     validity.update {
-                        val prevValue = it ?: 0
-
-                        prevValue
-                            .withBit(EXPRESSION_VALIDITY_BIT, isValid)
-                            .withBit(EXPRESSION_VALIDITY_NOT_CHOSEN_BIT, false)
+                        it.withBit(EXPRESSION_VALIDITY_BIT, isValid)
+                            .withBit(VALIDITY_COMPUTED_BIT, true)
                     }
 
                     _expressionErrorFlow.value = when {
                         isValid -> null
                         isBlank -> AddEditRecordMessage.EMPTY_TEXT
-                        !containsLetterOrDigit -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT
+                        !isMeaningfulExpr -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT
                         else -> AddEditRecordMessage.EXISTING_EXPRESSION
                     }
                 }
@@ -199,10 +196,14 @@ class AddEditRecordViewModel @Inject constructor(
         private const val TAG = "AddExpressionVM"
 
         const val EXPRESSION_VALIDITY_BIT = 1
-        const val EXPRESSION_VALIDITY_NOT_CHOSEN_BIT = 1 shl 2
         const val MEANING_VALIDITY_BIT = 1 shl 1
 
-        const val ALL_VALID_MASK = EXPRESSION_VALIDITY_BIT or MEANING_VALIDITY_BIT
+        // When the check of an expression is started, EXPRESSION_VALIDITY_BIT is disabled to prevent a situation
+        // when a record is added with expression being invalid. So this flag is used to mark that validity state
+        // is real (valid) for given expression and meaning.
+        const val VALIDITY_COMPUTED_BIT = 1 shl 2
+
+        const val ALL_VALID_MASK = EXPRESSION_VALIDITY_BIT or MEANING_VALIDITY_BIT or VALIDITY_COMPUTED_BIT
 
         internal fun <T> (() -> T)?.invokeOrThrow(): T {
             return requireNotNull(this).invoke()
