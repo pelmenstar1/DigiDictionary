@@ -59,6 +59,8 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
+    private val isWaitingForValidityComputed = AtomicBoolean()
+
     private val isCheckExpressionJobStarted = AtomicBoolean()
     private val checkExpressionChannel = Channel<String>(
         capacity = 1,
@@ -173,7 +175,6 @@ class AddEditRecordViewModel @Inject constructor(
                             isMeaningfulExpr &&
                             (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
 
-                    // TODO: Remove possible add button blinking when checking takes too long
                     validity.update {
                         it.withBit(EXPRESSION_VALIDITY_BIT, isValid)
                             .withBit(VALIDITY_COMPUTED_BIT, true)
@@ -190,7 +191,34 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
-    fun addOrEditRecord() = addOrEditAction.run()
+    /**
+     * Adds/Edits the record to/in the datastore.
+     *
+     * - If both expression and meaning are valid, immediately executes the actual logic.
+     * - If [validity] has [VALIDITY_COMPUTED_BIT] unset, waits until the validity becomes "computed" and makes a decision based on
+     * given value.
+     * - If either expression or meaning are invalid and [VALIDITY_COMPUTED_BIT] is set, the method does nothing.
+     */
+    fun addOrEditRecord() {
+        val validityValue = validity.value
+
+        if (validityValue == ALL_VALID_MASK) {
+            addOrEditAction.run()
+        } else if ((validityValue and VALIDITY_COMPUTED_BIT) == 0) {
+            // Don't start another coroutine if it's already started
+            if (isWaitingForValidityComputed.compareAndSet(false, true)) {
+                viewModelScope.launch {
+                    // Wait until validity is computed
+                    val newValidityValue = validity.first { (it and VALIDITY_COMPUTED_BIT) != 0 }
+                    isWaitingForValidityComputed.set(false)
+
+                    if (newValidityValue == ALL_VALID_MASK) {
+                        addOrEditAction.run()
+                    }
+                }
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "AddExpressionVM"

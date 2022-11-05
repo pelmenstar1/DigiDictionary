@@ -14,8 +14,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
-import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
-import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledIfEquals
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
@@ -173,8 +171,18 @@ class AddEditRecordFragment : Fragment() {
                     addRecordSearchExpression.isEnabled = it == null
                 }
 
-                launchErrorFlowCollector(addRecordExpressionInputLayout, vm.expressionErrorFlow, messageMapper)
-                launchSetEnabledIfEquals(addRecordAddButton, AddEditRecordViewModel.ALL_VALID_MASK, vm.validity)
+                launchFlowCollector(vm.validity) { value ->
+                    val isComputed = (value and AddEditRecordViewModel.VALIDITY_COMPUTED_BIT) != 0
+                    val isEnabled = if (isComputed) {
+                        value == AddEditRecordViewModel.ALL_VALID_MASK
+                    } else {
+                        // To avoid add button blinking when the checking takes too long
+                        // we make the button visually enabled but logically disabled. It's handled in the viewmodel.
+                        true
+                    }
+
+                    addRecordAddButton.isEnabled = isEnabled
+                }
             }
         }
     }

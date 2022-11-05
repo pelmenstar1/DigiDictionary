@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -20,10 +21,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNull
+import kotlin.test.*
 
 @RunWith(AndroidJUnit4::class)
 class AddEditRecordViewModelTests {
@@ -311,6 +309,50 @@ class AddEditRecordViewModelTests {
             oldBadges = arrayOf(RecordBadgeInfo(1, "Badge1", 1)),
             newBadges = emptyArray()
         )
+    }
+
+    @Test
+    fun addRecordTest_validityIsInvalidAndComputed() {
+        val recordDao = object : RecordDaoStub() {
+            override suspend fun insert(value: Record) {
+                throw Exception("Insert should not be executed")
+            }
+        }
+
+        useViewModel(recordDao = recordDao) { vm ->
+            vm.validity.value = 0 // Computed flag is unset
+            vm.addOrEditRecord()
+        }
+    }
+
+    @Test
+    fun addRecordTest_validityIsNotComputedThenComputed() = runTest {
+        var throwExceptionOnInsert = true
+
+        val recordDao = object : RecordDaoStub() {
+            override suspend fun insert(value: Record) {
+                if (throwExceptionOnInsert) {
+                    throw Exception("Insert should not be executed")
+                }
+            }
+
+            override suspend fun getRecordIdByExpression(expr: String): Int {
+                return 0
+            }
+        }
+
+        useViewModel(recordDao = recordDao) { vm ->
+            vm.validity.value = 0 // Computed flag is unset
+
+            vm.addOrEditRecord()
+            delay(500) // Wait a little bit, emulate some work
+
+            throwExceptionOnInsert = false
+            vm.getBadges = { emptyArray() }
+            vm.getMeaning = { ComplexMeaning.Common("") }
+            vm.validity.value = AddEditRecordViewModel.ALL_VALID_MASK // Computed flag is set
+            vm.addOrEditAction.waitForResult()
+        }
     }
 
     companion object {
