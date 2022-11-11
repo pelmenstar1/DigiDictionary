@@ -146,8 +146,9 @@ class AddEditRecordFragment : Fragment() {
             }
 
             addRecordAddButton.run {
-                val textId = if (args.recordId >= 0) R.string.edit else R.string.addRecord
-                text = resources.getString(textId)
+                text = resources.getString(
+                    if (args.recordId >= 0) R.string.addEditRecord_editButtonText else R.string.addEditRecord_addButtonText
+                )
 
                 setOnClickListener { vm.addOrEditRecord() }
             }

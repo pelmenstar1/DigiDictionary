@@ -56,6 +56,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom"
         android:layout_marginBottom="8dp"
-        android:contentDescription="@string/addRecord"
+        android:contentDescription="@string/addEditRecord_addButtonText"
         app:srcCompat="@drawable/ic_add" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

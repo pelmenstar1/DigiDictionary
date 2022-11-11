@@ -71,7 +71,8 @@
     <string name="recordLoadingError">Failed to load record</string>
 
     <!-- Add/Edit record fragment -->
-    <string name="addRecord">Add a new record</string>
+    <string name="addEditRecord_addButtonText">@string/add</string>
+    <string name="addEditRecord_editButtonText">Change</string>
     <string name="addEditRecord_label">Add or edit a record</string>
     <string name="addEditRecord_existingExprError">Such expression already exists</string>
     <string name="addEditRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
