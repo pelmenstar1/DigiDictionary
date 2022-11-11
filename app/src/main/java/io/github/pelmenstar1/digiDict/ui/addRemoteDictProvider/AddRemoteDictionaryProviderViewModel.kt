@@ -4,7 +4,6 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.common.updateNullable
 import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.common.withBit
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
@@ -16,6 +15,7 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -35,8 +35,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     private val _isInputsEnabled = MutableStateFlow(true)
 
-    // As name and schema is empty by default, it's 0 as no validity bits are set.
-    private val _validityFlow = MutableStateFlow<Int?>(null)
+    // As name and schema is empty by default,
+    // they're invalid but they're computed (the state won't be changed for particular name and schema)
+    private val _validityFlow = MutableStateFlow(NAME_COMPUTED_VALIDITY_BIT or SCHEMA_COMPUTED_VALIDITY_BIT)
 
     private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
     private val isCheckValueJobStarted = AtomicBoolean()
@@ -84,8 +85,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     }
 
     private fun scheduleCheckValue(type: Int, value: String) {
-        _validityFlow.updateNullable {
-            it.withBit(valueValidityMask(type), false).withBit(valueValidityNotChosenMask(type), true)
+        _validityFlow.update {
+            it.withBit(valueValidityMask(type), false)
+                .withBit(valueValidityComputedMask(type), false)
         }
 
         startCheckValueJobIfNecessary()
@@ -163,9 +165,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                     }
 
                     errorFlow.value = error
-                    _validityFlow.updateNullable {
+                    _validityFlow.update {
                         it.withBit(valueValidityMask(type), error == null)
-                            .withBit(valueValidityNotChosenMask(type), false)
+                            .withBit(valueValidityComputedMask(type), true)
                     }
                 }
             }
@@ -175,17 +177,19 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     companion object {
         private const val TAG = "AddRDP_VM"
 
-        private const val COUNT_TYPE = 2
+        private const val TYPE_COUNT = 2
         private const val TYPE_NAME = 0
         private const val TYPE_SCHEMA = 1
 
         const val NAME_VALIDITY_BIT = 1 shl TYPE_NAME
         const val SCHEMA_VALIDITY_BIT = 1 shl TYPE_SCHEMA
 
-        const val ALL_VALID_MASK = NAME_VALIDITY_BIT or SCHEMA_VALIDITY_BIT
-        const val NOT_CHOSEN_MASK = 0xC
+        const val NAME_COMPUTED_VALIDITY_BIT = 1 shl (TYPE_NAME + TYPE_COUNT)
+        const val SCHEMA_COMPUTED_VALIDITY_BIT = 1 shl (TYPE_SCHEMA + TYPE_COUNT)
+
+        const val ALL_VALID_MASK = 0xF
 
         fun valueValidityMask(type: Int) = 1 shl type
-        fun valueValidityNotChosenMask(type: Int) = 1 shl (type + COUNT_TYPE)
+        fun valueValidityComputedMask(type: Int) = 1 shl (type + TYPE_COUNT)
     }
 }

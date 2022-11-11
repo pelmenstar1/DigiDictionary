@@ -11,7 +11,6 @@ import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictiona
 import io.github.pelmenstar1.digiDict.utils.*
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -42,10 +41,9 @@ class AddRemoteDictionaryProviderViewModelTests {
         )
     }
 
-    private suspend fun AddRemoteDictionaryProviderViewModel.getValidity(): Int {
+    private suspend fun AddRemoteDictionaryProviderViewModel.getValidity(computedValidityBit: Int): Int {
         return validityFlow
-            .filterNotNull()
-            .filter { (it and AddRemoteDictionaryProviderViewModel.NOT_CHOSEN_MASK) == 0 }
+            .filter { (it and computedValidityBit) != 0 }
             .first()
     }
 
@@ -53,9 +51,10 @@ class AddRemoteDictionaryProviderViewModelTests {
         vm: AddRemoteDictionaryProviderViewModel,
         errorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>,
         expectedMsg: AddRemoteDictionaryProviderMessage,
-        validityMask: AddRemoteDictionaryProviderViewModel.Companion.() -> Int
+        validityMask: AddRemoteDictionaryProviderViewModel.Companion.() -> Int,
+        computedValidityBit: AddRemoteDictionaryProviderViewModel.Companion.() -> Int
     ) {
-        val validity = vm.getValidity()
+        val validity = vm.getValidity(computedValidityBit(AddRemoteDictionaryProviderViewModel.Companion))
 
         assertEquals(0, validity and validityMask(AddRemoteDictionaryProviderViewModel.Companion))
         assertEquals(expectedMsg, errorFlow.first())
@@ -64,9 +63,10 @@ class AddRemoteDictionaryProviderViewModelTests {
     private suspend fun assertValidState(
         vm: AddRemoteDictionaryProviderViewModel,
         errorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>,
-        validityMask: AddRemoteDictionaryProviderViewModel.Companion.() -> Int
+        validityMask: AddRemoteDictionaryProviderViewModel.Companion.() -> Int,
+        computedValidityBit: AddRemoteDictionaryProviderViewModel.Companion.() -> Int
     ) {
-        val validity = vm.getValidity()
+        val validity = vm.getValidity(computedValidityBit(AddRemoteDictionaryProviderViewModel.Companion))
 
         assertNotEquals(0, validity and validityMask(AddRemoteDictionaryProviderViewModel.Companion))
         assertNull(errorFlow.first())
@@ -76,22 +76,27 @@ class AddRemoteDictionaryProviderViewModelTests {
         vm: AddRemoteDictionaryProviderViewModel,
         expectedMsg: AddRemoteDictionaryProviderMessage
     ) {
-        assertInvalidState(vm, vm.nameErrorFlow, expectedMsg) { NAME_VALIDITY_BIT }
+        assertInvalidState(vm, vm.nameErrorFlow, expectedMsg, { NAME_VALIDITY_BIT }, { NAME_COMPUTED_VALIDITY_BIT })
     }
 
     private suspend fun assertSchemaInvalidState(
         vm: AddRemoteDictionaryProviderViewModel,
         expectedMsg: AddRemoteDictionaryProviderMessage
     ) {
-        assertInvalidState(vm, vm.schemaErrorFlow, expectedMsg) { SCHEMA_VALIDITY_BIT }
+        assertInvalidState(
+            vm,
+            vm.schemaErrorFlow,
+            expectedMsg,
+            { SCHEMA_VALIDITY_BIT },
+            { SCHEMA_COMPUTED_VALIDITY_BIT })
     }
 
     private suspend fun assertNameValidState(vm: AddRemoteDictionaryProviderViewModel) {
-        assertValidState(vm, vm.nameErrorFlow) { NAME_VALIDITY_BIT }
+        assertValidState(vm, vm.nameErrorFlow, { NAME_VALIDITY_BIT }, { NAME_COMPUTED_VALIDITY_BIT })
     }
 
     private suspend fun assertSchemaValidState(vm: AddRemoteDictionaryProviderViewModel) {
-        assertValidState(vm, vm.schemaErrorFlow) { SCHEMA_VALIDITY_BIT }
+        assertValidState(vm, vm.schemaErrorFlow, { SCHEMA_VALIDITY_BIT }, { SCHEMA_COMPUTED_VALIDITY_BIT })
     }
 
     @Test
