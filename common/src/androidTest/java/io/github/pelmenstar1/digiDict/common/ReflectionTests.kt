@@ -4,7 +4,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 
 // ReflectionTests is executed as Instrumentation test on the Android device
 // because Desktop JVM and Android JVM can have differences in Reflection API.
@@ -27,14 +26,6 @@ class ReflectionTests {
         testCase(EmptyEnum::class.java, 0)
         testCase(EnumWith1Field::class.java, 1)
         testCase(EnumWith5Fields::class.java, 5)
-    }
-
-    @Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING")
-    @Test
-    fun getEnumFieldCountThrowsWhenClassInNotEnum() {
-        assertFails {
-            getEnumFieldCount(NotEnum::class.java as Class<out Enum<*>>)
-        }
     }
 
     @Test
