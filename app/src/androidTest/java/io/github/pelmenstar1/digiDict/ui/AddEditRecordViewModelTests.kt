@@ -92,6 +92,8 @@ class AddEditRecordViewModelTests {
     @Test
     fun expressionIsInvalidWhenEmptyTest() = runTest {
         useViewModel { vm ->
+            // The currentRecordId should be set to correctly initialize the view-model
+            vm.currentRecordId = -1
             vm.expression = "123"
             vm.expression = " "
 
@@ -111,6 +113,8 @@ class AddEditRecordViewModelTests {
         )
 
         useViewModel { vm ->
+            // The currentRecordId should be set to correctly initialize the view-model
+            vm.currentRecordId = -1
             vm.expression = "Expr2"
 
             assertExpressionInvalid(vm, AddEditRecordMessage.EXISTING_EXPRESSION)
@@ -129,6 +133,8 @@ class AddEditRecordViewModelTests {
         )
 
         useViewModel { vm ->
+            // The currentRecordId should be set to correctly initialize the view-model
+            vm.currentRecordId = -1
             vm.expression = "Expr4"
 
             assertExpressionValid(vm)
@@ -170,10 +176,10 @@ class AddEditRecordViewModelTests {
             )
         )
 
-        val expectedRecord = dao.getRecordById(1)
+        val expectedRecord = dao.getRecordWithBadgesByExpression("Expr1")!!
 
         useViewModel { vm ->
-            vm.currentRecordId = 1
+            vm.currentRecordId = expectedRecord.id
 
             val actualRecord = vm.currentRecordStateFlow.firstSuccess()
 

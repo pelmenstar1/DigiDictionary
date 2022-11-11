@@ -180,7 +180,7 @@ open class RecordWithBadges(
     }
 
     override fun toString(): String {
-        return "Record(id=$id, expression='$expression', meaning='$meaning', additionalNotes='$additionalNotes', score=$score, epochSeconds=$epochSeconds, badges=${badges.contentToString()}"
+        return "RecordWithBadges(id=$id, expression='$expression', meaning='$meaning', additionalNotes='$additionalNotes', score=$score, epochSeconds=$epochSeconds, badges=${badges.contentToString()}"
     }
 
     companion object {

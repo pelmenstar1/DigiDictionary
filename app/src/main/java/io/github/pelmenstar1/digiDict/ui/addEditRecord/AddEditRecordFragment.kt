@@ -60,7 +60,7 @@ class AddEditRecordFragment : Fragment() {
         // and the inputs will be disabled.
         if (recordId >= 0) {
             lifecycleScope.launchFlowCollector(vm.currentRecordStateFlow) {
-                // If there's a record to load, inputs should be temporarily disabled and then when the record
+                // If the fragment is in edit mode, inputs should be temporarily disabled and then when the record
                 // is successfully loaded, they should be re-enabled.
 
                 when (it) {
@@ -80,11 +80,8 @@ class AddEditRecordFragment : Fragment() {
                         }
                     }
                     is DataLoadState.Success -> {
-                        it.value?.let { record ->
-                            setRecord(record)
-
-                            setInputsEnabled(true)
-                        }
+                        setRecord(it.value)
+                        setInputsEnabled(true)
                     }
                 }
             }
@@ -94,12 +91,10 @@ class AddEditRecordFragment : Fragment() {
         initBadgeInteraction()
         initViews()
 
+        // Set the initial expression (if it exists) only when all the listeners are set on the EditText's
         args.initialExpression?.let {
             binding.addRecordExpressionInputLayout.setText(it)
         }
-
-        // Init errors only after currentRecordId and initial expression are set.
-        vm.initErrors()
 
         return binding.root
     }
