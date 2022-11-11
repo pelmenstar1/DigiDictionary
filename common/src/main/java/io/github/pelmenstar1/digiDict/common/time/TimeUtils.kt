@@ -17,7 +17,7 @@ object TimeUtils {
     )
 
     private const val DAYS_PER_CYCLE = 146097
-    const val DAYS_0000_TO_1970 = DAYS_PER_CYCLE * 5L - (30L * 365L + 7L)
+    private const val DAYS_0000_TO_1970 = DAYS_PER_CYCLE * 5L - (30L * 365L + 7L)
 
     /**
      * Returns amount of days in given [month] (1-based). As the amount is dependent on a year, it's specified too.
@@ -50,8 +50,6 @@ object TimeUtils {
             throw IllegalArgumentException("epochDay can't be negative")
         }
     }
-
-    // TODO: Add tests for the methods below
 
     /**
      * Returns a month (1-based) calculated from given epoch day.
