@@ -12,7 +12,6 @@ import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -93,8 +92,15 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     }
 
     fun restartValidityCheck() {
-        scheduleCheckValue(TYPE_NAME, name)
-        scheduleCheckValue(TYPE_SCHEMA, schema)
+        // Disable all the bits. The validity of name and schema is not valid, nor computed.
+        _validityFlow.value = 0
+
+        startCheckValueJobIfNecessary()
+        checkValueChannel.run {
+            // trySend() will always succeed as the channel is unlimited.
+            trySend(Message(TYPE_NAME, name))
+            trySend(Message(TYPE_SCHEMA, schema))
+        }
     }
 
     private fun scheduleCheckValue(type: Int, value: String) {
@@ -104,7 +110,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         }
 
         startCheckValueJobIfNecessary()
-        checkValueChannel.trySendBlocking(Message(type, value))
+
+        // trySend() will always succeed as the channel is unlimited.
+        checkValueChannel.trySend(Message(type, value))
     }
 
     fun add() {
