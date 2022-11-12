@@ -88,6 +88,10 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     var spaceReplacement: Char = RemoteDictionaryProviderInfo.UrlEncodingRules.DEFAULT_SPACE_REPLACEMENT
 
+    init {
+        startCheckValueJob()
+    }
+
     fun restartValidityCheck() {
         scheduleCheckValue(TYPE_NAME, name)
         scheduleCheckValue(TYPE_SCHEMA, schema)
@@ -115,81 +119,86 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     private fun startCheckValueJobIfNecessary() {
         if (isCheckValueJobStarted.compareAndSet(false, true)) {
-            viewModelScope.launch(Dispatchers.Default) {
-                validityCheckErrorFlow.emit(null)
-                val allProviders: Array<RemoteDictionaryProviderInfo>
+            startCheckValueJob()
+        }
+    }
 
-                try {
-                    allProviders = remoteDictProviderDao.getAll()
-                } catch (e: Exception) {
-                    // The job still can be restarted.
-                    isCheckValueJobStarted.set(false)
-                    _isInputsEnabled.value = false
+    private fun startCheckValueJob() {
+        viewModelScope.launch(Dispatchers.Default) {
+            validityCheckErrorFlow.emit(null)
+            val allProviders: Array<RemoteDictionaryProviderInfo>
 
-                    // There can be no errors as name and schema inputs are disabled.
-                    _nameErrorFlow.value = null
-                    _schemaErrorFlow.value = null
+            try {
+                allProviders = remoteDictProviderDao.getAll()
+            } catch (e: Exception) {
+                // The job still can be restarted.
+                isCheckValueJobStarted.set(false)
+                _isInputsEnabled.value = false
 
-                    // Unset all validity bits in order to disable "Add" button
-                    _validityFlow.value = 0
+                // There can be no errors as name and schema inputs are disabled.
+                _nameErrorFlow.value = null
+                _schemaErrorFlow.value = null
 
-                    if (e !is CancellationException) {
-                        validityCheckErrorFlow.emit(e)
-                    }
+                // Unset all validity bits in order to disable "Add" button
+                _validityFlow.value = 0
 
-                    return@launch
+                if (e !is CancellationException) {
+                    validityCheckErrorFlow.emit(e)
                 }
 
-                // If the job is started after the error, _isNameEnabledFlow's and _isSchemaEnabledFlow's values might be false.
-                // So after we know allProviders are loaded successfully, we can re-enable inputs.
-                _isInputsEnabled.value = true
+                return@launch
+            }
 
-                while (isActive) {
-                    val (type, value) = checkValueChannel.receive()
+            // If the job is started after the error, _isNameEnabledFlow's and _isSchemaEnabledFlow's values might be false.
+            // So after we know allProviders are loaded successfully, we can re-enable inputs.
+            _isInputsEnabled.value = true
 
-                    val errorFlow = when (type) {
-                        TYPE_NAME -> _nameErrorFlow
-                        TYPE_SCHEMA -> _schemaErrorFlow
-                        else -> throw IllegalArgumentException("type")
-                    }
+            while (isActive) {
+                val (type, value) = checkValueChannel.receive()
 
-                    var error: AddRemoteDictionaryProviderMessage? = null
+                val errorFlow = when (type) {
+                    TYPE_NAME -> _nameErrorFlow
+                    TYPE_SCHEMA -> _schemaErrorFlow
+                    else -> throw IllegalArgumentException("type")
+                }
 
-                    if (value.isEmpty()) {
-                        error = AddRemoteDictionaryProviderMessage.EMPTY_TEXT
-                    } else {
-                        when (type) {
-                            TYPE_NAME -> {
-                                error = AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS.takeIf {
-                                    allProviders.any { it.name == value }
-                                }
+                var error: AddRemoteDictionaryProviderMessage? = null
+
+                if (value.isEmpty()) {
+                    error = AddRemoteDictionaryProviderMessage.EMPTY_TEXT
+                } else {
+                    when (type) {
+                        TYPE_NAME -> {
+                            error = AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS.takeIf {
+                                allProviders.any { it.name == value }
                             }
-                            TYPE_SCHEMA -> {
-                                error = when {
-                                    !Patterns.WEB_URL.matcher(value).matches() ->
-                                        AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
+                        }
+                        TYPE_SCHEMA -> {
+                            error = when {
+                                !Patterns.WEB_URL.matcher(value).matches() ->
+                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
 
-                                    !value.contains("\$query$") ->
-                                        AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
+                                !value.contains("\$query$") ->
+                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
 
-                                    allProviders.any { it.schema == value } ->
-                                        AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
+                                allProviders.any { it.schema == value } ->
+                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
 
-                                    else -> null
-                                }
+                                else -> null
                             }
                         }
                     }
+                }
 
-                    errorFlow.value = error
-                    _validityFlow.update {
-                        it.withBit(valueValidityMask(type), error == null)
-                            .withBit(valueValidityComputedMask(type), true)
-                    }
+                errorFlow.value = error
+                _validityFlow.update {
+                    it.withBit(valueValidityMask(type), error == null)
+                        .withBit(valueValidityComputedMask(type), true)
                 }
             }
         }
     }
+
 
     companion object {
         private const val TAG = "AddRDP_VM"

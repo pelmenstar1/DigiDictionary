@@ -144,12 +144,12 @@ class AddRemoteDictionaryProviderViewModelTests {
     @Test
     fun nameIsValidIfItDoesNotExistsTest() = runTest {
         val dao = db.remoteDictionaryProviderDao()
+        dao.insert(createProvider("Name1", "Schema1"))
+        dao.insert(createProvider("Name2", "Schema2"))
+
         val vm = createViewModel(dao)
 
         vm.use {
-            dao.insert(createProvider("Name1", "Schema1"))
-            dao.insert(createProvider("Name2", "Schema2"))
-
             vm.name = "Name3"
 
             assertNameValidState(vm)
@@ -159,6 +159,12 @@ class AddRemoteDictionaryProviderViewModelTests {
     @Test
     fun schemaIsInvalidIfItAlreadyExistsTest() = runTest {
         val dao = db.remoteDictionaryProviderDao()
+
+        // URL validity, $query$ checks should be run first, so URL's should be valid
+        dao.insert(createProvider("Name1", "https://a.com/\$query$"))
+        dao.insert(createProvider("Name2", "https://b.com/\$query$"))
+        dao.insert(createProvider("Name3", "https://c.com/\$query$"))
+
         val vm = createViewModel(dao)
 
         suspend fun testCase(schema: String) {
@@ -168,11 +174,6 @@ class AddRemoteDictionaryProviderViewModelTests {
         }
 
         vm.use {
-            // URL validity, $query$ checks should be run first, so URL's should be valid
-            dao.insert(createProvider("Name1", "https://a.com/\$query$"))
-            dao.insert(createProvider("Name2", "https://b.com/\$query$"))
-            dao.insert(createProvider("Name3", "https://c.com/\$query$"))
-
             testCase("https://a.com/\$query$")
             testCase("https://b.com/\$query$")
             testCase("https://c.com/\$query$")
@@ -182,13 +183,14 @@ class AddRemoteDictionaryProviderViewModelTests {
     @Test
     fun schemaIsValidIfItDoesNotExists() = runTest {
         val dao = db.remoteDictionaryProviderDao()
+
+        // URL validity, $query$ checks should be run first, so URL's should be valid
+        dao.insert(createProvider("Name1", "https://a.com/\$query$"))
+        dao.insert(createProvider("Name2", "https://b.com/\$query$"))
+
         val vm = createViewModel(dao)
 
         vm.use {
-            // URL validity, $query$ checks should be run first, so URL's should be valid
-            dao.insert(createProvider("Name1", "https://a.com/\$query$"))
-            dao.insert(createProvider("Name2", "https://b.com/\$query$"))
-
             vm.schema = "https://c.com/\$query$"
 
             assertSchemaValidState(vm)
@@ -218,18 +220,18 @@ class AddRemoteDictionaryProviderViewModelTests {
     fun addTest() = runTest {
         val vm = createViewModel()
 
-        vm.name = "Provider1"
-        vm.schema = "https://a.com/\$query$"
-        vm.spaceReplacement = '_'
+        vm.use {
+            vm.name = "Provider1"
+            vm.schema = "https://a.com/\$query$"
+            vm.spaceReplacement = '_'
 
-        vm.addAction.runAndWaitForResult()
+            vm.addAction.runAndWaitForResult()
 
-        val info = db.remoteDictionaryProviderDao().getByName("Provider1")!!
+            val info = db.remoteDictionaryProviderDao().getByName("Provider1")!!
 
-        assertEquals("https://a.com/\$query$", info.schema)
-        assertEquals('_', info.urlEncodingRules.spaceReplacement)
-
-        vm.clearThroughReflection()
+            assertEquals("https://a.com/\$query$", info.schema)
+            assertEquals('_', info.urlEncodingRules.spaceReplacement)
+        }
     }
 
     @Test
@@ -290,10 +292,7 @@ class AddRemoteDictionaryProviderViewModelTests {
         })
 
         vm.use {
-            // Trigger fetching all providers.
-            vm.schema = "123"
-
-            // the checking is async, so fetching the data is async too, so we need to wait
+            // Fetching the data is async, so we need to wait
             Thread.sleep(100)
             assertNotNull(vm.validityCheckErrorFlow.first())
         }
