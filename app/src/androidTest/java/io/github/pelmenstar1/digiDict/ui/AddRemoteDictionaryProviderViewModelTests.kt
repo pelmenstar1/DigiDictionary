@@ -233,6 +233,54 @@ class AddRemoteDictionaryProviderViewModelTests {
     }
 
     @Test
+    fun addTest_validityIsInvalidAndComputed() {
+        val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
+            override suspend fun insert(value: RemoteDictionaryProviderInfo) {
+                throw Exception()
+            }
+
+            override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
+                return emptyArray()
+            }
+        })
+
+        vm.use {
+            // Make validity invalid explicitly
+            vm.name = ""
+            vm.schema = ""
+
+            vm.add()
+        }
+    }
+
+    @Test
+    fun addTest_validityIsNotComputedThenComputed() = runTest {
+        var throwOnInsert = true
+        val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
+            override suspend fun insert(value: RemoteDictionaryProviderInfo) {
+                if (throwOnInsert) {
+                    throw Exception("Should not be here")
+                }
+            }
+
+            override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
+                return emptyArray()
+            }
+        })
+
+        vm.use {
+            vm._validityFlow.value = 0 // make validity not computed
+            vm.add()
+
+            Thread.sleep(100) // emulate some work
+
+            throwOnInsert = false
+            vm._validityFlow.value = AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK
+            vm.addAction.waitForResult()
+        }
+    }
+
+    @Test
     fun validityCheckErrorTest() = runTest {
         val vm = createViewModel(dao = object : RemoteDictionaryProviderDaoStub() {
             override suspend fun getAll(): Array<RemoteDictionaryProviderInfo> {
@@ -241,9 +289,14 @@ class AddRemoteDictionaryProviderViewModelTests {
             }
         })
 
-        // Trigger fetching all providers.
-        vm.schema = "123"
-        assertNotNull(vm.validityCheckErrorFlow.first())
+        vm.use {
+            // Trigger fetching all providers.
+            vm.schema = "123"
+
+            // the checking is async, so fetching the data is async too, so we need to wait
+            Thread.sleep(100)
+            assertNotNull(vm.validityCheckErrorFlow.first())
+        }
     }
 
     // TODO: Fix the test

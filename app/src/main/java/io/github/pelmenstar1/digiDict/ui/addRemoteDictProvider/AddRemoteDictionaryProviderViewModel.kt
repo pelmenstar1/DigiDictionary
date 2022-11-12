@@ -4,6 +4,7 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.pelmenstar1.digiDict.common.ExclusiveWaitHandleForFlowCondition
 import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.common.withBit
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
@@ -37,10 +38,18 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     // As name and schema is empty by default,
     // they're invalid but they're computed (the state won't be changed for particular name and schema)
-    private val _validityFlow = MutableStateFlow(NAME_COMPUTED_VALIDITY_BIT or SCHEMA_COMPUTED_VALIDITY_BIT)
+    internal val _validityFlow = MutableStateFlow(NAME_COMPUTED_VALIDITY_BIT or SCHEMA_COMPUTED_VALIDITY_BIT)
 
     private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
     private val isCheckValueJobStarted = AtomicBoolean()
+
+    private val addWaitHandle = ExclusiveWaitHandleForFlowCondition(
+        viewModelScope,
+        _validityFlow,
+        stopExclusiveCondition = { (it and COMPUTED_MASK) == COMPUTED_MASK },
+        runActionCondition = { it == ALL_VALID_MASK },
+        action = { addAction.run() }
+    )
 
     val nameErrorFlow = _nameErrorFlow.asStateFlow()
     val schemaErrorFlow = _schemaErrorFlow.asStateFlow()
@@ -94,7 +103,15 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         checkValueChannel.trySendBlocking(Message(type, value))
     }
 
-    fun add() = addAction.run()
+    fun add() {
+        val validity = _validityFlow.value
+
+        if (validity == ALL_VALID_MASK) {
+            addAction.run()
+        } else if ((validity and COMPUTED_MASK) != COMPUTED_MASK) {
+            addWaitHandle.runAction()
+        }
+    }
 
     private fun startCheckValueJobIfNecessary() {
         if (isCheckValueJobStarted.compareAndSet(false, true)) {
@@ -187,6 +204,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         const val NAME_COMPUTED_VALIDITY_BIT = 1 shl (TYPE_NAME + TYPE_COUNT)
         const val SCHEMA_COMPUTED_VALIDITY_BIT = 1 shl (TYPE_SCHEMA + TYPE_COUNT)
 
+        const val COMPUTED_MASK = NAME_COMPUTED_VALIDITY_BIT or SCHEMA_COMPUTED_VALIDITY_BIT
         const val ALL_VALID_MASK = 0xF
 
         fun valueValidityMask(type: Int) = 1 shl type

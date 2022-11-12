@@ -14,7 +14,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @HiltViewModel
@@ -71,8 +70,14 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
-    private val isWaitingForValidityComputed = AtomicBoolean()
 
+    private val addOrEditRecordWaitHandle = ExclusiveWaitHandleForFlowCondition(
+        viewModelScope,
+        validity,
+        stopExclusiveCondition = { (it and VALIDITY_COMPUTED_BIT) != 0 },
+        runActionCondition = { it == ALL_VALID_MASK },
+        action = { addOrEditAction.run() }
+    )
     private val checkExpressionChannel = Channel<String>(
         capacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -205,18 +210,7 @@ class AddEditRecordViewModel @Inject constructor(
         if (validityValue == ALL_VALID_MASK) {
             addOrEditAction.run()
         } else if ((validityValue and VALIDITY_COMPUTED_BIT) == 0) {
-            // Don't start another coroutine if it's already started
-            if (isWaitingForValidityComputed.compareAndSet(false, true)) {
-                viewModelScope.launch {
-                    // Wait until validity is computed
-                    val newValidityValue = validity.first { (it and VALIDITY_COMPUTED_BIT) != 0 }
-                    isWaitingForValidityComputed.set(false)
-
-                    if (newValidityValue == ALL_VALID_MASK) {
-                        addOrEditAction.run()
-                    }
-                }
-            }
+            addOrEditRecordWaitHandle.runAction()
         }
     }
 

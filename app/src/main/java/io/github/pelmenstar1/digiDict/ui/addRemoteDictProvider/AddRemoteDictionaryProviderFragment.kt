@@ -16,7 +16,6 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
-import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledIfEquals
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddRemoteDictProviderBinding
 import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
@@ -34,6 +33,7 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         val context = requireContext()
 
         val binding = FragmentAddRemoteDictProviderBinding.inflate(inflater, container, false)
+        val addButton = binding.addRemoteDictProviderAdd
 
         vm.apply {
             popBackStackOnSuccess(addAction, navController)
@@ -41,7 +41,7 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
                 addAction,
                 container,
                 msgId = R.string.dbError,
-                anchorView = binding.addRemoteDictProviderAdd
+                anchorView = addButton
             )
         }
 
@@ -52,11 +52,16 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
             launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageMapper)
             launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageMapper)
 
-            launchSetEnabledIfEquals(
-                binding.addRemoteDictProviderAdd,
-                AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK,
-                vm.validityFlow
-            )
+            launchFlowCollector(vm.validityFlow) { validity ->
+                val computedMask = AddRemoteDictionaryProviderViewModel.COMPUTED_MASK
+                addButton.isEnabled = if ((validity and computedMask) == computedMask) {
+                    validity == AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK
+                } else {
+                    // To avoid add button blinking when the checking takes too long
+                    // we make the button visually enabled but logically disabled. It's correctly handled in the view-model.
+                    true
+                }
+            }
 
             launchFlowCollector(vm.isInputEnabledFlow) { isEnabled ->
                 nameInputLayout.isEnabled = isEnabled

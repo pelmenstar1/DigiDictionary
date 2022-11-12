@@ -11,7 +11,6 @@ import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -351,7 +350,7 @@ class AddEditRecordViewModelTests {
             vm.validity.value = 0 // Computed flag is unset
 
             vm.addOrEditRecord()
-            delay(500) // Wait a little bit, emulate some work
+            Thread.sleep(100) // Wait a little bit, emulate some work
 
             throwExceptionOnInsert = false
             vm.getBadges = { emptyArray() }
