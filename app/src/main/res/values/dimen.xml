@@ -6,6 +6,8 @@
 
     <dimen name="home_stateContainerMarginTop">5dp</dimen>
     <dimen name="home_stateContainerMarginBottom">80dp</dimen>
+    <dimen name="home_dateMarker_padding">3dp</dimen>
+    <dimen name="home_dateMarker_backgroundRoundRadius">20dp</dimen>
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>

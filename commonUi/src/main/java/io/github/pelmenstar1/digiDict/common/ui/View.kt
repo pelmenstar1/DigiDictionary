@@ -53,8 +53,12 @@ inline fun <TGroup : ViewGroup> TGroup.adjustViewCountInternal(
     }
 }
 
+
+fun <T : View> ViewGroup.getTypedViewAt(index: Int) =
+    getNullableTypedViewAt<T>(index) ?: throw NullPointerException("The view at index $index doesn't exist")
+
 @Suppress("UNCHECKED_CAST")
-fun <T : View> ViewGroup.getTypedViewAt(index: Int) = getChildAt(index) as T
+fun <T : View> ViewGroup.getNullableTypedViewAt(index: Int) = getChildAt(index) as T?
 
 fun View.setPaddingRes(@DimenRes resId: Int) {
     setPadding(resources.getDimensionPixelOffset(resId))

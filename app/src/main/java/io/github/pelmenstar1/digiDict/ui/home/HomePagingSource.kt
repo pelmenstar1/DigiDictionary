@@ -5,11 +5,12 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.room.InvalidationTracker
 import androidx.room.withTransaction
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordTable
 
-class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int, ConciseRecordWithBadges>() {
+class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int, HomePageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLE_NAME_ARRAY) {
         override fun onInvalidated(tables: MutableSet<String>) {
             invalidate()
@@ -36,14 +37,14 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, ConciseRecordWithBadges>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, HomePageItem>): Int? {
         return when (val anchorPosition = state.anchorPosition) {
             null -> null
             else -> maxOf(0, anchorPosition - (state.config.initialLoadSize / 2))
         }
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ConciseRecordWithBadges> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, HomePageItem> {
         return try {
             if (itemCount >= 0) {
                 load(params, itemCount)
@@ -61,48 +62,78 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
         }
     }
 
-    private suspend fun load(params: LoadParams<Int>, count: Int): LoadResult.Page<Int, ConciseRecordWithBadges> {
+    private suspend fun load(params: LoadParams<Int>, count: Int): LoadResult.Page<Int, HomePageItem> {
         val key = params.key ?: 0
-        val limit = when (params) {
-            is LoadParams.Prepend ->
-                if (key < params.loadSize) {
-                    key
-                } else {
-                    params.loadSize
-                }
-            else -> params.loadSize
+        val loadSize = params.loadSize
+
+        val limit = if (params is LoadParams.Prepend) {
+            minOf(key, loadSize)
+        } else {
+            loadSize
         }
 
         val offset = when (params) {
-            is LoadParams.Prepend ->
-                if (key < params.loadSize) {
-                    0
-                } else {
-                    key - params.loadSize
-                }
+            is LoadParams.Prepend -> maxOf(0, key - loadSize)
             is LoadParams.Append -> key
             is LoadParams.Refresh ->
                 if (key >= count) {
-                    maxOf(0, count - params.loadSize)
+                    maxOf(0, count - loadSize)
                 } else {
                     key
                 }
         }
 
-        val data = recordDao.getConciseRecordsWithBadgesLimitOffset(limit, offset)
-        val dataSize = data.size
+        val recordData = recordDao.getConciseRecordsWithBadgesLimitOffset(limit, offset)
+        val recordDataSize = recordData.size
 
-        val nextPosToLoad = offset + dataSize
+        val result = computePageResult(recordData)
+
+        val nextPosToLoad = offset + recordDataSize
 
         return LoadResult.Page(
-            data,
-            prevKey = if (offset <= 0 || dataSize == 0) null else offset,
-            nextKey = if (dataSize == 0 || dataSize < limit || nextPosToLoad >= count) {
+            result,
+            prevKey = if (offset <= 0 || recordDataSize == 0) null else offset,
+            nextKey = if (recordDataSize == 0 || recordDataSize < limit || nextPosToLoad >= count) {
                 null
             } else {
                 nextPosToLoad
             }
         )
+    }
+
+    private suspend fun computePageResult(recordData: Array<out ConciseRecordWithBadges>): List<HomePageItem> {
+        val dataSize = recordData.size
+
+        if (dataSize > 0) {
+            val result = ArrayList<HomePageItem>(dataSize + (dataSize * 3) / 2)
+
+            val firstRecord = recordData[0]
+            var currentEpochDay = firstRecord.epochSeconds / SECONDS_IN_DAY
+            val firstRecordIdWithEpochDay = recordDao.getFirstRecordIdWithEpochDay(currentEpochDay)
+
+            if (firstRecordIdWithEpochDay == firstRecord.id) {
+                result.add(HomePageItem.DateMarker(currentEpochDay))
+            }
+
+            result.add(HomePageItem.Record(firstRecord))
+
+            for (i in 1 until dataSize) {
+                val record = recordData[i]
+                val epochDay = record.epochSeconds / SECONDS_IN_DAY
+
+                if (epochDay != currentEpochDay) {
+                    currentEpochDay = epochDay
+
+                    result.add(HomePageItem.DateMarker(epochDay))
+                }
+
+                result.add(HomePageItem.Record(record))
+            }
+
+            return result
+        } else {
+            return emptyList()
+        }
     }
 
     companion object {

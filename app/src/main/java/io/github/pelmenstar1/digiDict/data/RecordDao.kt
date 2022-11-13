@@ -96,7 +96,7 @@ abstract class RecordDao {
         }
     }
 
-    @Query("SELECT id, expression, meaning, score FROM records WHERE id IN (:ids)")
+    @Query("SELECT $CONCISE_RECORD_CONTENT FROM records WHERE id IN (:ids)")
     abstract suspend fun getConciseRecordsByIds(ids: IntArray): Array<ConciseRecord>
 
     suspend fun getConciseRecordsWithBadgesByIds(ids: IntArray): Array<ConciseRecordWithBadges> {
@@ -118,7 +118,7 @@ abstract class RecordDao {
     @Query("SELECT * FROM records ORDER BY id ASC")
     abstract suspend fun getAllRecordsByIdAsc(): Array<Record>
 
-    @Query("SELECT id, expression, meaning, score FROM records")
+    @Query("SELECT $CONCISE_RECORD_CONTENT FROM records")
     abstract suspend fun getAllConciseRecords(): Array<ConciseRecord>
 
     suspend fun getAllConciseRecordsWithBadges(): Array<ConciseRecordWithBadges> {
@@ -133,7 +133,7 @@ abstract class RecordDao {
 
     @Query(
         """
-        SELECT id, expression, meaning, score 
+        SELECT $CONCISE_RECORD_CONTENT
         FROM records
         ORDER BY dateTime DESC 
         LIMIT :limit OFFSET :offset
@@ -147,15 +147,18 @@ abstract class RecordDao {
     suspend fun getConciseRecordsWithBadgesLimitOffset(
         limit: Int,
         offset: Int
-    ): List<ConciseRecordWithBadges> {
+    ): Array<ConciseRecordWithBadges> {
         val records = getConciseRecordsLimitOffset(limit, offset)
 
-        return records.map {
+        return records.mapToArray {
             val badges = getRecordBadgesByRecordId(it.id)
 
             ConciseRecordWithBadges.create(it, badges)
         }
     }
+
+    @Query("SELECT id FROM records WHERE (dateTime / 86400) = :epochDay ORDER BY dateTime DESC LIMIT 1")
+    abstract suspend fun getFirstRecordIdWithEpochDay(epochDay: Long): Int?
 
     @Query("SELECT expression FROM records")
     abstract suspend fun getAllExpressions(): Array<String>
@@ -265,5 +268,7 @@ abstract class RecordDao {
         """
 
         private const val GET_RECORD_BY_ID_QUERY = "SELECT * FROM records WHERE id=:id"
+
+        private const val CONCISE_RECORD_CONTENT = "id, expression, meaning, score, dateTime"
     }
 }
