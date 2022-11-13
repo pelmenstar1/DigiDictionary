@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.setPadding
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
@@ -22,28 +21,38 @@ object HomeDateMarkerHelper {
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            val verticalMargin = context.resources.getDimensionPixelOffset(R.dimen.home_dateMarker_verticalMargin)
+
             gravity = Gravity.CENTER_HORIZONTAL
+            topMargin = verticalMargin
+            bottomMargin = verticalMargin
         }
 
         val textAppearance = TextAppearance(context) { BodyLarge }
-        val padding: Int
         val background: Drawable
         val dateFormatter = CompatDateTimeFormatter(context, DATE_FORMAT)
+
+        val horizontalPadding: Int
+        val verticalPadding: Int
 
         init {
             val res = context.resources
 
-            padding = res.getDimensionPixelOffset(R.dimen.home_dateMarker_padding)
+            horizontalPadding = res.getDimensionPixelOffset(R.dimen.home_dateMarker_horizontalPadding)
+            verticalPadding = res.getDimensionPixelOffset(R.dimen.home_dateMarker_verticalPadding)
             background = ResourcesCompat.getDrawable(res, R.drawable.home_date_marker_background, context.theme)!!
         }
     }
 
     fun createView(context: Context, staticInfo: StaticInfo): TextView {
         return MaterialTextView(context).apply {
+            val horizontalPadding = staticInfo.horizontalPadding
+            val verticalPadding = staticInfo.verticalPadding
+
             layoutParams = staticInfo.layoutParams
             background = staticInfo.background
 
-            setPadding(staticInfo.padding)
+            setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
             staticInfo.textAppearance.apply(this)
         }
     }
