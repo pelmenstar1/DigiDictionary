@@ -28,7 +28,7 @@ object HomeDateMarkerHelper {
             bottomMargin = verticalMargin
         }
 
-        val textAppearance = TextAppearance(context) { BodyLarge }
+        val textAppearance = TextAppearance(context, R.style.TextAppearance_DigiDictionary_Home_DateMarker)
         val background: Drawable
         val dateFormatter = CompatDateTimeFormatter(context, DATE_FORMAT)
 
