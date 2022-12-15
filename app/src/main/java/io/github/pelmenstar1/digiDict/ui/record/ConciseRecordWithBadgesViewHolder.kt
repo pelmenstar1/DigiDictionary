@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
@@ -15,7 +16,6 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.getNullableTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
-import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
@@ -65,6 +65,8 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
 
     val dividerHeight = res.getDimension(R.dimen.itemRecord_dividerHeight)
     val dividerColor = ResourcesCompat.getColor(res, R.color.record_item_divider, theme)
+
+    val rootPadding = res.getDimensionPixelOffset(R.dimen.itemRecord_padding)
 
     private inline fun getLazyColorStateList(
         @ColorRes colorRes: Int,
@@ -203,8 +205,7 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
             dividerColor = staticInfo.dividerColor
             dividerHeight = staticInfo.dividerHeight
 
-            // TODO: Save this padding to static info
-            setPaddingRes(R.dimen.itemRecord_padding)
+            setPadding(staticInfo.rootPadding)
 
             addView(createMainContentContainer(context, staticInfo))
         }
