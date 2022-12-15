@@ -30,12 +30,7 @@ inline fun <TGroup : ViewGroup> TGroup.adjustViewCount(
     targetCount: Int,
     addNewView: TGroup.() -> Unit
 ) {
-    val childCount = childCount
-    if (childCount == 0) {
-        removeAllViews()
-    } else {
-        adjustViewCountInternal(targetCount, childCount, addNewView)
-    }
+    adjustViewCountInternal(targetCount, childCount, addNewView)
 }
 
 inline fun <TGroup : ViewGroup> TGroup.adjustViewCountInternal(
