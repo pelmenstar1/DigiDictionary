@@ -115,7 +115,13 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
                 result.add(HomePageItem.DateMarker(currentEpochDay))
             }
 
-            result.add(HomePageItem.Record(firstRecord))
+            var isFirstRecordBeforeDateMarker = false
+            if (recordData.size > 1) {
+                val nextRecordEpochDay = recordData[1].epochSeconds / SECONDS_IN_DAY
+                isFirstRecordBeforeDateMarker = nextRecordEpochDay != currentEpochDay
+            }
+
+            result.add(HomePageItem.Record(firstRecord, isFirstRecordBeforeDateMarker))
 
             for (i in 1 until dataSize) {
                 val record = recordData[i]
@@ -127,7 +133,15 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
                     result.add(HomePageItem.DateMarker(epochDay))
                 }
 
-                result.add(HomePageItem.Record(record))
+                var isBeforeDateMarker = false
+
+                if (i < dataSize - 1) {
+                    val nextEpochDay = recordData[i + 1].epochSeconds / SECONDS_IN_DAY
+
+                    isBeforeDateMarker = nextEpochDay != currentEpochDay
+                }
+
+                result.add(HomePageItem.Record(record, isBeforeDateMarker))
             }
 
             return result

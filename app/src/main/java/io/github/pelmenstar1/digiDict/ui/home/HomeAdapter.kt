@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
+import io.github.pelmenstar1.digiDict.ui.record.RecordItemRootContainer
 
 class HomeAdapter(
     onViewRecord: (id: Int) -> Unit
@@ -17,7 +18,7 @@ class HomeAdapter(
     inner class HomeItemViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
         private var type = TYPE_NONE
 
-        private var recordRootContainer: ViewGroup? = null
+        private var recordRootContainer: RecordItemRootContainer? = null
         private var dateMarkerTextView: TextView? = null
 
         fun bind(item: HomePageItem?) {
@@ -39,7 +40,13 @@ class HomeAdapter(
 
                     replaceViewIfTypeDiffers(TYPE_RECORD, root)
 
-                    ConciseRecordWithBadgesViewHolder.bind(root, item.value, onItemClickListener, staticInfo)
+                    ConciseRecordWithBadgesViewHolder.bind(
+                        root,
+                        item.value,
+                        hasDivider = !item.isBeforeDateMarker,
+                        onItemClickListener,
+                        staticInfo
+                    )
                 }
 
                 is HomePageItem.DateMarker -> {

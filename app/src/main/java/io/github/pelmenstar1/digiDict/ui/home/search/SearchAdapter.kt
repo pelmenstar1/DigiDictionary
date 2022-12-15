@@ -48,8 +48,10 @@ class SearchAdapter(
     }
 
     override fun onBindViewHolder(holder: ConciseRecordWithBadgesViewHolder, position: Int) {
-        val record = asyncDiffer.currentData[position]
+        val currentData = asyncDiffer.currentData
+        val record = currentData[position]
 
-        holder.bind(record, onItemClickListener)
+        // Don't show divider if the item is the last one
+        holder.bind(record, hasDivider = position < currentData.size - 1, onItemClickListener)
     }
 }

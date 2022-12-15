@@ -44,7 +44,8 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
         get() {
             var padding = _badgeContainerHorizontalPadding
             if (padding < 0) {
-                padding = res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding)
+                padding =
+                    res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding)
                 _badgeContainerHorizontalPadding = padding
             }
 
@@ -62,6 +63,9 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
         marginStart = res.getDimensionPixelOffset(R.dimen.itemRecord_expressionMarginStart)
     }
 
+    val dividerHeight = res.getDimension(R.dimen.itemRecord_dividerHeight)
+    val dividerColor = ResourcesCompat.getColor(res, R.color.record_item_divider, theme)
+
     private inline fun getLazyColorStateList(
         @ColorRes colorRes: Int,
         currentValue: ColorStateList?,
@@ -78,7 +82,7 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
 }
 
 open class ConciseRecordWithBadgesViewHolder private constructor(
-    val container: ViewGroup,
+    val container: RecordItemRootContainer,
     private val staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
 ) : RecyclerView.ViewHolder(container) {
     val meaningView: TextView
@@ -95,8 +99,8 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
         }
     }
 
-    fun bind(record: ConciseRecordWithBadges?, onContainerClickListener: View.OnClickListener) {
-        bind(container, record, onContainerClickListener, staticInfo)
+    fun bind(record: ConciseRecordWithBadges?, hasDivider: Boolean, onContainerClickListener: View.OnClickListener) {
+        bind(container, record, hasDivider, onContainerClickListener, staticInfo)
     }
 
     companion object {
@@ -127,8 +131,9 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
         private const val MEANING_VIEW_INDEX = 2
 
         fun bind(
-            root: ViewGroup,
+            root: RecordItemRootContainer,
             record: ConciseRecordWithBadges?,
+            hasDivider: Boolean,
             onContainerClickListener: View.OnClickListener,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
         ) {
@@ -136,6 +141,8 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
             val scoreView = mainContentContainer.getTypedViewAt<TextView>(SCORE_VIEW_INDEX)
             val expressionView = mainContentContainer.getTypedViewAt<TextView>(EXPRESSION_VIEW_INDEX)
             val meaningView = mainContentContainer.getTypedViewAt<TextView>(MEANING_VIEW_INDEX)
+
+            root.hasDivider = hasDivider
 
             if (record != null) {
                 val context = root.context
@@ -189,59 +196,56 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
         fun createRootContainer(
             context: Context,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-        ): ViewGroup {
-            return LinearLayout(context).apply {
-                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
-                orientation = LinearLayout.VERTICAL
+        ) = RecordItemRootContainer(context).apply {
+            layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+            orientation = LinearLayout.VERTICAL
 
-                // TODO: Save this padding to static info
-                setPaddingRes(R.dimen.itemRecord_padding)
+            dividerColor = staticInfo.dividerColor
+            dividerHeight = staticInfo.dividerHeight
 
-                addView(createMainContentContainer(context, staticInfo))
-            }
+            // TODO: Save this padding to static info
+            setPaddingRes(R.dimen.itemRecord_padding)
+
+            addView(createMainContentContainer(context, staticInfo))
         }
 
         internal fun createBadgeContainer(
             context: Context,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-        ): BadgeContainer {
-            return BadgeContainer(context).apply {
-                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+        ) = BadgeContainer(context).apply {
+            layoutParams = MATCH_WRAP_LAYOUT_PARAMS
 
-                val hPadding = staticInfo.badgeContainerHorizontalPadding
-                setPadding(hPadding, 0, hPadding, 0)
-            }
+            val hPadding = staticInfo.badgeContainerHorizontalPadding
+            setPadding(hPadding, 0, hPadding, 0)
         }
 
         private fun createMainContentContainer(
             context: Context,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-        ): LinearLayout {
+        ) = LinearLayout(context).also { container ->
             val bodyLargeTextAppearance = staticInfo.bodyLargeTextAppearance
 
-            return LinearLayout(context).also { container ->
-                container.layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+            container.layoutParams = MATCH_WRAP_LAYOUT_PARAMS
 
-                container.addView(MaterialTextView(context).apply {
-                    layoutParams = WRAP_WRAP_LAYOUT_PARAMS
+            container.addView(MaterialTextView(context).apply {
+                layoutParams = WRAP_WRAP_LAYOUT_PARAMS
 
-                    staticInfo.bodyMediumTextAppearance.apply(this)
-                    setTextIsSelectable(false)
-                })
+                staticInfo.bodyMediumTextAppearance.apply(this)
+                setTextIsSelectable(false)
+            })
 
-                container.addView(MaterialTextView(context).apply {
-                    layoutParams = staticInfo.expressionLayoutParams
+            container.addView(MaterialTextView(context).apply {
+                layoutParams = staticInfo.expressionLayoutParams
 
-                    initTextView(bodyLargeTextAppearance)
-                })
+                initTextView(bodyLargeTextAppearance)
+            })
 
-                container.addView(MaterialTextView(context).apply {
-                    layoutParams = MEANING_LAYOUT_PARAMS
+            container.addView(MaterialTextView(context).apply {
+                layoutParams = MEANING_LAYOUT_PARAMS
 
-                    textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
-                    initTextView(bodyLargeTextAppearance)
-                })
-            }
+                textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
+                initTextView(bodyLargeTextAppearance)
+            })
         }
 
         private fun TextView.initTextView(textAppearance: TextAppearance) {

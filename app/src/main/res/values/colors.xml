@@ -15,6 +15,7 @@
 
     <color name="record_item_score_negative">@color/red_700</color>
     <color name="record_item_score_positive">@color/green_700</color>
+    <color name="record_item_divider">#66A8A7A7</color>
 
     <color name="record_quiz_item_correct_answer">@color/green_700</color>
     <color name="record_quiz_item_wrong_answer">@color/red_700</color>
@@ -41,4 +42,5 @@
     <color name="stats_chart_avg_color">#FFB300</color>
 
     <color name="home_date_marker_background_color">#80BAB7B7</color>
+
 </resources>
