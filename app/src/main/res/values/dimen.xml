@@ -6,10 +6,17 @@
 
     <dimen name="home_stateContainerMarginTop">5dp</dimen>
     <dimen name="home_stateContainerMarginBottom">80dp</dimen>
+    <dimen name="home_dateMarker_verticalPadding">3dp</dimen>
+    <dimen name="home_dateMarker_horizontalPadding">6dp</dimen>
+
+    <!-- TODO: Increase this because it seems it's not enough large -->
+    <dimen name="home_dateMarker_verticalMargin">7dp</dimen>
+    <dimen name="home_dateMarker_backgroundRoundRadius">20dp</dimen>
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
     <dimen name="itemRecord_badgeContainerHorizontalPadding">5dp</dimen>
+    <dimen name="itemRecord_dividerHeight">1dp</dimen>
 
     <dimen name="remindRecords_lastItemBottomPadding">60dp</dimen>
 

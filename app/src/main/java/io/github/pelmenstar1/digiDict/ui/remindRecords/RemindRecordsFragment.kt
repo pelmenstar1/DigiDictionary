@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
-import io.github.pelmenstar1.digiDict.common.ui.AdvancedDividerItemDecoration
 import io.github.pelmenstar1.digiDict.common.ui.LastElementVerticalSpaceDecoration
 import io.github.pelmenstar1.digiDict.databinding.FragmentRemindRecordsBinding
 import kotlinx.coroutines.flow.first
@@ -42,7 +41,6 @@ class RemindRecordsFragment : Fragment() {
                 it.itemAnimator = null
 
                 it.addItemDecoration(lastItemSpaceDecor)
-                it.addItemDecoration(AdvancedDividerItemDecoration(context))
             }
 
             remindRecordsRepeat.setOnClickListener {

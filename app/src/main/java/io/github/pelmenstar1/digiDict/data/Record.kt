@@ -93,14 +93,15 @@ open class ConciseRecord(
     override val id: Int,
     val expression: String,
     val meaning: String,
-    val score: Int
+    val score: Int,
+    @ColumnInfo(name = RecordTable.epochSeconds) val epochSeconds: Long
 ) : EntityWithPrimaryKeyId {
     override fun equals(other: Any?) = equalsPattern(other) { o ->
         id == o.id && equalsNoId(other)
     }
 
     override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
-        expression == o.expression && meaning == o.meaning && score == o.score
+        expression == o.expression && meaning == o.meaning && score == o.score && epochSeconds == o.epochSeconds
     }
 
     override fun hashCode(): Int {
@@ -108,12 +109,13 @@ open class ConciseRecord(
         result = 31 * result + expression.hashCode()
         result = 31 * result + meaning.hashCode()
         result = 31 * result + score
+        result = 31 * result + epochSeconds.hashCode()
 
         return result
     }
 
     override fun toString(): String {
-        return "ConciseRecord(id=$id, expression=$expression, meaning=$meaning, score=$score)"
+        return "ConciseRecord(id=$id, expression=$expression, meaning=$meaning, score=$score, epochSeconds=${epochSeconds})"
     }
 }
 
@@ -122,14 +124,17 @@ open class ConciseRecordWithBadges(
     expression: String,
     meaning: String,
     score: Int,
+    epochSeconds: Long,
     val badges: Array<RecordBadgeInfo>
-) : ConciseRecord(id, expression, meaning, score) {
+) : ConciseRecord(id, expression, meaning, score, epochSeconds) {
     override fun equals(other: Any?) = equalsPattern(other) { o ->
         id == o.id && equalsNoId(o)
     }
 
     override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
-        return expression == o.expression && meaning == o.meaning && score == o.score && badges.contentEquals(o.badges)
+        return expression == o.expression && meaning == o.meaning && score == o.score && epochSeconds == o.epochSeconds && badges.contentEquals(
+            o.badges
+        )
     }
 
     override fun hashCode(): Int {
@@ -140,12 +145,12 @@ open class ConciseRecordWithBadges(
     }
 
     override fun toString(): String {
-        return "ConciseRecordWithBadges(id=$id, expression=$expression, meaning=$meaning, score=$score, badges=${badges.contentToString()})"
+        return "ConciseRecordWithBadges(id=$id, expression=$expression, meaning=$meaning, score=$score, epochSeconds=$epochSeconds, badges=${badges.contentToString()})"
     }
 
     companion object {
         fun create(record: ConciseRecord, badges: Array<RecordBadgeInfo>) = ConciseRecordWithBadges(
-            record.id, record.expression, record.meaning, record.score, badges
+            record.id, record.expression, record.meaning, record.score, record.epochSeconds, badges
         )
     }
 }

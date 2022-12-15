@@ -122,7 +122,7 @@ fun AppDatabase.getAllConciseRecordsWithBadges(progressReporter: ProgressReporte
     val getBadgesByRecordIdQuery = GetBadgesByRecordIdQuery()
 
     return queryArrayWithProgressReporter(
-        "SELECT id, expression, meaning, score FROM records",
+        "SELECT id, expression, meaning, score, dateTime FROM records",
         null,
         progressReporter
     ) { c ->
@@ -130,10 +130,11 @@ fun AppDatabase.getAllConciseRecordsWithBadges(progressReporter: ProgressReporte
         val expr = c.getString(1)
         val meaning = c.getString(2)
         val score = c.getInt(3)
+        val epochSeconds = c.getLong(4)
 
         val badges = getBadgesByRecordId(getBadgesByRecordIdQuery, id)
 
-        ConciseRecordWithBadges(id, expr, meaning, score, badges)
+        ConciseRecordWithBadges(id, expr, meaning, score, epochSeconds, badges)
     }
 }
 

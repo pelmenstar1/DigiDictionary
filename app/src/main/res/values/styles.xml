@@ -15,4 +15,11 @@
         <item name="android:layout_marginBottom">5dp</item>
         <item name="android:layout_gravity">center_horizontal</item>
     </style>
+
+    <style name="TextAppearance.DigiDictionary.Home.DateMarker" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="fontFamily">sans-serif-black</item>
+        <item name="android:fontFamily">sans-serif-black</item>
+    </style>
 </resources>

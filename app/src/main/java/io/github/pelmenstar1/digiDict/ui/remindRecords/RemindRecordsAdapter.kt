@@ -103,7 +103,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position], onContainerClickListener)
+        holder.bind(items[position], hasDivider = position < items.size - 1, onContainerClickListener)
         holder.setRevealed(revealedStates[position])
     }
 

@@ -13,6 +13,7 @@ import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
+import io.github.pelmenstar1.digiDict.common.ui.getNullableTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
@@ -43,7 +44,8 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
         get() {
             var padding = _badgeContainerHorizontalPadding
             if (padding < 0) {
-                padding = res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding)
+                padding =
+                    res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding)
                 _badgeContainerHorizontalPadding = padding
             }
 
@@ -61,6 +63,9 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
         marginStart = res.getDimensionPixelOffset(R.dimen.itemRecord_expressionMarginStart)
     }
 
+    val dividerHeight = res.getDimension(R.dimen.itemRecord_dividerHeight)
+    val dividerColor = ResourcesCompat.getColor(res, R.color.record_item_divider, theme)
+
     private inline fun getLazyColorStateList(
         @ColorRes colorRes: Int,
         currentValue: ColorStateList?,
@@ -77,71 +82,25 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
 }
 
 open class ConciseRecordWithBadgesViewHolder private constructor(
-    val container: ViewGroup,
+    val container: RecordItemRootContainer,
     private val staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
 ) : RecyclerView.ViewHolder(container) {
-    private val expressionView: TextView
     val meaningView: TextView
     val scoreView: TextView
 
-    private var badgeContainer: BadgeContainer? = null
-
     constructor(context: Context, staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo) : this(
-        createContainer(context, staticInfo), staticInfo
+        createRootContainer(context, staticInfo), staticInfo
     )
 
     init {
         with(container.getTypedViewAt<ViewGroup>(MAIN_CONTENT_INDEX)) {
-            expressionView = getTypedViewAt(EXPRESSION_VIEW_INDEX)
             meaningView = getTypedViewAt(MEANING_VIEW_INDEX)
             scoreView = getTypedViewAt(SCORE_VIEW_INDEX)
         }
     }
 
-    fun bind(record: ConciseRecordWithBadges?, onContainerClickListener: View.OnClickListener) {
-        if (record != null) {
-            val context = container.context
-
-            container.tag = record
-            container.setOnClickListener(onContainerClickListener)
-
-            expressionView.text = record.expression
-            meaningView.text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
-
-            scoreView.run {
-                val score = record.score
-
-                val textColorList = if (score >= 0) {
-                    staticInfo.positiveScoreColorList
-                } else {
-                    staticInfo.negativeScoreColorList
-                }
-
-                setTextColor(textColorList)
-                text = score.toString()
-            }
-
-            val badges = record.badges
-            var bc = badgeContainer
-
-            if (badges.isEmpty()) {
-                bc?.removeAllViews()
-            } else {
-                if (bc == null) {
-                    bc = createBadgeContainer(context, staticInfo)
-                    container.addView(bc)
-                }
-
-                bc.setBadges(record.badges)
-            }
-        } else {
-            container.setOnClickListener(null)
-            container.tag = null
-
-            expressionView.text = ""
-            meaningView.text = ""
-            scoreView.text = ""
-        }
+    fun bind(record: ConciseRecordWithBadges?, hasDivider: Boolean, onContainerClickListener: View.OnClickListener) {
+        bind(container, record, hasDivider, onContainerClickListener, staticInfo)
     }
 
     companion object {
@@ -162,70 +121,131 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
             weight = 0.5f
         }
 
+        // Indices relative to root container
         private const val MAIN_CONTENT_INDEX = 0
+        private const val BADGE_CONTAINER_INDEX = 1
 
+        // Indices relative to main-content container
         private const val SCORE_VIEW_INDEX = 0
         private const val EXPRESSION_VIEW_INDEX = 1
         private const val MEANING_VIEW_INDEX = 2
+
+        fun bind(
+            root: RecordItemRootContainer,
+            record: ConciseRecordWithBadges?,
+            hasDivider: Boolean,
+            onContainerClickListener: View.OnClickListener,
+            staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
+        ) {
+            val mainContentContainer = root.getTypedViewAt<ViewGroup>(MAIN_CONTENT_INDEX)
+            val scoreView = mainContentContainer.getTypedViewAt<TextView>(SCORE_VIEW_INDEX)
+            val expressionView = mainContentContainer.getTypedViewAt<TextView>(EXPRESSION_VIEW_INDEX)
+            val meaningView = mainContentContainer.getTypedViewAt<TextView>(MEANING_VIEW_INDEX)
+
+            root.hasDivider = hasDivider
+
+            if (record != null) {
+                val context = root.context
+
+                root.tag = record
+                root.setOnClickListener(onContainerClickListener)
+
+                expressionView.text = record.expression
+                meaningView.text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
+
+                scoreView.run {
+                    val score = record.score
+
+                    val textColorList = if (score >= 0) {
+                        staticInfo.positiveScoreColorList
+                    } else {
+                        staticInfo.negativeScoreColorList
+                    }
+
+                    setTextColor(textColorList)
+                    text = score.toString()
+                }
+
+                val badges = record.badges
+                var bc = root.getNullableTypedViewAt<BadgeContainer>(BADGE_CONTAINER_INDEX)
+
+                if (badges.isEmpty()) {
+                    bc?.removeAllViews()
+                } else {
+                    if (bc == null) {
+                        bc = createBadgeContainer(context, staticInfo)
+                        root.addView(bc)
+                    }
+
+                    bc.setBadges(record.badges)
+                }
+            } else {
+                root.setOnClickListener(null)
+                root.tag = null
+
+                expressionView.text = ""
+                meaningView.text = ""
+                scoreView.text = ""
+            }
+        }
 
         inline fun createOnItemClickListener(crossinline block: (id: Int) -> Unit) = View.OnClickListener {
             (it.tag as ConciseRecordWithBadges?)?.also { record -> block(record.id) }
         }
 
-        internal fun createContainer(
+        fun createRootContainer(
             context: Context,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-        ): ViewGroup {
-            return LinearLayout(context).apply {
-                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
-                orientation = LinearLayout.VERTICAL
-                setPaddingRes(R.dimen.itemRecord_padding)
+        ) = RecordItemRootContainer(context).apply {
+            layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+            orientation = LinearLayout.VERTICAL
 
-                addView(createMainContentContainer(context, staticInfo))
-            }
+            dividerColor = staticInfo.dividerColor
+            dividerHeight = staticInfo.dividerHeight
+
+            // TODO: Save this padding to static info
+            setPaddingRes(R.dimen.itemRecord_padding)
+
+            addView(createMainContentContainer(context, staticInfo))
         }
 
         internal fun createBadgeContainer(
             context: Context,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-        ): BadgeContainer {
-            return BadgeContainer(context).apply {
-                layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+        ) = BadgeContainer(context).apply {
+            layoutParams = MATCH_WRAP_LAYOUT_PARAMS
 
-                val hPadding = staticInfo.badgeContainerHorizontalPadding
-                setPadding(hPadding, 0, hPadding, 0)
-            }
+            val hPadding = staticInfo.badgeContainerHorizontalPadding
+            setPadding(hPadding, 0, hPadding, 0)
         }
 
         private fun createMainContentContainer(
             context: Context,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-        ): LinearLayout {
+        ) = LinearLayout(context).also { container ->
             val bodyLargeTextAppearance = staticInfo.bodyLargeTextAppearance
 
-            return LinearLayout(context).also { container ->
-                container.layoutParams = MATCH_WRAP_LAYOUT_PARAMS
+            container.layoutParams = MATCH_WRAP_LAYOUT_PARAMS
 
-                container.addView(MaterialTextView(context).apply {
-                    layoutParams = WRAP_WRAP_LAYOUT_PARAMS
+            container.addView(MaterialTextView(context).apply {
+                layoutParams = WRAP_WRAP_LAYOUT_PARAMS
 
-                    staticInfo.bodyMediumTextAppearance.apply(this)
-                    setTextIsSelectable(false)
-                })
+                staticInfo.bodyMediumTextAppearance.apply(this)
+                setTextIsSelectable(false)
+            })
 
-                container.addView(MaterialTextView(context).apply {
-                    layoutParams = staticInfo.expressionLayoutParams
+            container.addView(MaterialTextView(context).apply {
+                layoutParams = staticInfo.expressionLayoutParams
 
-                    initTextView(bodyLargeTextAppearance)
-                })
+                initTextView(bodyLargeTextAppearance)
+            })
 
-                container.addView(MaterialTextView(context).apply {
-                    layoutParams = MEANING_LAYOUT_PARAMS
+            container.addView(MaterialTextView(context).apply {
+                layoutParams = MEANING_LAYOUT_PARAMS
 
-                    textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
-                    initTextView(bodyLargeTextAppearance)
-                })
-            }
+                textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
+                initTextView(bodyLargeTextAppearance)
+            })
         }
 
         private fun TextView.initTextView(textAppearance: TextAppearance) {
