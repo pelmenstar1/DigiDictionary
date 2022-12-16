@@ -80,7 +80,7 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                     requiredHeight += rowHeight
 
                     consumedWidthInRow = pLeft + requiredChildWidth
-                    rowHeight = requiredHeight
+                    rowHeight = requiredChildHeight
                 } else {
                     consumedWidthInRow = nextWidth
                     requiredWidth = max(requiredWidth, consumedWidthInRow)
