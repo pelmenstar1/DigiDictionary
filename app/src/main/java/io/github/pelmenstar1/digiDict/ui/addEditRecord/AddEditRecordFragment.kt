@@ -89,6 +89,7 @@ class AddEditRecordFragment : Fragment() {
 
         initMeaningInteraction()
         initBadgeInteraction()
+        initDoNotChangeCreationTimeBox(recordId)
         initViews()
 
         // Set the initial expression (if it exists) only when all the listeners are set on the EditText's
@@ -199,6 +200,20 @@ class AddEditRecordFragment : Fragment() {
         binding.addRecordBadgeInteraction.also { badgeInteraction ->
             badgeInteraction.onGetFragmentManager = { childFragmentManager }
             vm.getBadges = { badgeInteraction.badges }
+        }
+    }
+
+    private fun initDoNotChangeCreationTimeBox(currentRecordId: Int) {
+        binding.addRecordDoNotChangeCreationTimeBox.also {
+            it.visibility = if (currentRecordId >= 0) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
+            it.setOnCheckedChangeListener { _, isChecked ->
+                viewModel.changeCreationTime = !isChecked
+            }
         }
     }
 }

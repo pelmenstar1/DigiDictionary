@@ -307,6 +307,46 @@ class AddEditRecordViewModelTests {
     }
 
     @Test
+    fun editRecordTest_doNotChangeCreationTime() = runTest {
+        val recordDao = db.recordDao()
+
+        val vm = createViewModel(
+            currentEpochSecondsProvider = FakeCurrentEpochSecondsProvider(100L)
+        )
+
+        val recordId = 1
+        recordDao.insert(
+            Record(
+                recordId,
+                "Expr1_Old",
+                "CMeaning1_Old",
+                "Notes1_Old",
+                1,
+                0
+            )
+        )
+
+        vm.currentRecordId = recordId
+        vm.expression = "Expr1_New"
+        vm.additionalNotes = "Notes1_New"
+        vm.getMeaning = { ComplexMeaning.Common("Meaning1_New") }
+        vm.getBadges = { emptyArray() }
+        vm.changeCreationTime = false
+
+        vm.addOrEditAction.runAndWaitForResult()
+
+        val newRecord = recordDao.getRecordById(recordId)
+
+        assertNotNull(newRecord)
+        assertEquals("Expr1_New", newRecord.expression)
+        assertEquals("CMeaning1_New", newRecord.meaning)
+        assertEquals("Notes1_New", newRecord.additionalNotes)
+
+        // Creation time should not change
+        assertEquals(0, newRecord.epochSeconds)
+    }
+
+    @Test
     fun addRecordTest_validityIsInvalidAndComputed() {
         val recordDao = object : RecordDaoStub() {
             override suspend fun insert(value: Record) {

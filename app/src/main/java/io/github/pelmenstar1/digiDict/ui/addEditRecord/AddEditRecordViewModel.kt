@@ -87,19 +87,27 @@ class AddEditRecordViewModel @Inject constructor(
     var getBadges: (() -> Array<RecordBadgeInfo>)? = null
     var additionalNotes: CharSequence = ""
 
+    var changeCreationTime = true
+
     val addOrEditAction = viewModelAction(TAG) {
         val expr = _expression.trimToString()
         val additionalNotes = additionalNotes.trimToString()
         val rawMeaning = getMeaning.invokeOrThrow().rawText
         val badges = getBadges.invokeOrThrow()
-        val epochSeconds = currentEpochSecondsProvider.get { Utc }
+        val currentEpochSeconds = currentEpochSecondsProvider.get { Utc }
 
         val recordId: Int
         if (currentRecordId >= 0) {
+            val newEpochSeconds = if (changeCreationTime) {
+                currentEpochSeconds
+            } else {
+                currentRecordStateFlow.firstSuccess().epochSeconds
+            }
+
             recordDao.update(
                 currentRecordId,
                 expr, rawMeaning, additionalNotes,
-                epochSeconds
+                newEpochSeconds
             )
 
             recordId = currentRecordId
@@ -109,7 +117,7 @@ class AddEditRecordViewModel @Inject constructor(
                     id = 0,
                     expr, rawMeaning, additionalNotes,
                     score = 0,
-                    epochSeconds
+                    currentEpochSeconds
                 )
             )
 
