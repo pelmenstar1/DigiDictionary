@@ -142,8 +142,8 @@ class HomeFragment : Fragment() {
                 // to keep it on the screen as well.
                 searchAddRecordContainer.visibility = View.GONE
 
-                if (!isActive) {
-                    // In the next time search is active, adapter should contain no elements as in the initial state.
+                if (isActive) {
+                    // The initial state of search should be empty.
                     searchAdapter.submitEmpty()
                 }
             }
