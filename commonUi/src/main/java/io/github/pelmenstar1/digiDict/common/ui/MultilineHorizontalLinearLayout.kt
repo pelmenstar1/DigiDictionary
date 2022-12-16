@@ -32,7 +32,7 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
-        val totalWidth = if (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.EXACTLY) {
+        val totalWidth = if (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.AT_MOST) {
             MeasureSpec.getSize(widthMeasureSpec)
         } else {
             // As widthMode is MeasureSpec.UNSPECIFIED, there's no limitation for width and therefore there should be only
