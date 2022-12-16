@@ -99,12 +99,6 @@ class ValidityFlow(val scheme: Scheme) {
         get() = isAllValid(flow.value, scheme)
 
     /**
-     * Gets whether all the fields, except not-computed ones, are valid.
-     */
-    val isAllValidExceptNotComputedFields: Boolean
-        get() = isAllValidExceptNotComputedFields(flow.value, scheme)
-
-    /**
      * Gets whether all the fields are computed.
      */
     val isAllComputed: Boolean
@@ -163,20 +157,6 @@ class ValidityFlow(val scheme: Scheme) {
         internal fun isComputed(bits: Int, field: Field): Boolean {
             return (bits and field.computedFlagMask()) != 0
         }
-
-        fun isAllValidExceptNotComputedFields(bits: Int, scheme: Scheme): Boolean {
-            for (f in scheme.fields) {
-                // Ignore not-computed fields
-                if (isComputed(bits, f)) {
-                    if (!isValid(bits, f)) {
-                        return false
-                    }
-                }
-            }
-
-            return true
-        }
-
 
         // Just to support varargs to make the code more readable
         fun Scheme(vararg fields: Field) = Scheme(fields)
