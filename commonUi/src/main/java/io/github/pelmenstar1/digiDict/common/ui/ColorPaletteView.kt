@@ -226,8 +226,8 @@ class ColorPaletteView @JvmOverloads constructor(
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is SavedState) {
             selectedIndex = state.selectedIndex
-        }
 
-        super.onRestoreInstanceState(state)
+            super.onRestoreInstanceState(state.superState)
+        }
     }
 }
