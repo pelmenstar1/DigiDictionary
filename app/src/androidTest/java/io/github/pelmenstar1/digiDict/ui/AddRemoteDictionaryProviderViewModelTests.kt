@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.ValidityFlow
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
@@ -10,7 +11,6 @@ import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictiona
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -41,34 +41,26 @@ class AddRemoteDictionaryProviderViewModelTests {
         )
     }
 
-    private suspend fun AddRemoteDictionaryProviderViewModel.getValidity(computedValidityBit: Int): Int {
-        return validityFlow
-            .filter { (it and computedValidityBit) != 0 }
-            .first()
-    }
-
     private suspend fun assertInvalidState(
         vm: AddRemoteDictionaryProviderViewModel,
         errorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>,
         expectedMsg: AddRemoteDictionaryProviderMessage,
-        validityMask: AddRemoteDictionaryProviderViewModel.Companion.() -> Int,
-        computedValidityBit: AddRemoteDictionaryProviderViewModel.Companion.() -> Int
+        validityField: AddRemoteDictionaryProviderViewModel.Companion.() -> ValidityFlow.Field,
     ) {
-        val validity = vm.getValidity(computedValidityBit(AddRemoteDictionaryProviderViewModel.Companion))
+        val field = validityField(AddRemoteDictionaryProviderViewModel.Companion)
 
-        assertEquals(0, validity and validityMask(AddRemoteDictionaryProviderViewModel.Companion))
+        assertFalse(vm.validityFlow.waitForComputedAndReturnIsValid(field))
         assertEquals(expectedMsg, errorFlow.first())
     }
 
     private suspend fun assertValidState(
         vm: AddRemoteDictionaryProviderViewModel,
         errorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>,
-        validityMask: AddRemoteDictionaryProviderViewModel.Companion.() -> Int,
-        computedValidityBit: AddRemoteDictionaryProviderViewModel.Companion.() -> Int
+        validityField: AddRemoteDictionaryProviderViewModel.Companion.() -> ValidityFlow.Field,
     ) {
-        val validity = vm.getValidity(computedValidityBit(AddRemoteDictionaryProviderViewModel.Companion))
+        val field = validityField(AddRemoteDictionaryProviderViewModel.Companion)
 
-        assertNotEquals(0, validity and validityMask(AddRemoteDictionaryProviderViewModel.Companion))
+        assertTrue(vm.validityFlow.waitForComputedAndReturnIsValid(field))
         assertNull(errorFlow.first())
     }
 
@@ -76,27 +68,22 @@ class AddRemoteDictionaryProviderViewModelTests {
         vm: AddRemoteDictionaryProviderViewModel,
         expectedMsg: AddRemoteDictionaryProviderMessage
     ) {
-        assertInvalidState(vm, vm.nameErrorFlow, expectedMsg, { NAME_VALIDITY_BIT }, { NAME_COMPUTED_VALIDITY_BIT })
+        assertInvalidState(vm, vm.nameErrorFlow, expectedMsg) { nameValidityField }
     }
 
     private suspend fun assertSchemaInvalidState(
         vm: AddRemoteDictionaryProviderViewModel,
         expectedMsg: AddRemoteDictionaryProviderMessage
     ) {
-        assertInvalidState(
-            vm,
-            vm.schemaErrorFlow,
-            expectedMsg,
-            { SCHEMA_VALIDITY_BIT },
-            { SCHEMA_COMPUTED_VALIDITY_BIT })
+        assertInvalidState(vm, vm.schemaErrorFlow, expectedMsg) { schemaValidityField }
     }
 
     private suspend fun assertNameValidState(vm: AddRemoteDictionaryProviderViewModel) {
-        assertValidState(vm, vm.nameErrorFlow, { NAME_VALIDITY_BIT }, { NAME_COMPUTED_VALIDITY_BIT })
+        assertValidState(vm, vm.nameErrorFlow) { nameValidityField }
     }
 
     private suspend fun assertSchemaValidState(vm: AddRemoteDictionaryProviderViewModel) {
-        assertValidState(vm, vm.schemaErrorFlow, { SCHEMA_VALIDITY_BIT }, { SCHEMA_COMPUTED_VALIDITY_BIT })
+        assertValidState(vm, vm.schemaErrorFlow) { schemaValidityField }
     }
 
     @Test
@@ -271,13 +258,21 @@ class AddRemoteDictionaryProviderViewModelTests {
         })
 
         vm.use {
-            vm._validityFlow.value = 0 // make validity not computed
+            vm.validityFlow.mutate {
+                disable(AddRemoteDictionaryProviderViewModel.nameValidityField, isComputed = false)
+                disable(AddRemoteDictionaryProviderViewModel.schemaValidityField, isComputed = false)
+            }
             vm.add()
 
             Thread.sleep(100) // emulate some work
 
             throwOnInsert = false
-            vm._validityFlow.value = AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK
+
+            vm.validityFlow.mutate {
+                enable(AddRemoteDictionaryProviderViewModel.nameValidityField)
+                enable(AddRemoteDictionaryProviderViewModel.schemaValidityField)
+            }
+
             vm.addAction.waitForResult()
         }
     }

@@ -29,7 +29,7 @@ class ValidityFlowTests {
         fun testCase(fields: Array<out ValidityFieldEnabledComputed>, expected: Boolean) {
             val flow = createFlow(fields)
 
-            assertEquals(expected, flow.isValid)
+            assertEquals(expected, flow.isAllValid)
         }
 
         testCase(
@@ -112,7 +112,7 @@ class ValidityFlowTests {
         fun testCase(fields: Array<out ValidityFieldEnabledComputed>, expected: Boolean) {
             val flow = createFlow(fields)
 
-            assertEquals(expected, flow.isValidExceptNotComputedFields)
+            assertEquals(expected, flow.isAllValidExceptNotComputedFields)
         }
 
         testCase(

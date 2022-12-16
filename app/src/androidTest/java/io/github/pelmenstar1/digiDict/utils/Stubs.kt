@@ -136,6 +136,10 @@ open class RecordDaoStub : RecordDao() {
     override suspend fun getIdsAfter(epochSeconds: Long): IntArray {
         throw NotImplementedError()
     }
+
+    override suspend fun getFirstRecordIdWithEpochDay(epochDay: Long): Int? {
+        throw NotImplementedError()
+    }
 }
 
 object AppWidgetUpdaterStub : AppWidgetUpdater {

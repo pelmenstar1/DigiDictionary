@@ -11,7 +11,6 @@ import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordViewModel
 import io.github.pelmenstar1.digiDict.utils.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -68,23 +67,14 @@ class AddEditRecordViewModelTests {
         )
     }
 
-    private suspend fun AddEditRecordViewModel.getValidity(): Int {
-        return validity
-            .filter { (it and AddEditRecordViewModel.VALIDITY_COMPUTED_BIT) != 0 }
-            .first()
-    }
 
     private suspend fun assertExpressionInvalid(vm: AddEditRecordViewModel, expectedMsg: AddEditRecordMessage) {
-        val validity = vm.getValidity()
-
-        assertEquals(0, validity and AddEditRecordViewModel.EXPRESSION_VALIDITY_BIT)
+        assertFalse(vm.validity.waitForComputedAndReturnIsValid(AddEditRecordViewModel.expressionValidityField))
         assertEquals(expectedMsg, vm.expressionErrorFlow.filterNotNull().first())
     }
 
     private suspend fun assertExpressionValid(vm: AddEditRecordViewModel) {
-        val validity = vm.getValidity()
-
-        assertNotEquals(0, validity and AddEditRecordViewModel.EXPRESSION_VALIDITY_BIT)
+        assertTrue(vm.validity.waitForComputedAndReturnIsValid(AddEditRecordViewModel.expressionValidityField))
         assertNull(vm.expressionErrorFlow.first())
     }
 
@@ -325,7 +315,7 @@ class AddEditRecordViewModelTests {
         }
 
         useViewModel(recordDao = recordDao) { vm ->
-            vm.validity.value = 0 // Computed flag is unset
+            // validity is invalid and computed by default
             vm.addOrEditRecord()
         }
     }
@@ -347,7 +337,9 @@ class AddEditRecordViewModelTests {
         }
 
         useViewModel(recordDao = recordDao) { vm ->
-            vm.validity.value = 0 // Computed flag is unset
+            vm.validity.mutate {
+                disable(AddEditRecordViewModel.expressionValidityField, isComputed = false)
+            }
 
             vm.addOrEditRecord()
             Thread.sleep(100) // Wait a little bit, emulate some work
@@ -355,7 +347,12 @@ class AddEditRecordViewModelTests {
             throwExceptionOnInsert = false
             vm.getBadges = { emptyArray() }
             vm.getMeaning = { ComplexMeaning.Common("") }
-            vm.validity.value = AddEditRecordViewModel.ALL_VALID_MASK // Computed flag is set
+
+            vm.validity.mutate {
+                enable(AddEditRecordViewModel.expressionValidityField)
+                enable(AddEditRecordViewModel.meaningValidityField)
+            }
+
             vm.addOrEditAction.waitForResult()
         }
     }
