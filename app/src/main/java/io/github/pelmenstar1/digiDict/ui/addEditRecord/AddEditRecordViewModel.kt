@@ -11,7 +11,10 @@ import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,7 +28,7 @@ class AddEditRecordViewModel @Inject constructor(
 ) : ViewModel() {
     // By default, expression and meaning are invalid but it's "real" validity state for expression and meaning, so
     // VALIDITY_COMPUTED_BIT should be set.
-    val validity = MutableStateFlow(VALIDITY_COMPUTED_BIT)
+    val validity = ValidityFlow(validityScheme)
 
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
     val expressionErrorFlow = _expressionErrorFlow.asStateFlow()
@@ -58,10 +61,7 @@ class AddEditRecordViewModel @Inject constructor(
                 // wrong with the state because the record id is pointing to just can't be deleted when the logic is loading it.
                 val currentRecord = recordDao.getRecordWithBadgesById(id)!!
 
-                validity.update {
-                    it.withBit(EXPRESSION_VALIDITY_BIT, true)
-                        .withBit(VALIDITY_COMPUTED_BIT, true)
-                }
+                validity.mutate { enable(expressionValidityField) }
 
                 startCheckExpressionJob()
 
@@ -70,14 +70,6 @@ class AddEditRecordViewModel @Inject constructor(
         }
     }
 
-
-    private val addOrEditRecordWaitHandle = ExclusiveWaitHandleForFlowCondition(
-        viewModelScope,
-        validity,
-        stopExclusiveCondition = { (it and VALIDITY_COMPUTED_BIT) != 0 },
-        runActionCondition = { it == ALL_VALID_MASK },
-        action = { addOrEditAction.run() }
-    )
     private val checkExpressionChannel = Channel<String>(
         capacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -143,11 +135,7 @@ class AddEditRecordViewModel @Inject constructor(
     private fun setExpressionInternal(value: String) {
         _expression = value
 
-        validity.update {
-            it.withBit(EXPRESSION_VALIDITY_BIT, false)
-                .withBit(VALIDITY_COMPUTED_BIT, false)
-        }
-
+        validity.mutate { disable(expressionValidityField, isComputed = false) }
         checkExpressionChannel.trySend(value)
     }
 
@@ -181,9 +169,8 @@ class AddEditRecordViewModel @Inject constructor(
                         isMeaningfulExpr &&
                         (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
 
-                validity.update {
-                    it.withBit(EXPRESSION_VALIDITY_BIT, isValid)
-                        .withBit(VALIDITY_COMPUTED_BIT, true)
+                validity.mutate {
+                    set(expressionValidityField, isValid, isComputed = true)
                 }
 
                 _expressionErrorFlow.value = when {
@@ -197,35 +184,19 @@ class AddEditRecordViewModel @Inject constructor(
     }
 
     /**
-     * Adds/Edits the record to/in the datastore.
-     *
-     * - If both expression and meaning are valid, immediately executes the actual logic.
-     * - If [validity] has [VALIDITY_COMPUTED_BIT] unset, waits until the validity becomes "computed" and makes a decision based on
-     * given value.
-     * - If either expression or meaning are invalid and [VALIDITY_COMPUTED_BIT] is set, the method does nothing.
+     * Adds/Edits the record to/in the datastore. The actual logic is run when validity is valid
      */
     fun addOrEditRecord() {
-        val validityValue = validity.value
-
-        if (validityValue == ALL_VALID_MASK) {
-            addOrEditAction.run()
-        } else if ((validityValue and VALIDITY_COMPUTED_BIT) == 0) {
-            addOrEditRecordWaitHandle.runAction()
-        }
+        addOrEditAction.runWhenValid(validity)
     }
 
     companion object {
         private const val TAG = "AddExpressionVM"
 
-        const val EXPRESSION_VALIDITY_BIT = 1
-        const val MEANING_VALIDITY_BIT = 1 shl 1
+        val expressionValidityField = ValidityFlow.Field(ordinal = 0)
+        val meaningValidityField = ValidityFlow.Field(ordinal = 1)
 
-        // When the check of an expression is started, EXPRESSION_VALIDITY_BIT is disabled to prevent a situation
-        // when a record is added with expression being invalid. So this flag is used to mark that validity state
-        // is real (valid) for given expression and meaning.
-        const val VALIDITY_COMPUTED_BIT = 1 shl 2
-
-        const val ALL_VALID_MASK = EXPRESSION_VALIDITY_BIT or MEANING_VALIDITY_BIT or VALIDITY_COMPUTED_BIT
+        private val validityScheme = ValidityFlow.Scheme(expressionValidityField, meaningValidityField)
 
         internal fun <T> (() -> T)?.invokeOrThrow(): T {
             return requireNotNull(this).invoke()

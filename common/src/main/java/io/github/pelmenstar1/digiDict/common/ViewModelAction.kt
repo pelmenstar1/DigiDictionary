@@ -21,6 +21,8 @@ sealed class ViewModelAction(
     protected val resultFlow = MutableSharedFlow<Any?>(replay = 1)
     protected val isActionStarted = AtomicBoolean()
 
+    protected val isWaitingForValidityResult = AtomicBoolean()
+
     private var _successFlow: Flow<Any>? = null
     private var _errorFlow: Flow<Throwable>? = null
 
@@ -41,7 +43,7 @@ sealed class ViewModelAction(
 
     protected inline fun runInternal(crossinline action: suspend () -> Unit) {
         if (isActionStarted.compareAndSet(false, true)) {
-            vm.viewModelScope.launch(coroutineContext) {
+            launchInViewModelScope {
                 resultFlow.emit(null)
                 try {
                     action()
@@ -59,6 +61,29 @@ sealed class ViewModelAction(
         }
     }
 
+    protected inline fun runWhenValidInternal(flow: ValidityFlow, crossinline action: () -> Unit) {
+        if (flow.isValid) {
+            action()
+        } else if (!flow.isAllComputed) {
+            if (isWaitingForValidityResult.compareAndSet(false, true)) {
+                launchInViewModelScope {
+                    val value = flow.waitForAllComputed()
+                    isWaitingForValidityResult.set(false)
+
+                    if (value) {
+                        action()
+                    }
+                }
+            }
+        }
+    }
+
+    protected inline fun launchInViewModelScope(crossinline action: suspend () -> Unit) {
+        vm.viewModelScope.launch(coroutineContext) {
+            action()
+        }
+    }
+
     companion object {
         protected val SUCCESS = Any()
     }
@@ -73,6 +98,10 @@ abstract class NoArgumentViewModelAction(
         runInternal { invokeAction() }
     }
 
+    fun runWhenValid(flow: ValidityFlow) {
+        runWhenValidInternal(flow, ::run)
+    }
+
     protected abstract suspend fun invokeAction()
 }
 
@@ -83,6 +112,10 @@ abstract class SingleArgumentViewModelAction<T>(
 ) : ViewModelAction(vm, coroutineContext, logTag) {
     fun run(arg: T) {
         runInternal { invokeAction(arg) }
+    }
+
+    fun runWhenValid(flow: ValidityFlow, arg: T) {
+        runWhenValidInternal(flow) { run(arg) }
     }
 
     protected abstract suspend fun invokeAction(arg: T)
@@ -97,6 +130,10 @@ abstract class TwoArgumentViewModelAction<T1, T2>(
         runInternal { invokeAction(arg1, arg2) }
     }
 
+    fun runWhenValid(flow: ValidityFlow, arg1: T1, arg2: T2) {
+        runWhenValidInternal(flow) { run(arg1, arg2) }
+    }
+
     protected abstract suspend fun invokeAction(arg1: T1, arg2: T2)
 }
 
@@ -107,6 +144,10 @@ abstract class ThreeArgumentViewModelAction<T1, T2, T3>(
 ) : ViewModelAction(vm, coroutineContext, logTag) {
     fun run(arg1: T1, arg2: T2, arg3: T3) {
         runInternal { invokeAction(arg1, arg2, arg3) }
+    }
+
+    fun runWhenValid(flow: ValidityFlow, arg1: T1, arg2: T2, arg3: T3) {
+        runWhenValidInternal(flow) { run(arg1, arg2, arg3) }
     }
 
     protected abstract suspend fun invokeAction(arg1: T1, arg2: T2, arg3: T3)
