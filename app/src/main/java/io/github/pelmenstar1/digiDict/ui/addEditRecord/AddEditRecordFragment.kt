@@ -14,13 +14,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
+import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -167,18 +167,7 @@ class AddEditRecordFragment : Fragment() {
                     addRecordSearchExpression.isEnabled = it == null
                 }
 
-                launchFlowCollector(vm.validity) { value ->
-                    val isComputed = (value and AddEditRecordViewModel.VALIDITY_COMPUTED_BIT) != 0
-                    val isEnabled = if (isComputed) {
-                        value == AddEditRecordViewModel.ALL_VALID_MASK
-                    } else {
-                        // To avoid add button blinking when the checking takes too long
-                        // we make the button visually enabled but logically disabled. It's handled in the viewmodel.
-                        true
-                    }
-
-                    addRecordAddButton.isEnabled = isEnabled
-                }
+                addRecordAddButton.setEnabledWhenValid(vm.validity, lifecycleScope)
             }
         }
     }
@@ -188,11 +177,8 @@ class AddEditRecordFragment : Fragment() {
 
         binding.addRecordMeaningListInteraction.also {
             it.onErrorStateChanged = { isError ->
-                vm.validity.update { prevValue ->
-                    prevValue.withBit(
-                        AddEditRecordViewModel.MEANING_VALIDITY_BIT,
-                        !isError
-                    )
+                vm.validity.mutate {
+                    set(AddEditRecordViewModel.meaningValidityField, !isError)
                 }
             }
 

@@ -146,6 +146,14 @@ class FixedBitSet : Parcelable {
     }
 }
 
+fun nBitsSet(n: Int): Int {
+    if (n == 32) {
+        return -1
+    }
+
+    return ((-1) shl n).inv()
+}
+
 fun Int.withBit(mask: Int, state: Boolean): Int {
     return if (state) this or mask else this and mask.inv()
 }
@@ -156,6 +164,7 @@ fun Int?.withBit(mask: Int, state: Boolean): Int {
     return value.withBit(mask, state)
 }
 
+// TODO: Delete it
 fun MutableStateFlow<Int?>.withBitNullable(mask: Int, state: Boolean) {
     update { it.withBit(mask, state) }
 }

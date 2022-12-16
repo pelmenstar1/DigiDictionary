@@ -8,6 +8,19 @@ import kotlin.test.assertTrue
 
 class BitsTest {
     @Test
+    fun nBitsSetTest() {
+        fun testCase(n: Int, expected: Int) {
+            val actual = nBitsSet(n)
+            assertEquals(expected, actual)
+        }
+
+        testCase(n = 1, expected = 0b1)
+        testCase(n = 5, expected = 0b1_1111)
+        testCase(n = 32, expected = -1)
+        testCase(n = 8, expected = 0b1111_1111)
+    }
+
+    @Test
     fun findPositionOfNthBitInLongTest() {
         fun testCase(value: Long, n: Int, expectedPosition: Int) {
             val actualPosition = value.findPositionOfNthSetBit(n)

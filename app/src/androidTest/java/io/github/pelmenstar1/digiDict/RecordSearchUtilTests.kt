@@ -114,7 +114,7 @@ class RecordSearchUtilTests {
     @Test
     fun filterPredicate() {
         fun testCase(expr: String, meaning: String, query: String) {
-            val record = ConciseRecord(id = 0, expr, meaning, score = 0)
+            val record = ConciseRecord(id = 0, expr, meaning, score = 0, epochSeconds = 0)
 
             assertTrue(RecordSearchUtil.filterPredicate(record, query))
         }
