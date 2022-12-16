@@ -13,7 +13,6 @@ import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleRes
 import io.github.pelmenstar1.digiDict.common.EmptyArray
-import io.github.pelmenstar1.digiDict.common.withAddedElement
 import io.github.pelmenstar1.digiDict.common.withAddedElements
 import java.util.*
 
@@ -171,14 +170,6 @@ class ColorPaletteView @JvmOverloads constructor(
     fun addColors(values: IntArray) {
         colors = colors.withAddedElements(values)
         values.forEach(::addColorInternal)
-    }
-
-    /**
-     * Adds the specified color to the palette. It's not checked, but all colors in the palette are expected to be unique.
-     */
-    fun addColor(@ColorInt color: Int) {
-        colors = colors.withAddedElement(color)
-        addColorInternal(color)
     }
 
     private fun addColorInternal(@ColorInt color: Int) {

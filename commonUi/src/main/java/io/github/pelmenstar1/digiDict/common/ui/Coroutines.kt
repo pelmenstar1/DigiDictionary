@@ -1,14 +1,9 @@
 package io.github.pelmenstar1.digiDict.common.ui
 
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import io.github.pelmenstar1.digiDict.common.showLifecycleAwareSnackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
@@ -29,30 +24,5 @@ fun CoroutineScope.launchSetEnabledFlowCollector(view: View, flow: Flow<Boolean>
 fun <T> CoroutineScope.launchSetEnabledIfEquals(view: View, value: T, flow: Flow<T>) {
     launchFlowCollector(flow) {
         view.isEnabled = it == value
-    }
-}
-
-/**
- * Launches flow collector which shows snackbar on each message.
- *
- * @param flow flow which consists of enum [T] describing a message
- * @param messageMapper used to convert value [T] to string
- * @param container container in which show snackbar
- */
-fun <T : Enum<T>> LifecycleOwner.launchMessageFlowCollector(
-    flow: Flow<T?>,
-    messageMapper: MessageMapper<in T>,
-    container: ViewGroup?
-) {
-    if (container != null) {
-        lifecycleScope.launchFlowCollector(flow) { type ->
-            if (type != null) {
-                val message = messageMapper.map(type)
-
-                Snackbar.make(container, message, Snackbar.LENGTH_LONG).also {
-                    it.showLifecycleAwareSnackbar(lifecycle)
-                }
-            }
-        }
     }
 }

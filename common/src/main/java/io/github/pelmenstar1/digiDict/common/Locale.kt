@@ -9,7 +9,6 @@ fun interface LocaleProvider {
 
     companion object {
         fun fromContext(context: Context) = LocaleProvider { context.getLocaleCompat() }
-        fun fromValue(value: Locale) = LocaleProvider { value }
     }
 }
 

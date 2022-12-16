@@ -2,8 +2,6 @@ package io.github.pelmenstar1.digiDict.common
 
 import android.os.Parcel
 import android.os.Parcelable
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import java.util.*
 
 class FixedBitSet : Parcelable {
@@ -156,17 +154,6 @@ fun nBitsSet(n: Int): Int {
 
 fun Int.withBit(mask: Int, state: Boolean): Int {
     return if (state) this or mask else this and mask.inv()
-}
-
-fun Int?.withBit(mask: Int, state: Boolean): Int {
-    val value = this ?: 0
-
-    return value.withBit(mask, state)
-}
-
-// TODO: Delete it
-fun MutableStateFlow<Int?>.withBitNullable(mask: Int, state: Boolean) {
-    update { it.withBit(mask, state) }
 }
 
 // Finds such a position S, that range [0; S] of bitSet has N set bits.

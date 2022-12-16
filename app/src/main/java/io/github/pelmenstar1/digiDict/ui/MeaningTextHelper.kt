@@ -7,10 +7,7 @@ import io.github.pelmenstar1.digiDict.common.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.parsePositiveInt
 
 object MeaningTextHelper {
-    class FormatException : Exception {
-        constructor(message: String) : super(message)
-        constructor(message: String, cause: Throwable?) : super(message, cause)
-    }
+    class FormatException(message: String, cause: Throwable?) : Exception(message, cause)
 
     private const val TAG = "MeaningTextHelper"
 

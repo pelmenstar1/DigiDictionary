@@ -65,7 +65,6 @@ private inline fun paddedFourDigitHelper(number: Int, block: (d1: Char, d2: Char
     block('0' + d1, '0' + d2, '0' + d3, '0' + d4)
 }
 
-
 fun StringBuilder.appendPaddedFourDigit(number: Int) {
     paddedFourDigitHelper(number) { d1, d2, d3, d4 ->
         append(d1)

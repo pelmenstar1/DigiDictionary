@@ -6,17 +6,6 @@ interface SizedIterable<out T> : Iterable<T> {
     val size: Int
 }
 
-fun <T> Array<out T>.asSizedIterable(): SizedIterable<T> {
-    val array = this
-
-    return object : SizedIterable<T> {
-        override val size: Int
-            get() = array.size
-
-        override fun iterator() = array.iterator()
-    }
-}
-
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
     return arrayOfNulls<T>(size) as Array<T>
