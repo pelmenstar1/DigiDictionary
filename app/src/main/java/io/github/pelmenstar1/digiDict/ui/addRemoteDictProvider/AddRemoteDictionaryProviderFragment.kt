@@ -16,6 +16,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddRemoteDictProviderBinding
 import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
@@ -49,19 +50,10 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         val schemaInputLayout = binding.addRemoteDictProviderSchemaInputLayout
 
         lifecycleScope.run {
+            addButton.setEnabledWhenValid(vm.validityFlow, scope = this)
+
             launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageMapper)
             launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageMapper)
-
-            launchFlowCollector(vm.validityFlow) { validity ->
-                val computedMask = AddRemoteDictionaryProviderViewModel.COMPUTED_MASK
-                addButton.isEnabled = if ((validity and computedMask) == computedMask) {
-                    validity == AddRemoteDictionaryProviderViewModel.ALL_VALID_MASK
-                } else {
-                    // To avoid add button blinking when the checking takes too long
-                    // we make the button visually enabled but logically disabled. It's correctly handled in the view-model.
-                    true
-                }
-            }
 
             launchFlowCollector(vm.isInputEnabledFlow) { isEnabled ->
                 nameInputLayout.isEnabled = isEnabled

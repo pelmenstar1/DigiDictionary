@@ -14,11 +14,11 @@ fun View.setEnabledWhenValid(flow: ValidityFlow, scope: CoroutineScope) {
             val scheme = flow.scheme
 
             isEnabled = if (ValidityFlow.isAllComputed(bits, scheme)) {
-                ValidityFlow.isValid(bits, scheme)
+                ValidityFlow.isAllValid(bits, scheme)
             } else {
                 // To avoid add button blinking when the checking takes too long
                 // we make the button visually enabled if all fields except not computed ones are valid.
-                ValidityFlow.isValidExceptNotComputedFields(bits, scheme)
+                ValidityFlow.isAllValidExceptNotComputedFields(bits, scheme)
             }
         }
     }

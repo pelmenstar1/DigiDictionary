@@ -4,9 +4,8 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.common.ExclusiveWaitHandleForFlowCondition
+import io.github.pelmenstar1.digiDict.common.ValidityFlow
 import io.github.pelmenstar1.digiDict.common.viewModelAction
-import io.github.pelmenstar1.digiDict.common.withBit
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import kotlinx.coroutines.CancellationException
@@ -15,7 +14,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -35,25 +33,14 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     private val _isInputsEnabled = MutableStateFlow(true)
 
-    // As name and schema is empty by default,
-    // they're invalid but they're computed (the state won't be changed for particular name and schema)
-    internal val _validityFlow = MutableStateFlow(NAME_COMPUTED_VALIDITY_BIT or SCHEMA_COMPUTED_VALIDITY_BIT)
+    val validityFlow = ValidityFlow(validityScheme)
 
     private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
     private val isCheckValueJobStarted = AtomicBoolean()
 
-    private val addWaitHandle = ExclusiveWaitHandleForFlowCondition(
-        viewModelScope,
-        _validityFlow,
-        stopExclusiveCondition = { (it and COMPUTED_MASK) == COMPUTED_MASK },
-        runActionCondition = { it == ALL_VALID_MASK },
-        action = { addAction.run() }
-    )
-
     val nameErrorFlow = _nameErrorFlow.asStateFlow()
     val schemaErrorFlow = _schemaErrorFlow.asStateFlow()
     val isInputEnabledFlow = _isInputsEnabled.asStateFlow()
-    val validityFlow = _validityFlow.asStateFlow()
 
     val addAction = viewModelAction(TAG) {
         val newProvider = RemoteDictionaryProviderInfo(
@@ -92,8 +79,10 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     }
 
     fun restartValidityCheck() {
-        // Disable all the bits. The validity of name and schema is not valid, nor computed.
-        _validityFlow.value = 0
+        validityFlow.mutate {
+            disable(nameValidityField, isComputed = false)
+            disable(schemaValidityField, isComputed = false)
+        }
 
         startCheckValueJobIfNecessary()
         checkValueChannel.run {
@@ -104,9 +93,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     }
 
     private fun scheduleCheckValue(type: Int, value: String) {
-        _validityFlow.update {
-            it.withBit(valueValidityMask(type), false)
-                .withBit(valueValidityComputedMask(type), false)
+        validityFlow.mutate {
+            disable(getValidityField(type), isComputed = false)
         }
 
         startCheckValueJobIfNecessary()
@@ -116,13 +104,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     }
 
     fun add() {
-        val validity = _validityFlow.value
-
-        if (validity == ALL_VALID_MASK) {
-            addAction.run()
-        } else if ((validity and COMPUTED_MASK) != COMPUTED_MASK) {
-            addWaitHandle.runAction()
-        }
+        addAction.runWhenValid(validityFlow)
     }
 
     private fun startCheckValueJobIfNecessary() {
@@ -147,8 +129,11 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                 _nameErrorFlow.value = null
                 _schemaErrorFlow.value = null
 
-                // Unset all validity bits in order to disable "Add" button
-                _validityFlow.value = 0
+                // Disable all validity fields in order to disable "Add" button
+                validityFlow.mutate {
+                    disable(nameValidityField, isComputed = true)
+                    disable(schemaValidityField, isComputed = true)
+                }
 
                 if (e !is CancellationException) {
                     validityCheckErrorFlow.emit(e)
@@ -199,9 +184,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                 }
 
                 errorFlow.value = error
-                _validityFlow.update {
-                    it.withBit(valueValidityMask(type), error == null)
-                        .withBit(valueValidityComputedMask(type), true)
+                validityFlow.mutate {
+                    set(getValidityField(type), error == null, isComputed = true)
                 }
             }
         }
@@ -211,20 +195,18 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     companion object {
         private const val TAG = "AddRDP_VM"
 
-        private const val TYPE_COUNT = 2
         private const val TYPE_NAME = 0
         private const val TYPE_SCHEMA = 1
 
-        const val NAME_VALIDITY_BIT = 1 shl TYPE_NAME
-        const val SCHEMA_VALIDITY_BIT = 1 shl TYPE_SCHEMA
+        val nameValidityField = ValidityFlow.Field(ordinal = 0)
+        val schemaValidityField = ValidityFlow.Field(ordinal = 1)
 
-        const val NAME_COMPUTED_VALIDITY_BIT = 1 shl (TYPE_NAME + TYPE_COUNT)
-        const val SCHEMA_COMPUTED_VALIDITY_BIT = 1 shl (TYPE_SCHEMA + TYPE_COUNT)
+        private val validityScheme = ValidityFlow.Scheme(nameValidityField, schemaValidityField)
 
-        const val COMPUTED_MASK = NAME_COMPUTED_VALIDITY_BIT or SCHEMA_COMPUTED_VALIDITY_BIT
-        const val ALL_VALID_MASK = 0xF
-
-        fun valueValidityMask(type: Int) = 1 shl type
-        fun valueValidityComputedMask(type: Int) = 1 shl (type + TYPE_COUNT)
+        internal fun getValidityField(type: Int) = when (type) {
+            TYPE_NAME -> nameValidityField
+            TYPE_SCHEMA -> schemaValidityField
+            else -> throw IllegalArgumentException("type")
+        }
     }
 }

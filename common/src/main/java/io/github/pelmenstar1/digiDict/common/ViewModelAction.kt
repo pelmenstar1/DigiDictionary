@@ -62,12 +62,12 @@ sealed class ViewModelAction(
     }
 
     protected inline fun runWhenValidInternal(flow: ValidityFlow, crossinline action: () -> Unit) {
-        if (flow.isValid) {
+        if (flow.isAllValid) {
             action()
         } else if (!flow.isAllComputed) {
             if (isWaitingForValidityResult.compareAndSet(false, true)) {
                 launchInViewModelScope {
-                    val value = flow.waitForAllComputed()
+                    val value = flow.waitForAllComputedAndReturnIsAllValid()
                     isWaitingForValidityResult.set(false)
 
                     if (value) {
