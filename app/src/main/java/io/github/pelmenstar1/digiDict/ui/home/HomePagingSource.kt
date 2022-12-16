@@ -8,10 +8,9 @@ import androidx.room.withTransaction
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.data.RecordTable
 
 class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int, HomePageItem>() {
-    private val observer = object : InvalidationTracker.Observer(TABLE_NAME_ARRAY) {
+    private val observer = object : InvalidationTracker.Observer(TABLES) {
         override fun onInvalidated(tables: MutableSet<String>) {
             invalidate()
         }
@@ -30,7 +29,7 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
     }
 
     private fun queryItemCount(): Int {
-        val countStatement = appDatabase.compileStatement("SELECT COUNT(*) FROM $TABLE_NAME")
+        val countStatement = appDatabase.compileStatement("SELECT COUNT(*) FROM records")
 
         return countStatement.use {
             it.simpleQueryForLong().toInt()
@@ -151,9 +150,8 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
     }
 
     companion object {
-        private const val TABLE_NAME = RecordTable.name
         private const val TAG = "HomeDataSource"
 
-        private val TABLE_NAME_ARRAY = arrayOf(TABLE_NAME)
+        private val TABLES = arrayOf("records", "record_badges", "record_to_badge_relations")
     }
 }
