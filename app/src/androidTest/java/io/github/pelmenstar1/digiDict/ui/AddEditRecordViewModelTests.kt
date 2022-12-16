@@ -173,6 +173,7 @@ class AddEditRecordViewModelTests {
             val actualRecord = vm.currentRecordStateFlow.firstSuccess()
 
             assertEquals(expectedRecord, actualRecord)
+            assertTrue(vm.validity.isAllValid)
         }
     }
 

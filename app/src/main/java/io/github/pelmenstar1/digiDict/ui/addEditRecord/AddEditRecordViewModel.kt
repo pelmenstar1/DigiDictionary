@@ -61,7 +61,10 @@ class AddEditRecordViewModel @Inject constructor(
                 // wrong with the state because the record id is pointing to just can't be deleted when the logic is loading it.
                 val currentRecord = recordDao.getRecordWithBadgesById(id)!!
 
-                validity.mutate { enable(expressionValidityField) }
+                validity.mutate {
+                    enable(expressionValidityField)
+                    enable(meaningValidityField)
+                }
 
                 startCheckExpressionJob()
 
