@@ -12,8 +12,8 @@
     <dimen name="colorPalette_titleStartMargin">10dp</dimen>
     <dimen name="colorPalette_titleTextSize">13.5sp</dimen>
     <dimen name="colorPalette_titleHorizontalPadding">5dp</dimen>
-    <dimen name="colorPalette_padding">10dp</dimen>
     <dimen name="colorPalette_paddingTop">17dp</dimen>
+    <dimen name="colorPalette_paddingBottom">10dp</dimen>
 
     <dimen name="settingItemContainer_iconSize">32dp</dimen>
     <dimen name="settingItemContainer_padding">10dp</dimen>

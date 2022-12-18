@@ -157,13 +157,14 @@ class ColorPaletteView @JvmOverloads constructor(
 
     init {
         setWillNotDraw(false)
+        horizontalAlignment = ALIGNMENT_CENTER
 
         val res = context.resources
 
-        val padding = res.getDimensionPixelOffset(R.dimen.colorPalette_padding)
         val paddingTop = res.getDimensionPixelOffset(R.dimen.colorPalette_paddingTop)
+        val paddingBottom = res.getDimensionPixelOffset(R.dimen.colorPalette_paddingBottom)
 
-        setPadding(padding, paddingTop, padding, padding)
+        setPadding(0, paddingTop, 0, paddingBottom)
 
         res.getDimension(R.dimen.colorPalette_cellRoundRadius).also { radius ->
             cellRoundRadii = FloatArray(8).also { radii ->
