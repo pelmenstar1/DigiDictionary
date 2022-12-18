@@ -1,8 +1,10 @@
 package io.github.pelmenstar1.digiDict.common
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.TypedValue
+import androidx.annotation.ColorInt
 import androidx.core.content.res.ResourcesCompat
 
 fun Context.getSelectableItemBackground(): Drawable? {
@@ -16,5 +18,17 @@ fun Context.getSelectableItemBackground(): Drawable? {
         ResourcesCompat.getDrawable(resources, typedValue.resourceId, theme)
     } else {
         null
+    }
+}
+
+@ColorInt
+fun Context.getPrimaryColor(): Int {
+    val typedValue = TypedValue()
+    val isResolved = theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
+
+    return if (isResolved) {
+        typedValue.data
+    } else {
+        Color.TRANSPARENT
     }
 }

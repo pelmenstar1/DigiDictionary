@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="3dp"
-            android:text="@string/addEditRecord_outlineColorPrefix" />
+            android:text="@string/addEditRecord_outlineColor" />
 
         <io.github.pelmenstar1.digiDict.common.ui.ColorPaletteView
             android:id="@+id/addBadgeDialog_colorPalette"
@@ -41,7 +41,8 @@
             android:layout_marginHorizontal="10dp"
             android:layout_marginTop="5dp"
             app:colors="@array/add_edit_badge_dialog_outline_colors"
-            app:strokeColor="@color/add_edit_badge_dialog_color_palette_stroke_color" />
+            app:strokeColor="@color/add_edit_badge_dialog_color_palette_stroke_color"
+            app:title="@string/addEditRecord_outlineColor" />
 
         <Button
             android:id="@+id/addBadgeDialog_addButton"

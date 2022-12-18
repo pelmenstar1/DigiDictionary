@@ -5,8 +5,15 @@
 
     <dimen name="colorPalette_spacing">4dp</dimen>
     <dimen name="colorPalette_cellSize">40dp</dimen>
-    <dimen name="colorPalette_strokeWidth">1.5dp</dimen>
+    <dimen name="colorPalette_cellStrokeWidth">1.5dp</dimen>
     <dimen name="colorPalette_cellRoundRadius">2dp</dimen>
+    <dimen name="colorPalette_outlineStrokeWith">2dp</dimen>
+    <dimen name="colorPalette_outlineRoundRadius">3dp</dimen>
+    <dimen name="colorPalette_titleStartMargin">10dp</dimen>
+    <dimen name="colorPalette_titleTextSize">13.5sp</dimen>
+    <dimen name="colorPalette_titleHorizontalPadding">5dp</dimen>
+    <dimen name="colorPalette_padding">10dp</dimen>
+    <dimen name="colorPalette_paddingTop">17dp</dimen>
 
     <dimen name="settingItemContainer_iconSize">32dp</dimen>
     <dimen name="settingItemContainer_padding">10dp</dimen>

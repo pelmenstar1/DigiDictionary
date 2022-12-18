@@ -3,6 +3,9 @@ package io.github.pelmenstar1.digiDict.common.ui
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Region
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -12,7 +15,9 @@ import android.view.View.OnClickListener
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleRes
+import androidx.core.graphics.withSave
 import io.github.pelmenstar1.digiDict.common.EmptyArray
+import io.github.pelmenstar1.digiDict.common.getPrimaryColor
 import io.github.pelmenstar1.digiDict.common.withAddedElements
 import java.util.*
 
@@ -84,9 +89,8 @@ class ColorPaletteView @JvmOverloads constructor(
 
             val sw = strokeWidth
             val hsw = sw * 0.5f
-            val dsw = sw * 2f
 
-            canvas.drawOval(dsw, dsw, w - dsw, h - dsw, fillPaint)
+            canvas.drawOval(0f, 0f, w, h, fillPaint)
             if (isCellSelected) {
                 canvas.drawOval(hsw, hsw, w - hsw, h - hsw, strokePaint)
             }
@@ -101,7 +105,30 @@ class ColorPaletteView @JvmOverloads constructor(
     private val cellRoundRadii: FloatArray
     private val cellStrokeWidth: Float
 
+    private val outlinePaint: Paint
+    private val titlePaint: Paint
+
+    private val outlineRoundRadius: Float
+    private val outlineStrokeWidth: Float
+    private val titleStartMargin: Float
+    private val titleHorizontalPadding: Float
+
+    private var titleWidth = 0f
+    private var titleHeight = 0f
+    private val tempRect = Rect()
+
     private var colors = EmptyArray.INT
+
+    var title: String = ""
+        set(value) {
+            field = value
+
+            titlePaint.getTextBounds(value, 0, value.length, tempRect)
+            titleWidth = tempRect.width().toFloat()
+            titleHeight = tempRect.height().toFloat()
+
+            invalidate()
+        }
 
     val selectedColor: Int
         get() = colors[selectedIndex]
@@ -129,22 +156,46 @@ class ColorPaletteView @JvmOverloads constructor(
         }
 
     init {
-        with(context.resources) {
-            getDimension(R.dimen.colorPalette_cellRoundRadius).also { radius ->
-                cellRoundRadii = FloatArray(8).also { radii ->
-                    Arrays.fill(radii, radius)
-                }
-            }
+        setWillNotDraw(false)
 
-            val spacing = getDimensionPixelOffset(R.dimen.colorPalette_spacing)
-            getDimensionPixelSize(R.dimen.colorPalette_cellSize).also { size ->
-                cellLayoutParams = MarginLayoutParams(size, size).also {
-                    it.marginEnd = spacing
-                    it.bottomMargin = spacing
-                }
-            }
+        val res = context.resources
 
-            cellStrokeWidth = getDimension(R.dimen.colorPalette_strokeWidth)
+        val padding = res.getDimensionPixelOffset(R.dimen.colorPalette_padding)
+        val paddingTop = res.getDimensionPixelOffset(R.dimen.colorPalette_paddingTop)
+
+        setPadding(padding, paddingTop, padding, padding)
+
+        res.getDimension(R.dimen.colorPalette_cellRoundRadius).also { radius ->
+            cellRoundRadii = FloatArray(8).also { radii ->
+                Arrays.fill(radii, radius)
+            }
+        }
+
+        val spacing = res.getDimensionPixelOffset(R.dimen.colorPalette_spacing)
+        res.getDimensionPixelSize(R.dimen.colorPalette_cellSize).also { size ->
+            cellLayoutParams = MarginLayoutParams(size, size).also {
+                it.marginEnd = spacing
+                it.bottomMargin = spacing
+            }
+        }
+
+        cellStrokeWidth = res.getDimension(R.dimen.colorPalette_cellStrokeWidth)
+        outlineRoundRadius = res.getDimension(R.dimen.colorPalette_outlineRoundRadius)
+        outlineStrokeWidth = res.getDimension(R.dimen.colorPalette_outlineStrokeWith)
+        titleStartMargin = res.getDimension(R.dimen.colorPalette_titleStartMargin)
+        titleHorizontalPadding = res.getDimension(R.dimen.colorPalette_titleHorizontalPadding)
+
+        val primaryColor = context.getPrimaryColor()
+
+        outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            color = primaryColor
+            strokeWidth = outlineStrokeWidth
+        }
+
+        titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = primaryColor
+            textSize = res.getDimension(R.dimen.colorPalette_titleTextSize)
         }
 
         attrs?.let {
@@ -158,6 +209,10 @@ class ColorPaletteView @JvmOverloads constructor(
                 }
 
                 cellStrokeColor = a.getColor(R.styleable.ColorPaletteView_strokeColor, 0)
+
+                a.getString(R.styleable.ColorPaletteView_title)?.also { t ->
+                    title = t
+                }
             } finally {
                 a.recycle()
             }
@@ -215,6 +270,39 @@ class ColorPaletteView @JvmOverloads constructor(
 
     private fun setCellSelectedStateAt(index: Int, value: Boolean) {
         getTypedViewAt<CellView>(index).isCellSelected = value
+    }
+
+    override fun onDraw(c: Canvas) {
+        super.onDraw(c)
+
+        drawOutlineAndTitle(c)
+    }
+
+    private fun drawOutlineAndTitle(c: Canvas) {
+        val w = width.toFloat()
+        val h = height.toFloat()
+        val rr = outlineRoundRadius
+        val sw = outlineStrokeWidth
+
+        val hPadding = titleHorizontalPadding
+        val startMargin = titleStartMargin
+
+        c.withSave {
+            val clipLeft = startMargin + hPadding
+            val clipRight = startMargin + titleWidth + hPadding * 2
+            val clipBottom = titleHeight
+
+            if (Build.VERSION.SDK_INT >= 26) {
+                c.clipOutRect(clipLeft, 0f, clipRight, clipBottom)
+            } else {
+                @Suppress("DEPRECATION")
+                c.clipRect(clipLeft, 0f, clipRight, clipBottom, Region.Op.DIFFERENCE)
+            }
+
+            c.drawRoundRect(sw, titleHeight * 0.5f, w - sw, h - sw, rr, rr, outlinePaint)
+        }
+
+        c.drawText(title, startMargin + hPadding, titleHeight, titlePaint)
     }
 
     override fun onSaveInstanceState(): Parcelable {

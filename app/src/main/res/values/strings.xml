@@ -78,7 +78,7 @@
     <string name="addEditRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
     <string name="addEditRecord_exprNoLetterOrDigit">Expression should contain at least one letter or digit</string>
     <string name="addEditRecord_meaningNoLetterOrDigit">Meaning should contain at least one letter or digit</string>
-    <string name="addEditRecord_outlineColorPrefix">Outline color: </string>
+    <string name="addEditRecord_outlineColor">Outline color</string>
     <string name="addEditRecord_doNotChangeCreationTime">Don\'t change creation time</string>
 
     <string name="badgeInteraction_badge">Badge</string>
