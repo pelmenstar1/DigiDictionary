@@ -221,17 +221,15 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     /**
-     * Adds multiple colors to the palette. It's not checked, but all colors in the palette are expected to be unique.
+     * Adds multiple colors to the palette.
+     * It's not checked, but all colors in the palette are expected to be unique.
      */
     fun addColors(values: IntArray) {
         colors = colors.withAddedElements(values)
-        values.forEach(::addColorInternal)
-    }
 
-    private fun addColorInternal(@ColorInt color: Int) {
-        val index = childCount
-
-        addView(createCellView(color, index))
+        for (i in values.indices) {
+            addView(createCellView(values[i], childCount))
+        }
     }
 
     private fun createCellView(@ColorInt color: Int, index: Int): View {
