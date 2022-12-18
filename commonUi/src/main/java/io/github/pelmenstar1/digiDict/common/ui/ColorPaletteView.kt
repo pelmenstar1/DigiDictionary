@@ -102,7 +102,6 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     private val cellLayoutParams: LayoutParams
-    private val cellRoundRadii: FloatArray
     private val cellStrokeWidth: Float
 
     private val outlinePaint: Paint
@@ -165,12 +164,6 @@ class ColorPaletteView @JvmOverloads constructor(
         val paddingBottom = res.getDimensionPixelOffset(R.dimen.colorPalette_paddingBottom)
 
         setPadding(0, paddingTop, 0, paddingBottom)
-
-        res.getDimension(R.dimen.colorPalette_cellRoundRadius).also { radius ->
-            cellRoundRadii = FloatArray(8).also { radii ->
-                Arrays.fill(radii, radius)
-            }
-        }
 
         val spacing = res.getDimensionPixelOffset(R.dimen.colorPalette_spacing)
         res.getDimensionPixelSize(R.dimen.colorPalette_cellSize).also { size ->
