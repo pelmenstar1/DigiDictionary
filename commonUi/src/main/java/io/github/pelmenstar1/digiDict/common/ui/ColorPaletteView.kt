@@ -141,8 +141,7 @@ class ColorPaletteView @JvmOverloads constructor(
             val w = width.toFloat()
             val h = height.toFloat()
 
-            val sw = strokeWidth
-            val hsw = sw * 0.5f
+            val hsw = strokeWidth * 0.5f
 
             canvas.drawOval(0f, 0f, w, h, fillPaint)
 
