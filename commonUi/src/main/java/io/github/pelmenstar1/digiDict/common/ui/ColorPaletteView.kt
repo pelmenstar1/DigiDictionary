@@ -10,6 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.AbsSavedState
+import android.view.Choreographer
 import android.view.View
 import android.view.View.OnClickListener
 import androidx.annotation.AttrRes
@@ -56,6 +57,16 @@ class ColorPaletteView @JvmOverloads constructor(
             style = Paint.Style.STROKE
         }
 
+        private var selectionAnimStartTime = 0L
+        private var selectionAnimIsForward = true
+        private var selectionAnimIsRunning = false
+
+        private val selectionAnimCallback = Choreographer.FrameCallback { currentTime ->
+            val elapsed = currentTime - selectionAnimStartTime
+
+            onSelectionAnimationFrame(elapsed)
+        }
+
         var fillColor: Int
             get() = fillPaint.color
             set(value) {
@@ -79,9 +90,52 @@ class ColorPaletteView @JvmOverloads constructor(
 
         var isCellSelected: Boolean = false
             set(value) {
-                field = value
-                invalidate()
+                if (field != value) {
+                    field = value
+
+                    startCellSelectionAnimation(isForward = value)
+                }
             }
+
+        var selectionAnimationDuration: Long = 0
+
+        private fun startCellSelectionAnimation(isForward: Boolean) {
+            selectionAnimIsForward = isForward
+
+            // Let the animation run if it already does
+            if (!selectionAnimIsRunning) {
+                selectionAnimIsRunning = true
+                selectionAnimStartTime = System.nanoTime()
+
+                if (isForward) {
+                    strokePaint.alpha = 0
+                }
+
+                choreographer.postFrameCallback(selectionAnimCallback)
+            }
+        }
+
+        private fun onSelectionAnimationFrame(elapsedNs: Long) {
+            val durationNs = selectionAnimationDuration * 1_000_000
+
+            if (elapsedNs < durationNs) {
+                var alpha = ((elapsedNs * 255) / durationNs).toInt()
+
+                if (!selectionAnimIsForward) {
+                    alpha = 255 - alpha
+                }
+
+                strokePaint.alpha = alpha
+
+                choreographer.postFrameCallback(selectionAnimCallback)
+            } else {
+                selectionAnimIsRunning = false
+
+                strokePaint.alpha = if (selectionAnimIsForward) 255 else 0
+            }
+
+            invalidate()
+        }
 
         override fun onDraw(canvas: Canvas) {
             val w = width.toFloat()
@@ -91,9 +145,14 @@ class ColorPaletteView @JvmOverloads constructor(
             val hsw = sw * 0.5f
 
             canvas.drawOval(0f, 0f, w, h, fillPaint)
-            if (isCellSelected) {
+
+            if (isCellSelected || selectionAnimIsRunning) {
                 canvas.drawOval(hsw, hsw, w - hsw, h - hsw, strokePaint)
             }
+        }
+
+        companion object {
+            private val choreographer = Choreographer.getInstance()
         }
     }
 
@@ -111,6 +170,8 @@ class ColorPaletteView @JvmOverloads constructor(
     private val outlineStrokeWidth: Float
     private val titleStartMargin: Float
     private val titleHorizontalPadding: Float
+
+    private val cellSelectionAnimationDuration: Int
 
     private var titleWidth = 0f
     private var titleHeight = 0f
@@ -179,6 +240,8 @@ class ColorPaletteView @JvmOverloads constructor(
         titleStartMargin = res.getDimension(R.dimen.colorPalette_titleStartMargin)
         titleHorizontalPadding = res.getDimension(R.dimen.colorPalette_titleHorizontalPadding)
 
+        cellSelectionAnimationDuration = res.getInteger(R.integer.colorPalette_cellSelectionAnimationDuration)
+
         val primaryColor = context.getPrimaryColor()
 
         outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -232,6 +295,7 @@ class ColorPaletteView @JvmOverloads constructor(
             fillColor = color
             strokeWidth = cellStrokeWidth
             strokeColor = cellStrokeColor
+            selectionAnimationDuration = cellSelectionAnimationDuration.toLong()
             tag = index
 
             setOnClickListener(cellOnClickListener)
