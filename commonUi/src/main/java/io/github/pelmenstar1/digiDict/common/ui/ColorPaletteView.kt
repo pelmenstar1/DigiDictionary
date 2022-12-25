@@ -28,6 +28,10 @@ class ColorPaletteView @JvmOverloads constructor(
     @AttrRes defStyleAttr: Int = 0,
     @StyleRes defStyleRes: Int = 0
 ) : MultilineHorizontalLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
+    fun interface OnColorSelectedListener {
+        fun onSelected(@ColorInt color: Int)
+    }
+
     private class SavedState : AbsSavedState {
         var selectedIndex = -1
 
@@ -156,7 +160,9 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     private val cellOnClickListener = OnClickListener {
-        selectedIndex = it.tag as Int
+        val index = it.tag as Int
+
+        selectedIndex = index
     }
 
     private val cellLayoutParams: LayoutParams
@@ -203,6 +209,7 @@ class ColorPaletteView @JvmOverloads constructor(
             field = value
 
             setCellSelectedStateAt(value, true)
+            onColorSelectedListener?.onSelected(colors[value])
         }
 
     var cellStrokeColor = 0
@@ -213,6 +220,8 @@ class ColorPaletteView @JvmOverloads constructor(
                 getTypedViewAt<CellView>(i).strokeColor = value
             }
         }
+
+    var onColorSelectedListener: OnColorSelectedListener? = null
 
     init {
         setWillNotDraw(false)
@@ -302,16 +311,16 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     /**
-     * Selects specified [color] in the palette. Returns true if given color is actually found in the palette, otherwise false.
+     * Selects specified [color] in the palette.
+     * If specified [color] is not in the palette, selects the last color if there's at least one color.
      */
-    fun selectColor(@ColorInt color: Int): Boolean {
-        return colors.indexOf(color).let {
-            val found = it >= 0
-            if (found) {
-                selectedIndex = it
-            }
+    fun selectColorOrLast(@ColorInt color: Int) {
+        val index = colors.indexOf(color)
 
-            found
+        if (index >= 0) {
+            selectedIndex = index
+        } else if (colors.isNotEmpty()) {
+            selectedIndex = colors.size - 1
         }
     }
 

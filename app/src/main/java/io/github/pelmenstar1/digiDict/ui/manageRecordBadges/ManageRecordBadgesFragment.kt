@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,15 +33,13 @@ class ManageRecordBadgesFragment : Fragment() {
                         showDeleteWarningDialog(badge)
                     }
                     ManageRecordBadgesAdapter.ACTION_EDIT -> {
-                        showAddEditBadgeDialog(currentBadge = badge)
+                        navigateToAddEditBadgeFragment(currentBadgeId = badge.id)
                     }
                 }
             }
         )
 
         showSnackbarEventHandlerOnError(vm.removeAction, container, R.string.manageRecordBadges_removeError)
-        showSnackbarEventHandlerOnError(vm.addAction, container, R.string.manageRecordBadges_addError)
-        showSnackbarEventHandlerOnError(vm.updateAction, container, R.string.manageRecordBadges_editError)
 
         binding.manageRecordBadgesRecyclerView.also {
             it.adapter = adapter
@@ -53,48 +52,24 @@ class ManageRecordBadgesFragment : Fragment() {
         }
 
         binding.manageRecordBadgesAdd.also {
-            it.setOnClickListener { showAddEditBadgeDialog(currentBadge = null) }
+            it.setOnClickListener {
+                navigateToAddEditBadgeFragment(currentBadgeId = -1)
+            }
         }
 
-        initAddBadgeDialogIfShown()
-
         return binding.root
+    }
+
+    private fun navigateToAddEditBadgeFragment(currentBadgeId: Int) {
+        val directions =
+            ManageRecordBadgesFragmentDirections.actionManageRecordBadgesFragmentToAddEditBadgeFragment(currentBadgeId)
+
+        findNavController().navigate(directions)
     }
 
     private fun showDeleteWarningDialog(badge: RecordBadgeInfo) {
         showAlertDialog(messageId = R.string.manageRecordBadges_removeWarning) {
             viewModel.remove(badge)
         }
-    }
-
-    private fun showAddEditBadgeDialog(currentBadge: RecordBadgeInfo?) {
-        AddEditBadgeDialog().also {
-            initAddEditBadgeDialog(it)
-
-            it.arguments = AddEditBadgeDialog.args(currentBadge)
-            it.show(childFragmentManager, ADD_BADGE_DIALOG_TAG)
-        }
-    }
-
-    private fun initAddBadgeDialogIfShown() {
-        val fm = childFragmentManager
-
-        fm.findFragmentByTag(ADD_BADGE_DIALOG_TAG)?.also {
-            initAddEditBadgeDialog(it as AddEditBadgeDialog)
-        }
-    }
-
-    private fun initAddEditBadgeDialog(dialog: AddEditBadgeDialog) {
-        dialog.onSubmit = { badge ->
-            if (dialog.currentBadge != null) {
-                viewModel.update(badge)
-            } else {
-                viewModel.add(badge)
-            }
-        }
-    }
-
-    companion object {
-        private const val ADD_BADGE_DIALOG_TAG = "AddBadgeDialog"
     }
 }
