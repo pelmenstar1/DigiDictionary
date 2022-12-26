@@ -5,7 +5,7 @@
 
     <dimen name="colorPalette_cellSpacing">4dp</dimen>
     <dimen name="colorPalette_cellSize">40dp</dimen>
-    <dimen name="colorPalette_cellStrokeWidth">2dp</dimen>
+    <dimen name="colorPalette_cellStrokeWidth">1.75dp</dimen>
     <dimen name="colorPalette_outlineStrokeWith">2dp</dimen>
     <dimen name="colorPalette_outlineRoundRadius">3dp</dimen>
     <dimen name="colorPalette_titleStartMargin">10dp</dimen>

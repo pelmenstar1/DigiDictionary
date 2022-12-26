@@ -2,10 +2,7 @@ package io.github.pelmenstar1.digiDict.common.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.Region
+import android.graphics.*
 import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
@@ -17,6 +14,7 @@ import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleRes
 import androidx.core.graphics.withSave
+import androidx.core.graphics.withTranslation
 import io.github.pelmenstar1.digiDict.common.*
 import java.util.*
 
@@ -63,6 +61,9 @@ class ColorPaletteView @JvmOverloads constructor(
 
     private val cellFillPaint: Paint
     private val cellStrokePaint: Paint
+    private val cellStrokeShadowPaint: Paint
+
+    private var cellStrokeAlpha = 255
 
     private val outlinePaint: Paint
     private val outlineRoundRadius: Float
@@ -75,7 +76,6 @@ class ColorPaletteView @JvmOverloads constructor(
     private var titleWidth = 0f
     private var titleHeight = 0f
 
-    private val selectionAnimPrevCellStrokePaint: Paint
     private var selectionAnimPrevCellIndex = -1
     private val selectionAnimator: PrimitiveAnimator
 
@@ -110,8 +110,8 @@ class ColorPaletteView @JvmOverloads constructor(
             field = value
 
             cellStrokePaint.color = value
-            selectionAnimPrevCellStrokePaint.color = value
 
+            refreshCellStrokeShadowShader()
             invalidate()
         }
 
@@ -156,9 +156,8 @@ class ColorPaletteView @JvmOverloads constructor(
             strokeWidth = cellStrokeWidth
         }
 
-        selectionAnimPrevCellStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = cellStrokeWidth
+        cellStrokeShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
         }
 
         selectionAnimator = PrimitiveAnimator(::onSelectionAnimationTick).apply {
@@ -228,10 +227,26 @@ class ColorPaletteView @JvmOverloads constructor(
     private fun onSelectionAnimationTick(fraction: Float) {
         val alpha = (fraction * 255f + 0.5f).toInt()
 
-        cellStrokePaint.alpha = alpha
-        selectionAnimPrevCellStrokePaint.alpha = 255 - alpha
+        //cellStrokePaint.alpha = alpha
+        //selectionAnimPrevCellStrokePaint.alpha = 255 - alpha
+        cellStrokeAlpha = alpha
 
         invalidate()
+    }
+
+    private fun refreshCellStrokeShadowShader() {
+        val halfCellSize = cellSize * 0.5f
+
+        // There's nothing special about alpha of cellStrokeColor or stops.
+        // It's just hand-picked numbers to get a nice balance between
+        // shadow not being too noisy and shadow being noticeable.
+        cellStrokeShadowPaint.shader = RadialGradient(
+            halfCellSize, halfCellSize,
+            halfCellSize - cellStrokeWidth,
+            intArrayOf(Color.TRANSPARENT, cellStrokeColor.withAlpha(110)),
+            floatArrayOf(0.65f, 1f),
+            Shader.TileMode.CLAMP
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -349,7 +364,9 @@ class ColorPaletteView @JvmOverloads constructor(
         val cellSizeWithSpacing = cellSize + cellSpacing
 
         val fillPaint = cellFillPaint
+        val strokePaint = cellStrokePaint
 
+        val cellStrokeWidth = cellStrokeWidth
         val halfCellStrokeWidth = cellStrokeWidth * 0.5f
 
         var columnIndex = 0
@@ -370,19 +387,38 @@ class ColorPaletteView @JvmOverloads constructor(
             c.drawOval(cellLeft, cellTop, cellRight, cellBottom, fillPaint)
 
             if (i == selIndex || (selAnimIsRunning && i == selAnimPrevIndex)) {
-                val paint = if (i == selAnimPrevIndex) {
-                    selectionAnimPrevCellStrokePaint
+                val actualAlpha = if (i == selAnimPrevIndex) {
+                    255 - cellStrokeAlpha
                 } else {
-                    cellStrokePaint
+                    cellStrokeAlpha
                 }
+
+                strokePaint.alpha = actualAlpha
 
                 c.drawOval(
                     cellLeft + halfCellStrokeWidth,
                     cellTop + halfCellStrokeWidth,
                     cellRight - halfCellStrokeWidth,
                     cellBottom - halfCellStrokeWidth,
-                    paint
+                    strokePaint
                 )
+
+                if (actualAlpha > 0) {
+                    c.withTranslation(cellLeft, cellTop) {
+                        if (actualAlpha < 255) {
+                            // withTranslation will restore this layer too, so no need store save count and restore it as well.
+                            c.saveLayerAlpha(0f, 0f, cellSize, cellSize, actualAlpha)
+                        }
+
+                        c.drawOval(
+                            cellStrokeWidth,
+                            cellStrokeWidth,
+                            cellSize - cellStrokeWidth,
+                            cellSize - cellStrokeWidth,
+                            cellStrokeShadowPaint
+                        )
+                    }
+                }
             }
 
             cellLeft += cellSizeWithSpacing
