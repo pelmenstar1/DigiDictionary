@@ -79,6 +79,7 @@ class ColorPaletteView @JvmOverloads constructor(
     private var selectionAnimPrevCellIndex = -1
     private val selectionAnimator: PrimitiveAnimator
 
+    private var selectedIndex = -1
     private var colors = EmptyArray.INT
 
     var title: String = ""
@@ -91,18 +92,6 @@ class ColorPaletteView @JvmOverloads constructor(
             titleHeight = rect.height().toFloat()
 
             invalidate()
-        }
-
-    var selectedIndex = -1
-        set(value) {
-            val oldValue = selectedIndex
-
-            if (oldValue != value) {
-                field = value
-
-                startCellSelectionAnimation(prevIndex = oldValue)
-                onColorSelectedListener?.onSelected(colors[value])
-            }
         }
 
     var cellStrokeColor = 0
@@ -200,21 +189,37 @@ class ColorPaletteView @JvmOverloads constructor(
      * Selects specified [color] in the palette.
      * If specified [color] is not in the palette, selects the last color if there's at least one color.
      */
-    fun selectColorOrLast(@ColorInt color: Int) {
+    fun selectColorOrLast(@ColorInt color: Int, animate: Boolean = true) {
         val index = colors.indexOf(color)
 
         if (index >= 0) {
-            selectedIndex = index
+            selectColorAt(index, animate)
         } else if (colors.isNotEmpty()) {
-            selectedIndex = colors.size - 1
+            selectColorAt(colors.size - 1, animate)
         }
     }
 
-    fun selectLastColor() {
+    fun selectLastColor(animate: Boolean = true) {
         val size = colors.size
 
         if (size > 0) {
-            selectedIndex = size - 1
+            selectColorAt(size - 1, animate)
+        }
+    }
+
+    fun selectColorAt(index: Int, animate: Boolean = true) {
+        val oldIndex = selectedIndex
+
+        if (oldIndex != index) {
+            selectedIndex = index
+
+            onColorSelectedListener?.onSelected(colors[index])
+
+            if (animate) {
+                startCellSelectionAnimation(prevIndex = oldIndex)
+            } else {
+                invalidate()
+            }
         }
     }
 
@@ -260,7 +265,7 @@ class ColorPaletteView @JvmOverloads constructor(
                     val cellIndex = getCellByPointOnScreen(x, y)
 
                     if (cellIndex >= 0) {
-                        selectedIndex = cellIndex
+                        selectColorAt(cellIndex)
                     }
                 }
             }
@@ -461,7 +466,8 @@ class ColorPaletteView @JvmOverloads constructor(
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is SavedState) {
-            selectedIndex = state.selectedIndex
+            // The change should be animated because logically nothing is changed, we're just restoring previous state
+            selectColorAt(state.selectedIndex, animate = false)
 
             super.onRestoreInstanceState(state.superState)
         }

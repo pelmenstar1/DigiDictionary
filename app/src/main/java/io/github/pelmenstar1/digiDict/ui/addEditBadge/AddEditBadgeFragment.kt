@@ -57,7 +57,8 @@ class AddEditBadgeFragment : Fragment() {
             }
 
             if (currentBadgeId < 0) {
-                selectLastColor()
+                // The change shouldn't be animated because it's initializing the state, actually.
+                selectLastColor(animate = false)
             }
         }
 
@@ -105,7 +106,9 @@ class AddEditBadgeFragment : Fragment() {
 
                             setInputsEnabled(true)
                             nameInput.setText(value.name)
-                            colorPalette.selectColorOrLast(value.outlineColor)
+
+                            // The change shouldn't be animated, because logically it isn't even a change, it's initializing the state.
+                            colorPalette.selectColorOrLast(value.outlineColor, animate = false)
                         }
                     }
                 }
