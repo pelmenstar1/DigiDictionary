@@ -82,7 +82,7 @@
     <string name="addEditRecord_doNotChangeCreationTime">Don\'t change creation time</string>
 
     <string name="badgeInteraction_badge">Badge</string>
-    <string name="badgeSelector_manage">Manage</string>
+    <string name="badgeSelector_manage">Manage badges</string>
 
     <!-- Manage record badges -->
     <string name="manageRecordBadges_title">Record badges</string>
