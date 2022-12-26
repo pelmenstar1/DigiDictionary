@@ -35,8 +35,9 @@
     <dimen name="badgeInteraction_addButton_startMargin">8dp</dimen>
     <dimen name="badgeInteraction_addButton_rightPadding">4dp</dimen>
 
-    <dimen name="badgeSelectorDialog_listHeight">300dp</dimen>
-    <dimen name="badgeSelectorDialog_listElementPadding">8dp</dimen>
+    <dimen name="badgeSelectorDialog_listElement_nameStartMargin">7dp</dimen>
+    <dimen name="badgeSelectorDialog_listElement_padding">8dp</dimen>
+    <dimen name="badgeSelectorDialog_listElement_colorCircleSize">35dp</dimen>
 
     <dimen name="itemManageRecordBadges_actionButtonSize">48dp</dimen>
     <dimen name="itemManageRecordBadges_colorCircleSize">32dp</dimen>
