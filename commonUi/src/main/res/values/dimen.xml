@@ -3,7 +3,7 @@
     <dimen name="errorContainer_textHorizontalMargin">8dp</dimen>
     <dimen name="errorContainer_retryTopMargin">16dp</dimen>
 
-    <dimen name="colorPalette_spacing">4dp</dimen>
+    <dimen name="colorPalette_cellSpacing">4dp</dimen>
     <dimen name="colorPalette_cellSize">40dp</dimen>
     <dimen name="colorPalette_cellStrokeWidth">2dp</dimen>
     <dimen name="colorPalette_outlineStrokeWith">2dp</dimen>
@@ -11,8 +11,9 @@
     <dimen name="colorPalette_titleStartMargin">10dp</dimen>
     <dimen name="colorPalette_titleTextSize">13.5sp</dimen>
     <dimen name="colorPalette_titleHorizontalPadding">5dp</dimen>
-    <dimen name="colorPalette_paddingTop">20dp</dimen>
-    <dimen name="colorPalette_paddingBottom">10dp</dimen>
+    <dimen name="colorPalette_cellAreaTopMargin">20dp</dimen>
+    <dimen name="colorPalette_cellAreaBottomMargin">10dp</dimen>
+    <dimen name="colorPalette_cellAreaHorizontalMargin">10dp</dimen>
 
     <dimen name="settingItemContainer_iconSize">32dp</dimen>
     <dimen name="settingItemContainer_padding">10dp</dimen>
