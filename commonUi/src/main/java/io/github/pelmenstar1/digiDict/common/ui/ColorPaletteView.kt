@@ -416,6 +416,7 @@ class ColorPaletteView @JvmOverloads constructor(
         c.drawText(title, startMargin + hPadding, th, titlePaint)
     }
 
+    // TODO: Add tests for checking whether saving and restoring state behaves correctly
     override fun onSaveInstanceState(): Parcelable {
         return SavedState(super.onSaveInstanceState()).also {
             it.selectedIndex = selectedIndex
