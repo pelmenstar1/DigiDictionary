@@ -78,23 +78,23 @@
     <string name="addEditRecord_meaningDuplicateError">There\'s already an item with such meaning</string>
     <string name="addEditRecord_exprNoLetterOrDigit">Expression should contain at least one letter or digit</string>
     <string name="addEditRecord_meaningNoLetterOrDigit">Meaning should contain at least one letter or digit</string>
-    <string name="addEditRecord_outlineColorPrefix">Outline color: </string>
+    <string name="addEditRecord_outlineColor">Outline color</string>
     <string name="addEditRecord_doNotChangeCreationTime">Don\'t change creation time</string>
 
     <string name="badgeInteraction_badge">Badge</string>
-    <string name="badgeSelector_manage">Manage</string>
+    <string name="badgeSelector_manage">Manage badges</string>
 
     <!-- Manage record badges -->
     <string name="manageRecordBadges_title">Record badges</string>
     <string name="manageRecordBadges_addContentDescription">Add a new record badge</string>
     <string name="manageRecordBadges_removeWarning">Do you really want to remove the badge? This will remove the badge from all the records.</string>
     <string name="manageRecordBadges_removeError">Failed to remove the badge</string>
-    <string name="manageRecordBadges_addError">Failed to add the badge</string>
-    <string name="manageRecordBadges_editError">Failed to edit the badge</string>
 
-    <!-- Add badge dialog -->
-    <string name="addBadge_badgeExistsError">Badge with such name is already added</string>
-    <string name="addBadge_name">Name</string>
+    <!-- Add badge fragment -->
+    <string name="addEditBadge_title">Add or edit badge</string>
+    <string name="addEditBadge_name">Name</string>
+    <string name="addEditBadge_nameExistsError">Badge with such name is already added</string>
+    <string name="addEditBadge_badgeLoadingError">Failed to load badge</string>
 
     <!-- View record fragment -->
     <string name="viewRecord_label">View</string>

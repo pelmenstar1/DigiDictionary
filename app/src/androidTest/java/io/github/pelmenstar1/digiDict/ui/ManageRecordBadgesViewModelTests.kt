@@ -33,34 +33,6 @@ class ManageRecordBadgesViewModelTests {
         ManageRecordBadgesViewModel(recordToBadgeRelationDao, recordBadgeDao).use(block)
     }
 
-    @Test
-    fun updateTest() = runTest {
-        val recordBadgeDao = db.recordBadgeDao()
-
-        useViewModel { vm ->
-            val oldBadge = RecordBadgeInfo(1, "Old", 1)
-            val newBadge = RecordBadgeInfo(1, "New", 2)
-
-            recordBadgeDao.insert(oldBadge)
-            vm.updateAction.runAndWaitForResult(newBadge)
-
-            val actualBadge = recordBadgeDao.getById(1)
-            assertEquals(newBadge, actualBadge)
-        }
-    }
-
-    @Test
-    fun addTest() = runTest {
-        val recordBadgeDao = db.recordBadgeDao()
-
-        useViewModel { vm ->
-            val expectedBadge = RecordBadgeInfo(1, "Badge", 2)
-            vm.addAction.runAndWaitForResult(expectedBadge)
-
-            val actualBadge = recordBadgeDao.getById(1)
-            assertEquals(expectedBadge, actualBadge)
-        }
-    }
 
     @Test
     fun removeBadgeTest() = runTest {

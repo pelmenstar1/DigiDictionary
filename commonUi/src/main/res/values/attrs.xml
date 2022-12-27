@@ -15,6 +15,7 @@
     <declare-styleable name="ColorPaletteView">
         <attr name="colors" format="reference" />
         <attr name="strokeColor" format="color" />
+        <attr name="title" format="string" />
         <attr name="android:numColumns" />
     </declare-styleable>
 </resources>

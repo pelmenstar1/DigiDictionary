@@ -134,6 +134,7 @@ class AddEditRecordFragment : Fragment() {
         }
     }
 
+    // TODO: Merge initViews with initMeaningInteraction, initBadgeInteraction, initDoNotChangeCreationTimeBox
     private fun initViews() {
         binding.run {
             val vm = viewModel

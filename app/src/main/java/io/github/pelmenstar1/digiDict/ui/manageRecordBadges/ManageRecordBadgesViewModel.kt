@@ -14,14 +14,6 @@ class ManageRecordBadgesViewModel @Inject constructor(
     private val recordToBadgeRelationDao: RecordToBadgeRelationDao,
     private val badgeDao: RecordBadgeDao
 ) : SingleDataLoadStateViewModel<Array<RecordBadgeInfo>>(TAG) {
-    val updateAction = viewModelAction<RecordBadgeInfo>(TAG) { badge ->
-        badgeDao.update(badge)
-    }
-
-    val addAction = viewModelAction<RecordBadgeInfo>(TAG) { badge ->
-        badgeDao.insert(badge)
-    }
-
     val removeAction = viewModelAction<RecordBadgeInfo>(TAG) { badge ->
         recordToBadgeRelationDao.deleteAllBadgeRelations(badge.id)
         badgeDao.delete(badge)
@@ -34,8 +26,6 @@ class ManageRecordBadgesViewModel @Inject constructor(
         badgeDao.getAllFlow()
     }
 
-    fun update(badge: RecordBadgeInfo) = updateAction.run(badge)
-    fun add(badge: RecordBadgeInfo) = addAction.run(badge)
     fun remove(badge: RecordBadgeInfo) = removeAction.run(badge)
 
     companion object {

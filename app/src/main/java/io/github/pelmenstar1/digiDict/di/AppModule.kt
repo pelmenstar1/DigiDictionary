@@ -16,9 +16,9 @@ import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
+import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
-import io.github.pelmenstar1.digiDict.ui.manageRecordBadges.AddEditBadgeInputMessage
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -98,7 +98,7 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideBadgeSelectorInputMessageMapper(@ApplicationContext context: Context): MessageMapper<AddEditBadgeInputMessage> {
-        return AddEditBadgeInputMessage.defaultMapper(context)
+    fun provideBadgeSelectorInputMessageMapper(@ApplicationContext context: Context): MessageMapper<AddEditBadgeFragmentMessage> {
+        return AddEditBadgeFragmentMessage.defaultMapper(context)
     }
 }

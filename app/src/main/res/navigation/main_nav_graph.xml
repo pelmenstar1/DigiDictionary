@@ -149,7 +149,22 @@
     <fragment
         android:id="@+id/manageRecordBadgesFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.manageRecordBadges.ManageRecordBadgesFragment"
-        android:label="@string/manageRecordBadges_title" />
+        android:label="@string/manageRecordBadges_title">
+
+        <action
+            android:id="@+id/action_manageRecordBadgesFragment_to_addEditBadgeFragment"
+            app:destination="@id/addEditBadgeFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/addEditBadgeFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragment"
+        android:label="@string/addEditBadge_title">
+        <argument
+            android:name="currentBadgeId"
+            app:argType="integer" />
+    </fragment>
 
     <fragment
         android:id="@+id/exportConfigurationFragment"

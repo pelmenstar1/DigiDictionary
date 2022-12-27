@@ -26,6 +26,9 @@ interface RecordBadgeDao {
     @Query("SELECT * FROM record_badges")
     fun getAllFlow(): Flow<Array<RecordBadgeInfo>>
 
+    @Query("SELECT name FROM record_badges")
+    suspend fun getAllNames(): Array<String>
+
     @Query(GET_BY_ID_QUERY)
     suspend fun getById(id: Int): RecordBadgeInfo?
 
@@ -37,6 +40,9 @@ interface RecordBadgeDao {
 
     @Query("SELECT id FROM record_badges WHERE name=:name")
     suspend fun getIdByName(name: String): Int?
+
+    @Query("SELECT * FROM record_badges WHERE name=:name")
+    suspend fun getByName(name: String): RecordBadgeInfo?
 
     companion object {
         const val GET_BY_ID_QUERY = "SELECT * FROM record_badges WHERE id=:id"

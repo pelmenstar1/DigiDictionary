@@ -24,15 +24,36 @@
 
     <color name="add_edit_badge_dialog_color_palette_stroke_color">#FFFFFF</color>
     <array name="add_edit_badge_dialog_outline_colors">
-        <item>#D50000</item>
-        <item>#DD2C00</item>
-        <item>#FFD600</item>
-        <item>#5FF800</item>
-        <item>#00C853</item>
-        <item>#2962FF</item>
-        <item>#00B8D4</item>
-        <item>#2F105A</item>
-        <item>#C51162</item>
+        <item>#ff0000</item>
+        <item>#ff3300</item>
+        <item>#ff6600</item>
+        <item>#ff9900</item>
+        <item>#ffcc00</item>
+        <item>#feff00</item>
+        <item>#cbff00</item>
+        <item>#98ff00</item>
+        <item>#65ff00</item>
+        <item>#32ff00</item>
+        <item>#00ff00</item>
+        <item>#00ff32</item>
+        <item>#00ff66</item>
+        <item>#00ff99</item>
+        <item>#00ffcc</item>
+        <item>#00feff</item>
+        <item>#00cbff</item>
+        <item>#0098ff</item>
+        <item>#0065ff</item>
+        <item>#0032ff</item>
+        <item>#0000ff</item>
+        <item>#3200ff</item>
+        <item>#6500ff</item>
+        <item>#9800ff</item>
+        <item>#cb00ff</item>
+        <item>#ff00fe</item>
+        <item>#ff00cb</item>
+        <item>#ff0098</item>
+        <item>#ff0065</item>
+        <item>#ff0032</item>
     </array>
 
     <color name="stats_chart_text_color">#FFFFFF</color>
