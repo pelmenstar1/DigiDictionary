@@ -30,14 +30,18 @@ android {
         // In most situations showLifecycleAwareSnackbar is called to show snackbar, but lint doesn't understand
         // that showLifecycleAwareSnackbar calls show() internally and shows this warning everywhere.
         disable += "ShowToast"
+
+        // Lint gives false-positives about BadgeContainer not being instantiable
+        // TODO: Fix this
+        checkReleaseBuilds = false
     }
 
     defaultConfig {
         applicationId = "io.github.pelmenstar1.digiDict"
         minSdk = 21
         targetSdk = 32
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         signingConfig = signingConfigs.getByName("release")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
