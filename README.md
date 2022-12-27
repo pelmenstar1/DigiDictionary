@@ -26,14 +26,6 @@ Note that when a record in the application and one in the file are the same, it'
 Two records are considered as conflicting only when they have same expression and different meaning or additional notes.
 So, when there are conflicting records, you can choose what to do with them: `Accept old`, `Accept new` or `Merge`.
 
-## Screenshots
-
-<p align="center">
-  <img src="./art/screen1.jpg" width="400px">
-  <img src="./art/screen2.jpg" width="400px">
-  <img src="./art/screen3.jpg" width="400px">
-</p>
-
 ## License
 
 ```
