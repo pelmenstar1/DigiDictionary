@@ -79,8 +79,11 @@ class ColorPaletteView @JvmOverloads constructor(
     private var selectionAnimPrevCellIndex = -1
     private val selectionAnimator: PrimitiveAnimator
 
-    private var selectedIndex = -1
+    private var _selectedIndex = -1
     private var colors = EmptyArray.INT
+
+    val selectedIndex: Int
+        get() = _selectedIndex
 
     var title: String = ""
         set(value) {
@@ -208,10 +211,14 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     fun selectColorAt(index: Int, animate: Boolean = true) {
-        val oldIndex = selectedIndex
+        if (index < 0 || index > colors.size) {
+            throw IllegalArgumentException("Unable to select a cell at index $index (color count = ${colors.size})")
+        }
+
+        val oldIndex = _selectedIndex
 
         if (oldIndex != index) {
-            selectedIndex = index
+            _selectedIndex = index
 
             onColorSelectedListener?.onSelected(colors[index])
 
@@ -360,7 +367,7 @@ class ColorPaletteView @JvmOverloads constructor(
         val colors = colors
 
         val selAnimIsRunning = selectionAnimator.isRunning
-        val selIndex = selectedIndex
+        val selIndex = _selectedIndex
         val selAnimPrevIndex = selectionAnimPrevCellIndex
 
         var cellLeft = cellRowStart
@@ -460,14 +467,18 @@ class ColorPaletteView @JvmOverloads constructor(
     // TODO: Add tests for checking whether saving and restoring state behaves correctly
     override fun onSaveInstanceState(): Parcelable {
         return SavedState(super.onSaveInstanceState()).also {
-            it.selectedIndex = selectedIndex
+            it.selectedIndex = _selectedIndex
         }
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is SavedState) {
-            // The change should be animated because logically nothing is changed, we're just restoring previous state
-            selectColorAt(state.selectedIndex, animate = false)
+            val selIndex = state.selectedIndex
+
+            if (selIndex in colors.indices) {
+                // The change should be animated because logically nothing is changed, we're just restoring previous state
+                selectColorAt(selIndex, animate = false)
+            }
 
             super.onRestoreInstanceState(state.superState)
         }
