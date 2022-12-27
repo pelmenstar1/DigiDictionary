@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -87,10 +88,7 @@ class AddEditRecordFragment : Fragment() {
             }
         }
 
-        initMeaningInteraction()
-        initBadgeInteraction()
-        initDoNotChangeCreationTimeBox(recordId)
-        initViews()
+        initViews(recordId)
 
         // Set the initial expression (if it exists) only when all the listeners are set on the EditText's
         args.initialExpression?.let {
@@ -134,10 +132,10 @@ class AddEditRecordFragment : Fragment() {
         }
     }
 
-    // TODO: Merge initViews with initMeaningInteraction, initBadgeInteraction, initDoNotChangeCreationTimeBox
-    private fun initViews() {
+    private fun initViews(currentRecordId: Int) {
         binding.run {
             val vm = viewModel
+            val ls = lifecycleScope
 
             addRecordExpressionInputLayout.addTextChangedListener {
                 vm.expression = it
@@ -149,7 +147,7 @@ class AddEditRecordFragment : Fragment() {
 
             addRecordAddButton.run {
                 text = resources.getString(
-                    if (args.recordId >= 0) R.string.addEditRecord_editButtonText else R.string.addEditRecord_addButtonText
+                    if (currentRecordId >= 0) R.string.addEditRecord_editButtonText else R.string.addEditRecord_addButtonText
                 )
 
                 setOnClickListener { vm.addOrEditRecord() }
@@ -163,58 +161,43 @@ class AddEditRecordFragment : Fragment() {
                 findNavController().navigate(directions)
             }
 
-            lifecycleScope.run {
-                launchFlowCollector(vm.expressionErrorFlow) {
-                    addRecordExpressionInputLayout.error = it?.let(messageMapper::map)
-                    addRecordSearchExpression.isEnabled = it == null
+            addRecordMeaningListInteraction.run {
+                onErrorStateChanged = { isError ->
+                    vm.validity.mutate {
+                        set(AddEditRecordViewModel.meaningValidityField, !isError)
+                    }
                 }
 
-                addRecordAddButton.setEnabledWhenValid(vm.validity, lifecycleScope)
+                // Only if there's no 'current record', specify error state for meaning list.
+                // Otherwise, wait until 'current record' is set.
+                // This will work, because meaning of 'current record' can't be empty.
+                if (currentRecordId < 0) {
+                    refreshErrorState()
+                }
+
+                vm.getMeaning = { meaning }
             }
-        }
-    }
 
-    private fun initMeaningInteraction() {
-        val vm = viewModel
+            addRecordBadgeInteraction.run {
+                onGetFragmentManager = { childFragmentManager }
 
-        binding.addRecordMeaningListInteraction.also {
-            it.onErrorStateChanged = { isError ->
-                vm.validity.mutate {
-                    set(AddEditRecordViewModel.meaningValidityField, !isError)
+                vm.getBadges = { badges }
+            }
+
+            addRecordDoNotChangeCreationTimeBox.also {
+                it.isVisible = currentRecordId >= 0
+
+                it.setOnCheckedChangeListener { _, isChecked ->
+                    vm.changeCreationTime = !isChecked
                 }
             }
 
-            // Only if there's no 'current record', specify error state for meaning list.
-            // Otherwise, wait until 'current record' is set.
-            // This will work, because meaning of 'current record' can't be empty.
-            if (vm.currentRecordId < 0) {
-                it.refreshErrorState()
+            ls.launchFlowCollector(vm.expressionErrorFlow) {
+                addRecordExpressionInputLayout.error = it?.let(messageMapper::map)
+                addRecordSearchExpression.isEnabled = it == null
             }
 
-            vm.getMeaning = { it.meaning }
-        }
-    }
-
-    private fun initBadgeInteraction() {
-        val vm = viewModel
-
-        binding.addRecordBadgeInteraction.also { badgeInteraction ->
-            badgeInteraction.onGetFragmentManager = { childFragmentManager }
-            vm.getBadges = { badgeInteraction.badges }
-        }
-    }
-
-    private fun initDoNotChangeCreationTimeBox(currentRecordId: Int) {
-        binding.addRecordDoNotChangeCreationTimeBox.also {
-            it.visibility = if (currentRecordId >= 0) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-
-            it.setOnCheckedChangeListener { _, isChecked ->
-                viewModel.changeCreationTime = !isChecked
-            }
+            addRecordAddButton.setEnabledWhenValid(vm.validity, ls)
         }
     }
 }
