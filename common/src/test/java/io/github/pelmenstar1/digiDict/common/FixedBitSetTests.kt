@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
+import io.github.pelmenstar1.digiDict.commonTestUtils.toIntArray
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

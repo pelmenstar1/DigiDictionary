@@ -55,6 +55,7 @@ dependencies {
     testImplementation(libs.bundles.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 
+    androidTestImplementation(project(":commonTestUtils"))
     androidTestImplementation(libs.bundles.kotlin.test)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext)

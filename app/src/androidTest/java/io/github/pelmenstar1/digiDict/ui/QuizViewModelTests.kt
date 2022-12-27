@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.commonTestUtils.use
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
@@ -15,7 +16,6 @@ import io.github.pelmenstar1.digiDict.ui.quiz.QuizViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.ReadonlyDigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.utils.reset
-import io.github.pelmenstar1.digiDict.utils.use
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass

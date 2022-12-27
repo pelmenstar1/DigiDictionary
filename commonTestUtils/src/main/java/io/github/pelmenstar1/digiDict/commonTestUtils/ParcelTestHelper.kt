@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common
+package io.github.pelmenstar1.digiDict.commonTestUtils
 
 import android.os.Parcel
 import android.os.Parcelable

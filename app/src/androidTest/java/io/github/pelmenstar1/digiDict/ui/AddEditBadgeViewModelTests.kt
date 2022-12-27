@@ -3,6 +3,8 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.github.pelmenstar1.digiDict.common.firstSuccess
+import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
+import io.github.pelmenstar1.digiDict.commonTestUtils.use
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
@@ -10,8 +12,6 @@ import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessag
 import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset
-import io.github.pelmenstar1.digiDict.utils.runAndWaitForResult
-import io.github.pelmenstar1.digiDict.utils.use
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
@@ -34,7 +34,6 @@ class AddEditBadgeViewModelTests {
     ) {
         AddEditBadgeViewModel(badgeDao).use(block)
     }
-
 
     @Test
     fun nameErrorIsEmptyWhenInputIsEmpty() = runTest {

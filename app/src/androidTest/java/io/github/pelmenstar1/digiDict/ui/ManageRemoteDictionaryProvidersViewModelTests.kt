@@ -3,12 +3,12 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.commonTestUtils.clearThroughReflection
+import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders.ManageRemoteDictionaryProvidersViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
-import io.github.pelmenstar1.digiDict.utils.clearThroughReflection
 import io.github.pelmenstar1.digiDict.utils.reset
-import io.github.pelmenstar1.digiDict.utils.runAndWaitForResult
 import kotlinx.coroutines.test.runTest
 import org.junit.AfterClass
 import org.junit.Before

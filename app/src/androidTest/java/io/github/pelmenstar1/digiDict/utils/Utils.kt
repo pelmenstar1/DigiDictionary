@@ -1,11 +1,7 @@
 package io.github.pelmenstar1.digiDict.utils
 
-import androidx.lifecycle.ViewModel
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.data.*
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlin.test.fail
 
 fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<T>, actual: Array<T>) {
@@ -23,21 +19,6 @@ fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<T>, act
         if (!expectedElement.equalsNoId(actualElement)) {
             fail("Elements at index $i differ: Expected element: '$expectedElement' \n Actual element: '$actualElement'")
         }
-    }
-}
-
-fun ViewModel.clearThroughReflection() {
-    val method = ViewModel::class.java.getDeclaredMethod("clear")
-    method.isAccessible = true
-
-    method.invoke(this)
-}
-
-inline fun <T : ViewModel> T.use(block: (vm: T) -> Unit) {
-    try {
-        block(this)
-    } finally {
-        clearThroughReflection()
     }
 }
 
@@ -64,29 +45,4 @@ suspend fun AppDatabase.addRecordAndBadges(
     )
 
     return recordWithBadges
-}
-
-suspend fun ViewModelAction.waitForResult() {
-    try {
-        coroutineScope {
-            launchFlowCollector(errorFlow) { throw it }
-            launchFlowCollector(successFlow) {
-                cancel()
-            }
-        }
-    } catch (e: Throwable) {
-        if (e !is CancellationException) {
-            throw e
-        }
-    }
-}
-
-suspend fun NoArgumentViewModelAction.runAndWaitForResult() {
-    run()
-    waitForResult()
-}
-
-suspend fun <T> SingleArgumentViewModelAction<T>.runAndWaitForResult(arg: T) {
-    run(arg)
-    waitForResult()
 }
