@@ -3,13 +3,9 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.commonTestUtils.clearThroughReflection
-import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
-import io.github.pelmenstar1.digiDict.commonTestUtils.use
-import io.github.pelmenstar1.digiDict.commonTestUtils.waitForResult
+import io.github.pelmenstar1.digiDict.commonTestUtils.*
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordViewModel
@@ -149,7 +145,7 @@ class AddEditRecordViewModelTests {
             val expectedCurrentRecord = recordDao.getRecordWithBadgesByExpression("Expr2")!!
             vm.currentRecordId = expectedCurrentRecord.id
 
-            val actualCurrentRecord = vm.currentRecordStateFlow.firstSuccess()
+            val actualCurrentRecord = vm.currentRecordStateFlow.waitUntilSuccessOrThrowOnError()
             assertEquals(expectedCurrentRecord, actualCurrentRecord)
 
             vm.expression = "Expr2"
@@ -174,7 +170,7 @@ class AddEditRecordViewModelTests {
         useViewModel { vm ->
             vm.currentRecordId = expectedRecord.id
 
-            val actualRecord = vm.currentRecordStateFlow.firstSuccess()
+            val actualRecord = vm.currentRecordStateFlow.waitUntilSuccessOrThrowOnError()
 
             assertEquals(expectedRecord, actualRecord)
             assertTrue(vm.validity.isAllValid)
@@ -254,7 +250,7 @@ class AddEditRecordViewModelTests {
             vm.currentRecordId = recordId
 
             // Wait until current record is loaded
-            vm.currentRecordStateFlow.firstSuccess()
+            vm.currentRecordStateFlow.waitUntilSuccessOrThrowOnError()
 
             val expectedNewRecord = RecordWithBadges(
                 recordId,

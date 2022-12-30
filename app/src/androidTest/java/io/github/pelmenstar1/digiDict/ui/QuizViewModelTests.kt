@@ -3,10 +3,10 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.commonTestUtils.use
+import io.github.pelmenstar1.digiDict.commonTestUtils.waitUntilSuccessOrThrowOnError
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordDao
@@ -70,7 +70,7 @@ class QuizViewModelTests {
             vm.use {
                 vm.mode = QuizMode.ALL
 
-                vm.dataStateFlow.firstSuccess()
+                vm.dataStateFlow.waitUntilSuccessOrThrowOnError()
 
                 indices.forEach {
                     vm.onItemAnswer(it, false)

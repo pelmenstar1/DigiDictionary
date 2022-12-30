@@ -10,8 +10,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 
 suspend fun ViewModelAction.waitForResult() {
-
-
     try {
         coroutineScope {
             launchFlowCollector(errorFlow) { throw it }

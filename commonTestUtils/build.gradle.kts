@@ -29,6 +29,10 @@ android {
 
     kotlinOptions {
         jvmTarget = "1.8"
+
+        freeCompilerArgs = freeCompilerArgs + arrayOf(
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+        )
     }
 }
 
@@ -41,4 +45,9 @@ dependencies {
     implementation(libs.junit)
     implementation(libs.androidx.test.ext)
     implementation(libs.kotlin.test.junit)
+
+    androidTestImplementation(libs.bundles.kotlin.test)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.ext)
+    androidTestImplementation(libs.androidx.test.espresso)
 }

@@ -7,6 +7,7 @@ import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.commonTestUtils.clearThroughReflection
 import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
+import io.github.pelmenstar1.digiDict.commonTestUtils.waitUntilSuccessOrThrowOnError
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
@@ -70,7 +71,7 @@ class ViewRecordViewModelTests {
             val vm = createViewModel()
             vm.id = expectedRecordId
 
-            val actualRecord = vm.dataStateFlow.firstSuccess()
+            val actualRecord = vm.dataStateFlow.waitUntilSuccessOrThrowOnError()
             assertEquals(expectedRecordWithBadges, actualRecord)
 
             db.reset()

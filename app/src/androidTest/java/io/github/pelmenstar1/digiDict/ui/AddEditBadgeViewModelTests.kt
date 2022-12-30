@@ -2,9 +2,9 @@ package io.github.pelmenstar1.digiDict.ui
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
 import io.github.pelmenstar1.digiDict.commonTestUtils.use
+import io.github.pelmenstar1.digiDict.commonTestUtils.waitUntilSuccessOrThrowOnError
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
@@ -146,8 +146,7 @@ class AddEditBadgeViewModelTests {
             val badgeId = recordBadgeDao.getIdByName(oldName)!!
             vm.currentBadgeId = badgeId
 
-            // TODO: Create and use a helper to throw an exception if error in state flow happens
-            vm.currentBadgeStateFlow.firstSuccess()
+            vm.currentBadgeStateFlow.waitUntilSuccessOrThrowOnError()
 
             vm.name = newName
             vm.outlineColor = newOutlineColor
