@@ -8,8 +8,8 @@ import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.backup.BackupManager
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.android.viewModelAction
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
-import io.github.pelmenstar1.digiDict.common.viewModelAction
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject

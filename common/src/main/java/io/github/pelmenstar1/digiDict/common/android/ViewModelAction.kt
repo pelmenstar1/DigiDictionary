@@ -1,8 +1,10 @@
-package io.github.pelmenstar1.digiDict.common
+package io.github.pelmenstar1.digiDict.common.android
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.pelmenstar1.digiDict.common.ValidityFlow
+import io.github.pelmenstar1.digiDict.common.getLazyValue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow

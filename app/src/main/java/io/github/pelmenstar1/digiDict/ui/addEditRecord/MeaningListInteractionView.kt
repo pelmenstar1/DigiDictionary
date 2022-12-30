@@ -23,6 +23,8 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.theme.overlay.MaterialThemeOverlay
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
+import io.github.pelmenstar1.digiDict.common.android.readStringOrThrow
 import io.github.pelmenstar1.digiDict.common.ui.adjustViewCountWithoutLast
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.setText

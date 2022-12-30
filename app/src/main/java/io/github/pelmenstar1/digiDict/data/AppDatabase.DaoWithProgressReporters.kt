@@ -4,7 +4,7 @@ import androidx.sqlite.db.SupportSQLiteProgram
 import androidx.sqlite.db.SupportSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteStatement
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.queryArrayWithProgressReporter
+import io.github.pelmenstar1.digiDict.common.android.queryArrayWithProgressReporter
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
 fun AppDatabase.compileInsertRecordStatement(): SupportSQLiteStatement {

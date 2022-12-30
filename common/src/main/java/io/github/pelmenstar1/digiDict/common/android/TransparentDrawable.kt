@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common
+package io.github.pelmenstar1.digiDict.common.android
 
 import android.graphics.Canvas
 import android.graphics.ColorFilter

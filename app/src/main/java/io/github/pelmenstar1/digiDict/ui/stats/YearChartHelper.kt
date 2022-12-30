@@ -12,7 +12,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.getLocaleCompat
+import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.stats.MonthAdditionStats
 import java.text.DateFormatSymbols
 

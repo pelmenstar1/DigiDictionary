@@ -11,7 +11,7 @@ import android.text.method.TransformationMethod
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import io.github.pelmenstar1.digiDict.common.getLocaleCompat
+import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import java.util.*
 
 class AllCapsTransformationMethod(context: Context) : TransformationMethod {

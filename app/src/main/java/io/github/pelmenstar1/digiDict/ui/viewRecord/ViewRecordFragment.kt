@@ -11,9 +11,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
-import io.github.pelmenstar1.digiDict.common.popBackStackOnSuccess
-import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
+import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.time.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentViewRecordBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper

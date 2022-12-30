@@ -16,6 +16,8 @@ import androidx.annotation.StyleRes
 import androidx.core.graphics.withSave
 import androidx.core.graphics.withTranslation
 import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.android.PrimitiveAnimator
+import io.github.pelmenstar1.digiDict.common.android.getPrimaryColor
 import java.util.*
 
 class ColorPaletteView @JvmOverloads constructor(

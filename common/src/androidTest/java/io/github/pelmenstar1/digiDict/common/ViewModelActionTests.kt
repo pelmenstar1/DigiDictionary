@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.common
 
 import androidx.lifecycle.ViewModel
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.android.viewModelAction
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertFalse

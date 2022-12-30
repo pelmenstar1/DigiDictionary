@@ -5,9 +5,9 @@ import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import io.github.pelmenstar1.digiDict.common.android.readStringOrThrow
 import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
 import io.github.pelmenstar1.digiDict.common.equalsPattern
-import io.github.pelmenstar1.digiDict.common.readStringOrThrow
 import kotlinx.serialization.Serializable
 
 @Entity(tableName = "record_badges", indices = [Index("name", unique = true)])

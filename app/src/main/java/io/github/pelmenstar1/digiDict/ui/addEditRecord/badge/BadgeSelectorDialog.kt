@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.common.EmptyArray
-import io.github.pelmenstar1.digiDict.common.MaterialDialogFragment
+import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.databinding.DialogBadgeSelectorBinding

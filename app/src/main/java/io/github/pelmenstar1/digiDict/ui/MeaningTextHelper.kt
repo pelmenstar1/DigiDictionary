@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import android.util.Log
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.getLocaleCompat
+import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.parsePositiveInt
 
 object MeaningTextHelper {

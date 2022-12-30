@@ -15,6 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentExportConfigurationBinding
 import io.github.pelmenstar1.digiDict.ui.importExportConfig.ImportExportConfigProgressIndicatorDialogManager

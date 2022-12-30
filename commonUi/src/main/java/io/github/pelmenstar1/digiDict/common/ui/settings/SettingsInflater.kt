@@ -17,10 +17,10 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
-import io.github.pelmenstar1.digiDict.common.TransparentDrawable
+import io.github.pelmenstar1.digiDict.common.android.TransparentDrawable
+import io.github.pelmenstar1.digiDict.common.android.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
-import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.R

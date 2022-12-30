@@ -15,9 +15,9 @@ import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.EmptyArray
-import io.github.pelmenstar1.digiDict.common.getByteArrayOrThrow
-import io.github.pelmenstar1.digiDict.common.popBackStackOnSuccess
-import io.github.pelmenstar1.digiDict.common.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.android.getByteArrayOrThrow
+import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
+import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledFlowCollector
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding

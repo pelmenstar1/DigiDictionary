@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict.ui.addEditBadge
 
 import android.content.Context
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.resourcesMessageMapper
+import io.github.pelmenstar1.digiDict.common.android.resourcesMessageMapper
 
 enum class AddEditBadgeFragmentMessage {
     EMPTY_TEXT,

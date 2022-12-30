@@ -1,10 +1,14 @@
-package io.github.pelmenstar1.digiDict.common
+package io.github.pelmenstar1.digiDict.common.android
 
 import android.database.Cursor
 import androidx.lifecycle.ViewModel
 import androidx.room.InvalidationTracker
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
+import io.github.pelmenstar1.digiDict.common.trackProgressWith
+import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
 inline fun <T : SupportSQLiteDatabase> T.runInTransactionBlocking(block: T.() -> Unit) {
     beginTransaction()

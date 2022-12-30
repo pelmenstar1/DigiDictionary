@@ -1,9 +1,9 @@
 package io.github.pelmenstar1.digiDict.commonTestUtils
 
 import androidx.lifecycle.ViewModel
-import io.github.pelmenstar1.digiDict.common.NoArgumentViewModelAction
-import io.github.pelmenstar1.digiDict.common.SingleArgumentViewModelAction
-import io.github.pelmenstar1.digiDict.common.ViewModelAction
+import io.github.pelmenstar1.digiDict.common.android.NoArgumentViewModelAction
+import io.github.pelmenstar1.digiDict.common.android.SingleArgumentViewModelAction
+import io.github.pelmenstar1.digiDict.common.android.ViewModelAction
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel

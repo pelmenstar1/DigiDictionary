@@ -9,8 +9,8 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
+import io.github.pelmenstar1.digiDict.common.time.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 
 object HomeDateMarkerHelper {

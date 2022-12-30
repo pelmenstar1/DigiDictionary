@@ -11,7 +11,7 @@ import androidx.annotation.IntRange
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.progressindicator.CircularProgressIndicator
-import io.github.pelmenstar1.digiDict.common.TransparentDrawable
+import io.github.pelmenstar1.digiDict.common.android.TransparentDrawable
 
 interface ProgressIndicatorDialogInterface {
     fun setProgress(value: Int)

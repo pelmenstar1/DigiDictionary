@@ -7,7 +7,7 @@ import android.widget.LinearLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
-import io.github.pelmenstar1.digiDict.common.getSelectableItemBackground
+import io.github.pelmenstar1.digiDict.common.android.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 

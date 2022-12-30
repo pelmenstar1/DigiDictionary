@@ -1,10 +1,11 @@
-package io.github.pelmenstar1.digiDict.common
+package io.github.pelmenstar1.digiDict.common.time
 
 import android.content.Context
 import android.icu.text.DisplayContext
 import android.icu.text.SimpleDateFormat
 import android.os.Build
 import android.text.format.DateFormat
+import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import java.util.*
 
 class CompatDateTimeFormatter(context: Context, format: String) {

@@ -4,6 +4,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.collection.ArraySet
 import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.android.readStringOrThrow
 
 enum class MeaningType {
     COMMON,

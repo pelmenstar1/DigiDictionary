@@ -5,8 +5,8 @@ import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import io.github.pelmenstar1.digiDict.common.android.runInTransactionBlocking
 import io.github.pelmenstar1.digiDict.common.getLazyValue
-import io.github.pelmenstar1.digiDict.common.runInTransactionBlocking
 
 @Database(
     entities = [

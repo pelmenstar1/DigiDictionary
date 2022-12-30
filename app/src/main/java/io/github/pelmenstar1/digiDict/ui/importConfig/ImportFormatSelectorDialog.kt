@@ -6,7 +6,7 @@ import android.view.View
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
-import io.github.pelmenstar1.digiDict.common.MaterialDialogFragment
+import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
 import io.github.pelmenstar1.digiDict.databinding.DialogImportFormatSelectorBinding
 
 class ImportFormatSelectorDialog : MaterialDialogFragment() {
