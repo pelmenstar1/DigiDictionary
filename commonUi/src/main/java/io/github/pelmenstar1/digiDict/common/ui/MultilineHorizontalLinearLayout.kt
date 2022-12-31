@@ -31,9 +31,21 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
         var height = -1
     }
 
-    private var tempRowMeasurementResult: RowMeasurementResult? = null
+    private var _cachedRowMeasurementResult: RowMeasurementResult? = null
+    private val cachedRowMeasurementResult: RowMeasurementResult
+        get() = getLazyValue(
+            _cachedRowMeasurementResult,
+            { RowMeasurementResult() }
+        ) { _cachedRowMeasurementResult = it }
 
-    var horizontalAlignment: Int = ALIGNMENT_START
+    var horizontalAlignment: Int = HORIZONTAL_ALIGNMENT_START
+        set(value) {
+            field = value
+
+            requestLayout()
+        }
+
+    var rowVerticalAlignment: Int = VERTICAL_ROW_ALIGNMENT_TOP
         set(value) {
             field = value
 
@@ -122,64 +134,10 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        when (horizontalAlignment) {
-            ALIGNMENT_START -> layoutStart()
-            ALIGNMENT_CENTER -> layoutCenter()
-        }
-    }
-
-    private fun layoutStart() {
-        val totalWidth = measuredWidth
+        val rowResult = cachedRowMeasurementResult
+        val horizontalAlign = horizontalAlignment
         val pLeft = paddingLeft
-        val totalWidthWithoutRightPadding = totalWidth - paddingRight
-
-        var currentTop = paddingTop
-        var currentLeft = pLeft
-
-        var rowHeight = 0
-
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-
-            if (child.visibility != GONE) {
-                val childParams = child.layoutParams as MarginLayoutParams
-                val childLeftMargin = childParams.leftMargin
-                val childTopMargin = childParams.topMargin
-
-                val childWidth = child.measuredWidth
-                val childHeight = child.measuredHeight
-
-                val requiredWidth = childWidth + childLeftMargin + childParams.rightMargin
-                val requiredHeight = childHeight + childTopMargin + childParams.bottomMargin
-
-                rowHeight = max(rowHeight, requiredHeight)
-                var nextLeft = currentLeft + requiredWidth
-
-                if (nextLeft > totalWidthWithoutRightPadding) {
-                    currentTop += rowHeight
-                    currentLeft = pLeft
-                    nextLeft = pLeft + requiredWidth
-
-                    rowHeight = 0
-                }
-
-                val viewLeft = currentLeft + childLeftMargin
-                val viewTop = currentTop + childTopMargin
-
-                child.layout(viewLeft, viewTop, viewLeft + childWidth, viewTop + childHeight)
-                currentLeft = nextLeft
-            }
-        }
-    }
-
-    private fun layoutCenter() {
-        val rowResult = getLazyValue(
-            tempRowMeasurementResult,
-            { RowMeasurementResult() },
-            { tempRowMeasurementResult = it }
-        )
-
-        val totalWidthWithoutSidePaddings = measuredWidth - paddingLeft - paddingRight
+        val totalWidthWithoutSidePaddings = measuredWidth - pLeft - paddingRight
 
         var currentTop = paddingTop
         var childIndex = 0
@@ -187,9 +145,14 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
         while (childIndex < childCount) {
             measureRow(childIndex, rowResult)
             val endIndex = rowResult.endIndex
-            val initialLeft = (totalWidthWithoutSidePaddings - rowResult.width) / 2
 
-            layoutRowWhenCenterAlign(childIndex, endIndex, initialLeft, currentTop)
+            val initialLeft = when (horizontalAlign) {
+                HORIZONTAL_ALIGNMENT_START -> pLeft
+                HORIZONTAL_ALIGNMENT_CENTER -> (totalWidthWithoutSidePaddings - rowResult.width) / 2
+                else -> 0
+            }
+
+            layoutRow(childIndex, endIndex, initialLeft, currentTop, rowResult)
 
             currentTop += rowResult.height
             childIndex = endIndex
@@ -251,8 +214,19 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
         outResult.height = rowHeight
     }
 
-    private fun layoutRowWhenCenterAlign(startViewIndex: Int, endViewIndex: Int, initialLeft: Int, initialTop: Int) {
+    private fun layoutRow(
+        startViewIndex: Int,
+        endViewIndex: Int,
+        initialLeft: Int,
+        initialTop: Int,
+        rowResult: RowMeasurementResult
+    ) {
         var currentLeft = initialLeft
+
+        val horizontalAlign = horizontalAlignment
+        val verticalAlign = rowVerticalAlignment
+
+        val rowHeight = rowResult.height
 
         for (i in startViewIndex until endViewIndex) {
             val child = getChildAt(i)
@@ -265,22 +239,26 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                 val childWidth = child.measuredWidth
                 val childHeight = child.measuredHeight
 
-                var requiredWidth = childWidth
+                var requiredWidth = childWidth + childParams.rightMargin
 
                 // Don't use left margin on first view in row when center alignment is used
-                if (i != startViewIndex) {
+                if (horizontalAlign != HORIZONTAL_ALIGNMENT_CENTER || i != startViewIndex) {
                     requiredWidth += childLeftMargin
                 }
 
-                // Don't use right margin on last view in row when center alignment is used
-                if (i != endViewIndex - 1) {
-                    requiredWidth += childParams.rightMargin
+                val childLeft = currentLeft + childLeftMargin
+                var childTop = initialTop
+
+                when (verticalAlign) {
+                    VERTICAL_ROW_ALIGNMENT_TOP -> {
+                        childTop += childTopMargin
+                    }
+                    VERTICAL_ROW_ALIGNMENT_CENTER -> {
+                        childTop += (rowHeight - childHeight) / 2
+                    }
                 }
 
-                val viewLeft = currentLeft + childLeftMargin
-                val viewTop = initialTop + childTopMargin
-
-                child.layout(viewLeft, viewTop, viewLeft + childWidth, viewTop + childHeight)
+                child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
 
                 currentLeft += requiredWidth
             }
@@ -288,7 +266,10 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
     }
 
     companion object {
-        const val ALIGNMENT_START = 0
-        const val ALIGNMENT_CENTER = 1
+        const val HORIZONTAL_ALIGNMENT_START = 0
+        const val HORIZONTAL_ALIGNMENT_CENTER = 1
+
+        const val VERTICAL_ROW_ALIGNMENT_TOP = 0
+        const val VERTICAL_ROW_ALIGNMENT_CENTER = 1
     }
 }

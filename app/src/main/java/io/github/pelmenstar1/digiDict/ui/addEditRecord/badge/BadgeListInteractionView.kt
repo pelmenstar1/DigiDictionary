@@ -72,6 +72,8 @@ class BadgeListInteractionView @JvmOverloads constructor(
     }
 
     init {
+        rowVerticalAlignment = VERTICAL_ROW_ALIGNMENT_CENTER
+
         addView(createAddButton().also { addButton = it })
     }
 
