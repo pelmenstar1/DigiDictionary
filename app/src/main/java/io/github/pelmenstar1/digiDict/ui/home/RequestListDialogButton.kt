@@ -46,11 +46,12 @@ class RequestListDialogButton @JvmOverloads constructor(
         icon = ResourcesCompat.getDrawable(res, R.drawable.ic_arrow_down, theme)
         iconGravity = ICON_GRAVITY_END
         iconTint = ResourcesCompat.getColorStateList(res, R.color.request_list_dialog_button_icon_tint, theme)
-        iconPadding = res.getDimensionPixelOffset(R.dimen.home_requestListDialogButton_iconPadding)
 
-        res.getDimensionPixelOffset(R.dimen.home_requestListDialogButton_verticalPadding).let {
-            setPadding(0, it, 0, it)
-        }
+        val verticalPadding = res.getDimensionPixelOffset(R.dimen.home_requestListDialogButton_verticalPadding)
+        val rightPadding = res.getDimensionPixelOffset(R.dimen.home_requestListDialogButton_rightPadding)
+
+        setPadding(0, verticalPadding, rightPadding, verticalPadding)
+
         minimumHeight = 0
         minHeight = 0
 
