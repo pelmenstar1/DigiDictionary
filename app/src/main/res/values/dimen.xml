@@ -11,6 +11,8 @@
 
     <dimen name="home_dateMarker_verticalMargin">10dp</dimen>
     <dimen name="home_dateMarker_backgroundRoundRadius">20dp</dimen>
+    <dimen name="home_requestListDialogButton_iconPadding">10dp</dimen>
+    <dimen name="home_requestListDialogButton_verticalPadding">4dp</dimen>
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>

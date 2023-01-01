@@ -6,48 +6,69 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true">
 
-    <FrameLayout
-        android:id="@+id/home_container"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:layout_marginBottom="70dp">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/home_recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/home_searchAddRecordContainer"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="8dp"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:visibility="gone"
-            tools:visibility="visible">
+            android:orientation="horizontal">
 
-            <TextView
-                style="@style/TextAppearance.Material3.BodyLarge"
+            <io.github.pelmenstar1.digiDict.ui.home.RequestListDialogButton
+                android:id="@+id/home_requestSortListDialogButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/home_searchNoResultsMessage" />
-
-            <Button
-                android:id="@+id/home_searchAddRecordButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:text="@string/add" />
+                android:layout_marginStart="7dp"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp"
+                app:prefix="@string/home_sort" />
 
         </LinearLayout>
 
-        <include layout="@layout/home_loading_error_and_progress_merge" />
-    </FrameLayout>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            tools:layout_marginBottom="70dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/home_recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <LinearLayout
+                android:id="@+id/home_searchAddRecordContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    style="@style/TextAppearance.Material3.BodyLarge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@string/home_searchNoResultsMessage" />
+
+                <Button
+                    android:id="@+id/home_searchAddRecordButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/add" />
+
+            </LinearLayout>
+
+            <include layout="@layout/home_loading_error_and_progress_merge" />
+        </FrameLayout>
+    </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/home_addRecord"

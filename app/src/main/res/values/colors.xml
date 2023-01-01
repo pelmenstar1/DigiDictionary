@@ -64,4 +64,6 @@
 
     <color name="home_date_marker_background_color">#80BAB7B7</color>
 
+    <color name="request_list_dialog_button_background">#3E3E3E</color>
+    <color name="request_list_dialog_button_icon_tint">#616060</color>
 </resources>

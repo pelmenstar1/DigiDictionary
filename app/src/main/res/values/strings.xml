@@ -52,6 +52,7 @@
     <string name="home_label">Home</string>
     <string name="home_loadingError">There was an error during the loading of the records.</string>
     <string name="home_searchNoResultsMessage">No results? Add a record then.</string>
+    <string name="home_sort">Sort</string>
 
     <!-- Remind records fragment -->
     <string name="remindRecords_labelInFragment">Remind</string>
