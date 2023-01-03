@@ -90,7 +90,15 @@ class HomePagingSource(
         val recordData = appDatabase.getConciseRecordsWithBadgesForHome(limit, offset, sortType)
         val recordDataSize = recordData.size
 
-        val result = computePageResult(recordData)
+        // For now, the only purpose of computePageResult is to add date markers where neccessary.
+        // Doing it when sorting is not related to dates has no sense and very strange.
+        //
+        // As computePageResult has a single purpose, no flags are added to control the transformation for now.
+        val result = if (sortType == HomeSortType.NEWEST || sortType == HomeSortType.OLDEST) {
+            computePageResult(recordData)
+        } else {
+            recordData.map { HomePageItem.Record(it, isBeforeDateMarker = false) }
+        }
 
         val nextPosToLoad = offset + recordDataSize
 
