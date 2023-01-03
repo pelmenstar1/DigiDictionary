@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.annotation.ArrayRes
 import androidx.annotation.StringRes
 import androidx.core.widget.TextViewCompat
-import com.google.android.material.divider.MaterialDivider
 import com.google.android.material.radiobutton.MaterialRadioButton
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
@@ -39,7 +38,6 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
         }
 
         root.addView(createTitleView(context))
-        //root.addView(createTitleDividerView(context))
         createAndAddViewsForItems(context, root)
 
         return ScrollView(context).apply {
@@ -60,24 +58,6 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
 
             text = res.getText(titleRes)
             TextViewCompat.setTextAppearance(this, R.style.TextAppearance_DigiDictionary_ConstListDialog_Title)
-        }
-    }
-
-    private fun createTitleDividerView(context: Context): MaterialDivider {
-        val res = context.resources
-
-        return MaterialDivider(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            ).apply {
-                val horizontalMargin =
-                    res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_titleDividerMarginHorizontal)
-
-                topMargin = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_titleDividerMarginTop)
-                leftMargin = horizontalMargin
-                rightMargin = horizontalMargin
-            }
         }
     }
 

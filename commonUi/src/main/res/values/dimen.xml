@@ -24,8 +24,6 @@
     <dimen name="singleSelectionDialog_rootVerticalPadding">20dp</dimen>
     <dimen name="singleSelectionDialog_rootHorizontalPadding">10dp</dimen>
     <dimen name="singleSelectionDialog_titleMarginStart">10dp</dimen>
-    <dimen name="singleSelectionDialog_titleDividerMarginTop">3dp</dimen>
-    <dimen name="singleSelectionDialog_titleDividerMarginHorizontal">5dp</dimen>
     <dimen name="singleSelectionDialog_textHorizontalPadding">15dp</dimen>
     <dimen name="singleSelectionDialog_textVerticalPadding">13dp</dimen>
 </resources>
