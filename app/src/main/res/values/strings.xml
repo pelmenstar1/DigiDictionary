@@ -54,6 +54,21 @@
     <string name="home_searchNoResultsMessage">No results? Add a record then.</string>
     <string name="home_sort">Sort</string>
 
+    <string name="home_sortType_newest">Newest</string>
+    <string name="home_sortType_oldest">Oldest</string>
+    <string name="home_sortType_greatestScore">Greatest score</string>
+    <string name="home_sortType_leastScore">Least score</string>
+    <string name="home_sortType_byExpression">By expression (A-Z)</string>
+    <string name="home_sortType_byExpressionInverse">By expression (Z-A)</string>
+    <string-array name="home_sortTypes">
+        <item>@string/home_sortType_newest</item>
+        <item>@string/home_sortType_oldest</item>
+        <item>@string/home_sortType_greatestScore</item>
+        <item>@string/home_sortType_leastScore</item>
+        <item>@string/home_sortType_byExpression</item>
+        <item>@string/home_sortType_byExpressionInverse</item>
+    </string-array>
+
     <!-- Remind records fragment -->
     <string name="remindRecords_labelInFragment">Remind</string>
     <string name="remindRecords_label">Remind me!</string>

@@ -8,8 +8,13 @@ import androidx.room.withTransaction
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.getConciseRecordsWithBadgesForHome
 
-class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int, HomePageItem>() {
+class HomePagingSource(
+    private val appDatabase: AppDatabase,
+    private val sortType: HomeSortType
+) : PagingSource<Int, HomePageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
         override fun onInvalidated(tables: MutableSet<String>) {
             invalidate()
@@ -82,7 +87,7 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
                 }
         }
 
-        val recordData = recordDao.getConciseRecordsWithBadgesLimitOffset(limit, offset)
+        val recordData = appDatabase.getConciseRecordsWithBadgesForHome(limit, offset, sortType)
         val recordDataSize = recordData.size
 
         val result = computePageResult(recordData)

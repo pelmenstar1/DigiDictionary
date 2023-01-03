@@ -101,10 +101,6 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override suspend fun getConciseRecordsLimitOffset(limit: Int, offset: Int): Array<ConciseRecord> {
-        throw NotImplementedError()
-    }
-
     override suspend fun getAllExpressions(): Array<String> {
         throw NotImplementedError()
     }

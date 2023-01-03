@@ -13,8 +13,10 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.common.DataLoadState
+import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
@@ -23,10 +25,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.plus
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
     private val viewModel by viewModels<HomeViewModel>()
+
+    @Inject
+    lateinit var homeSortTypeMessageMapper: MessageMapper<HomeSortType>
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -93,6 +99,9 @@ class HomeFragment : Fragment() {
             it.adapter = loadStatePagingAdapter
             it.layoutManager = LinearLayoutManager(context)
         }
+
+        initRequestSortListDialogButton(binding, pagingAdapter)
+        initSortTypeDialogIfShown(pagingAdapter)
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.items, pagingAdapter::submitData)
@@ -173,5 +182,39 @@ class HomeFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun initRequestSortListDialogButton(binding: FragmentHomeBinding, pagingAdapter: HomeAdapter) {
+        val button = binding.homeRequestSortListDialogButton
+
+        lifecycleScope.launchFlowCollector(viewModel.sortTypeFlow) { sortType ->
+            button.value = homeSortTypeMessageMapper.map(sortType)
+        }
+
+        button.setOnClickListener {
+            HomeSortTypeDialogFragment().let { dialog ->
+                initSortTypeDialog(dialog, pagingAdapter)
+
+                dialog.show(childFragmentManager, SORT_TYPE_DIALOG_TAG)
+            }
+        }
+    }
+
+    private fun initSortTypeDialog(dialog: HomeSortTypeDialogFragment, pagingAdapter: HomeAdapter) {
+        dialog.onValueSelected = { sortType ->
+            viewModel.sortType = sortType
+
+            pagingAdapter.refresh()
+        }
+    }
+
+    private fun initSortTypeDialogIfShown(pagingAdapter: HomeAdapter) {
+        childFragmentManager.findFragmentByTag(SORT_TYPE_DIALOG_TAG)?.let {
+            initSortTypeDialog(it as HomeSortTypeDialogFragment, pagingAdapter)
+        }
+    }
+
+    companion object {
+        private const val SORT_TYPE_DIALOG_TAG = "SortTypeDialog"
     }
 }

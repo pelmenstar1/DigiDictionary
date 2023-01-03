@@ -20,4 +20,11 @@
     <dimen name="settingItemContainer_nameMarginStart">8dp</dimen>
     <dimen name="settings_titlePadding">8dp</dimen>
     <dimen name="settings_actionItemNameVerticalMargin">5dp</dimen>
+
+    <dimen name="constListDialog_rootVerticalPadding">20dp</dimen>
+    <dimen name="constListDialog_rootHorizontalPadding">10dp</dimen>
+    <dimen name="constListDialog_titleMarginStart">10dp</dimen>
+
+    <dimen name="simpleTextConstListDialog_textHorizontalPadding">15dp</dimen>
+    <dimen name="simpleTextConstListDialog_textVerticalPadding">13dp</dimen>
 </resources>

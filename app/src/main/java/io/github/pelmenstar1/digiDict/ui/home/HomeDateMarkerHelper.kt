@@ -40,6 +40,8 @@ object HomeDateMarkerHelper {
 
             horizontalPadding = res.getDimensionPixelOffset(R.dimen.home_dateMarker_horizontalPadding)
             verticalPadding = res.getDimensionPixelOffset(R.dimen.home_dateMarker_verticalPadding)
+
+            // TODO: Don't make Drawable shared across views
             background = ResourcesCompat.getDrawable(res, R.drawable.home_date_marker_background, context.theme)!!
         }
     }
