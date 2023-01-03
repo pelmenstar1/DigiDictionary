@@ -69,13 +69,10 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
         val textHorizontalPadding = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_textHorizontalPadding)
         val textAppearance = TextAppearance(context) { BodyLarge }
 
-        val values = getValues()
-
         val itemOnClickListener = View.OnClickListener {
-            @Suppress("UNCHECKED_CAST")
-            val value = it.tag as TValue
+            val index = it.tag as Int
 
-            onValueSelected?.invoke(value)
+            onValueSelected?.invoke(getValueByIndex(index))
             dismiss()
         }
 
@@ -91,7 +88,7 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
                 layoutParams = itemLayoutParams
                 setPadding(textHorizontalPadding, textVerticalPadding, textHorizontalPadding, textVerticalPadding)
 
-                tag = values[index]
+                tag = index
                 text = choice
                 textAppearance.apply(this)
 
@@ -102,8 +99,7 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
         }
     }
 
-    // TODO: Use direct approach with getting the TValue by index
-    protected abstract fun getValues(): Array<out TValue>
+    protected abstract fun getValueByIndex(index: Int): TValue
 
     companion object {
         private const val ARGS_SELECTED_INDEX =

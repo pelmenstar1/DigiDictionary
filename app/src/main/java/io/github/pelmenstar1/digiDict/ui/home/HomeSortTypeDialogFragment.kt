@@ -11,7 +11,8 @@ class HomeSortTypeDialogFragment : SingleSelectionDialogFragment<HomeSortType>()
     override val titleRes: Int
         get() = R.string.home_sortTypeDialog_title
 
-    override fun getValues(): Array<out HomeSortType> = HomeSortType.values()
+
+    override fun getValueByIndex(index: Int) = HomeSortType.fromOrdinal(index)
 
     companion object {
         fun create(selectedIndex: Int): HomeSortTypeDialogFragment {
