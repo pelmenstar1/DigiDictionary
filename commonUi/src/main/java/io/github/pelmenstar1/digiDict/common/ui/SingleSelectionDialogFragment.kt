@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.ui.constListDialog
+package io.github.pelmenstar1.digiDict.common.ui
 
 import android.content.Context
 import android.os.Bundle
@@ -7,18 +7,20 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.annotation.ArrayRes
 import androidx.annotation.StringRes
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.divider.MaterialDivider
+import com.google.android.material.radiobutton.MaterialRadioButton
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
-import io.github.pelmenstar1.digiDict.common.ui.R
+import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 
-abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : MaterialDialogFragment() {
+abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() {
     var onValueSelected: ((TValue) -> Unit)? = null
 
-    protected open val useHorizontalPaddingOnItemContainer: Boolean
-        get() = true
+    @get:ArrayRes
+    protected abstract val choicesRes: Int
 
     @get:StringRes
     protected abstract val titleRes: Int
@@ -30,18 +32,14 @@ abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : Mat
         val root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
 
-            val verticalPadding = res.getDimensionPixelOffset(R.dimen.constListDialog_rootVerticalPadding)
-            val horizontalPadding = if (useHorizontalPaddingOnItemContainer) {
-                res.getDimensionPixelOffset(R.dimen.constListDialog_rootHorizontalPadding)
-            } else {
-                0
-            }
+            val verticalPadding = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_rootVerticalPadding)
+            val horizontalPadding = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_rootHorizontalPadding)
 
             setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
         }
 
         root.addView(createTitleView(context))
-        root.addView(createTitleDividerView(context))
+        //root.addView(createTitleDividerView(context))
         createAndAddViewsForItems(context, root)
 
         return ScrollView(context).apply {
@@ -57,7 +55,7 @@ abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : Mat
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                marginStart = res.getDimensionPixelOffset(R.dimen.constListDialog_titleMarginStart)
+                marginStart = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_titleMarginStart)
             }
 
             text = res.getText(titleRes)
@@ -73,9 +71,10 @@ abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : Mat
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT
             ).apply {
-                val horizontalMargin = res.getDimensionPixelOffset(R.dimen.constListDialog_titleDividerMarginHorizontal)
+                val horizontalMargin =
+                    res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_titleDividerMarginHorizontal)
 
-                topMargin = res.getDimensionPixelOffset(R.dimen.constListDialog_titleDividerMarginTop)
+                topMargin = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_titleDividerMarginTop)
                 leftMargin = horizontalMargin
                 rightMargin = horizontalMargin
             }
@@ -83,7 +82,13 @@ abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : Mat
     }
 
     private fun createAndAddViewsForItems(context: Context, root: LinearLayout) {
-        val reprItems = getRepresentationItems()
+        val res = context.resources
+
+        val choices = res.getStringArray(choicesRes)
+        val textVerticalPadding = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_textVerticalPadding)
+        val textHorizontalPadding = res.getDimensionPixelOffset(R.dimen.singleSelectionDialog_textHorizontalPadding)
+        val textAppearance = TextAppearance(context) { BodyLarge }
+
         val values = getValues()
 
         val itemOnClickListener = View.OnClickListener {
@@ -99,21 +104,35 @@ abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : Mat
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        val resData = createResourcesData(context)
+        val selectedIndex = arguments?.getInt(ARGS_SELECTED_INDEX) ?: -1
 
-        for ((index, item) in reprItems.withIndex()) {
-            root.addView(createViewForItem(context, item, resData).also {
-                it.layoutParams = itemLayoutParams
-                it.tag = values[index]
+        for ((index, choice) in choices.withIndex()) {
+            root.addView(MaterialRadioButton(context).apply {
+                layoutParams = itemLayoutParams
+                setPadding(textHorizontalPadding, textVerticalPadding, textHorizontalPadding, textVerticalPadding)
 
-                it.setOnClickListener(itemOnClickListener)
+                tag = values[index]
+                text = choice
+                textAppearance.apply(this)
+
+                setOnClickListener(itemOnClickListener)
+
+                isChecked = index == selectedIndex
             })
         }
     }
 
-    protected abstract fun getRepresentationItems(): Array<out TRepr>
+    // TODO: Use direct approach with getting the TValue by index
     protected abstract fun getValues(): Array<out TValue>
 
-    protected abstract fun createResourcesData(context: Context): TResData
-    protected abstract fun createViewForItem(context: Context, item: TRepr, resData: TResData): View
+    companion object {
+        private const val ARGS_SELECTED_INDEX =
+            "io.github.pelmenstar1.digiDict.SingleSelectionDialogFragment.selectedIndex"
+
+        fun createArguments(selectedIndex: Int): Bundle {
+            return Bundle(1).apply {
+                putInt(ARGS_SELECTED_INDEX, selectedIndex)
+            }
+        }
+    }
 }

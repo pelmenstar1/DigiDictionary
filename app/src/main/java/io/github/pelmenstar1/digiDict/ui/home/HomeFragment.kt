@@ -192,7 +192,7 @@ class HomeFragment : Fragment() {
         }
 
         button.setOnClickListener {
-            HomeSortTypeDialogFragment().let { dialog ->
+            HomeSortTypeDialogFragment.create(selectedValue = viewModel.sortType).let { dialog ->
                 initSortTypeDialog(dialog, pagingAdapter)
 
                 dialog.show(childFragmentManager, SORT_TYPE_DIALOG_TAG)
