@@ -50,10 +50,10 @@ class HomePagingSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, HomePageItem> {
         return try {
-            if (itemCount >= 0) {
-                load(params, itemCount)
-            } else {
-                appDatabase.withTransaction {
+            appDatabase.withTransaction {
+                if (itemCount >= 0) {
+                    load(params, itemCount)
+                } else {
                     itemCount = queryItemCount()
 
                     load(params, itemCount)
@@ -95,7 +95,7 @@ class HomePagingSource(
         //
         // As computePageResult has a single purpose, no flags are added to control the transformation for now.
         val result = if (sortType == HomeSortType.NEWEST || sortType == HomeSortType.OLDEST) {
-            computePageResult(recordData)
+            computePageResult(recordData, sortType)
         } else {
             recordData.map { HomePageItem.Record(it, isBeforeDateMarker = false) }
         }
@@ -113,15 +113,22 @@ class HomePagingSource(
         )
     }
 
-    private suspend fun computePageResult(recordData: Array<out ConciseRecordWithBadges>): List<HomePageItem> {
+    private suspend fun computePageResult(
+        recordData: Array<out ConciseRecordWithBadges>,
+        sortType: HomeSortType
+    ): List<HomePageItem> {
         val dataSize = recordData.size
 
-        if (dataSize > 0) {
+        return if (dataSize > 0) {
             val result = ArrayList<HomePageItem>(dataSize + (dataSize * 3) / 2)
 
             val firstRecord = recordData[0]
             var currentEpochDay = firstRecord.epochSeconds / SECONDS_IN_DAY
-            val firstRecordIdWithEpochDay = recordDao.getFirstRecordIdWithEpochDay(currentEpochDay)
+            val firstRecordIdWithEpochDay = if (sortType == HomeSortType.NEWEST) {
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(currentEpochDay)
+            } else {
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayAsc(currentEpochDay)
+            }
 
             if (firstRecordIdWithEpochDay == firstRecord.id) {
                 result.add(HomePageItem.DateMarker(currentEpochDay))
@@ -156,9 +163,9 @@ class HomePagingSource(
                 result.add(HomePageItem.Record(record, isBeforeDateMarker))
             }
 
-            return result
+            result
         } else {
-            return emptyList()
+            emptyList()
         }
     }
 
