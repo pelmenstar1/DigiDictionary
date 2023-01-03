@@ -6,6 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.TextView
+import androidx.annotation.StringRes
+import androidx.core.widget.TextViewCompat
+import com.google.android.material.divider.MaterialDivider
+import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
 import io.github.pelmenstar1.digiDict.common.ui.R
 
@@ -14,6 +19,9 @@ abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : Mat
 
     protected open val useHorizontalPaddingOnItemContainer: Boolean
         get() = true
+
+    @get:StringRes
+    protected abstract val titleRes: Int
 
     override fun createDialogView(layoutInflater: LayoutInflater, savedInstanceState: Bundle?): View {
         val context = requireContext()
@@ -32,10 +40,45 @@ abstract class AbstractConstantListDialogFragment<TValue, TRepr, TResData> : Mat
             setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
         }
 
+        root.addView(createTitleView(context))
+        root.addView(createTitleDividerView(context))
         createAndAddViewsForItems(context, root)
 
         return ScrollView(context).apply {
             addView(root)
+        }
+    }
+
+    private fun createTitleView(context: Context): TextView {
+        val res = context.resources
+
+        return MaterialTextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = res.getDimensionPixelOffset(R.dimen.constListDialog_titleMarginStart)
+            }
+
+            text = res.getText(titleRes)
+            TextViewCompat.setTextAppearance(this, R.style.TextAppearance_DigiDictionary_ConstListDialog_Title)
+        }
+    }
+
+    private fun createTitleDividerView(context: Context): MaterialDivider {
+        val res = context.resources
+
+        return MaterialDivider(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            ).apply {
+                val horizontalMargin = res.getDimensionPixelOffset(R.dimen.constListDialog_titleDividerMarginHorizontal)
+
+                topMargin = res.getDimensionPixelOffset(R.dimen.constListDialog_titleDividerMarginTop)
+                leftMargin = horizontalMargin
+                rightMargin = horizontalMargin
+            }
         }
     }
 

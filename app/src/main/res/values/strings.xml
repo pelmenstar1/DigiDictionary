@@ -69,6 +69,8 @@
         <item>@string/home_sortType_byExpressionInverse</item>
     </string-array>
 
+    <string name="home_sortTypeDialog_title">Sorting</string>
+
     <!-- Remind records fragment -->
     <string name="remindRecords_labelInFragment">Remind</string>
     <string name="remindRecords_label">Remind me!</string>

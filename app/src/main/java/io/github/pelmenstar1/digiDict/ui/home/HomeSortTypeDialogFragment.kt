@@ -8,5 +8,8 @@ class HomeSortTypeDialogFragment : SimpleTextConstantListDialogFragment<HomeSort
     override val stringArrayResource: Int
         get() = R.array.home_sortTypes
 
+    override val titleRes: Int
+        get() = R.string.home_sortTypeDialog_title
+
     override fun getValues(): Array<out HomeSortType> = HomeSortType.values()
 }
