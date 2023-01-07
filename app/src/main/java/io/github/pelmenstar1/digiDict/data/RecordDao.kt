@@ -131,34 +131,11 @@ abstract class RecordDao {
         }
     }
 
-    @Query(
-        """
-        SELECT $CONCISE_RECORD_CONTENT
-        FROM records
-        ORDER BY dateTime DESC 
-        LIMIT :limit OFFSET :offset
-        """
-    )
-    abstract suspend fun getConciseRecordsLimitOffset(
-        limit: Int,
-        offset: Int,
-    ): Array<ConciseRecord>
-
-    suspend fun getConciseRecordsWithBadgesLimitOffset(
-        limit: Int,
-        offset: Int
-    ): Array<ConciseRecordWithBadges> {
-        val records = getConciseRecordsLimitOffset(limit, offset)
-
-        return records.mapToArray {
-            val badges = getRecordBadgesByRecordId(it.id)
-
-            ConciseRecordWithBadges.create(it, badges)
-        }
-    }
-
     @Query("SELECT id FROM records WHERE (dateTime / 86400) = :epochDay ORDER BY dateTime DESC LIMIT 1")
-    abstract suspend fun getFirstRecordIdWithEpochDay(epochDay: Long): Int?
+    abstract suspend fun getFirstRecordIdWithEpochDayOrderByEpochDayDesc(epochDay: Long): Int?
+
+    @Query("SELECT id FROM records WHERE (dateTime / 86400) = :epochDay ORDER BY dateTime ASC LIMIT 1")
+    abstract suspend fun getFirstRecordIdWithEpochDayOrderByEpochDayAsc(epochDay: Long): Int?
 
     @Query("SELECT expression FROM records")
     abstract suspend fun getAllExpressions(): Array<String>

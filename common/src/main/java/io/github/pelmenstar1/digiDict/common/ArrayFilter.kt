@@ -2,11 +2,14 @@ package io.github.pelmenstar1.digiDict.common
 
 import kotlin.math.min
 
-class FilteredArray<out T>(
-    private val origin: Array<out T>,
+class FilteredArray<out T> @PublishedApi internal constructor(
+    internal val origin: Array<out T>,
 
     // If the bit at position N is set, it means that element N in origin passed a filtering.
-    private val bitSet: LongArray,
+    internal val bitSet: LongArray,
+
+    // Maps relative index to its actual relative index, can be used in sorting.
+    internal val bitSetMap: IntArray? = null,
 
     // If 'size' argument is negative, size will be computed using bitSet and Long.countOneBits
     //
@@ -17,7 +20,14 @@ class FilteredArray<out T>(
     override val size: Int = if (size >= 0) size else bitSet.sumOf(Long::countOneBits)
 
     operator fun get(index: Int): T {
-        return origin[resolveIndex(index)]
+        val map = bitSetMap
+        var i = index
+
+        if (map != null) {
+            i = map[index]
+        }
+
+        return origin[resolveIndex(i)]
     }
 
     // Finds such a position N, that range [0; N] of bitSet has 'index' set bits.
@@ -95,7 +105,7 @@ class FilteredArray<out T>(
     }
 
     companion object {
-        private val EMPTY = FilteredArray<Any>(emptyArray(), EmptyArray.LONG)
+        private val EMPTY = FilteredArray<Any>(emptyArray(), EmptyArray.LONG, bitSetMap = null, size = 0)
 
         @Suppress("UNCHECKED_CAST")
         fun <T> empty() = EMPTY as FilteredArray<T>
@@ -140,5 +150,5 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
         start = end
     }
 
-    return FilteredArray(this, bitSet, size = filteredSize)
+    return FilteredArray(this, bitSet, bitSetMap = null, size = filteredSize)
 }

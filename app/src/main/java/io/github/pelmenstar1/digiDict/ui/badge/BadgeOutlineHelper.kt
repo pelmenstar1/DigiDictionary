@@ -6,6 +6,7 @@ import android.graphics.Paint
 import androidx.annotation.ColorInt
 import io.github.pelmenstar1.digiDict.R
 
+// TODO: Use MaxRoundRectDrawable
 class BadgeOutlineHelper(context: Context) {
     private val strokeWidth: Float
     private var outlineRoundRadius = 0f

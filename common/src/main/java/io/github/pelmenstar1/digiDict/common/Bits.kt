@@ -160,9 +160,9 @@ fun Int.withBit(mask: Int, state: Boolean): Int {
 fun Long.findPositionOfNthSetBit(n: Int): Int {
     var seqIndex = 0
 
-    iterateSetBits { bitIndex ->
+    iterateSetBitsRaw { bitIndex ->
         if (seqIndex == n) {
-            return bitIndex
+            return 63 - bitIndex
         }
 
         seqIndex++
@@ -171,14 +171,15 @@ fun Long.findPositionOfNthSetBit(n: Int): Int {
     return -1
 }
 
-inline fun Long.iterateSetBits(block: (bitIndex: Int) -> Unit) {
+// TODO: Add docs
+inline fun Long.iterateSetBitsRaw(block: (bitIndex: Int) -> Unit) {
     // Original source: https://lemire.me/blog/2018/02/21/iterating-over-set-bits-quickly/
     var bits = this
 
     while (bits != 0L) {
         val t = bits and (-bits)
         val bitIndex = t.countLeadingZeroBits()
-        block(63 - bitIndex)
+        block(bitIndex)
 
         bits = bits xor t
     }
@@ -213,10 +214,10 @@ inline fun LongArray.iterateSetBits(block: (bitIndex: Int) -> Unit) {
         val element = this[i]
 
         // Multiply by 64
-        val baseIndex = i shl 6
+        val baseIndex = i shl 6 + 63
 
-        element.iterateSetBits { bitIndex ->
-            block(baseIndex + bitIndex)
+        element.iterateSetBitsRaw { bitIndex ->
+            block(baseIndex + 63 - bitIndex)
         }
     }
 }

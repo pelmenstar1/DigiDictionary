@@ -26,6 +26,12 @@ class SearchAdapter(
         FilteredArrayDiffCallback(oldData, newData)
     }
 
+    var afterDispatchChangesCallback: (() -> Unit)?
+        get() = asyncDiffer.afterDispatchChangesCallback
+        set(value) {
+            asyncDiffer.afterDispatchChangesCallback = value
+        }
+
     fun submitData(newData: FilteredArray<ConciseRecordWithBadges>) {
         asyncDiffer.submit(newData)
     }

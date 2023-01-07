@@ -8,8 +8,13 @@ import androidx.room.withTransaction
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.getConciseRecordsWithBadgesForHome
 
-class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int, HomePageItem>() {
+class HomePagingSource(
+    private val appDatabase: AppDatabase,
+    private val sortType: HomeSortType
+) : PagingSource<Int, HomePageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
         override fun onInvalidated(tables: MutableSet<String>) {
             invalidate()
@@ -45,10 +50,10 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, HomePageItem> {
         return try {
-            if (itemCount >= 0) {
-                load(params, itemCount)
-            } else {
-                appDatabase.withTransaction {
+            appDatabase.withTransaction {
+                if (itemCount >= 0) {
+                    load(params, itemCount)
+                } else {
                     itemCount = queryItemCount()
 
                     load(params, itemCount)
@@ -82,10 +87,18 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
                 }
         }
 
-        val recordData = recordDao.getConciseRecordsWithBadgesLimitOffset(limit, offset)
+        val recordData = appDatabase.getConciseRecordsWithBadgesForHome(limit, offset, sortType)
         val recordDataSize = recordData.size
 
-        val result = computePageResult(recordData)
+        // For now, the only purpose of computePageResult is to add date markers where neccessary.
+        // Doing it when sorting is not related to dates has no sense and very strange.
+        //
+        // As computePageResult has a single purpose, no flags are added to control the transformation for now.
+        val result = if (sortType == HomeSortType.NEWEST || sortType == HomeSortType.OLDEST) {
+            computePageResult(recordData, sortType)
+        } else {
+            recordData.map { HomePageItem.Record(it, isBeforeDateMarker = false) }
+        }
 
         val nextPosToLoad = offset + recordDataSize
 
@@ -100,15 +113,22 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
         )
     }
 
-    private suspend fun computePageResult(recordData: Array<out ConciseRecordWithBadges>): List<HomePageItem> {
+    private suspend fun computePageResult(
+        recordData: Array<out ConciseRecordWithBadges>,
+        sortType: HomeSortType
+    ): List<HomePageItem> {
         val dataSize = recordData.size
 
-        if (dataSize > 0) {
+        return if (dataSize > 0) {
             val result = ArrayList<HomePageItem>(dataSize + (dataSize * 3) / 2)
 
             val firstRecord = recordData[0]
             var currentEpochDay = firstRecord.epochSeconds / SECONDS_IN_DAY
-            val firstRecordIdWithEpochDay = recordDao.getFirstRecordIdWithEpochDay(currentEpochDay)
+            val firstRecordIdWithEpochDay = if (sortType == HomeSortType.NEWEST) {
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(currentEpochDay)
+            } else {
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayAsc(currentEpochDay)
+            }
 
             if (firstRecordIdWithEpochDay == firstRecord.id) {
                 result.add(HomePageItem.DateMarker(currentEpochDay))
@@ -143,9 +163,9 @@ class HomePagingSource(private val appDatabase: AppDatabase) : PagingSource<Int,
                 result.add(HomePageItem.Record(record, isBeforeDateMarker))
             }
 
-            return result
+            result
         } else {
-            return emptyList()
+            emptyList()
         }
     }
 

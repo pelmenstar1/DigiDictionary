@@ -7,6 +7,8 @@ import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.android.queryArrayWithProgressReporter
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
+// TODO: Think up a better file's name or split the file to the ones whose names better reflect the purpose
+
 fun AppDatabase.compileInsertRecordStatement(): SupportSQLiteStatement {
     return compileStatement("INSERT OR REPLACE INTO records (expression, meaning, additionalNotes, score, dateTime) VALUES (?,?,?,?,?)")
 }
@@ -119,13 +121,19 @@ fun AppDatabase.getBadgesByRecordId(getQuery: GetBadgesByRecordIdQuery, recordId
 }
 
 fun AppDatabase.getAllConciseRecordsWithBadges(progressReporter: ProgressReporter?): Array<ConciseRecordWithBadges> {
+    return queryConciseRecordsWithBadges(
+        "SELECT id, expression, meaning, score, dateTime FROM records",
+        progressReporter
+    )
+}
+
+fun AppDatabase.queryConciseRecordsWithBadges(
+    sql: String,
+    progressReporter: ProgressReporter?
+): Array<ConciseRecordWithBadges> {
     val getBadgesByRecordIdQuery = GetBadgesByRecordIdQuery()
 
-    return queryArrayWithProgressReporter(
-        "SELECT id, expression, meaning, score, dateTime FROM records",
-        null,
-        progressReporter
-    ) { c ->
+    return queryArrayWithProgressReporter(sql, null, progressReporter) { c ->
         val id = c.getInt(0)
         val expr = c.getString(1)
         val meaning = c.getString(2)
@@ -137,4 +145,3 @@ fun AppDatabase.getAllConciseRecordsWithBadges(progressReporter: ProgressReporte
         ConciseRecordWithBadges(id, expr, meaning, score, epochSeconds, badges)
     }
 }
-

@@ -1,5 +1,4 @@
 <resources>
-
     <style name="Widget.DigiDictionary.ListWidget.Container" parent="android:Widget">
         <item name="android:id">@android:id/background</item>
         <item name="android:padding">?attr/listWidgetPadding</item>

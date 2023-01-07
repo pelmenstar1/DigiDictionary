@@ -9,25 +9,34 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.android.onDatabaseTablesUpdated
 import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
+import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import io.github.pelmenstar1.digiDict.ui.home.search.SearchResult
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val appDatabase: AppDatabase
 ) : ViewModel() {
+    private val _sortTypeFlow = MutableStateFlow(HomeSortType.NEWEST)
+    val sortTypeFlow: StateFlow<HomeSortType>
+        get() = _sortTypeFlow
+
+    var sortType: HomeSortType
+        get() = _sortTypeFlow.value
+        set(value) {
+            _sortTypeFlow.value = value
+        }
+
     val items = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = {
-            HomePagingSource(appDatabase)
+            HomePagingSource(appDatabase, sortType)
         }
     ).flow.cachedIn(viewModelScope)
 
@@ -51,13 +60,17 @@ class HomeViewModel @Inject constructor(
                     }
                 }
 
-            recordFlow.combine(GlobalSearchQueryProvider.queryFlow) { records, query ->
+            combine(
+                GlobalSearchQueryProvider.queryFlow, recordFlow, _sortTypeFlow
+            ) { query, records, sortType ->
                 val isMeaningfulQuery = query.containsLetterOrDigit()
 
                 // Search can only be performed if query contains at least one letter or digit.
                 // Otherwise, there's no sense in it because such expressions and meanings are forbidden
                 val result = if (isMeaningfulQuery) {
-                    RecordSearchUtil.filter(records, query)
+                    RecordSearchUtil
+                        .filter(records, query)
+                        .sorted(sortType.getComparatorForConciseRecordWithBadges())
                 } else {
                     FilteredArray.empty()
                 }
