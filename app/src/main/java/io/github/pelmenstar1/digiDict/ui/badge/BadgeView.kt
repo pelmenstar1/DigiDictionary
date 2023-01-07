@@ -1,14 +1,14 @@
 package io.github.pelmenstar1.digiDict.ui.badge
 
 import android.content.Context
-import android.graphics.Canvas
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.android.MaxRoundRectDrawable
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
 // Instantiated only from the code.
 class BadgeView(context: Context) : MaterialTextView(context) {
-    private val outlineHelper = BadgeOutlineHelper(context)
+    private val badgeBackground: MaxRoundRectDrawable
 
     private var _badge: RecordBadgeInfo? = null
     var badge: RecordBadgeInfo
@@ -18,30 +18,22 @@ class BadgeView(context: Context) : MaterialTextView(context) {
                 _badge = value
 
                 text = value.name
-                outlineHelper.setOutlineColor(value.outlineColor)
-
-                invalidate()
+                badgeBackground.color = value.outlineColor
             }
         }
 
     init {
-        with(context.resources) {
-            val horizontalPadding = getDimensionPixelOffset(R.dimen.badge_paddingHorizontal)
-            val verticalPadding = getDimensionPixelOffset(R.dimen.badge_paddingVertical)
+        val res = context.resources
 
-            setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+        val horizontalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingHorizontal)
+        val verticalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingVertical)
+
+        setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+
+        badgeBackground = BadgeOutlineHelper.createBackground(context).also {
+            background = it
         }
 
         ellipsize = null
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        outlineHelper.onSizeChanged(w, h)
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-
-        outlineHelper.draw(canvas)
     }
 }

@@ -74,13 +74,21 @@ class MaxRoundRectDrawable : Drawable() {
         val bounds = bounds
         val roundRadius = min(bounds.width(), bounds.height()) * 0.5f
 
-        canvas.drawRoundRect(
-            bounds.left.toFloat(),
-            bounds.top.toFloat(),
-            bounds.right.toFloat(),
-            bounds.bottom.toFloat(),
-            roundRadius, roundRadius,
-            paint
-        )
+        val left = bounds.left.toFloat()
+        val top = bounds.top.toFloat()
+        val right = bounds.right.toFloat()
+        val bottom = bounds.bottom.toFloat()
+
+        if (paint.style == Paint.Style.FILL) {
+            canvas.drawRoundRect(left, top, right, bottom, roundRadius, roundRadius, paint)
+        } else {
+            val sw = paint.strokeWidth * 0.5f
+
+            canvas.drawRoundRect(
+                left + sw, top + sw, right - sw, bottom - sw,
+                roundRadius, roundRadius,
+                paint
+            )
+        }
     }
 }

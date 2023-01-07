@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.badge
 
 import android.content.Context
-import android.graphics.Canvas
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
@@ -10,6 +9,7 @@ import androidx.core.view.setPadding
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.android.MaxRoundRectDrawable
 import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 
@@ -18,7 +18,7 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
     private val textView: TextView
     private val removeButton: Button
 
-    private val outlineHelper = BadgeOutlineHelper(context)
+    private val badgeBackground: MaxRoundRectDrawable
     private var _badge: RecordBadgeInfo? = null
 
     var badge: RecordBadgeInfo
@@ -28,7 +28,7 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
                 _badge = value
 
                 textView.text = value.name
-                outlineHelper.setOutlineColor(value.outlineColor)
+                badgeBackground.color = value.outlineColor
 
                 invalidate()
             }
@@ -36,7 +36,6 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
 
     init {
         orientation = HORIZONTAL
-        setWillNotDraw(false)
 
         val res = context.resources
         val horizontalPadding = res.getDimensionPixelOffset(R.dimen.badge_paddingHorizontal)
@@ -48,6 +47,10 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
             horizontalPadding,
             verticalPadding
         )
+
+        badgeBackground = BadgeOutlineHelper.createBackground(context).also {
+            background = it
+        }
 
         addView(MaterialTextView(context).apply {
             layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
@@ -84,17 +87,5 @@ class BadgeWithRemoveButtonView(context: Context) : LinearLayout(context) {
 
     fun setOnRemoveListener(listener: OnClickListener) {
         removeButton.setOnClickListener(listener)
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-
-        outlineHelper.onSizeChanged(w, h)
-    }
-
-    override fun onDraw(c: Canvas) {
-        super.onDraw(c)
-
-        outlineHelper.draw(c)
     }
 }
