@@ -6,11 +6,11 @@
 
     <dimen name="home_stateContainerMarginTop">5dp</dimen>
     <dimen name="home_stateContainerMarginBottom">80dp</dimen>
+
     <dimen name="home_dateMarker_verticalPadding">3dp</dimen>
     <dimen name="home_dateMarker_horizontalPadding">6dp</dimen>
-
     <dimen name="home_dateMarker_verticalMargin">10dp</dimen>
-    <dimen name="home_dateMarker_backgroundRoundRadius">20dp</dimen>
+
     <dimen name="home_requestListDialogButton_startPadding">10dp</dimen>
     <dimen name="home_requestListDialogButton_endPadding">5dp</dimen>
     <dimen name="home_requestListDialogButton_verticalPadding">4dp</dimen>

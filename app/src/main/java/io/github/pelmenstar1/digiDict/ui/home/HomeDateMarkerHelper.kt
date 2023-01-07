@@ -1,7 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
 import android.content.Context
-import android.graphics.drawable.Drawable
+import android.graphics.Paint
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.android.MaxRoundRectDrawable
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.time.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
@@ -29,20 +30,21 @@ object HomeDateMarkerHelper {
         }
 
         val textAppearance = TextAppearance(context, R.style.TextAppearance_DigiDictionary_Home_DateMarker)
-        val background: Drawable
         val dateFormatter = CompatDateTimeFormatter(context, DATE_FORMAT)
+
+        val backgroundColor: Int
 
         val horizontalPadding: Int
         val verticalPadding: Int
 
         init {
             val res = context.resources
+            val theme = context.theme
 
             horizontalPadding = res.getDimensionPixelOffset(R.dimen.home_dateMarker_horizontalPadding)
             verticalPadding = res.getDimensionPixelOffset(R.dimen.home_dateMarker_verticalPadding)
 
-            // TODO: Don't make Drawable shared across views
-            background = ResourcesCompat.getDrawable(res, R.drawable.home_date_marker_background, context.theme)!!
+            backgroundColor = ResourcesCompat.getColor(res, R.color.home_date_marker_background_color, theme)
         }
     }
 
@@ -52,7 +54,10 @@ object HomeDateMarkerHelper {
             val verticalPadding = staticInfo.verticalPadding
 
             layoutParams = staticInfo.layoutParams
-            background = staticInfo.background
+            background = MaxRoundRectDrawable().also {
+                it.style = Paint.Style.FILL
+                it.color = staticInfo.backgroundColor
+            }
 
             setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
             staticInfo.textAppearance.apply(this)
