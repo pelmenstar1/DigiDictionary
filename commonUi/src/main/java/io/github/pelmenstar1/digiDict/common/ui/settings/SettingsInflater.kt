@@ -132,7 +132,6 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
     private fun createTitleViewInfo(textAppearance: TextAppearance): TitleViewInfo {
         val background = getTitleBackground(context)
 
-        // TODO: Try to load font in async way
         val typeface = ResourcesCompat.getFont(context, R.font.oswald_regular)
         val padding = context.resources.getDimensionPixelOffset(R.dimen.settings_titlePadding)
 
