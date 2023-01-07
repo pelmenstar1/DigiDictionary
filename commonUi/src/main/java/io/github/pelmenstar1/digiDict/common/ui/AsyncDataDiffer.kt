@@ -25,9 +25,11 @@ class AsyncDataDiffer<TData : SizedIterable<*>>(
     val currentData: TData
         get() = _currentData
 
+    var afterDispatchChangesCallback: (() -> Unit)? = null
+
     @MainThread
     fun submit(newData: TData) {
-        // As updateChannel's capacity is UNLIMITED, send is non-blocking.
+        // As updateChannel is CONFLATED, send is non-blocking.
         updateChannel.trySend(newData)
 
         startUpdateJobIfNecessary()
@@ -59,6 +61,7 @@ class AsyncDataDiffer<TData : SizedIterable<*>>(
                             _currentData = newData
 
                             diffResult.dispatchUpdatesTo(updateCallback)
+                            afterDispatchChangesCallback?.invoke()
                         }
                     }
                 }

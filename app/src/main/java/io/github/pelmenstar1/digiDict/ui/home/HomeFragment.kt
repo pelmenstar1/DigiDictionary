@@ -43,6 +43,8 @@ class HomeFragment : Fragment() {
         val context = requireContext()
 
         val binding = FragmentHomeBinding.inflate(inflater, container, false)
+        val recyclerView = binding.homeRecyclerView
+
         val onViewRecord: (Int) -> Unit = { id ->
             val directions = HomeFragmentDirections.actionHomeToViewRecord(id)
 
@@ -50,8 +52,19 @@ class HomeFragment : Fragment() {
         }
 
         val pagingAdapter = HomeAdapter(onViewRecord = onViewRecord)
-        val searchAdapter =
-            SearchAdapter(differScope = lifecycleScope + Dispatchers.Default, onViewRecord = onViewRecord)
+        val searchAdapter = SearchAdapter(
+            differScope = lifecycleScope + Dispatchers.Default,
+            onViewRecord = onViewRecord
+        ).apply {
+            afterDispatchChangesCallback = {
+                // It's better for the UX to scroll to the top in order to
+                // show the most relevant elements. It's due to the fact the scroll position remains the same
+                // between the changes. Then when we the query or sort type change, the scroll position will be the same and
+                // the data is changed, so we'll get into the situation when we're showing not very relevant data according
+                // to the sort type.
+                recyclerView.scrollToPosition(0)
+            }
+        }
 
         val stateContainerBinding = HomeLoadingErrorAndProgressMergeBinding.bind(binding.root)
         val retryLambda = pagingAdapter::retry
@@ -66,8 +79,6 @@ class HomeFragment : Fragment() {
                 pagingAdapter.retry()
             }
         }
-
-        val recyclerView = binding.homeRecyclerView
 
         val addRecordButton = binding.homeAddRecord.also {
             it.setOnClickListener {
