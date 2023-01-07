@@ -42,12 +42,10 @@ fun <T> FilteredArray<T>.sorted(comparator: Comparator<T>): FilteredArray<T> {
                 var indexValue = origin[indexBitPos]
                 val nextIndexValue = origin[nextIndexBitPos]
 
-                if (index < i - 1) {
-                    // If left child is smaller than right child point index variable to right child.
-                    if (comparator.compare(indexValue, origin[nextIndexBitPos]) < 0) {
-                        index++
-                        indexValue = nextIndexValue
-                    }
+                // If left child is smaller than right child point index variable to right child.
+                if (index < i - 1 && comparator.compare(indexValue, nextIndexValue) < 0) {
+                    index++
+                    indexValue = nextIndexValue
                 }
 
                 val jBitPos = bitSet.findPositionOfNthSetBit(map[j])
