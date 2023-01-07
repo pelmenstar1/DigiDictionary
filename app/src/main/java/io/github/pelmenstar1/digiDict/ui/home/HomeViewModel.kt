@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.common.android.onDatabaseTablesUpdated
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
+import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import io.github.pelmenstar1.digiDict.ui.home.search.SearchResult
@@ -59,13 +60,17 @@ class HomeViewModel @Inject constructor(
                     }
                 }
 
-            recordFlow.combine(GlobalSearchQueryProvider.queryFlow) { records, query ->
+            combine(
+                GlobalSearchQueryProvider.queryFlow, recordFlow, _sortTypeFlow
+            ) { query, records, sortType ->
                 val isMeaningfulQuery = query.containsLetterOrDigit()
 
                 // Search can only be performed if query contains at least one letter or digit.
                 // Otherwise, there's no sense in it because such expressions and meanings are forbidden
                 val result = if (isMeaningfulQuery) {
-                    RecordSearchUtil.filter(records, query)
+                    RecordSearchUtil
+                        .filter(records, query)
+                        .sorted(sortType.getComparatorForConciseRecordWithBadges())
                 } else {
                     FilteredArray.empty()
                 }
