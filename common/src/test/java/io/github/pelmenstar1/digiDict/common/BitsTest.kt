@@ -49,13 +49,12 @@ class BitsTest {
         )
     }
 
-
     @Test
-    fun iterateSetBitsTest() {
+    fun iterateSetBitsRawTest() {
         fun testCase(value: Long, expectedBitsSet: Array<Int>) {
             val list = ArrayList<Int>()
 
-            value.iterateSetBits {
+            value.iterateSetBitsRaw {
                 list.add(it)
             }
 
@@ -64,22 +63,22 @@ class BitsTest {
 
         testCase(
             0b00000000_00000000_00000100_00000000_00000000_00000000_10001001,
-            expectedBitsSet = arrayOf(0, 3, 7, 34)
+            expectedBitsSet = arrayOf(63, 60, 56, 29)
         )
 
         testCase(
             0b00000000_00000000_00000100_00000000_00000000_00000000_11111111,
-            expectedBitsSet = arrayOf(0, 1, 2, 3, 4, 5, 6, 7, 34)
+            expectedBitsSet = arrayOf(63, 62, 61, 60, 59, 58, 57, 56, 29)
         )
 
         testCase(
             0b11111111_00000000_00000100_00000000_00000000_00000000_10001001,
-            expectedBitsSet = arrayOf(0, 3, 7, 34, 48, 49, 50, 51, 52, 53, 54, 55)
+            expectedBitsSet = arrayOf(63, 60, 56, 29, 15, 14, 13, 12, 11, 10, 9, 8)
         )
 
         testCase(
             0b10110111_00010100_00100100_00100000_10000000_01010011_00001001,
-            expectedBitsSet = arrayOf(0, 3, 8, 9, 12, 14, 23, 29, 34, 37, 42, 44, 48, 49, 50, 52, 53, 55)
+            expectedBitsSet = arrayOf(63, 60, 55, 54, 51, 49, 40, 34, 29, 26, 21, 19, 15, 14, 13, 11, 10, 8)
         )
     }
 
