@@ -25,40 +25,42 @@ fun <T> FilteredArray<T>.sorted(comparator: Comparator<T>): FilteredArray<T> {
     initMap(bitSet, map)
     buildMaxHeap(origin, bitSet, map, comparator)
 
-    val firstSetBitIndex = bitSet.firstSetBit()
+    val firstSetBitPos = bitSet.firstSetBit()
     var i = arraySize - 1
 
     bitSet.iterateSetBitsFromEndExceptFirst { bitIndex ->
         // Swap value of first indexed with last indexed
-        map.swapValuesAt(firstSetBitIndex, bitIndex)
+        map.swapValuesAt(firstSetBitPos, bitIndex)
 
         // Maintaining heap property after each swapping
         var j = 0
+        var jBitPos = firstSetBitPos
+
         var index: Int
 
         do {
             index = 2 * j + 1
 
             if (index < i) {
-                var indexBitIndex = bitSet.findPositionOfNthSetBit(index)
-                val nextIndexBitIndex = bitSet.nextSetBit(fromIndex = indexBitIndex + 1)
+                var indexBitPos = bitSet.findPositionOfNthSetBit(index)
+                val nextIndexBitPos = bitSet.nextSetBit(fromIndex = indexBitPos + 1)
 
-                var indexValue = origin[map[indexBitIndex]]
-                val nextIndexValue = origin[map[nextIndexBitIndex]]
+                var indexValue = origin[map[indexBitPos]]
+                val nextIndexValue = origin[map[nextIndexBitPos]]
 
                 // If left child is smaller than right child point index variable to right child.
                 if (index < i - 1 && comparator.compare(indexValue, nextIndexValue) < 0) {
                     index++
                     indexValue = nextIndexValue
-                    indexBitIndex = nextIndexBitIndex
+                    indexBitPos = nextIndexBitPos
                 }
-
-                val jBitPos = bitSet.findPositionOfNthSetBit(j)
 
                 // if parent is smaller than child then swapping parent with child having higher value
                 if (comparator.compare(origin[map[jBitPos]], indexValue) < 0) {
-                    map.swapValuesAt(jBitPos, indexBitIndex)
+                    map.swapValuesAt(jBitPos, indexBitPos)
                 }
+
+                jBitPos = indexBitPos
             }
 
             j = index
@@ -84,28 +86,36 @@ private fun <T> buildMaxHeap(
     comparator: Comparator<T>
 ) {
     var i = 1
+
     bitSet.iterateSetBitsExceptFirst { childBitIndex ->
+        val parentBitPos = bitSet.findPositionOfNthSetBit((i - 1) / 2)
+
         val childIndex = map[childBitIndex]
-        val parentIndex = map[bitSet.findPositionOfNthSetBit((i - 1) / 2)]
+        val parentIndex = map[parentBitPos]
 
         // If child is bigger than parent
         if (comparator.compare(origin[childIndex], origin[parentIndex]) > 0) {
             var j = i
+            var jBitPos = childBitIndex
+            var nextParentBitPos = parentBitPos
 
             // Swap child and parent until parent is smaller
             while (true) {
                 val nextParentIndex = (j - 1) / 2
 
-                val jBitIndex = bitSet.findPositionOfNthSetBit(j)
-                val nextParentBitIndex = bitSet.findPositionOfNthSetBit(nextParentIndex)
-
-                if (comparator.compare(origin[map[jBitIndex]], origin[map[nextParentBitIndex]]) <= 0) {
+                if (comparator.compare(origin[map[jBitPos]], origin[map[nextParentBitPos]]) <= 0) {
                     break
                 }
 
-                map.swapValuesAt(jBitIndex, nextParentBitIndex)
+                map.swapValuesAt(jBitPos, nextParentBitPos)
 
                 j = nextParentIndex
+                jBitPos = nextParentBitPos
+
+                // Calculate nextParentBitIndex for the next iteration.
+                // This is done to get rid of one findPositionOfNthSetBit in the first iteration when
+                // parentBitPos is used
+                nextParentBitPos = bitSet.findPositionOfNthSetBit((j - 1) / 2)
             }
         }
 

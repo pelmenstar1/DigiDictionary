@@ -234,6 +234,7 @@ inline fun LongArray.iterateSetBitsExceptFirst(block: (bitIndex: Int) -> Unit) {
     }
 }
 
+// TODO: Apparently it can be implemented w/o using Long.reverse()
 inline fun LongArray.iterateSetBitsFromEndExceptFirst(block: (bitIndex: Int) -> Unit) {
     var prevIndex = -1
 
