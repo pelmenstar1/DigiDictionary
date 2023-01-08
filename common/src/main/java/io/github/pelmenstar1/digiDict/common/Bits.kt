@@ -214,10 +214,39 @@ inline fun LongArray.iterateSetBits(block: (bitIndex: Int) -> Unit) {
         val element = this[i]
 
         // Multiply by 64
-        val baseIndex = i shl 6 + 63
+        val baseIndex = (i shl 6) + 63
 
         element.iterateSetBitsRaw { bitIndex ->
-            block(baseIndex + 63 - bitIndex)
+            block(baseIndex - bitIndex)
+        }
+    }
+}
+
+inline fun LongArray.iterateSetBitsExceptFirst(block: (bitIndex: Int) -> Unit) {
+    var isFirst = true
+
+    iterateSetBits { bitIndex ->
+        if (isFirst) {
+            isFirst = false
+        } else {
+            block(bitIndex)
+        }
+    }
+}
+
+inline fun LongArray.iterateSetBitsFromEndExceptFirst(block: (bitIndex: Int) -> Unit) {
+    var prevIndex = -1
+
+    for (i in (size - 1) downTo 0) {
+        val word = java.lang.Long.reverse(this[i])
+        val baseIndex = (i shl 6)
+
+        word.iterateSetBitsRaw { bitIndex ->
+            if (prevIndex >= 0) {
+                block(prevIndex)
+            }
+
+            prevIndex = baseIndex + bitIndex
         }
     }
 }
@@ -250,6 +279,18 @@ fun LongArray.nextSetBit(fromIndex: Int): Int {
 
         word = this[wordIndex]
     }
+}
+
+fun LongArray.firstSetBit(): Int {
+    for (i in indices) {
+        val word = this[i]
+
+        if (word != 0L) {
+            return i * 64 + word.countTrailingZeroBits()
+        }
+    }
+
+    return -1
 }
 
 fun Short.writeTo(dest: ByteArray, offset: Int) {

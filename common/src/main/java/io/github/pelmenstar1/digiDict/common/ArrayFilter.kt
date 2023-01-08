@@ -8,8 +8,8 @@ class FilteredArray<out T> @PublishedApi internal constructor(
     // If the bit at position N is set, it means that element N in origin passed a filtering.
     internal val bitSet: LongArray,
 
-    // Maps relative index to its actual relative index, can be used in sorting.
-    internal val bitSetMap: IntArray? = null,
+    // Maps absolute index to its actual absolute index, can be used in sorting.
+    internal val postBitSetMap: IntArray? = null,
 
     // If 'size' argument is negative, size will be computed using bitSet and Long.countOneBits
     //
@@ -20,14 +20,14 @@ class FilteredArray<out T> @PublishedApi internal constructor(
     override val size: Int = if (size >= 0) size else bitSet.sumOf(Long::countOneBits)
 
     operator fun get(index: Int): T {
-        val map = bitSetMap
-        var i = index
+        val map = postBitSetMap
+        var i = resolveIndex(index)
 
         if (map != null) {
-            i = map[index]
+            i = map[i]
         }
 
-        return origin[resolveIndex(i)]
+        return origin[i]
     }
 
     // Finds such a position N, that range [0; N] of bitSet has 'index' set bits.
@@ -105,7 +105,7 @@ class FilteredArray<out T> @PublishedApi internal constructor(
     }
 
     companion object {
-        private val EMPTY = FilteredArray<Any>(emptyArray(), EmptyArray.LONG, bitSetMap = null, size = 0)
+        private val EMPTY = FilteredArray<Any>(emptyArray(), EmptyArray.LONG, postBitSetMap = null, size = 0)
 
         @Suppress("UNCHECKED_CAST")
         fun <T> empty() = EMPTY as FilteredArray<T>
@@ -150,5 +150,5 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
         start = end
     }
 
-    return FilteredArray(this, bitSet, bitSetMap = null, size = filteredSize)
+    return FilteredArray(this, bitSet, postBitSetMap = null, size = filteredSize)
 }
