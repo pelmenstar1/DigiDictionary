@@ -86,11 +86,11 @@ class FilteredArrayDiffResult<T> internal constructor(
     private val diagonals: ArrayList<Diagonal>,
     private val oldArray: FilteredArray<T>,
     private val newArray: FilteredArray<T>,
-    private val oldStatuses: IntArray,
+    private val statuses: IntArray,
     private val itemCallback: FilteredArrayDiffItemCallback<T>
 ) {
     init {
-        Arrays.fill(oldStatuses, 0)
+        Arrays.fill(statuses, 0)
 
         addEdgeDiagonals()
         findMatchingItems()
@@ -129,7 +129,7 @@ class FilteredArrayDiffResult<T> internal constructor(
                 if(!itemCallback.areContentsTheSame(oldOrigin[oldIndex], newOrigin[newIndex])) {
                     val posX = diagX + offset
 
-                    oldStatuses[posX] = STATUS_CHANGED
+                    statuses[posX] = STATUS_CHANGED
                 }
 
                 xBitPos = oldBitSet.nextSetBit(fromIndex = xBitPos + 1)
@@ -166,7 +166,7 @@ class FilteredArrayDiffResult<T> internal constructor(
             var lastChangePos = -1
 
             for(j in 0 until diagonal.size) {
-                val status = oldStatuses[posX]
+                val status = statuses[posX]
 
                 if (status == STATUS_CHANGED) {
                     if(lastChangePos < 0) {
