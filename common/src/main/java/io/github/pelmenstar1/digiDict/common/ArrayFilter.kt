@@ -109,15 +109,29 @@ class FilteredArray<out T> @PublishedApi internal constructor(
 
         @Suppress("UNCHECKED_CAST")
         fun <T> empty() = EMPTY as FilteredArray<T>
+
+        fun <T> createUnsafe(array: Array<out T>, bitSet: LongArray, bitSetMap: IntArray? = null): FilteredArray<T> {
+            return FilteredArray(array, bitSet, bitSetMap)
+        }
+    }
+}
+
+object ArrayFilterHelpers {
+    fun calculateBitSetSize(dataSize: Int): Int {
+        return (dataSize + 63) shr 6
     }
 }
 
 inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): FilteredArray<E> {
-    val size = size
-
     // Ceiling division to 64
-    val bitSetSize = (size + 63) shr 6
+    val bitSetSize = ArrayFilterHelpers.calculateBitSetSize(size)
     val bitSet = LongArray(bitSetSize)
+
+    return filterFast(bitSet, predicate)
+}
+
+inline fun <E> Array<E>.filterFast(outBitSet: LongArray, predicate: (element: E) -> Boolean): FilteredArray<E> {
+    val size = size
 
     var wordIndex = 0
     var start = 0
@@ -145,10 +159,10 @@ inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): Filtered
             }
         }
 
-        bitSet[wordIndex++] = word
+        outBitSet[wordIndex++] = word
 
         start = end
     }
 
-    return FilteredArray(this, bitSet, postBitSetMap = null, size = filteredSize)
+    return FilteredArray(this, outBitSet, postBitSetMap = null, size = filteredSize)
 }

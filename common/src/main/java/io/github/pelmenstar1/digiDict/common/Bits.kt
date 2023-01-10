@@ -282,6 +282,65 @@ fun LongArray.nextSetBit(fromIndex: Int): Int {
     }
 }
 
+fun LongArray.previousSetBit(fromIndex: Int): Int {
+    if(fromIndex < 0) {
+        if(fromIndex == -1) {
+            return -1
+        }
+
+        throw IllegalArgumentException("fromIndex < -1 (fromIndex=$fromIndex)")
+    }
+
+    var wordIndex = fromIndex shr 6
+    if (wordIndex >= size) {
+        return -1
+    }
+
+    var word: Long = this[wordIndex] and (-1L ushr -(fromIndex + 1))
+
+    while (true) {
+        if (word != 0L) {
+            return (wordIndex + 1) * 64 - 1 - word.countLeadingZeroBits()
+        }
+
+        if (wordIndex-- == 0) {
+            return -1
+        }
+
+        word = this[wordIndex]
+    }
+}
+
+/*
+fun LongArray.nextClearBit(fromIndex: Int): Int {
+    if (fromIndex < 0) {
+        throw IllegalArgumentException("fromIndex < 0 (fromIndex=$fromIndex)")
+    }
+
+    val size = size
+    var wordIndex = fromIndex shr 6
+
+    if (wordIndex >= size) {
+        return -1
+    }
+
+    var word = this[wordIndex].inv() and (-1L shl fromIndex)
+
+    while (true) {
+        if (word != 0L) {
+            return wordIndex * 64 + word.countTrailingZeroBits()
+        }
+
+        if (++wordIndex == size) {
+            return -1
+        }
+
+        word = this[wordIndex].inv()
+    }
+}
+
+ */
+
 fun LongArray.firstSetBit(): Int {
     for (i in indices) {
         val word = this[i]

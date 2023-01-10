@@ -1,27 +1,17 @@
 package io.github.pelmenstar1.digiDict.common
 
+import io.github.pelmenstar1.digiDict.commonTestUtils.FilteredArrayTestUtils
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class FilteredArrayTests {
-    private fun createBitSet(size: Int, indices: IntArray): LongArray {
-        val wordCount = (size + 63) / 64
-        val bitSet = LongArray(wordCount)
-        for (index in indices) {
-            val wordIndex = index / 64
-            bitSet[wordIndex] = bitSet[wordIndex] or (1L shl index)
-        }
-
-        return bitSet
-    }
-
     @Test
     fun sizeTest() {
         fun testCase(originSize: Int, passedIndices: IntArray) {
             val origin = arrayOfNulls<Any>(originSize)
 
-            val bitSet = createBitSet(originSize, passedIndices)
+            val bitSet = FilteredArrayTestUtils.createBitSet(originSize, passedIndices)
             val filteredArray = FilteredArray(origin, bitSet)
 
             assertEquals(passedIndices.size, filteredArray.size)
@@ -47,7 +37,7 @@ class FilteredArrayTests {
                 }
             }
 
-            val bitSet = createBitSet(originSize, passedIndices)
+            val bitSet = FilteredArrayTestUtils.createBitSet(originSize, passedIndices)
             val filteredArray = FilteredArray(origin, bitSet)
 
             pIndex = 0
@@ -65,7 +55,7 @@ class FilteredArrayTests {
     @Test
     fun sortTest() {
         fun testCase(input: Array<Int>, passedIndices: IntArray, output: Array<Int>) {
-            val bitSet = createBitSet(input.size, passedIndices)
+            val bitSet = FilteredArrayTestUtils.createBitSet(input.size, passedIndices)
             val filteredInput = FilteredArray(input, bitSet)
             val filteredOutput = filteredInput.sorted { a, b -> a.compareTo(b) }
             val actualOutput = filteredOutput.toArray()

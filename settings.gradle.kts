@@ -47,6 +47,7 @@ dependencyResolutionManagement {
             library("android-material", "com.google.android.material", "material").version("1.6.1")
             library("androidx-constraintlayout", "androidx.constraintlayout", "constraintlayout").version("2.1.4")
             library("androidx-viewpager", "androidx.viewpager2", "viewpager2").version("1.0.0")
+            library("androidx-recyclerview", "androidx.recyclerview", "recyclerview").version("1.2.1")
 
             library("mpandroidchart", "com.github.PhilJay", "MPAndroidChart").version("v3.1.0")
 
