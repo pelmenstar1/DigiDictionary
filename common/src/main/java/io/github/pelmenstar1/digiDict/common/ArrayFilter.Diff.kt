@@ -87,12 +87,10 @@ class FilteredArrayDiffResult<T> internal constructor(
     private val oldArray: FilteredArray<T>,
     private val newArray: FilteredArray<T>,
     private val oldStatuses: IntArray,
-    private val newStatuses: IntArray,
     private val itemCallback: FilteredArrayDiffItemCallback<T>
 ) {
     init {
         Arrays.fill(oldStatuses, 0)
-        Arrays.fill(newStatuses, 0)
 
         addEdgeDiagonals()
         findMatchingItems()
@@ -130,10 +128,8 @@ class FilteredArrayDiffResult<T> internal constructor(
 
                 if(!itemCallback.areContentsTheSame(oldOrigin[oldIndex], newOrigin[newIndex])) {
                     val posX = diagX + offset
-                    val posY = diagY + offset
 
                     oldStatuses[posX] = STATUS_CHANGED
-                    newStatuses[posY] = STATUS_CHANGED
                 }
 
                 xBitPos = oldBitSet.nextSetBit(fromIndex = xBitPos + 1)
@@ -199,7 +195,6 @@ class FilteredArrayDiffResult<T> internal constructor(
 
     companion object {
         private const val STATUS_CHANGED = 1
-        private const val STATUS_NOT_CHANGED = 0
     }
 }
 
@@ -276,7 +271,7 @@ fun <T> FilteredArray<T>.calculateDifference(
     // sort snakes
     diagonals.sortWith(DIAGONAL_COMPARATOR)
 
-    return FilteredArrayDiffResult(diagonals, oldArray, newArray, forward, backward, cb)
+    return FilteredArrayDiffResult(diagonals, oldArray, newArray, forward, cb)
 }
 
 private fun <T> midPointFilteredArray(
