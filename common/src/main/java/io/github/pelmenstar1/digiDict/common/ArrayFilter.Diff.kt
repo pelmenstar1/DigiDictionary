@@ -459,18 +459,8 @@ private fun <T> backwardFilteredArray(
 
         // now find snake size
         while(x > oldStart && y > newStart) {
-            /*
-            if(!cb.areItemsTheSame(oldArray[x - 1], newArray[y - 1])) {
-                break
-            }
-
-            x--
-            y--
-            */
-
-
-            val oldIndex = mapIndex(x - 1, oldMap)
-            val newIndex = mapIndex(y - 1, newMap)
+            val oldIndex = mapIndex(xBitPos, oldMap)
+            val newIndex = mapIndex(yBitPos, newMap)
 
             if (!cb.areItemsTheSame(oldOrigin[oldIndex], newOrigin[newIndex])) {
                 break
