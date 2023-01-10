@@ -9,7 +9,7 @@ class FilteredArray<out T> @PublishedApi internal constructor(
     internal val bitSet: LongArray,
 
     // Maps absolute index to its actual absolute index, can be used in sorting.
-    internal val postBitSetMap: IntArray? = null,
+    val postBitSetMap: IntArray? = null,
 
     // If 'size' argument is negative, size will be computed using bitSet and Long.countOneBits
     //
@@ -122,15 +122,15 @@ object ArrayFilterHelpers {
     }
 }
 
-inline fun <E> Array<E>.filterFast(predicate: (element: E) -> Boolean): FilteredArray<E> {
+inline fun <E> Array<E>.toFilteredArray(predicate: (element: E) -> Boolean): FilteredArray<E> {
     // Ceiling division to 64
     val bitSetSize = ArrayFilterHelpers.calculateBitSetSize(size)
     val bitSet = LongArray(bitSetSize)
 
-    return filterFast(bitSet, predicate)
+    return toFilteredArray(bitSet, predicate)
 }
 
-inline fun <E> Array<E>.filterFast(outBitSet: LongArray, predicate: (element: E) -> Boolean): FilteredArray<E> {
+inline fun <E> Array<E>.toFilteredArray(outBitSet: LongArray, predicate: (element: E) -> Boolean): FilteredArray<E> {
     val size = size
 
     var wordIndex = 0

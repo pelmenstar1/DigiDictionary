@@ -1,7 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
 import io.github.pelmenstar1.digiDict.common.FilteredArray
-import io.github.pelmenstar1.digiDict.common.filterFast
+import io.github.pelmenstar1.digiDict.common.toFilteredArray
 import io.github.pelmenstar1.digiDict.common.nextLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.common.nextNonLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
@@ -16,7 +16,7 @@ object RecordSearchUtil {
     fun filter(records: Array<out ConciseRecordWithBadges>, query: String): FilteredArray<ConciseRecordWithBadges> {
         val preparedQuery = prepareQuery(query)
 
-        return records.filterFast {
+        return records.toFilteredArray {
             filterPredicate(it, preparedQuery)
         }
     }

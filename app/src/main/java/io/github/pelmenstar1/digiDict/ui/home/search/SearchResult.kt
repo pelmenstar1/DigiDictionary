@@ -16,6 +16,18 @@ class SearchResult(
 
     /**
      * The result of the search request.
+     *
+     * Saved instances of [currentData] should be accessed with great care.
+     * After the next [SearchResult], [currentData] will become invalid.
      */
-    val data: FilteredArray<ConciseRecordWithBadges>
+    val currentData: FilteredArray<ConciseRecordWithBadges>,
+
+    /**
+     * The result of the previous search request. It can be used to find difference between [currentData] and [previousData].
+     * If [previousData] is null, it means it's the first [SearchResult].
+     *
+     * Saved instances of [previousData] should be accessed with great care.
+     * After the next [SearchResult], [previousData] will become invalid.
+     */
+    val previousData: FilteredArray<ConciseRecordWithBadges>?
 )
