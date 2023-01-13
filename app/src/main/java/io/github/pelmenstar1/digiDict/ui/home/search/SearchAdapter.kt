@@ -17,13 +17,6 @@ class SearchAdapter(
     private val onItemClickListener = ConciseRecordWithBadgesViewHolder.createOnItemClickListener(onViewRecord)
     private var staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo? = null
 
-    /*
-    var afterDispatchChangesCallback: (() -> Unit)?
-        get() = asyncDiffer.afterDispatchChangesCallback
-        set(value) {
-            asyncDiffer.afterDispatchChangesCallback = value
-        }
-     */
     private var currentData = FilteredArray.empty<ConciseRecordWithBadges>()
     private val listUpdateCallback = RecyclerViewAdapterListUpdateCallback(this)
 
@@ -35,9 +28,12 @@ class SearchAdapter(
 
         if (previousData == null) {
             // If it's the first SearchResult, it means that the _currentData is empty.
-            // So the only thing we should do is to notify that the items added added.
-
-            notifyItemRangeInserted(0, currentData.size)
+            // So the only thing we should do is to notify that the items are inserted.
+            currentData.size.let {
+                if (it > 0) {
+                    notifyItemRangeInserted(0, it)
+                }
+            }
         } else {
             val diffResult = previousData.calculateDifference(currentData, conciseRecordDiffCallback)
 
@@ -46,12 +42,12 @@ class SearchAdapter(
     }
 
     fun submitEmpty() {
-        val currentDataSize = currentData.size
+        currentData.size.let {
+            if(it > 0) {
+                currentData = FilteredArray.empty()
 
-        if (currentDataSize > 0) {
-            notifyItemRangeRemoved(0, currentDataSize)
-
-            currentData = FilteredArray.empty()
+                notifyItemRangeRemoved(0, it)
+            }
         }
     }
 

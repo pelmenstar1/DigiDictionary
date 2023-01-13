@@ -4,7 +4,6 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
-import java.util.*
 
 class HomeSearchManager {
     private var _previousRecords: Array<out ConciseRecordWithBadges>? = null
@@ -46,26 +45,25 @@ class HomeSearchManager {
         // the code
         prevBitSet!!
 
+        // There can be such case that prevBitSet is smaller than currentBitSet.
+        // For example, when records property is updated to a bigger array, _previousResultBitSet's size remains the same
+        // and then currentBitSet size can be actually bigger than prevBitSet because underlying "current" array is bigger.
+        if (prevBitSet.size < currentBitSet.size) {
+            // Resize the array then but don't copy the content because we'll move the content
+            // of currentBitSet to prevBitSet below.
+            prevBitSet = LongArray(currentBitSet.size)
+
+            _previousResultBitSet = prevBitSet
+        }
+
+        // Move the content of currentBitSet to prevBitSet as currentBitSet is actually "previous".
+        System.arraycopy(currentBitSet, 0, prevBitSet, 0, currentBitSet.size)
+
         val isMeaningfulQuery = query.containsLetterOrDigit()
 
         // Search can only be performed if query contains at least one letter or digit.
         // Otherwise, there's no sense in it as both expression and meaning should have at least one letter or digit.
         val currentFilteredArray = if (isMeaningfulQuery) {
-            // There can be such case that prevBitSet is smaller than currentBitSet.
-            // For example, when records property is updated to a bigger array, _previousResultBitSet's size remains the same
-            // and then currentBitSet size can be actually bigger than prevBitSet because underlying "current" array is bigger.
-            if (prevBitSet.size < currentBitSet.size) {
-                // Resize the array then but don't copy the content because lower we'll move the content
-                // of currentBitSet to prevBitSet
-                prevBitSet = LongArray(currentBitSet.size)
-            }
-
-            // Move the content of currentBitSet to prevBitSet as currentBitSet is actually "previous".
-            System.arraycopy(currentBitSet, 0, prevBitSet, 0, currentBitSet.size)
-
-            // toFilteredArray expects currentBitSet to be zeroed
-            Arrays.fill(currentBitSet, 0)
-
             val preparedQuery = RecordSearchUtil.prepareQuery(query)
             val unsortedResult = data.toFilteredArray(currentBitSet) { record ->
                 RecordSearchUtil.filterPredicate(record, preparedQuery)
@@ -81,8 +79,6 @@ class HomeSearchManager {
         }
 
         _previousRecords = data
-        _previousResultBitSet = currentBitSet
-
         _previousPostBitSetMap = currentFilteredArray.postBitSetMap
 
         return SearchResult(query, isMeaningfulQuery, currentFilteredArray, prevFilteredArray)
