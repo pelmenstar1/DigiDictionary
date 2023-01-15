@@ -84,8 +84,8 @@ private class Snake(
 
 class FilteredArrayDiffResult<T> internal constructor(
     private val diagonals: ArrayList<Diagonal>,
-    private val oldArray: FilteredArray<T>,
-    private val newArray: FilteredArray<T>,
+    private val oldArray: FilteredArray<out T>,
+    private val newArray: FilteredArray<out T>,
     private val statuses: IntArray,
     private val itemCallback: FilteredArrayDiffItemCallback<T>
 ) {
@@ -108,32 +108,19 @@ class FilteredArrayDiffResult<T> internal constructor(
 
     private fun findMatchingItems() {
         val oldOrigin = oldArray.origin
-        val oldBitSet = oldArray.bitSet
-        val oldMap = oldArray.postBitSetMap
-
         val newOrigin = newArray.origin
-        val newBitSet = newArray.bitSet
-        val newMap = newArray.postBitSetMap
 
         for (diagonal in diagonals) {
             val diagX = diagonal.x
             val diagY = diagonal.y
 
-            var xBitPos = oldBitSet.findPositionOfNthSetBit(diagX)
-            var yBitPos = newBitSet.findPositionOfNthSetBit(diagY)
-
             for (offset in 0 until diagonal.size) {
-                val oldIndex = mapIndex(xBitPos, oldMap)
-                val newIndex = mapIndex(yBitPos, newMap)
+                val posX = diagX + offset
+                val posY = diagY + offset
 
-                if(!itemCallback.areContentsTheSame(oldOrigin[oldIndex], newOrigin[newIndex])) {
-                    val posX = diagX + offset
-
+                if(!itemCallback.areContentsTheSame(oldOrigin[posX], newOrigin[posY])) {
                     statuses[posX] = STATUS_CHANGED
                 }
-
-                xBitPos = oldBitSet.nextSetBit(fromIndex = xBitPos + 1)
-                yBitPos = newBitSet.nextSetBit(fromIndex = yBitPos + 1)
             }
         }
     }
@@ -205,8 +192,8 @@ interface FilteredArrayDiffItemCallback<in T> {
 
 private val DIAGONAL_COMPARATOR = Comparator<Diagonal> { a, b -> a.x - b.x }
 
-fun <T> FilteredArray<T>.calculateDifference(
-    other: FilteredArray<T>,
+fun <T> FilteredArray<out T>.calculateDifference(
+    other: FilteredArray<out T>,
     cb: FilteredArrayDiffItemCallback<T>
 ): FilteredArrayDiffResult<T> {
     val oldArray = this
@@ -275,8 +262,8 @@ fun <T> FilteredArray<T>.calculateDifference(
 }
 
 private fun <T> midPointFilteredArray(
-    oldArray: FilteredArray<T>,
-    newArray: FilteredArray<T>,
+    oldArray: FilteredArray<out T>,
+    newArray: FilteredArray<out T>,
     cb: FilteredArrayDiffItemCallback<T>,
     range: Range,
     forward: IntArray,
@@ -308,8 +295,8 @@ private fun <T> midPointFilteredArray(
 }
 
 private fun <T> forwardFilteredArray(
-    oldArray: FilteredArray<T>,
-    newArray: FilteredArray<T>,
+    oldArray: FilteredArray<out T>,
+    newArray: FilteredArray<out T>,
     cb: FilteredArrayDiffItemCallback<T>,
     range: Range,
     forward: IntArray,
@@ -326,12 +313,6 @@ private fun <T> forwardFilteredArray(
 
     val oldOrigin = oldArray.origin
     val newOrigin = newArray.origin
-
-    val oldBitSet = oldArray.bitSet
-    val newBitSet = newArray.bitSet
-
-    val oldMap = oldArray.postBitSetMap
-    val newMap = newArray.postBitSetMap
 
     var k = -d
     while (k <= d) {
@@ -357,20 +338,11 @@ private fun <T> forwardFilteredArray(
         var y = newStart + (x - oldStart) - k
         val startY = if (d == 0 || x != startX) y else (y - 1)
 
-        var xBitPos = oldBitSet.findPositionOfNthSetBit(x)
-        var yBitPos = newBitSet.findPositionOfNthSetBit(y)
-
         // now find snake size
         while (x < oldEnd && y < newEnd) {
-            val oldIndex = mapIndex(xBitPos, oldMap)
-            val newIndex = mapIndex(yBitPos, newMap)
-
-            if (!cb.areItemsTheSame(oldOrigin[oldIndex], newOrigin[newIndex])) {
+            if (!cb.areItemsTheSame(oldOrigin[x], newOrigin[y])) {
                 break
             }
-
-            xBitPos = oldBitSet.nextSetBit(fromIndex = xBitPos + 1)
-            yBitPos = newBitSet.nextSetBit(fromIndex = yBitPos + 1)
 
             x++
             y++
@@ -397,8 +369,8 @@ private fun <T> forwardFilteredArray(
 }
 
 private fun <T> backwardFilteredArray(
-    oldArray: FilteredArray<T>,
-    newArray: FilteredArray<T>,
+    oldArray: FilteredArray<out T>,
+    newArray: FilteredArray<out T>,
     cb: FilteredArrayDiffItemCallback<T>,
     range: Range,
     forward: IntArray,
@@ -415,12 +387,6 @@ private fun <T> backwardFilteredArray(
 
     val oldOrigin = oldArray.origin
     val newOrigin = newArray.origin
-
-    val oldBitSet = oldArray.bitSet
-    val newBitSet = newArray.bitSet
-
-    val oldMap = oldArray.postBitSetMap
-    val newMap = newArray.postBitSetMap
 
     // same as forward but we go backwards from end of the lists to be beginning
     // this also means we'll try to optimize for minimizing x instead of maximizing it
@@ -449,23 +415,14 @@ private fun <T> backwardFilteredArray(
         var y = newEnd - (oldEnd - x - k)
         val startY = if (d == 0 || x != startX) y else y + 1
 
-        var xBitPos = oldBitSet.findPositionOfNthSetBit(x - 1)
-        var yBitPos = newBitSet.findPositionOfNthSetBit(y - 1)
-
         // now find snake size
         while(x > oldStart && y > newStart) {
-            val oldIndex = mapIndex(xBitPos, oldMap)
-            val newIndex = mapIndex(yBitPos, newMap)
-
-            if (!cb.areItemsTheSame(oldOrigin[oldIndex], newOrigin[newIndex])) {
+            if (!cb.areItemsTheSame(oldOrigin[x - 1], newOrigin[y - 1])) {
                 break
             }
 
             x--
             y--
-
-            xBitPos = oldBitSet.previousSetBit(fromIndex = xBitPos - 1)
-            yBitPos = newBitSet.previousSetBit(fromIndex = yBitPos - 1)
         }
 
         // now we have furthest point, record it (min X)
@@ -494,8 +451,4 @@ private fun IntArray.getCentered(index: Int): Int {
 
 private fun IntArray.setCentered(index: Int, value: Int) {
     this[index + (size / 2)] = value
-}
-
-internal fun mapIndex(index: Int, map: IntArray?): Int {
-    return if (map != null) map[index] else index
 }

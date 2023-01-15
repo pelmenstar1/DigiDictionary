@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
 import androidx.recyclerview.widget.DiffUtil
-import io.github.pelmenstar1.digiDict.commonTestUtils.FilteredArrayTestUtils
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -18,20 +17,6 @@ class FilteredArrayDiffTests {
             return "($type: pos=$position; count=$count)"
         }
     }
-
-    /*
-    private class RangeEmitter {
-        val ranges = ArrayList<TypedIntRange>()
-
-        fun inserted(position: Int, count: Int) = addRange(RangeType.INSERTED, position, count)
-        fun removed(position: Int, count: Int) = addRange(RangeType.REMOVED, position, count)
-        fun changed(position: Int, count: Int) = addRange(RangeType.CHANGED, position, count)
-
-        private fun addRange(type: RangeType, position: Int, count: Int) {
-            ranges.add(TypedIntRange(type, position, count))
-        }
-    }
-    */
 
     private data class DataObject(val id: Int, val value: Int = 0)
 
@@ -61,19 +46,9 @@ class FilteredArrayDiffTests {
         }
     }
 
-    private fun diffTestHelper(
-        old: Array<DataObject>,
-        oldPassedIndices: IntArray? = null,
-        new: Array<DataObject>,
-        newPassedIndices: IntArray? = null
-    ) {
-        val oldFilteredArray = FilteredArray.createUnsafe(
-            old, FilteredArrayTestUtils.createBitSet(old.size, oldPassedIndices)
-        )
-
-        val newFilteredArray = FilteredArray.createUnsafe(
-            new, FilteredArrayTestUtils.createBitSet(new.size, newPassedIndices)
-        )
+    private fun diffTestHelper(old: Array<DataObject>, new: Array<DataObject>) {
+        val oldFilteredArray = FilteredArray(old, old.size)
+        val newFilteredArray = FilteredArray(new, new.size)
 
         val diffResult = oldFilteredArray.calculateDifference(newFilteredArray, DataObjectFilteredArrayItemCallback)
         val actualRanges = ArrayList<TypedIntRange>()
@@ -328,178 +303,6 @@ class FilteredArrayDiffTests {
     }
 
     @Test
-    fun diffWithBitSetTest() {
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 100), DataObject(id = 1), DataObject(id = 2)
-            ),
-            oldPassedIndices = intArrayOf(0, 2, 3),
-            new = arrayOf(
-                DataObject(id = 100), DataObject(id = 1), DataObject(id = 2)
-            ),
-            newPassedIndices = intArrayOf(1, 2)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 1), DataObject(id = 100), DataObject(id = 2), DataObject(id = 101)
-            ),
-            oldPassedIndices = intArrayOf(0, 2),
-            new = arrayOf(
-                DataObject(id = 100),
-                DataObject(id = 0),
-                DataObject(id = 1),
-                DataObject(id = 2),
-                DataObject(id = 101)
-            ),
-            newPassedIndices = intArrayOf(1, 2, 3)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0),
-                DataObject(id = 100),
-                DataObject(id = 101),
-                DataObject(id = 102),
-                DataObject(id = 1),
-                DataObject(id = 103),
-                DataObject(id = 2)
-            ),
-            oldPassedIndices = intArrayOf(0, 4, 6),
-            new = arrayOf(
-                DataObject(id = 100),
-                DataObject(id = 101),
-                DataObject(id = 1),
-            ),
-            newPassedIndices = intArrayOf(2)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0),
-                DataObject(id = 100),
-                DataObject(id = 1),
-                DataObject(id = 2),
-                DataObject(id = 101)
-            ),
-            oldPassedIndices = intArrayOf(0, 2, 3),
-            new = arrayOf(
-                DataObject(id = 2),
-                DataObject(id = 100)
-            ),
-            newPassedIndices = intArrayOf(0)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 2), DataObject(id = 100), DataObject(id = 101)
-            ),
-            oldPassedIndices = intArrayOf(0),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 100)
-            ),
-            newPassedIndices = intArrayOf(0, 1, 2)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 100), DataObject(id = 1), DataObject(id = 101)
-            ),
-            oldPassedIndices = intArrayOf(1),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            ),
-            newPassedIndices = intArrayOf(0)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 100), DataObject(id = 0), DataObject(id = 101), DataObject(id = 102)
-            ),
-            oldPassedIndices = intArrayOf(1),
-            new = arrayOf(
-                DataObject(id = 0)
-            )
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 100)
-            ),
-            oldPassedIndices = intArrayOf(0, 1),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 2), DataObject(id = 100)
-            ),
-            newPassedIndices = intArrayOf(0, 1)
-        )
-
-        diffTestHelper(
-            old = arrayOf(DataObject(id = 100)),
-            oldPassedIndices = intArrayOf(),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 100), DataObject(id = 101)
-            ),
-            newPassedIndices = intArrayOf(0)
-        )
-
-        diffTestHelper(
-            old = arrayOf(DataObject(id = 100), DataObject(id = 101)),
-            oldPassedIndices = intArrayOf(),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 100)
-            ),
-            newPassedIndices = intArrayOf(0, 1)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0, value = 0), DataObject(id = 100), DataObject(id = 101)
-            ),
-            oldPassedIndices = intArrayOf(0),
-            new = arrayOf(
-                DataObject(id = 100), DataObject(id = 0, value = 1)
-            ),
-            newPassedIndices = intArrayOf(1)
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 100), DataObject(id = 0), DataObject(id = 1, value = 0), DataObject(id = 101)
-            ),
-            new = arrayOf(
-                DataObject(id = 100), DataObject(id = 1, value = 1), DataObject(id = 101), DataObject(id = 102)
-            )
-        )
-
-        diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0),
-                DataObject(id = 1),
-                DataObject(id = 100),
-                DataObject(id = 101),
-                DataObject(id = 2),
-                DataObject(id = 102),
-                DataObject(id = 3),
-                DataObject(id = 103),
-                DataObject(id = 104),
-                DataObject(id = 4),
-                DataObject(id = 105)
-            ),
-            oldPassedIndices = intArrayOf(0, 1, 4, 6, 9),
-            new = arrayOf(
-                DataObject(id = 0, value = 1),
-                DataObject(id = 1, value = 1),
-                DataObject(id = 100),
-                DataObject(id = 2),
-                DataObject(id = 3),
-                DataObject(id = 101),
-                DataObject(id = 4, value = 1)
-            ),
-            newPassedIndices = intArrayOf(0, 1, 3, 4, 6)
-        )
-    }
-
-    @Test
     fun diffRandomizedTest() {
         val random = Random(2023)
 
@@ -512,27 +315,6 @@ class FilteredArrayDiffTests {
                 }
 
                 diffTestHelper(old = oldArray, new = newArray)
-            }
-        }
-    }
-
-    @Test
-    fun diffRandomizedWithBitSetTest() {
-        val random = Random(2023)
-
-        for (arraySize in intArrayOf(20, 50, 100, 200, 300)) {
-            repeat(1000) { _ ->
-                val oldArray = Array(arraySize) { DataObject(id = it) }
-                val oldPassedIndices = random.generateUniqueRandomNumbers(
-                    upperBound = arraySize, size = arraySize / 2
-                )
-
-                val newArray = Array(arraySize) { DataObject(id = it) }
-                val newPassedIndices = random.generateUniqueRandomNumbers(
-                    upperBound = arraySize, size = arraySize / 2
-                )
-
-                diffTestHelper(oldArray, oldPassedIndices, newArray, newPassedIndices)
             }
         }
     }

@@ -17,7 +17,7 @@ class SearchAdapter(
     private val onItemClickListener = ConciseRecordWithBadgesViewHolder.createOnItemClickListener(onViewRecord)
     private var staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo? = null
 
-    private var currentData = FilteredArray.empty<ConciseRecordWithBadges>()
+    private var currentData: FilteredArray<out ConciseRecordWithBadges> = FilteredArray.empty()
     private val listUpdateCallback = RecyclerViewAdapterListUpdateCallback(this)
 
     fun submitResult(result: SearchResult) {

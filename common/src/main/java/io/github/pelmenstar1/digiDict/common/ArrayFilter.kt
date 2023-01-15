@@ -1,74 +1,49 @@
 package io.github.pelmenstar1.digiDict.common
 
-import kotlin.math.min
-
-class FilteredArray<out T> @PublishedApi internal constructor(
-    internal val origin: Array<out T>,
-
-    // If the bit at position N is set, it means that element N in origin passed a filtering.
-    internal val bitSet: LongArray,
-
-    // Maps absolute index to its actual absolute index, can be used in sorting.
-    val postBitSetMap: IntArray? = null,
-
-    // If 'size' argument is negative, size will be computed using bitSet and Long.countOneBits
-    //
-    // If 'size' argument is positive or zero, it will be used to init size. It allows to skip countOneBits part.
-    // 'size' argument must equal to the count of set bits in bitSet, otherwise it may lead to unexpected results.
-    size: Int = -1
+/**
+ * Represents a special wrapper of [Array] used to store elements after filtering.
+ *
+ * The elements that passed filtering are located starting from zero index up to [size].
+ */
+class FilteredArray<T>(
+    val origin: Array<T>,
+    override val size: Int
 ) : SizedIterable<T> {
-    override val size: Int = if (size >= 0) size else bitSet.sumOf(Long::countOneBits)
-
     operator fun get(index: Int): T {
-        val map = postBitSetMap
-        var i = resolveIndex(index)
-
-        if (map != null) {
-            i = map[i]
+        // The important thing is to not let reading from valid index in context of origin but invalid index in context of size
+        // If the index is negative, the exception will be thrown when accessing the origin.
+        if (index >= size) {
+            throw IndexOutOfBoundsException("index")
         }
 
-        return origin[i]
-    }
-
-    // Finds such a position N, that range [0; N] of bitSet has 'index' set bits.
-    private fun resolveIndex(index: Int): Int {
-        return bitSet.findPositionOfNthSetBit(index)
+        return origin[index]
     }
 
     override fun equals(other: Any?) = equalsPattern(other) { o ->
+        val size = size
+
         if (size != o.size) return false
 
-        val origin = origin
-        val bitSet = bitSet
-
+        val thisOrigin = origin
         val otherOrigin = o.origin
-        val otherBitSet = o.bitSet
 
-        if (origin === otherOrigin) {
-            return bitSet.contentEquals(otherBitSet)
-        }
-
-        var result = true
-
-        var otherBitIndex = otherBitSet.nextSetBit(0)
-
-        bitSet.iterateSetBits { absIndex ->
-            if (origin[absIndex] != otherOrigin[otherBitIndex]) {
-                result = false
-                return@iterateSetBits
+        for (i in 0 until size) {
+            if (thisOrigin[i] != otherOrigin[i]) {
+                return false
             }
-
-            otherBitIndex = otherBitSet.nextSetBit(otherBitIndex + 1)
         }
 
-        return result
+        return true
     }
 
     override fun hashCode(): Int {
-        var result = 0
+        val size = size
+        val origin = origin
 
-        bitSet.iterateSetBits { index ->
-            result = result * 31 + origin[index].hashCode()
+        var result = size
+
+        for (i in 0 until size) {
+            result = result * 31 + origin[i].hashCode()
         }
 
         return result
@@ -83,14 +58,14 @@ class FilteredArray<out T> @PublishedApi internal constructor(
             append(size)
             append(", elements=[")
 
-            var seqIndex = 0
-            bitSet.iterateSetBits { i ->
+            for (i in 0 until size) {
                 append(origin[i])
 
-                if ((seqIndex++) < size - 1) {
+                if (i < size - 1) {
                     append(", ")
                 }
             }
+
             append("])")
         }
     }
@@ -105,64 +80,36 @@ class FilteredArray<out T> @PublishedApi internal constructor(
     }
 
     companion object {
-        private val EMPTY = FilteredArray<Any>(emptyArray(), EmptyArray.LONG, postBitSetMap = null, size = 0)
+        private val EMPTY = FilteredArray<Any>(emptyArray(), size = 0)
 
         @Suppress("UNCHECKED_CAST")
         fun <T> empty() = EMPTY as FilteredArray<T>
+    }
+}
 
-        fun <T> createUnsafe(array: Array<out T>, bitSet: LongArray, bitSetMap: IntArray? = null): FilteredArray<T> {
-            return FilteredArray(array, bitSet, bitSetMap)
+/**
+ * Filters given array using [predicate] lambda to determine whether an element [T] passed filtering or not.
+ *
+ * **Note that the given array is mutated**
+ */
+inline fun <T> Array<T>.toFilteredArray(predicate: (element: T) -> Boolean): FilteredArray<T> {
+    var currentIndex = 0
+
+    for (i in indices) {
+        val element = this[i]
+
+        if (predicate(element)) {
+            val t = this[currentIndex]
+            this[currentIndex] = element
+            this[i] = t
+
+            currentIndex++
         }
     }
-}
 
-object ArrayFilterHelpers {
-    fun calculateBitSetSize(dataSize: Int): Int {
-        return (dataSize + 63) shr 6
+    return if (currentIndex > 0) {
+        FilteredArray(this, currentIndex)
+    } else {
+        FilteredArray.empty()
     }
-}
-
-inline fun <E> Array<E>.toFilteredArray(predicate: (element: E) -> Boolean): FilteredArray<E> {
-    // Ceiling division to 64
-    val bitSetSize = ArrayFilterHelpers.calculateBitSetSize(size)
-    val bitSet = LongArray(bitSetSize)
-
-    return toFilteredArray(bitSet, predicate)
-}
-
-inline fun <E> Array<E>.toFilteredArray(outBitSet: LongArray, predicate: (element: E) -> Boolean): FilteredArray<E> {
-    val size = size
-
-    var wordIndex = 0
-    var start = 0
-    var filteredSize = 0
-
-    // Fill bitSet word by word
-    while (start < size) {
-        // end shouldn't be greater than size of the array
-        val end = min(start + 64, size)
-
-        var word = 0L
-
-        for (i in start until end) {
-            if (predicate(this[i])) {
-                filteredSize++
-
-                // Two facts make (1L shl i) mask valid:
-                // - left shift operator takes into account only 6 lowest-order bits
-                //   which means that (1L shl i) is actually (1L shl (i % 64))
-                // - start is always aligned to 64, which means that (1L shl start) is (1L shl 0),
-                //   (1L shl (start + 1)) is equals to (1L shl 1) and so on.
-                //   To generalize, say we have variable n within [start; end) range and (end - start) <= 64, then:
-                //   (1L shl n) = (1L shl (n - start))
-                word = word or (1L shl i)
-            }
-        }
-
-        outBitSet[wordIndex++] = word
-
-        start = end
-    }
-
-    return FilteredArray(this, outBitSet, postBitSetMap = null, size = filteredSize)
 }

@@ -6,6 +6,12 @@ interface SizedIterable<out T> : Iterable<T> {
     val size: Int
 }
 
+fun<T> Array<T>.swap(i: Int, j: Int) {
+    val t = this[i]
+    this[i] = this[j]
+    this[j] = t
+}
+
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
     return arrayOfNulls<T>(size) as Array<T>

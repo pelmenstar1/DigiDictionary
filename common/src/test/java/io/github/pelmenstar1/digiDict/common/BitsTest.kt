@@ -21,35 +21,6 @@ class BitsTest {
     }
 
     @Test
-    fun findPositionOfNthBitInLongTest() {
-        fun testCase(value: Long, n: Int, expectedPosition: Int) {
-            val actualPosition = value.findPositionOfNthSetBit(n)
-
-            assertEquals(expectedPosition, actualPosition)
-        }
-
-        testCase(0b00000000_00000000_00000100_00000000_00000000_00000000_10001001, 2, 7)
-        testCase(0b10010000_00000001_00000000_00000000_00000010_00100000_10001000, 3, 17)
-        testCase(0b00000000_00000000_00000000_00000000_00000000_00000000_00001000, 2, -1)
-    }
-
-    @Test
-    fun findPositionOfNthSetBitInLongArrayTest() {
-        fun testCase(value: LongArray, n: Int, expectedPosition: Int) {
-            val actualPosition = value.findPositionOfNthSetBit(n)
-
-            assertEquals(expectedPosition, actualPosition)
-        }
-
-        testCase(
-            longArrayOf(
-                0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_10001001,
-                0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_00000001UL.toLong()
-            ), 3, 64
-        )
-    }
-
-    @Test
     fun iterateSetBitsRawTest() {
         fun testCase(value: Long, expectedBitsSet: Array<Int>) {
             val list = ArrayList<Int>()
@@ -118,87 +89,6 @@ class BitsTest {
                 0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_00000001
             ),
             expectedBitsSet = arrayOf(63, 64)
-        )
-    }
-
-    @Test
-    fun iterateSetBitsFromEndExceptFirst() {
-        fun testCase(values: LongArray, expectedBitsSet: Array<Int>) {
-            val list = ArrayList<Int>()
-
-            values.iterateSetBitsFromEndExceptFirst {
-                list.add(it)
-            }
-
-            assertContentEquals(expectedBitsSet, list.toTypedArray())
-        }
-
-        testCase(
-            longArrayOf(0b00000000_00000000_00000000_00000100_00000000_00000000_00000000_10001001),
-            expectedBitsSet = arrayOf(34, 7, 3)
-        )
-
-        testCase(
-            longArrayOf(0b00000000_00000000_00000000_00000100_00000000_00000000_00000000_11111111),
-            expectedBitsSet = arrayOf(34, 7, 6, 5, 4, 3, 2, 1)
-        )
-
-        testCase(
-            longArrayOf(0b00000000_00000000_00000000_00000100_00000000_00000000_00000000_11111110),
-            expectedBitsSet = arrayOf(34, 7, 6, 5, 4, 3, 2)
-        )
-
-        testCase(
-            longArrayOf(
-                0b00000000_00000000_00000000_00000100_00000000_00000000_00000000_11111111,
-                0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_00000001
-            ),
-            expectedBitsSet = arrayOf(64, 34, 7, 6, 5, 4, 3, 2, 1)
-        )
-
-        testCase(
-            longArrayOf(
-                0b10000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000UL.toLong(),
-                0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_00000001
-            ),
-            expectedBitsSet = arrayOf(64)
-        )
-    }
-
-    @Test
-    fun firstSetBitTest() {
-        fun testCase(values: LongArray, expected: Int) {
-            val actual = values.firstSetBit()
-
-            assertEquals(expected, actual)
-        }
-
-        testCase(
-            longArrayOf(0b10000000),
-            expected = 7
-        )
-
-        testCase(
-            longArrayOf(0b00000000),
-            expected = -1
-        )
-
-        testCase(
-            longArrayOf(0b00000001),
-            expected = 0
-        )
-
-        testCase(
-            longArrayOf(0b10000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000UL.toLong()),
-            expected = 63
-        )
-
-        testCase(
-            longArrayOf(
-                0L,
-                0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_00000001
-            ),
-            expected = 64
         )
     }
 
