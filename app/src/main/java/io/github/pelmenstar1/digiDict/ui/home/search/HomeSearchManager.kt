@@ -21,7 +21,7 @@ class HomeSearchManager {
             _currentRecords = value
         }
 
-    fun onSearchRequest(query: String, sortType: HomeSortType): SearchResult {
+    fun onSearchRequest(query: String, sortType: HomeSortType): HomeSearchResult {
         val currentRecords = currentRecords
         var prevSavedRecords = _previousSavedRecords
 
@@ -51,6 +51,6 @@ class HomeSearchManager {
         _currentRecordsSize = currentFilteredArray.size
         _previousRecords = currentRecords
 
-        return SearchResult(query, isMeaningfulQuery, currentFilteredArray, prevFilteredArray)
+        return HomeSearchResult(query, isMeaningfulQuery, currentFilteredArray, prevFilteredArray)
     }
 }

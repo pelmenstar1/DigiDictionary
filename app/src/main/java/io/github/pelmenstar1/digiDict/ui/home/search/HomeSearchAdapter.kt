@@ -11,7 +11,7 @@ import io.github.pelmenstar1.digiDict.ui.EntityWitIdFilteredArrayDiffCallback
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
 
-class SearchAdapter(
+class HomeSearchAdapter(
     onViewRecord: (id: Int) -> Unit
 ) : RecyclerView.Adapter<ConciseRecordWithBadgesViewHolder>() {
     private val onItemClickListener = ConciseRecordWithBadgesViewHolder.createOnItemClickListener(onViewRecord)
@@ -20,7 +20,7 @@ class SearchAdapter(
     private var currentData: FilteredArray<out ConciseRecordWithBadges> = FilteredArray.empty()
     private val listUpdateCallback = RecyclerViewAdapterListUpdateCallback(this)
 
-    fun submitResult(result: SearchResult) {
+    fun submitResult(result: HomeSearchResult) {
         val currentData = result.currentData
         val previousData = result.previousData
 

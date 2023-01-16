@@ -16,7 +16,7 @@ import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchManager
-import io.github.pelmenstar1.digiDict.ui.home.search.SearchResult
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -47,7 +47,7 @@ class HomeViewModel @Inject constructor(
     private val searchProgressReporter = ProgressReporter()
     val searchProgressFlow = searchProgressReporter.progressFlow
 
-    private val searchStateManager = DataLoadStateManager<SearchResult>(TAG)
+    private val searchStateManager = DataLoadStateManager<HomeSearchResult>(TAG)
 
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {

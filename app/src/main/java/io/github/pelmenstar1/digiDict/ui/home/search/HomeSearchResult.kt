@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.ui.home.search
 import io.github.pelmenstar1.digiDict.common.FilteredArray
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 
-class SearchResult(
+class HomeSearchResult(
     /**
      * Query of the search request.
      */
@@ -18,7 +18,7 @@ class SearchResult(
      * The result of the search request.
      *
      * Saved instances of [currentData] should be accessed with great care.
-     * After the next [SearchResult], [currentData] will become invalid.
+     * After the next [HomeSearchResult], [currentData] will become invalid.
      */
     val currentData: FilteredArray<out ConciseRecordWithBadges>,
 
@@ -27,7 +27,7 @@ class SearchResult(
      * If it's the first request, the array will be empty.
      *
      * Saved instances of [previousData] should be accessed with great care.
-     * After the next [SearchResult], [previousData] will become invalid.
+     * After the next [HomeSearchResult], [previousData] will become invalid.
      */
     val previousData: FilteredArray<out ConciseRecordWithBadges>
 )
