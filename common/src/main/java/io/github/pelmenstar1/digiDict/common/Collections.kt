@@ -141,6 +141,10 @@ inline fun <T, reified R> Array<out T>.mapToArray(block: (T) -> R): Array<R> {
     return Array(size) { block(this[it]) }
 }
 
+inline fun <T, reified R> Array<out T>.mapToArrayIndexed(block: (index: Int, T) -> R): Array<R> {
+    return Array(size) { i -> block(i, this[i]) }
+}
+
 inline fun <T> Array<out T>.mapToIntArray(block: (T) -> Int): IntArray {
     return IntArray(size) { block(this[it]) }
 }

@@ -1,13 +1,15 @@
 package io.github.pelmenstar1.digiDict
 
+import androidx.recyclerview.widget.DiffUtil
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.common.containsLetterOrDigit
-import io.github.pelmenstar1.digiDict.common.mapToArray
+import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.commonTestUtils.Diff
 import io.github.pelmenstar1.digiDict.commonTestUtils.toArray
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchManager
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.ui.EntityWitIdFilteredArrayDiffCallback
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,17 +19,21 @@ import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
 class HomeSearchManagerTests {
-    private val dataRecords = HomeSearchManagerTestsData.words.mapToArray(::createRecord)
+    private val realisticRecords = mapExpressionsToRecords(HomeSearchManagerTestsData.words)
 
-    private fun createRecord(expression: String): ConciseRecordWithBadges {
-        return ConciseRecordWithBadges(0, expression, "CMeaning", 0, 0, emptyArray())
+    private fun createRecord(id: Int, expression: String): ConciseRecordWithBadges {
+        return ConciseRecordWithBadges(id, expression, "CMeaning", 0, 0, emptyArray())
+    }
+
+    private fun mapExpressionsToRecords(expressions: Array<out String>): Array<ConciseRecordWithBadges> {
+        return expressions.mapToArrayIndexed(::createRecord)
     }
 
     @Test
     fun onSearchRequest_noMutations() {
         fun testCase(queries: Array<String>) {
             val manager = HomeSearchManager()
-            manager.currentRecords = dataRecords
+            manager.currentRecords = realisticRecords
 
             var expectedPrevData: Array<ConciseRecordWithBadges>? = null
             val sortTypes = HomeSortType.values()
@@ -37,7 +43,7 @@ class HomeSearchManagerTests {
                     val result = manager.onSearchRequest(query, sortType)
                     val actualCurrentData = result.currentData.toArray()
                     val expectedCurrentData = if (query.containsLetterOrDigit()) {
-                        dataRecords
+                        realisticRecords
                             .filter { RecordSearchUtil.filterPredicate(it, query) }
                             .sortedWith(sortType.getComparatorForConciseRecordWithBadges())
                             .toTypedArray()
@@ -100,20 +106,20 @@ class HomeSearchManagerTests {
         newExpectedCurrentExpressions: Array<String>
     ) {
         val manager = HomeSearchManager()
-        manager.currentRecords = oldExpressionsData.mapToArray(::createRecord)
+        manager.currentRecords = mapExpressionsToRecords(oldExpressionsData)
 
         val oldResult = manager.onSearchRequest(searchQuery, HomeSortType.ALPHABETIC_BY_EXPRESSION)
         val oldActualCurrentData = oldResult.currentData.toArray()
-        val oldExpectedCurrentData = oldExpectedCurrentExpressions.mapToArray(::createRecord)
+        val oldExpectedCurrentData = mapExpressionsToRecords(oldExpectedCurrentExpressions)
 
         assertEquals(0, oldResult.previousData.size)
         assertContentEquals(oldExpectedCurrentData, oldActualCurrentData)
 
-        manager.currentRecords = newExpressionsData.mapToArray(::createRecord)
+        manager.currentRecords = mapExpressionsToRecords(newExpressionsData)
 
         val newResult = manager.onSearchRequest(searchQuery, HomeSortType.ALPHABETIC_BY_EXPRESSION)
         val newActualCurrentData = newResult.currentData.toArray()
-        val newExpectedCurrentData = newExpectedCurrentExpressions.mapToArray(::createRecord)
+        val newExpectedCurrentData = mapExpressionsToRecords(newExpectedCurrentExpressions)
 
         val newActualPrevData = newResult.previousData.toArray()
 
@@ -164,5 +170,94 @@ class HomeSearchManagerTests {
             oldExpectedCurrentExpressions = arrayOf("c0", "c1", "c2"),
             newExpectedCurrentExpressions = arrayOf("c0", "c1", "c3")
         )
+    }
+
+    // Tests whether out implementation of diff works correctly on more realistic data.
+    @Test
+    fun diffTest() {
+        fun testCase(queries: Array<String>) {
+            val manager = HomeSearchManager()
+            manager.currentRecords = realisticRecords
+
+            var expectedPrevData: Array<ConciseRecordWithBadges>? = null
+
+            for (query in queries) {
+                val result = manager.onSearchRequest(query, HomeSortType.NEWEST)
+                val actualCurrentData = result.currentData
+                val actualCurrentDataArray = actualCurrentData.toArray()
+
+                val actualPrevData = result.previousData
+
+                val actualDiffResult = actualPrevData.calculateDifference(actualCurrentData, filteredArrayDiffCallback)
+                val actualRanges = ArrayList<Diff.TypedIntRange>()
+
+                actualDiffResult.dispatchTo(Diff.ListUpdateCallbackToList(actualRanges))
+
+                val expectedDiffResult = DiffUtil.calculateDiff(
+                    RecyclerViewDiffCallback(actualPrevData, actualCurrentData), false
+                )
+                val expectedRanges = ArrayList<Diff.TypedIntRange>()
+                expectedDiffResult.dispatchUpdatesTo(Diff.RecyclerViewListUpdateCallbackToList(expectedRanges))
+
+                assertContentEquals(expectedRanges, actualRanges)
+
+                if (expectedPrevData == null) {
+                    assertEquals(0, actualPrevData.size)
+                } else {
+                    assertContentEquals(expectedPrevData, actualPrevData.toArray())
+                }
+
+                expectedPrevData = actualCurrentDataArray
+            }
+        }
+
+        testCase(
+            queries = arrayOf(
+                "A",
+                "AA",
+                "A",
+                "AB",
+                "",
+                "A",
+                "AC",
+                "ACC"
+            )
+        )
+
+        testCase(
+            queries = arrayOf(
+                "",
+                "A",
+                "abandoned",
+                "ab",
+                "",
+                "ab",
+                "o",
+                "of",
+                "off",
+                "o",
+                "ok"
+            )
+        )
+    }
+
+    private class RecyclerViewDiffCallback(
+        private val oldArray: FilteredArray<out ConciseRecordWithBadges>,
+        private val newArray: FilteredArray<out ConciseRecordWithBadges>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize() = oldArray.size
+        override fun getNewListSize() = newArray.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldArray[oldItemPosition].id == newArray[newItemPosition].id
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldArray[oldItemPosition] == newArray[newItemPosition]
+        }
+    }
+
+    companion object {
+        val filteredArrayDiffCallback = EntityWitIdFilteredArrayDiffCallback<ConciseRecordWithBadges>()
     }
 }

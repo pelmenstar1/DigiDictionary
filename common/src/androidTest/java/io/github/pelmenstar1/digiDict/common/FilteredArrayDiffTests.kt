@@ -1,23 +1,12 @@
 package io.github.pelmenstar1.digiDict.common
 
 import androidx.recyclerview.widget.DiffUtil
+import io.github.pelmenstar1.digiDict.commonTestUtils.Diff
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 
 class FilteredArrayDiffTests {
-    private enum class RangeType {
-        INSERTED,
-        REMOVED,
-        CHANGED
-    }
-
-    private data class TypedIntRange(val type: RangeType, val position: Int, val count: Int) {
-        override fun toString(): String {
-            return "($type: pos=$position; count=$count)"
-        }
-    }
-
     private data class DataObject(val id: Int, val value: Int = 0)
 
     private object DataObjectFilteredArrayItemCallback : FilteredArrayDiffItemCallback<DataObject> {
@@ -51,38 +40,17 @@ class FilteredArrayDiffTests {
         val newFilteredArray = FilteredArray(new, new.size)
 
         val diffResult = oldFilteredArray.calculateDifference(newFilteredArray, DataObjectFilteredArrayItemCallback)
-        val actualRanges = ArrayList<TypedIntRange>()
+        val actualRanges = ArrayList<Diff.TypedIntRange>()
+        diffResult.dispatchTo(Diff.ListUpdateCallbackToList(actualRanges))
 
-        diffResult.dispatchTo(object : ListUpdateCallback {
-            override fun onInserted(position: Int, count: Int) = onEvent(RangeType.INSERTED, position, count)
-            override fun onRemoved(position: Int, count: Int) = onEvent(RangeType.REMOVED, position, count)
-            override fun onChanged(position: Int, count: Int) = onEvent(RangeType.CHANGED, position, count)
+        val diffUtilResult = DiffUtil.calculateDiff(
+            DataObjectRecyclerViewCallback(oldFilteredArray, newFilteredArray), false
+        )
 
-            private fun onEvent(type: RangeType, position: Int, count: Int) {
-                actualRanges.add(TypedIntRange(type, position, count))
-            }
-        })
+        val expectedRanges = ArrayList<Diff.TypedIntRange>()
+        diffUtilResult.dispatchUpdatesTo(Diff.RecyclerViewListUpdateCallbackToList(expectedRanges))
 
-        val diffUtilResult =
-            DiffUtil.calculateDiff(DataObjectRecyclerViewCallback(oldFilteredArray, newFilteredArray), false)
-        val diffUtilRanges = ArrayList<TypedIntRange>()
-
-        diffUtilResult.dispatchUpdatesTo(object : androidx.recyclerview.widget.ListUpdateCallback {
-            override fun onInserted(position: Int, count: Int) = onEvent(RangeType.INSERTED, position, count)
-            override fun onRemoved(position: Int, count: Int) = onEvent(RangeType.REMOVED, position, count)
-            override fun onChanged(position: Int, count: Int, payload: Any?) =
-                onEvent(RangeType.CHANGED, position, count)
-
-            override fun onMoved(fromPosition: Int, toPosition: Int) {
-                throw IllegalStateException("Move detection must be disabled")
-            }
-
-            private fun onEvent(type: RangeType, position: Int, count: Int) {
-                diffUtilRanges.add(TypedIntRange(type, position, count))
-            }
-        })
-
-        assertContentEquals(diffUtilRanges, actualRanges)
+        assertContentEquals(expectedRanges, actualRanges)
     }
 
     @Test
