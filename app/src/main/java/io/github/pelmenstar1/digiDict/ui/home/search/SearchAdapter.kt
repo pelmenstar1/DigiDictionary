@@ -26,9 +26,8 @@ class SearchAdapter(
 
         this.currentData = currentData
 
-        if (previousData == null) {
-            // If it's the first SearchResult, it means that the _currentData is empty.
-            // So the only thing we should do is to notify that the items are inserted.
+        // calculateDifference is a quite expensive method, so it's better not to call when it's possible.
+        if (previousData.size == 0) {
             currentData.size.let {
                 if (it > 0) {
                     notifyItemRangeInserted(0, it)

@@ -6,7 +6,12 @@ import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 
 class HomeSearchManager {
+    // _previousRecords saves the reference to _currentRecords of the previous search request. It's
+    // needed to correctly handle the situation when _currentRecords is changed. Where-as _previousSavedRecords
+    // saves the result of previous search request.
+
     private var _previousRecords: Array<out ConciseRecordWithBadges>? = null
+    private var _previousSavedRecords: Array<out ConciseRecordWithBadges>? = null
     private var _currentRecords: Array<out ConciseRecordWithBadges>? = null
     private var _currentRecordsSize = 0
 
@@ -18,19 +23,18 @@ class HomeSearchManager {
 
     fun onSearchRequest(query: String, sortType: HomeSortType): SearchResult {
         val currentRecords = currentRecords
-
-        var prevRecords = _previousRecords
+        var prevSavedRecords = _previousSavedRecords
 
         // _currentRecordsSize is actually previous by this moment.
         val prevRecordsSize = _currentRecordsSize
 
-        if (prevRecordsSize > 0) {
-            if (prevRecords == null || prevRecordsSize > prevRecords.size) {
-                prevRecords = unsafeNewArray(prevRecordsSize)
-                _previousRecords = prevRecords
-            }
+        if (prevSavedRecords == null || prevRecordsSize > prevSavedRecords.size) {
+            prevSavedRecords = unsafeNewArray(prevRecordsSize)
+            _previousSavedRecords = prevSavedRecords
+        }
 
-            System.arraycopy(currentRecords, 0, prevRecords, 0, prevRecordsSize)
+        _previousRecords?.let {
+            System.arraycopy(it, 0, prevSavedRecords, 0, prevRecordsSize)
         }
 
         val isMeaningfulQuery = query.containsLetterOrDigit()
@@ -43,8 +47,9 @@ class HomeSearchManager {
             FilteredArray.empty()
         }
 
-        val prevFilteredArray = prevRecords?.let { FilteredArray(it, prevRecordsSize) }
+        val prevFilteredArray = FilteredArray(prevSavedRecords, prevRecordsSize)
         _currentRecordsSize = currentFilteredArray.size
+        _previousRecords = currentRecords
 
         return SearchResult(query, isMeaningfulQuery, currentFilteredArray, prevFilteredArray)
     }

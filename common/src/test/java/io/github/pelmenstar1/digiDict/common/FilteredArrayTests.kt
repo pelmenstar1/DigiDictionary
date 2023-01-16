@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
+import io.github.pelmenstar1.digiDict.commonTestUtils.toArray
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFails
@@ -82,12 +83,5 @@ class FilteredArrayTests {
         testCase(elements = arrayOf(11, 12, 13), expected = arrayOf(11, 12, 13))
         testCase(elements = arrayOf(12, 15, 0, 1, 11), expected = arrayOf(12, 15, 11))
         testCase(elements = arrayOf(11, 12, 13, 0, 1, 2), expected = arrayOf(11, 12, 13))
-    }
-
-    private inline fun <reified T> FilteredArray<T>.toArray(): Array<T> {
-        val array = unsafeNewArray<T>(size)
-        System.arraycopy(origin, 0, array, 0, size)
-
-        return array
     }
 }

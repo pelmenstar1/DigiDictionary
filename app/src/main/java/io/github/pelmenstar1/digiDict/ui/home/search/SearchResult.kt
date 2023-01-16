@@ -24,10 +24,10 @@ class SearchResult(
 
     /**
      * The result of the previous search request. It can be used to find difference between [currentData] and [previousData].
-     * If [previousData] is null, it means it's the first [SearchResult].
+     * If it's the first request, the array will be empty.
      *
      * Saved instances of [previousData] should be accessed with great care.
      * After the next [SearchResult], [previousData] will become invalid.
      */
-    val previousData: FilteredArray<out ConciseRecordWithBadges>?
+    val previousData: FilteredArray<out ConciseRecordWithBadges>
 )
