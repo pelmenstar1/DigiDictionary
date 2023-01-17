@@ -2,9 +2,9 @@ package io.github.pelmenstar1.digiDict.data
 
 import android.os.Parcel
 import android.os.Parcelable
-import androidx.collection.ArraySet
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.android.readStringOrThrow
+import java.util.*
 
 enum class MeaningType {
     COMMON,
@@ -42,40 +42,6 @@ sealed class ComplexMeaning : Parcelable {
             this.rawText = rawText
         }
 
-        @Suppress("UNCHECKED_CAST")
-        override fun mergedWith(other: ComplexMeaning): ComplexMeaning {
-            return when (other) {
-                is Common -> {
-                    val otherText = other.text
-
-                    if (text == otherText) {
-                        this
-                    } else {
-                        List(ArraySet<String>(2).apply {
-                            add(text)
-                            add(otherText)
-                        })
-                    }
-                }
-                is List -> {
-                    val otherElements = other.elements
-
-                    if (otherElements.contains(text)) {
-                        this
-                    } else {
-                        List(
-                            newArraySetFrom(
-                                otherElements,
-                                otherElements.size + 1
-                            ).apply {
-                                add(text)
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
         override fun writeToParcel(dest: Parcel, flags: Int) {
             dest.writeString(text)
         }
@@ -108,97 +74,51 @@ sealed class ComplexMeaning : Parcelable {
         override val type: MeaningType
             get() = MeaningType.LIST
 
-        val elements: Set<String>
+        val elements: Array<out String>
 
         constructor(parcel: Parcel) {
             val size = parcel.readInt()
 
             rawText = parcel.readStringOrThrow()
-
-            elements = ArraySet<String>(size).apply {
-                for (i in 0 until size) {
-                    add(parcel.readStringOrThrow())
-                }
-            }
+            elements = Array(size) { parcel.readStringOrThrow() }
         }
 
-        constructor(elements: Set<String>) {
+        constructor(elements: Array<out String>) {
             this.elements = elements
             rawText = createListRawText(elements)
         }
 
-        constructor(elements: Array<out String>) {
-            val set = ArraySet<String>(elements.size).apply {
-                addAllArray(elements)
-            }
-
-            this.elements = set
-
-            rawText = createListRawText(set)
-        }
-
         @Suppress("UNCHECKED_CAST")
         constructor(firstElement: String, vararg elements: String) {
-            val set = ArraySet<String>(elements.size + 1).apply {
-                add(firstElement)
-                addAllArray(elements)
+            var newElements = elements
+            if (!newElements.contains(firstElement)) {
+                newElements = elements.withAddedElement(firstElement)
             }
 
-            this.elements = set
-
-            rawText = createListRawText(set)
+            this.elements = newElements
+            rawText = createListRawText(newElements)
         }
 
-        constructor(elements: Set<String>, rawText: String) {
+        internal constructor(elements: Array<out String>, rawText: String) {
             this.rawText = rawText
             this.elements = elements
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        override fun mergedWith(other: ComplexMeaning): ComplexMeaning {
-            val elements = elements
-
-            return when (other) {
-                is Common -> {
-                    val otherText = other.text
-
-                    if (elements.contains(otherText)) {
-                        this
-                    } else {
-                        val newElements = newArraySetFrom(elements, elements.size + 1)
-                        newElements.add(otherText)
-
-                        List(newElements)
-                    }
-                }
-                is List -> {
-                    val otherElements = other.elements
-                    val resultElements = newArraySetFrom(
-                        elements,
-                        elements.size + otherElements.size
-                    )
-                    resultElements.addAllSet(otherElements)
-
-                    List(resultElements)
-                }
-            }
         }
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
             dest.writeInt(elements.size)
             dest.writeString(rawText)
 
-            elements.forEachFast(dest::writeString)
+            elements.forEach(dest::writeString)
         }
 
         override fun equals(other: Any?) = equalsPattern(other) { o ->
-            return elements == o.elements
+            return elements.contentEquals(o.elements)
         }
 
-        override fun hashCode(): Int = elements.hashCode()
+        override fun hashCode(): Int = elements.contentHashCode()
 
         override fun toString(): String {
-            return "ComplexMeaning.List(elements=$elements)"
+            return "ComplexMeaning.List(elements=${elements.contentToString()})"
         }
 
         companion object CREATOR : Parcelable.Creator<List> {
@@ -208,8 +128,6 @@ sealed class ComplexMeaning : Parcelable {
     }
 
     abstract val type: MeaningType
-
-    abstract fun mergedWith(other: ComplexMeaning): ComplexMeaning
 
     abstract override fun equals(other: Any?): Boolean
     abstract override fun hashCode(): Int
@@ -229,7 +147,7 @@ sealed class ComplexMeaning : Parcelable {
             return String(buffer)
         }
 
-        internal fun createListRawText(elements: Set<String>): String {
+        internal fun createListRawText(elements: Array<out String>): String {
             val size = elements.size
             val lastIndex = size - 1
 
@@ -289,7 +207,7 @@ sealed class ComplexMeaning : Parcelable {
                     val contentStart = firstDelimiterIndex + 1
 
                     var prevPos = contentStart
-                    val elements = ArraySet<String>(count)
+                    val elements = unsafeNewArray<String>(count)
 
                     for (i in 0 until count) {
                         var nextPos = rawText.indexOf('\n', prevPos)
@@ -298,7 +216,7 @@ sealed class ComplexMeaning : Parcelable {
                         }
 
                         val element = rawText.substring(prevPos, nextPos)
-                        elements.add(element)
+                        elements[i] = element
 
                         prevPos = nextPos + 1
                     }

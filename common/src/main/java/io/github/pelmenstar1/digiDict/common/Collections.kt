@@ -1,7 +1,5 @@
 package io.github.pelmenstar1.digiDict.common
 
-import androidx.collection.ArraySet
-
 interface SizedIterable<out T> : Iterable<T> {
     val size: Int
 }
@@ -89,39 +87,6 @@ fun IntArray.contains(element: Int, start: Int, end: Int): Boolean {
     }
 
     return false
-}
-
-fun <T> newArraySetFrom(set: Set<T>, capacity: Int): ArraySet<T> {
-    return ArraySet<T>(capacity).also {
-        it.addAllSet(set)
-    }
-}
-
-fun <T> ArraySet<in T>.addAllSet(set: Set<T>) {
-    // ArraySet has addAll(ArraySet) method, it's more optimized because it uses internal specialties of the class.
-    // ArraySet also has addAll(Collection) method, it's less optimized, it uses iterator and etc.
-    //
-    // So in order to use more optimized overload, Kotlin should be convinced that set is ArraySet.
-    if (set is ArraySet<out T>) {
-        addAll(set)
-    } else {
-        addAll(set)
-    }
-}
-
-fun <T> MutableSet<in T>.addAllArray(elements: Array<out T>) {
-    elements.forEach(::add)
-}
-
-@Suppress("UNCHECKED_CAST")
-inline fun <T> Set<T>.forEachFast(action: (T) -> Unit) {
-    if (this is ArraySet<T>) {
-        for (i in 0 until size) {
-            action(valueAt(i) as T)
-        }
-    } else {
-        forEach(action)
-    }
 }
 
 inline fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> {
