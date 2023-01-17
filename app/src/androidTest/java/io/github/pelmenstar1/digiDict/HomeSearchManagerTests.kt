@@ -6,10 +6,10 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.commonTestUtils.Diff
 import io.github.pelmenstar1.digiDict.commonTestUtils.toArray
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchManager
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.EntityWitIdFilteredArrayDiffCallback
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchManager
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -176,19 +176,21 @@ class HomeSearchManagerTests {
     @Test
     fun diffTest() {
         fun testCase(queries: Array<String>) {
-            val manager = HomeSearchManager()
-            manager.currentRecords = realisticRecords
+            val searchManager = HomeSearchManager()
+            searchManager.currentRecords = realisticRecords
+
+            val diffManager = FilteredArrayDiffManager(filteredArrayDiffCallback)
 
             var expectedPrevData: Array<ConciseRecordWithBadges>? = null
 
             for (query in queries) {
-                val result = manager.onSearchRequest(query, HomeSortType.NEWEST)
+                val result = searchManager.onSearchRequest(query, HomeSortType.NEWEST)
                 val actualCurrentData = result.currentData
                 val actualCurrentDataArray = actualCurrentData.toArray()
 
                 val actualPrevData = result.previousData
 
-                val actualDiffResult = actualPrevData.calculateDifference(actualCurrentData, filteredArrayDiffCallback)
+                val actualDiffResult = diffManager.calculateDifference(actualPrevData, actualCurrentData)
                 val actualRanges = ArrayList<Diff.TypedIntRange>()
 
                 actualDiffResult.dispatchTo(Diff.ListUpdateCallbackToList(actualRanges))
