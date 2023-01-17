@@ -6,11 +6,17 @@ interface SizedIterable<out T> : Iterable<T> {
     val size: Int
 }
 
-fun<T> Array<T>.swap(i: Int, j: Int) {
-    val t = this[i]
-    this[i] = this[j]
-    this[j] = t
+inline fun <TArray, TValue> TArray.swap(
+    i: Int, j: Int,
+    get: TArray.(Int) -> TValue,
+    set: TArray.(Int, TValue) -> Unit
+) {
+    val t = get(i)
+    set(i, get(j))
+    set(j, t)
 }
+
+fun <T> Array<T>.swap(i: Int, j: Int) = swap(i, j, Array<T>::get, Array<T>::set)
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> unsafeNewArray(size: Int): Array<T> {

@@ -2,52 +2,23 @@ package io.github.pelmenstar1.digiDict.common
 
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.min
 
-private class Range {
-    @JvmField
-    var oldStart = 0
-
-    @JvmField
-    var oldEnd = 0
-
-    @JvmField
-    var newStart = 0
-
-    @JvmField
-    var newEnd = 0
-
-    val oldSize: Int
-        get() = oldEnd - oldStart
-
-    val newSize: Int
-        get() = newEnd - newStart
-
-    constructor()
-    constructor(oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) {
-        this.oldStart = oldStart
-        this.oldEnd = oldEnd
-        this.newStart = newStart
-        this.newEnd = newEnd
-    }
-}
-
-class Diagonal(@JvmField val x: Int, @JvmField val y: Int, @JvmField val size: Int) {
-    val endX: Int
-        get() = x + size
-
-    val endY: Int
-        get() = y + size
-}
-
-private class Snake(
+internal class Snake(
     @JvmField var startX: Int,
     @JvmField var startY: Int,
     @JvmField var endX: Int,
     @JvmField var endY: Int,
     @JvmField var isReversed: Boolean
 ) {
-    fun toDiagonal(): Diagonal? {
+    fun toDiagonal() = toDiagonalInternal(ArrayFilterDiffLong::Diagonal, noneValue = { null })
+    fun toPackedDiagonal() = toDiagonalInternal(
+        ArrayFilterDiffShort::PackedDiagonal,
+        noneValue = { ArrayFilterDiffShort.PackedDiagonal.NONE }
+    )
+
+    private inline fun <T> toDiagonalInternal(createDiagonal: (x: Int, y: Int, size: Int) -> T, noneValue: () -> T): T {
         val sx = startX
         val sy = startY
         val ex = endX
@@ -63,126 +34,27 @@ private class Snake(
             if (xDiff != yDiff) {
                 if (isReversed) {
                     // snake edge it at the end
-                    Diagonal(sx, sy, dSize)
+                    createDiagonal(sx, sy, dSize)
                 } else {
                     // snake edge it at the beginning
                     if (yDiff > xDiff) {
-                        Diagonal(sx, sy + 1, dSize)
+                        createDiagonal(sx, sy + 1, dSize)
                     } else {
-                        Diagonal(sx + 1, sy, dSize)
+                        createDiagonal(sx + 1, sy, dSize)
                     }
                 }
             } else {
                 // we are a pure diagonal
-                Diagonal(sx, sy, xDiff)
+                createDiagonal(sx, sy, xDiff)
             }
         } else {
-            null
+            noneValue()
         }
     }
 }
 
-class FilteredArrayDiffResult<T> internal constructor(
-    private val diagonals: ArrayList<Diagonal>,
-    private val oldArray: FilteredArray<out T>,
-    private val newArray: FilteredArray<out T>,
-    private val statuses: IntArray,
-    private val itemCallback: FilteredArrayDiffItemCallback<T>
-) {
-    init {
-        Arrays.fill(statuses, 0)
-
-        addEdgeDiagonals()
-        findMatchingItems()
-    }
-
-    private fun addEdgeDiagonals() {
-        val first = diagonals.firstOrNull()
-
-        if(first == null || first.x != 0 || first.y != 0) {
-            diagonals.add(0, Diagonal(0, 0, 0))
-        }
-
-        diagonals.add(Diagonal(oldArray.size, newArray.size, 0))
-    }
-
-    private fun findMatchingItems() {
-        val oldOrigin = oldArray.origin
-        val newOrigin = newArray.origin
-
-        for (diagonal in diagonals) {
-            val diagX = diagonal.x
-            val diagY = diagonal.y
-
-            for (offset in 0 until diagonal.size) {
-                val posX = diagX + offset
-                val posY = diagY + offset
-
-                if(!itemCallback.areContentsTheSame(oldOrigin[posX], newOrigin[posY])) {
-                    statuses[posX] = STATUS_CHANGED
-                }
-            }
-        }
-    }
-
-    fun dispatchTo(callback: ListUpdateCallback) {
-        var posX = oldArray.size
-        var posY = newArray.size
-
-        for(i in (diagonals.size - 1) downTo 0) {
-            val diagonal = diagonals[i]
-            val diagX = diagonal.x
-            val diagY = diagonal.y
-
-            val endX = diagonal.endX
-            val endY = diagonal.endY
-
-            val removedCount = posX - endX
-            if(removedCount > 0) {
-                callback.onRemoved(endX, removedCount)
-            }
-
-            val insertedCount = posY - endY
-            if(insertedCount > 0) {
-                callback.onInserted(endX, insertedCount)
-            }
-
-            posX = diagX
-            posY = diagY
-
-            var lastChangePos = -1
-
-            for(j in 0 until diagonal.size) {
-                val status = statuses[posX]
-
-                if (status == STATUS_CHANGED) {
-                    if(lastChangePos < 0) {
-                        lastChangePos = posX
-                    }
-                } else {
-                    // If the element isn't changed, it means the change range is ended,
-                    // so invoke the callback and reset the range.
-                    if (lastChangePos >= 0) {
-                        callback.onChanged(lastChangePos, posX - lastChangePos)
-                        lastChangePos = -1
-                    }
-                }
-
-                posX++
-            }
-
-            // Process the last change range if it exists
-            if (lastChangePos >= 0) {
-                callback.onChanged(lastChangePos, posX - lastChangePos)
-            }
-
-            posX = diagX
-        }
-    }
-
-    companion object {
-        private const val STATUS_CHANGED = 1
-    }
+interface FilteredArrayDiffResult {
+    fun dispatchTo(callback: ListUpdateCallback)
 }
 
 interface FilteredArrayDiffItemCallback<in T> {
@@ -190,265 +62,286 @@ interface FilteredArrayDiffItemCallback<in T> {
     fun areContentsTheSame(a: T, b: T): Boolean
 }
 
-private val DIAGONAL_COMPARATOR = Comparator<Diagonal> { a, b -> a.x - b.x }
+internal fun CenteredIntArray(size: Int) = CenteredIntArray(IntArray(size))
 
-fun <T> FilteredArray<out T>.calculateDifference(
-    other: FilteredArray<out T>,
-    cb: FilteredArrayDiffItemCallback<T>
-): FilteredArrayDiffResult<T> {
-    val oldArray = this
-
-    @Suppress("UnnecessaryVariable")
-    val newArray = other
-
-    val oldSize = oldArray.size
-    val newSize = newArray.size
-
-    val diagonals = ArrayList<Diagonal>()
-
-    // instead of a recursive implementation, we keep our own stack to avoid potential stack
-    // overflow exceptions
-    val stack = ArrayList<Range>()
-    stack.add(Range(0, oldSize, 0, newSize))
-
-    val max = (oldSize + newSize + 1) / 2
-
-    // allocate forward and backward k-lines. K lines are diagonal lines in the matrix. (see the
-    // paper for details)
-    // These arrays lines keep the max reachable position for each k-line.
-    val forward = IntArray(max * 2 + 1)
-    val backward = IntArray(max * 2 + 1)
-
-    // We pool the ranges to avoid allocations for each recursive call.
-    val rangePool = ArrayList<Range>()
-    while (stack.isNotEmpty()) {
-        val range = stack.removeAt(stack.size - 1)
-        val snake = midPointFilteredArray(oldArray, newArray, cb, range, forward, backward)
-
-        if (snake != null) {
-            // if it has a diagonal, save it
-            snake.toDiagonal()?.let {
-                diagonals.add(it)
-            }
-
-            // add new ranges for left and right
-            val left = if (rangePool.isEmpty()) {
-                Range()
-            } else {
-                rangePool.removeAt(rangePool.size - 1)
-            }
-
-            left.oldStart = range.oldStart
-            left.newStart = range.newStart
-            left.oldEnd = snake.startX
-            left.newEnd = snake.startY
-            stack.add(left)
-
-            // re-use range for right
-            range.oldEnd = range.oldEnd
-            range.newEnd = range.newEnd
-            range.oldStart = snake.endX
-            range.newStart = snake.endY
-            stack.add(range)
-        } else {
-            rangePool.add(range)
-        }
+@JvmInline
+internal value class CenteredIntArray(@JvmField val array: IntArray) {
+    operator fun get(index: Int) = array[index + (array.size / 2)]
+    operator fun set(index: Int, value: Int) {
+        array[index + (array.size / 2)] = value
     }
-
-    // sort snakes
-    diagonals.sortWith(DIAGONAL_COMPARATOR)
-
-    return FilteredArrayDiffResult(diagonals, oldArray, newArray, forward, cb)
 }
 
-private fun <T> midPointFilteredArray(
-    oldArray: FilteredArray<out T>,
-    newArray: FilteredArray<out T>,
-    cb: FilteredArrayDiffItemCallback<T>,
-    range: Range,
-    forward: IntArray,
-    backward: IntArray
-): Snake? {
-    val oldRangeSize = range.oldSize
-    val newRangeSize = range.newSize
+internal object ArrayFilterDiffShared {
+    fun <T> midPointFilteredArray(
+        oldOrigin: Array<out T>, newOrigin: Array<out T>,
+        cb: FilteredArrayDiffItemCallback<T>,
+        oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int,
+        forward: CenteredIntArray, backward: CenteredIntArray
+    ): Snake? {
+        val oldRangeSize = oldEnd - oldStart
+        val newRangeSize = newEnd - newStart
 
-    if (oldRangeSize < 1 || newRangeSize < 1) {
+        if (oldRangeSize < 1 || newRangeSize < 1) {
+            return null
+        }
+
+        val max = (oldRangeSize + newRangeSize + 1) / 2
+
+        forward[1] = oldStart
+        backward[1] = oldEnd
+
+        for (d in 0 until max) {
+            forward(
+                oldOrigin, newOrigin, cb, oldStart, oldEnd, newStart, newEnd, forward, backward, d
+            )?.let {
+                return it
+            }
+
+            backward(
+                oldOrigin, newOrigin, cb, oldStart, oldEnd, newStart, newEnd, forward, backward, d
+            )?.let {
+                return it
+            }
+        }
+
         return null
     }
 
-    val max = (oldRangeSize + newRangeSize + 1) / 2
+    private fun <T> forward(
+        oldOrigin: Array<out T>, newOrigin: Array<out T>,
+        cb: FilteredArrayDiffItemCallback<T>,
+        oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int,
+        forward: CenteredIntArray, backward: CenteredIntArray,
+        d: Int
+    ): Snake? {
+        val delta = (oldEnd - oldStart) - (newEnd - newStart)
+        val checkForSnake = abs(delta) % 2 == 1
 
-    forward.setCentered(1, range.oldStart)
-    backward.setCentered(1, range.oldEnd)
+        var k = -d
+        while (k <= d) {
+            // we either come from d-1, k-1 OR d-1. k+1
+            // as we move in steps of 2, array always holds both current and previous d values
+            // k = x - y and each array value holds the max X, y = x - k
+            val startX: Int
+            var x: Int
 
-    for (d in 0 until max) {
-        forwardFilteredArray(oldArray, newArray, cb, range, forward, backward, d)?.let {
-            return it
+            val nextKItem = forward[k + 1]
+            val prevKItem = forward[k - 1]
+
+            if (k == -d || k != d && nextKItem > prevKItem) {
+                // picking k + 1, incrementing Y (by simply not incrementing X)
+                startX = nextKItem
+                x = startX
+            } else {
+                // picking k - 1, incrementing X
+                startX = prevKItem
+                x = startX + 1
+            }
+
+            var y = newStart + (x - oldStart) - k
+            val startY = if (d == 0 || x != startX) y else (y - 1)
+
+            // now find snake size
+            while (x < oldEnd && y < newEnd) {
+                if (!cb.areItemsTheSame(oldOrigin[x], newOrigin[y])) {
+                    break
+                }
+
+                x++
+                y++
+            }
+
+            // now we have furthest reaching x, record it
+            forward[k] = x
+            if (checkForSnake) {
+                // see if we did pass over a backwards array
+                // mapping function: delta - k
+                val backwardsK = delta - k
+
+                // if backwards K is calculated and it passed me, found match
+                if (backwardsK >= 1 - d && backwardsK <= d - 1 && backward[backwardsK] <= x) {
+                    // match
+                    return Snake(startX, startY, x, y, isReversed = false)
+                }
+            }
+
+            k += 2
         }
 
-        backwardFilteredArray(oldArray, newArray, cb, range, forward, backward, d)?.let {
-            return it
-        }
+        return null
     }
 
-    return null
+    private fun <T> backward(
+        oldOrigin: Array<out T>, newOrigin: Array<out T>,
+        cb: FilteredArrayDiffItemCallback<T>,
+        oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int,
+        forward: CenteredIntArray, backward: CenteredIntArray,
+        d: Int
+    ): Snake? {
+        val delta = (oldEnd - oldStart) - (newEnd - newStart)
+        val checkForSnake = abs(delta) % 2 == 0
+
+        // same as forward but we go backwards from end of the lists to be beginning
+        // this also means we'll try to optimize for minimizing x instead of maximizing it
+        var k = -d
+        while (k <= d) {
+            // we either come from d-1, k-1 OR d-1, k+1
+            // as we move in steps of 2, array always holds both current and previous d values
+            // k = x - y and each array value holds the MIN X, y = x - k
+            // when x's are equal, we prioritize deletion over insertion
+            val startX: Int
+            var x: Int
+
+            val nextKItem = backward[k + 1]
+            val prevKItem = backward[k - 1]
+
+            if (k == -d || k != d && nextKItem < prevKItem) {
+                // picking k + 1, decrementing Y (by simply not decrementing X)
+                startX = nextKItem
+                x = startX
+            } else {
+                // picking k - 1, decrementing X
+                startX = prevKItem
+                x = startX - 1
+            }
+
+            var y = newEnd - (oldEnd - x - k)
+            val startY = if (d == 0 || x != startX) y else y + 1
+
+            // now find snake size
+            while (x > oldStart && y > newStart) {
+                if (!cb.areItemsTheSame(oldOrigin[x - 1], newOrigin[y - 1])) {
+                    break
+                }
+
+                x--
+                y--
+            }
+
+            // now we have furthest point, record it (min X)
+            backward[k] = x
+            if (checkForSnake) {
+                // see if we did pass over a backwards array
+                // mapping function: delta - k
+                val forwardsK = delta - k
+
+                // if forwards K is calculated and it passed me, found match
+                if (forwardsK >= -d && forwardsK <= d && forward[forwardsK] >= x) {
+                    // assignment are reverse since we are a reverse snake
+                    return Snake(x, y, startX, startY, isReversed = true)
+                }
+            }
+
+            k += 2
+        }
+
+        return null
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    inline fun<TValue, TDiag, TDiagList> createDiffResult(
+        oldArray: FilteredArray<out TValue>, newArray: FilteredArray<out TValue>,
+        itemCallback: FilteredArrayDiffItemCallback<TValue>,
+        statuses: IntArray,
+        diagonals: TDiagList,
+        crossinline diagListSize: TDiagList.() -> Int,
+        crossinline diagListGet: TDiagList.(Int) -> TDiag,
+        crossinline diagX: TDiag.() -> Int, crossinline diagY: TDiag.() -> Int, crossinline diagSize: TDiag.() -> Int,
+        addEdgeDiagonals: () -> Unit,
+    ): FilteredArrayDiffResult {
+        Arrays.fill(statuses, 0)
+
+        val oldOrigin = oldArray.origin
+        val newOrigin = newArray.origin
+
+        addEdgeDiagonals()
+
+        for (i in 0 until diagonals.diagListSize()) {
+            val diag = diagonals.diagListGet(i)
+            val dx = diag.diagX()
+            val dy = diag.diagY()
+
+            for (offset in 0 until diag.diagSize()) {
+                val posX = dx + offset
+                val posY = dy + offset
+
+                if (!itemCallback.areContentsTheSame(oldOrigin[posX], newOrigin[posY])) {
+                    statuses[posX] = 1
+                }
+            }
+        }
+
+        return object : FilteredArrayDiffResult {
+            override fun dispatchTo(callback: ListUpdateCallback) {
+                var posX = oldArray.size
+                var posY = newArray.size
+
+                for (i in (diagonals.diagListSize() - 1) downTo 0) {
+                    val diagonal = diagonals.diagListGet(i)
+                    val dx = diagonal.diagX()
+                    val dy = diagonal.diagY()
+                    val dSize = diagonal.diagSize()
+
+                    val endX = dx + dSize
+                    val endY = dy + dSize
+
+                    val removedCount = posX - endX
+                    if (removedCount > 0) {
+                        callback.onRemoved(endX, removedCount)
+                    }
+
+                    val insertedCount = posY - endY
+                    if (insertedCount > 0) {
+                        callback.onInserted(endX, insertedCount)
+                    }
+
+                    posX = dx
+                    posY = dy
+
+                    var lastChangePos = -1
+
+                    for (j in 0 until dSize) {
+                        val status = statuses[posX]
+
+                        if (status == 1) {
+                            if (lastChangePos < 0) {
+                                lastChangePos = posX
+                            }
+                        } else {
+                            // If the element isn't changed, it means the change range is ended,
+                            // so invoke the callback and reset the range.
+                            if (lastChangePos >= 0) {
+                                callback.onChanged(lastChangePos, posX - lastChangePos)
+                                lastChangePos = -1
+                            }
+                        }
+
+                        posX++
+                    }
+
+                    // Process the last change range if it exists
+                    if (lastChangePos >= 0) {
+                        callback.onChanged(lastChangePos, posX - lastChangePos)
+                    }
+
+                    posX = dx
+                }
+            }
+        }
+    }
 }
 
-private fun <T> forwardFilteredArray(
-    oldArray: FilteredArray<out T>,
+// Exclusive bound
+private const val SHORT_IMPL_UPPER_BOUND = 0xFFFF
+
+fun <T> FilteredArray<out T>.calculateDifference(
     newArray: FilteredArray<out T>,
-    cb: FilteredArrayDiffItemCallback<T>,
-    range: Range,
-    forward: IntArray,
-    backward: IntArray,
-    d: Int
-): Snake? {
-    val oldStart = range.oldStart
-    val oldEnd = range.oldEnd
-    val newStart = range.newStart
-    val newEnd = range.newEnd
-
-    val delta = (oldEnd - oldStart) - (newEnd - newStart)
-    val checkForSnake = abs(delta) % 2 == 1
-
-    val oldOrigin = oldArray.origin
-    val newOrigin = newArray.origin
-
-    var k = -d
-    while (k <= d) {
-        // we either come from d-1, k-1 OR d-1. k+1
-        // as we move in steps of 2, array always holds both current and previous d values
-        // k = x - y and each array value holds the max X, y = x - k
-        val startX: Int
-        var x: Int
-
-        val nextKItem = forward.getCentered(k + 1)
-        val prevKItem = forward.getCentered(k - 1)
-
-        if (k == -d || k != d && nextKItem > prevKItem) {
-            // picking k + 1, incrementing Y (by simply not incrementing X)
-            startX = nextKItem
-            x = startX
-        } else {
-            // picking k - 1, incrementing X
-            startX = prevKItem
-            x = startX + 1
-        }
-
-        var y = newStart + (x - oldStart) - k
-        val startY = if (d == 0 || x != startX) y else (y - 1)
-
-        // now find snake size
-        while (x < oldEnd && y < newEnd) {
-            if (!cb.areItemsTheSame(oldOrigin[x], newOrigin[y])) {
-                break
-            }
-
-            x++
-            y++
-        }
-
-        // now we have furthest reaching x, record it
-        forward.setCentered(k, x)
-        if (checkForSnake) {
-            // see if we did pass over a backwards array
-            // mapping function: delta - k
-            val backwardsK = delta - k
-
-            // if backwards K is calculated and it passed me, found match
-            if (backwardsK >= 1 - d && backwardsK <= d - 1 && backward.getCentered(backwardsK) <= x) {
-                // match
-                return Snake(startX, startY, x, y, isReversed = false)
-            }
-        }
-
-        k += 2
+    cb: FilteredArrayDiffItemCallback<T>
+): FilteredArrayDiffResult {
+    return if (max(size, newArray.size) < SHORT_IMPL_UPPER_BOUND) {
+        ArrayFilterDiffShort.calculateDifference(this, newArray, cb)
+    } else {
+        ArrayFilterDiffLong.calculateDifference(this, newArray, cb)
     }
-
-    return null
-}
-
-private fun <T> backwardFilteredArray(
-    oldArray: FilteredArray<out T>,
-    newArray: FilteredArray<out T>,
-    cb: FilteredArrayDiffItemCallback<T>,
-    range: Range,
-    forward: IntArray,
-    backward: IntArray,
-    d: Int
-): Snake? {
-    val oldStart = range.oldStart
-    val oldEnd = range.oldEnd
-    val newStart = range.newStart
-    val newEnd = range.newEnd
-
-    val delta = (oldEnd - oldStart) - (newEnd - newStart)
-    val checkForSnake = abs(delta) % 2 == 0
-
-    val oldOrigin = oldArray.origin
-    val newOrigin = newArray.origin
-
-    // same as forward but we go backwards from end of the lists to be beginning
-    // this also means we'll try to optimize for minimizing x instead of maximizing it
-    var k = -d
-    while (k <= d) {
-        // we either come from d-1, k-1 OR d-1, k+1
-        // as we move in steps of 2, array always holds both current and previous d values
-        // k = x - y and each array value holds the MIN X, y = x - k
-        // when x's are equal, we prioritize deletion over insertion
-        val startX: Int
-        var x: Int
-
-        val nextKItem = backward.getCentered(k + 1)
-        val prevKItem = backward.getCentered(k - 1)
-
-        if (k == -d || k != d && nextKItem < prevKItem) {
-            // picking k + 1, decrementing Y (by simply not decrementing X)
-            startX = nextKItem
-            x = startX
-        } else {
-            // picking k - 1, decrementing X
-            startX = prevKItem
-            x = startX - 1
-        }
-
-        var y = newEnd - (oldEnd - x - k)
-        val startY = if (d == 0 || x != startX) y else y + 1
-
-        // now find snake size
-        while(x > oldStart && y > newStart) {
-            if (!cb.areItemsTheSame(oldOrigin[x - 1], newOrigin[y - 1])) {
-                break
-            }
-
-            x--
-            y--
-        }
-
-        // now we have furthest point, record it (min X)
-        backward.setCentered(k, x)
-        if (checkForSnake) {
-            // see if we did pass over a backwards array
-            // mapping function: delta - k
-            val forwardsK = delta - k
-
-            // if forwards K is calculated and it passed me, found match
-            if (forwardsK >= -d && forwardsK <= d && forward.getCentered(forwardsK) >= x) {
-                // assignment are reverse since we are a reverse snake
-                return Snake(x, y, startX, startY, isReversed = true)
-            }
-        }
-
-        k += 2
-    }
-
-    return null
-}
-
-private fun IntArray.getCentered(index: Int): Int {
-    return this[index + (size / 2)]
-}
-
-private fun IntArray.setCentered(index: Int, value: Int) {
-    this[index + (size / 2)] = value
 }

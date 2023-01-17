@@ -35,11 +35,15 @@ class FilteredArrayDiffTests {
         }
     }
 
-    private fun diffTestHelper(old: Array<DataObject>, new: Array<DataObject>) {
+    private inline fun diffTestHelperInternal(
+        old: Array<DataObject>,
+        new: Array<DataObject>,
+        diffMethod: (FilteredArray<DataObject>, FilteredArray<DataObject>, FilteredArrayDiffItemCallback<DataObject>) -> FilteredArrayDiffResult
+    ) {
         val oldFilteredArray = FilteredArray(old, old.size)
         val newFilteredArray = FilteredArray(new, new.size)
 
-        val diffResult = oldFilteredArray.calculateDifference(newFilteredArray, DataObjectFilteredArrayItemCallback)
+        val diffResult = diffMethod(oldFilteredArray, newFilteredArray, DataObjectFilteredArrayItemCallback)
         val actualRanges = ArrayList<Diff.TypedIntRange>()
         diffResult.dispatchTo(Diff.ListUpdateCallbackToList(actualRanges))
 
@@ -50,168 +54,105 @@ class FilteredArrayDiffTests {
         val expectedRanges = ArrayList<Diff.TypedIntRange>()
         diffUtilResult.dispatchUpdatesTo(Diff.RecyclerViewListUpdateCallbackToList(expectedRanges))
 
-        assertContentEquals(expectedRanges, actualRanges)
+        assertContentEquals(expectedRanges, actualRanges, "old: ${old.contentToString()}, new: ${new.contentToString()}")
     }
 
-    @Test
-    fun diffTest() {
+
+    private fun diffTestCases(diffTestHelper: (old: Array<DataObject>, new: Array<DataObject>) -> Unit) {
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            ),
-            new = arrayOf(
-                DataObject(id = 1), DataObject(id = 2)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)),
+            arrayOf(DataObject(id = 1), DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 1), DataObject(id = 2)
-            ),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            )
+            arrayOf(DataObject(id = 1), DataObject(id = 2)),
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            ),
-            new = arrayOf(
-                DataObject(id = 1)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)),
+            arrayOf(DataObject(id = 1))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            ),
-            new = arrayOf(
-                DataObject(id = 2)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)),
+            arrayOf(DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 2)
-            ),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            )
+            arrayOf(DataObject(id = 2)),
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 1)
-            ),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            )
+            arrayOf(DataObject(id = 1)),
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0)
-            ),
-            new = arrayOf(
-                DataObject(id = 0)
-            )
+            arrayOf(DataObject(id = 0)),
+            arrayOf(DataObject(id = 0))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1)
-            ),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 2)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 1)),
+            arrayOf(DataObject(id = 0), DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = emptyArray(),
-            new = arrayOf(
-                DataObject(id = 0)
-            )
+            emptyArray(),
+            arrayOf(DataObject(id = 0))
         )
 
         diffTestHelper(
-            old = emptyArray(),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1)
-            )
+            emptyArray(),
+            arrayOf(DataObject(id = 0), DataObject(id = 1))
         )
 
         diffTestHelper(
-            old = emptyArray(),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            )
+            emptyArray(),
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0)
-            ),
-            new = emptyArray()
+            arrayOf(DataObject(id = 0)), emptyArray()
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1)
-            ),
-            new = emptyArray()
+            arrayOf(DataObject(id = 0), DataObject(id = 1)),
+            emptyArray()
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)
-            ),
-            new = arrayOf(
-                DataObject(id = 2)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2)),
+            arrayOf(DataObject(id = 2))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3)
-            ),
-            new = arrayOf(
-                DataObject(id = 1), DataObject(id = 3)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3)),
+            arrayOf(DataObject(id = 1), DataObject(id = 3))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 3)
-            ),
-            new = arrayOf(
-                DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 3)),
+            arrayOf(DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0, value = 0)
-            ),
-            new = arrayOf(
-                DataObject(id = 0, value = 1)
-            )
+            arrayOf(DataObject(id = 0, value = 0)),
+            arrayOf(DataObject(id = 0, value = 1))
         )
 
         diffTestHelper(
-            old = arrayOf(
-                DataObject(id = 0), DataObject(id = 1, value = 0)
-            ),
-            new = arrayOf(
-                DataObject(id = 1, value = 1)
-            )
+            arrayOf(DataObject(id = 0), DataObject(id = 1, value = 0)),
+            arrayOf(DataObject(id = 1, value = 1))
         )
 
         diffTestHelper(
-            old = arrayOf(
+            arrayOf(
                 DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3), DataObject(id = 4)
             ),
-            new = arrayOf(
+            arrayOf(
                 DataObject(id = 0, value = 1),
                 DataObject(id = 1, value = 1),
                 DataObject(id = 2),
@@ -221,10 +162,10 @@ class FilteredArrayDiffTests {
         )
 
         diffTestHelper(
-            old = arrayOf(
+            arrayOf(
                 DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3), DataObject(id = 4)
             ),
-            new = arrayOf(
+            arrayOf(
                 DataObject(id = 0, value = 1),
                 DataObject(id = 1, value = 1),
                 DataObject(id = 2),
@@ -234,10 +175,10 @@ class FilteredArrayDiffTests {
         )
 
         diffTestHelper(
-            old = arrayOf(
+            arrayOf(
                 DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3), DataObject(id = 4)
             ),
-            new = arrayOf(
+            arrayOf(
                 DataObject(id = 1, value = 1),
                 DataObject(id = 2),
                 DataObject(id = 3),
@@ -245,10 +186,10 @@ class FilteredArrayDiffTests {
         )
 
         diffTestHelper(
-            old = arrayOf(
+            arrayOf(
                 DataObject(id = 0), DataObject(id = 1), DataObject(id = 2), DataObject(id = 3)
             ),
-            new = arrayOf(
+            arrayOf(
                 DataObject(id = 1, value = 1),
                 DataObject(id = 2),
                 DataObject(id = 3, value = 1),
@@ -257,10 +198,10 @@ class FilteredArrayDiffTests {
         )
 
         diffTestHelper(
-            old = arrayOf(
+            arrayOf(
                 DataObject(id = 1)
             ),
-            new = arrayOf(
+            arrayOf(
                 DataObject(id = 0),
                 DataObject(id = 1, value = 1),
                 DataObject(id = 2),
@@ -270,8 +211,25 @@ class FilteredArrayDiffTests {
         )
     }
 
+    private fun diffTestHelperShort(old: Array<DataObject>, new: Array<DataObject>) {
+        diffTestHelperInternal(old, new, ArrayFilterDiffShort::calculateDifference)
+    }
+
+    private fun diffTestHelperLong(old: Array<DataObject>, new: Array<DataObject>) {
+        diffTestHelperInternal(old, new, ArrayFilterDiffLong::calculateDifference)
+    }
+
     @Test
-    fun diffRandomizedTest() {
+    fun diffTest_short() {
+        diffTestCases(::diffTestHelperShort)
+    }
+
+    @Test
+    fun diffTest_long() {
+        diffTestCases(::diffTestHelperLong)
+    }
+
+    private fun diffRandomizedTestInternal(diffTestHelper: (old: Array<DataObject>, new: Array<DataObject>) -> Unit) {
         val random = Random(2023)
 
         for (arraySize in intArrayOf(20, 50, 100)) {
@@ -282,8 +240,18 @@ class FilteredArrayDiffTests {
                     it.shuffle(random)
                 }
 
-                diffTestHelper(old = oldArray, new = newArray)
+                diffTestHelper(oldArray, newArray)
             }
         }
+    }
+
+    @Test
+    fun diffRandomizedTest_short() {
+        diffRandomizedTestInternal(::diffTestHelperShort)
+    }
+
+    @Test
+    fun diffRandomizedTest_long() {
+        diffRandomizedTestInternal(::diffTestHelperLong)
     }
 }
