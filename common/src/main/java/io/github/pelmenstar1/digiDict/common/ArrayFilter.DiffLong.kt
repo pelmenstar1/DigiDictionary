@@ -54,8 +54,8 @@ object ArrayFilterDiffLong {
         // allocate forward and backward k-lines. K lines are diagonal lines in the matrix. (see the
         // paper for details)
         // These arrays lines keep the max reachable position for each k-line.
-        val forward = CenteredIntArray(max * 2 + 1)
-        val backward = CenteredIntArray(max * 2 + 1)
+        val forward = ArrayFilterDiffShared.CenteredIntArray(max * 2 + 1)
+        val backward = ArrayFilterDiffShared.CenteredIntArray(max * 2 + 1)
 
         // We pool the ranges to avoid allocations for each recursive call.
         val rangePool = ArrayList<Range>()
