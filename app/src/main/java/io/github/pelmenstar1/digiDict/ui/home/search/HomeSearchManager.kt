@@ -42,7 +42,9 @@ class HomeSearchManager {
         val currentFilteredArray = if (isMeaningfulQuery) {
             currentRecords.toFilteredArray { record ->
                 RecordSearchUtil.filterPredicate(record, query)
-            }.sorted(sortType.getComparatorForConciseRecordWithBadges())
+            }.also {
+                it.sort(sortType.getComparatorForConciseRecordWithBadges())
+            }
         } else {
             FilteredArray.empty()
         }

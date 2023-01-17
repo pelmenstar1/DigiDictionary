@@ -17,8 +17,9 @@ class FilteredArrayTests {
     fun sortTest() {
         fun testCase(input: Array<Int>, size: Int = input.size, output: Array<Int>) {
             val filteredInput = FilteredArray(input, size)
-            val filteredOutput = filteredInput.sorted(Int::compareTo)
-            val actualOutput = filteredOutput.toArray()
+            filteredInput.sort(Int::compareTo)
+
+            val actualOutput = filteredInput.toArray()
 
             assertContentEquals(output, actualOutput)
         }
