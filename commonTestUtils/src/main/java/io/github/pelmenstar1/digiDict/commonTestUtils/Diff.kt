@@ -1,7 +1,5 @@
 package io.github.pelmenstar1.digiDict.commonTestUtils
 
-import io.github.pelmenstar1.digiDict.common.FilteredArray
-import io.github.pelmenstar1.digiDict.common.FilteredArrayDiffItemCallback
 import io.github.pelmenstar1.digiDict.common.ListUpdateCallback
 
 object Diff {
