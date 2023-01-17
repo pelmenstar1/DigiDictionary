@@ -12,11 +12,8 @@ internal object ArrayFilterDiffShared {
         @JvmField var endY: Int,
         @JvmField var isReversed: Boolean
     ) {
-        fun toDiagonal() = toDiagonalInternal(ArrayFilterDiffLong::Diagonal, noneValue = { null })
-        fun toPackedDiagonal() = toDiagonalInternal(
-            ArrayFilterDiffShort::PackedDiagonal,
-            noneValue = { ArrayFilterDiffShort.PackedDiagonal.NONE }
-        )
+        fun toDiagonal() = toDiagonalInternal(::DiffDiagonal, noneValue = { null })
+        fun toPackedDiagonal() = toDiagonalInternal(::PackedDiffDiagonal, PackedDiffDiagonal::NONE)
 
         private inline fun <T> toDiagonalInternal(createDiagonal: (x: Int, y: Int, size: Int) -> T, noneValue: () -> T): T {
             val sx = startX
@@ -57,6 +54,9 @@ internal object ArrayFilterDiffShared {
 
     @JvmInline
     value class CenteredIntArray(@JvmField val array: IntArray) {
+        inline val size: Int
+            get() = array.size
+
         operator fun get(index: Int) = array[index + (array.size / 2)]
         operator fun set(index: Int, value: Int) {
             array[index + (array.size / 2)] = value

@@ -2,36 +2,37 @@ package io.github.pelmenstar1.digiDict.common
 
 import java.util.*
 import kotlin.Comparator
-import kotlin.collections.ArrayList
 
-object ArrayFilterDiffLong {
-    private val DIAGONAL_COMPARATOR = Comparator<Diagonal> { a, b -> a.x - b.x }
+private val DIAGONAL_COMPARATOR = Comparator<DiffDiagonal> { a, b -> a.x - b.x }
 
-    class Diagonal(@JvmField val x: Int, @JvmField val y: Int, @JvmField val size: Int)
+class DiffDiagonal(@JvmField val x: Int, @JvmField val y: Int, @JvmField val size: Int)
 
-    private class Range {
-        @JvmField
-        var oldStart = 0
+private class DiffRange {
+    @JvmField
+    var oldStart = 0
 
-        @JvmField
-        var oldEnd = 0
+    @JvmField
+    var oldEnd = 0
 
-        @JvmField
-        var newStart = 0
+    @JvmField
+    var newStart = 0
 
-        @JvmField
-        var newEnd = 0
+    @JvmField
+    var newEnd = 0
 
-        constructor()
-        constructor(oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) {
-            this.oldStart = oldStart
-            this.oldEnd = oldEnd
-            this.newStart = newStart
-            this.newEnd = newEnd
-        }
+    constructor()
+    constructor(oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) {
+        this.oldStart = oldStart
+        this.oldEnd = oldEnd
+        this.newStart = newStart
+        this.newEnd = newEnd
     }
+}
 
-    internal fun <T> calculateDifference(
+internal class FilteredArrayDiffManagerDelegateLongImpl<T> : FilteredArrayDiffManagerDelegate<T>() {
+    private val diagonals = ArrayList<DiffDiagonal>()
+
+    override fun calculateDifference(
         oldArray: FilteredArray<out T>,
         newArray: FilteredArray<out T>,
         cb: FilteredArrayDiffItemCallback<T>
@@ -42,23 +43,21 @@ object ArrayFilterDiffLong {
         val oldOrigin = oldArray.origin
         val newOrigin = newArray.origin
 
-        val diagonals = ArrayList<Diagonal>()
+        // Relies on the fact that ArrayList saves the buffer on clearing. Instead, it just sets the size to 0
+        diagonals.clear()
 
         // instead of a recursive implementation, we keep our own stack to avoid potential stack
         // overflow exceptions
-        val stack = ArrayList<Range>()
-        stack.add(Range(0, oldSize, 0, newSize))
+        val stack = ArrayList<DiffRange>()
+        stack.add(DiffRange(0, oldSize, 0, newSize))
 
-        val max = (oldSize + newSize + 1) / 2
+        initForwardBackwardArrays(max = (oldSize + newSize + 1) / 2)
 
-        // allocate forward and backward k-lines. K lines are diagonal lines in the matrix. (see the
-        // paper for details)
-        // These arrays lines keep the max reachable position for each k-line.
-        val forward = ArrayFilterDiffShared.CenteredIntArray(max * 2 + 1)
-        val backward = ArrayFilterDiffShared.CenteredIntArray(max * 2 + 1)
+        val forward = forwardArray
+        val backward = backwardArray
 
         // We pool the ranges to avoid allocations for each recursive call.
-        val rangePool = ArrayList<Range>()
+        val rangePool = ArrayList<DiffRange>()
         while (stack.isNotEmpty()) {
             val range = stack.removeAt(stack.size - 1)
             val snake = ArrayFilterDiffShared.midPointFilteredArray(
@@ -76,7 +75,7 @@ object ArrayFilterDiffLong {
 
                 // add new ranges for left and right
                 val left = if (rangePool.isEmpty()) {
-                    Range()
+                    DiffRange()
                 } else {
                     rangePool.removeAt(rangePool.size - 1)
                 }
@@ -99,7 +98,7 @@ object ArrayFilterDiffLong {
         }
 
         // sort snakes
-        diagonals.sortWith(DIAGONAL_COMPARATOR)
+        Collections.sort(diagonals, DIAGONAL_COMPARATOR)
 
         return createDiffResult(oldArray, newArray, cb, forward.array, diagonals)
     }
@@ -109,20 +108,20 @@ object ArrayFilterDiffLong {
         newArray: FilteredArray<out T>,
         cb: FilteredArrayDiffItemCallback<T>,
         statuses: IntArray,
-        diagonals: ArrayList<Diagonal>
+        diagonals: ArrayList<DiffDiagonal>
     ): FilteredArrayDiffResult {
         return ArrayFilterDiffShared.createDiffResult(
             oldArray, newArray, cb, statuses, diagonals,
-            ArrayList<Diagonal>::size, ArrayList<Diagonal>::get,
-            Diagonal::x, Diagonal::y, Diagonal::size,
+            ArrayList<DiffDiagonal>::size, ArrayList<DiffDiagonal>::get,
+            DiffDiagonal::x, DiffDiagonal::y, DiffDiagonal::size,
             addEdgeDiagonals = {
                 val first = diagonals.firstOrNull()
 
                 if (first == null || first.x != 0 || first.y != 0) {
-                    diagonals.add(0, Diagonal(0, 0, 0))
+                    diagonals.add(0, DiffDiagonal(0, 0, 0))
                 }
 
-                diagonals.add(Diagonal(oldArray.size, newArray.size, 0))
+                diagonals.add(DiffDiagonal(oldArray.size, newArray.size, 0))
             }
         )
     }

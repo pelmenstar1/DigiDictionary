@@ -3,11 +3,11 @@ package io.github.pelmenstar1.digiDict.common
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class ArrayFilterDiffShortPackedTests {
+class ArrayFilterDiffPackedTests {
     @Test
-    fun packedRange_roundtrip() {
+    fun packedDiffRange_roundtrip() {
         fun testCase(oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) {
-            val range = ArrayFilterDiffShort.PackedRange(oldStart, oldEnd, newStart, newEnd)
+            val range = PackedDiffRange(oldStart, oldEnd, newStart, newEnd)
 
             assertEquals(oldStart, range.oldStart)
             assertEquals(oldEnd, range.oldEnd)
@@ -26,9 +26,9 @@ class ArrayFilterDiffShortPackedTests {
     }
 
     @Test
-    fun packedDiagonal_roundtrip() {
+    fun packedDiffDiagonal_roundtrip() {
         fun testCase(x: Int, y: Int, size: Int) {
-            val diagonal = ArrayFilterDiffShort.PackedDiagonal(x, y, size)
+            val diagonal = PackedDiffDiagonal(x, y, size)
 
             assertEquals(x, diagonal.x)
             assertEquals(y, diagonal.y)
@@ -45,8 +45,8 @@ class ArrayFilterDiffShortPackedTests {
     }
 
     @Test
-    fun packedDiagonal_none() {
-        val none = ArrayFilterDiffShort.PackedDiagonal.NONE
+    fun packedDiffDiagonal_none() {
+        val none = PackedDiffDiagonal.NONE
         assertEquals(0xFFFF, none.x)
         assertEquals(0xFFFF, none.y)
         assertEquals(0xFFFF, none.size)

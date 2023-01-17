@@ -5,6 +5,7 @@ import io.github.pelmenstar1.digiDict.commonTestUtils.Diff
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertTrue
 
 class FilteredArrayDiffTests {
     private data class DataObject(val id: Int, val value: Int = 0)
@@ -54,7 +55,11 @@ class FilteredArrayDiffTests {
         val expectedRanges = ArrayList<Diff.TypedIntRange>()
         diffUtilResult.dispatchUpdatesTo(Diff.RecyclerViewListUpdateCallbackToList(expectedRanges))
 
-        assertContentEquals(expectedRanges, actualRanges, "old: ${old.contentToString()}, new: ${new.contentToString()}")
+        assertContentEquals(
+            expectedRanges,
+            actualRanges,
+            "old: ${old.contentToString()}, new: ${new.contentToString()}"
+        )
     }
 
 
@@ -212,21 +217,43 @@ class FilteredArrayDiffTests {
     }
 
     private fun diffTestHelperShort(old: Array<DataObject>, new: Array<DataObject>) {
-        diffTestHelperInternal(old, new, ArrayFilterDiffShort::calculateDifference)
+        val impl = FilteredArrayDiffManagerDelegateShortImpl<DataObject>()
+
+        diffTestHelperInternal(old, new, impl::calculateDifference)
     }
 
     private fun diffTestHelperLong(old: Array<DataObject>, new: Array<DataObject>) {
-        diffTestHelperInternal(old, new, ArrayFilterDiffLong::calculateDifference)
+        val impl = FilteredArrayDiffManagerDelegateLongImpl<DataObject>()
+
+        diffTestHelperInternal(old, new, impl::calculateDifference)
     }
 
     @Test
-    fun diffTest_short() {
+    fun diffTest_short_onDistinctManagers() {
         diffTestCases(::diffTestHelperShort)
     }
 
     @Test
-    fun diffTest_long() {
+    fun diffTest_short_onSameManager() {
+        val impl = FilteredArrayDiffManagerDelegateShortImpl<DataObject>()
+
+        diffTestCases { old, new ->
+            diffTestHelperInternal(old, new, impl::calculateDifference)
+        }
+    }
+
+    @Test
+    fun diffTest_long_onDistinctManagers() {
         diffTestCases(::diffTestHelperLong)
+    }
+
+    @Test
+    fun diffTest_long_onSameManager() {
+        val impl = FilteredArrayDiffManagerDelegateLongImpl<DataObject>()
+
+        diffTestCases { old, new ->
+            diffTestHelperInternal(old, new, impl::calculateDifference)
+        }
     }
 
     private fun diffRandomizedTestInternal(diffTestHelper: (old: Array<DataObject>, new: Array<DataObject>) -> Unit) {
@@ -246,12 +273,53 @@ class FilteredArrayDiffTests {
     }
 
     @Test
-    fun diffRandomizedTest_short() {
+    fun diffRandomizedTest_short_onDistinctManagers() {
         diffRandomizedTestInternal(::diffTestHelperShort)
     }
 
     @Test
-    fun diffRandomizedTest_long() {
+    fun diffRandomizedTest_short_onSameManager() {
+        val manager = FilteredArrayDiffManagerDelegateShortImpl<DataObject>()
+
+        diffRandomizedTestInternal { old, new ->
+            diffTestHelperInternal(old, new, manager::calculateDifference)
+        }
+    }
+
+    @Test
+    fun diffRandomizedTest_long_onDistinctManagers() {
         diffRandomizedTestInternal(::diffTestHelperLong)
+    }
+
+    @Test
+    fun diffRandomizedTest_long_onSameManager() {
+        val manager = FilteredArrayDiffManagerDelegateLongImpl<DataObject>()
+
+        diffRandomizedTestInternal { old, new ->
+            diffTestHelperInternal(old, new, manager::calculateDifference)
+        }
+    }
+
+    @Test
+    fun diffManager_delegateSwitchedToLongImplOnFirstRequest() {
+        val manager = FilteredArrayDiffManager(DataObjectFilteredArrayItemCallback)
+
+        manager.resolveDelegate(oldSize = 0xFFFF, newSize = 0xFFFF)
+        assertTrue(manager.delegate is FilteredArrayDiffManagerDelegateLongImpl)
+    }
+
+    @Test
+    fun diffManager_delegateSwitchTest() {
+        val manager = FilteredArrayDiffManager(DataObjectFilteredArrayItemCallback)
+
+        manager.resolveDelegate(oldSize = 1, newSize = 1)
+        assertTrue(manager.delegate is FilteredArrayDiffManagerDelegateShortImpl)
+
+        manager.resolveDelegate(oldSize = 2, newSize = 0xFFFF)
+        assertTrue(manager.delegate is FilteredArrayDiffManagerDelegateLongImpl)
+
+        // The manager shouldn't switch to short-impl once it switched to long-impl
+        manager.resolveDelegate(oldSize = 1, newSize = 1)
+        assertTrue(manager.delegate is FilteredArrayDiffManagerDelegateLongImpl)
     }
 }

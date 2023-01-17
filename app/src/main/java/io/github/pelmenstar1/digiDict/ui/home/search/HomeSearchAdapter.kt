@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.ui.home.search
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FilteredArray
-import io.github.pelmenstar1.digiDict.common.calculateDifference
+import io.github.pelmenstar1.digiDict.common.FilteredArrayDiffManager
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.ui.RecyclerViewAdapterListUpdateCallback
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
@@ -20,6 +20,8 @@ class HomeSearchAdapter(
     private var currentData: FilteredArray<out ConciseRecordWithBadges> = FilteredArray.empty()
     private val listUpdateCallback = RecyclerViewAdapterListUpdateCallback(this)
 
+    private val diffManager = FilteredArrayDiffManager(conciseRecordDiffCallback)
+
     fun submitResult(result: HomeSearchResult) {
         val currentData = result.currentData
         val previousData = result.previousData
@@ -34,7 +36,7 @@ class HomeSearchAdapter(
                 }
             }
         } else {
-            val diffResult = previousData.calculateDifference(currentData, conciseRecordDiffCallback)
+            val diffResult = diffManager.calculateDifference(previousData, currentData)
 
             diffResult.dispatchTo(listUpdateCallback)
         }
