@@ -6,15 +6,17 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.android.onDatabaseTablesUpdated
+import io.github.pelmenstar1.digiDict.common.filterTrue
+import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
-import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
-import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
-import io.github.pelmenstar1.digiDict.ui.home.search.SearchResult
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchManager
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -40,10 +42,12 @@ class HomeViewModel @Inject constructor(
         }
     ).flow.cachedIn(viewModelScope)
 
+    private val searchManager = HomeSearchManager()
+
     private val searchProgressReporter = ProgressReporter()
     val searchProgressFlow = searchProgressReporter.progressFlow
 
-    private val searchStateManager = DataLoadStateManager<SearchResult>(TAG)
+    private val searchStateManager = DataLoadStateManager<HomeSearchResult>(TAG)
 
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {
@@ -58,24 +62,14 @@ class HomeViewModel @Inject constructor(
                     trackProgressWith(searchProgressReporter) {
                         appDatabase.getAllConciseRecordsWithBadges(searchProgressReporter)
                     }
+                }.onEach {
+                    searchManager.currentRecords = it
                 }
 
             combine(
-                GlobalSearchQueryProvider.queryFlow, recordFlow, _sortTypeFlow
-            ) { query, records, sortType ->
-                val isMeaningfulQuery = query.containsLetterOrDigit()
-
-                // Search can only be performed if query contains at least one letter or digit.
-                // Otherwise, there's no sense in it because such expressions and meanings are forbidden
-                val result = if (isMeaningfulQuery) {
-                    RecordSearchUtil
-                        .filter(records, query)
-                        .sorted(sortType.getComparatorForConciseRecordWithBadges())
-                } else {
-                    FilteredArray.empty()
-                }
-
-                SearchResult(query, isMeaningfulQuery, result)
+                GlobalSearchQueryProvider.queryFlow, _sortTypeFlow, recordFlow
+            ) { query, sortType, _ ->
+                searchManager.onSearchRequest(query, sortType)
             }.flowOn(Dispatchers.Default)
         }
     }

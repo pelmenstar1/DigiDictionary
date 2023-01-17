@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.android.material)
     implementation(libs.androidx.datastore.prefs)
+    implementation(libs.androidx.recyclerview)
 
     testImplementation(project(":commonTestUtils"))
     testImplementation(libs.bundles.kotlin.test.junit)

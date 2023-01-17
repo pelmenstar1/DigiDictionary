@@ -6,6 +6,18 @@ interface SizedIterable<out T> : Iterable<T> {
     val size: Int
 }
 
+inline fun <TArray, TValue> TArray.swap(
+    i: Int, j: Int,
+    get: TArray.(Int) -> TValue,
+    set: TArray.(Int, TValue) -> Unit
+) {
+    val t = get(i)
+    set(i, get(j))
+    set(j, t)
+}
+
+fun <T> Array<T>.swap(i: Int, j: Int) = swap(i, j, Array<T>::get, Array<T>::set)
+
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
     return arrayOfNulls<T>(size) as Array<T>
@@ -133,6 +145,10 @@ inline fun <T, R> Array<out T>.mapOffset(offset: Int, block: (T) -> R): List<R> 
 
 inline fun <T, reified R> Array<out T>.mapToArray(block: (T) -> R): Array<R> {
     return Array(size) { block(this[it]) }
+}
+
+inline fun <T, reified R> Array<out T>.mapToArrayIndexed(block: (index: Int, T) -> R): Array<R> {
+    return Array(size) { i -> block(i, this[i]) }
 }
 
 inline fun <T> Array<out T>.mapToIntArray(block: (T) -> Int): IntArray {

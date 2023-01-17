@@ -1,27 +1,12 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
-import io.github.pelmenstar1.digiDict.common.FilteredArray
-import io.github.pelmenstar1.digiDict.common.filterFast
 import io.github.pelmenstar1.digiDict.common.nextLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.common.nextNonLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecord
-import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import org.jetbrains.annotations.TestOnly
 
 object RecordSearchUtil {
-    /**
-     * Filters given [records] array using given [query].
-     */
-    fun filter(records: Array<out ConciseRecordWithBadges>, query: String): FilteredArray<ConciseRecordWithBadges> {
-        val preparedQuery = prepareQuery(query)
-
-        return records.filterFast {
-            filterPredicate(it, preparedQuery)
-        }
-    }
-
-    @TestOnly
     fun filterPredicate(record: ConciseRecord, query: String): Boolean {
         val expr = record.expression
         val meaning = record.meaning
