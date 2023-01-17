@@ -5,10 +5,7 @@ package io.github.pelmenstar1.digiDict.common
  *
  * The elements that passed filtering are located starting from zero index up to [size].
  */
-class FilteredArray<T>(
-    val origin: Array<T>,
-    override val size: Int
-) : SizedIterable<T> {
+class FilteredArray<T>(val origin: Array<T>, val size: Int) {
     operator fun get(index: Int): T {
         // The important thing is to not let reading from valid index in context of origin but invalid index in context of size
         // If the index is negative, the exception will be thrown when accessing the origin.
@@ -67,15 +64,6 @@ class FilteredArray<T>(
             }
 
             append("])")
-        }
-    }
-
-    override fun iterator(): Iterator<T> {
-        return object : Iterator<T> {
-            private var index = 0
-
-            override fun hasNext() = index < size
-            override fun next() = get(index++)
         }
     }
 

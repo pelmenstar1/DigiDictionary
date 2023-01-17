@@ -1,9 +1,5 @@
 package io.github.pelmenstar1.digiDict.common
 
-interface SizedIterable<out T> : Iterable<T> {
-    val size: Int
-}
-
 inline fun <TArray, TValue> TArray.swap(
     i: Int, j: Int,
     get: TArray.(Int) -> TValue,
@@ -13,8 +9,6 @@ inline fun <TArray, TValue> TArray.swap(
     set(i, get(j))
     set(j, t)
 }
-
-fun <T> Array<T>.swap(i: Int, j: Int) = swap(i, j, Array<T>::get, Array<T>::set)
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
