@@ -360,12 +360,6 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
     private object SwitchContentInflater :
         ItemContentInflater<Boolean, SettingsDescriptor.SwitchItemContent, SwitchMaterial> {
-        @Suppress("UNCHECKED_CAST")
-        private val onCheckedChangedListener = CompoundButton.OnCheckedChangeListener { view, isChecked ->
-            (view.tag as (Boolean) -> Unit).also {
-                it(isChecked)
-            }
-        }
 
         override fun createView(
             context: Context,
@@ -373,9 +367,9 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             onValueChanged: (Boolean) -> Unit
         ): SwitchMaterial {
             return SwitchMaterial(context).also {
-                it.tag = onValueChanged
-
-                it.setOnCheckedChangeListener(onCheckedChangedListener)
+                it.setOnCheckedChangeListener { _, isChecked ->
+                    onValueChanged(isChecked)
+                }
             }
         }
 
@@ -386,26 +380,6 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
     private object RangeSpinnerInflater :
         ItemContentInflater<Int, SettingsDescriptor.RangeSpinnerItemContent, AppCompatSpinner> {
-        private class Tag(
-            @JvmField val start: Int,
-            @JvmField val endInclusive: Int,
-            @JvmField val step: Int,
-            @JvmField val onValueChanged: (Int) -> Unit
-        )
-
-        private val rangeSpinnerOnItemSelected = object : AdapterView.OnItemSelectedListener {
-            @Suppress("UNCHECKED_CAST")
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                (parent.tag as Tag).also {
-                    val value = min(it.endInclusive, it.start + position * it.step)
-
-                    it.onValueChanged(value)
-                }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-            }
-        }
 
         override fun createView(
             context: Context,
@@ -417,18 +391,22 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             val step = content.step
 
             return AppCompatSpinner(context).also {
-                it.tag = Tag(
-                    start, end, step,
-                    onValueChanged = onValueChanged
-                )
-
                 it.adapter = ArrayAdapter(
                     context,
                     android.R.layout.simple_spinner_dropdown_item,
                     createNumberRangeList(start, end, step)
                 )
 
-                it.onItemSelectedListener = rangeSpinnerOnItemSelected
+                it.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                        val value = min(end, start + position * step)
+
+                        onValueChanged(value)
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+                    }
+                }
             }
 
         }
