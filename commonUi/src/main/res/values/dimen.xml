@@ -17,9 +17,9 @@
 
     <dimen name="settingItemContainer_iconSize">32dp</dimen>
     <dimen name="settingItemContainer_padding">10dp</dimen>
-    <dimen name="settingItemContainer_nameMarginStart">8dp</dimen>
+    <dimen name="settingItemContainer_iconPadding">8dp</dimen>
     <dimen name="settings_titlePadding">8dp</dimen>
-    <dimen name="settings_actionItemNameVerticalMargin">5dp</dimen>
+    <dimen name="settings_actionItemAdditionalVerticalPadding">5dp</dimen>
 
     <dimen name="singleSelectionDialog_rootVerticalPadding">15dp</dimen>
     <dimen name="singleSelectionDialog_rootHorizontalPadding">10dp</dimen>

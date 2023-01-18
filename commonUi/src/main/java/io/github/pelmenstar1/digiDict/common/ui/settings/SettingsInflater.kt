@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
@@ -139,28 +138,21 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
         val padding = res.getDimensionPixelOffset(R.dimen.settingItemContainer_padding)
         val iconSize = res.getDimensionPixelSize(R.dimen.settingItemContainer_iconSize)
-        val nameMarginStart = res.getDimensionPixelOffset(R.dimen.settingItemContainer_nameMarginStart)
+        val iconPadding = res.getDimensionPixelOffset(R.dimen.settingItemContainer_iconPadding)
 
         val nameLayoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.CENTER_VERTICAL
-
-            marginStart = nameMarginStart
             weight = 1f
-        }
-
-        val iconLayoutParams = LinearLayout.LayoutParams(iconSize, iconSize).apply {
-            gravity = Gravity.CENTER_VERTICAL
         }
 
         return ItemContainerViewInfo(
             padding,
             iconSize,
-            nameMarginStart,
+            iconPadding,
             nameLayoutParams,
-            iconLayoutParams,
             nameTextAppearance
         )
     }
@@ -169,23 +161,18 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         containerInfo: ItemContainerViewInfo,
         selectableItemBackground: Drawable?
     ): LinkItemViewInfo {
-        val res = context.resources
+        val iconDrawable = getDrawableWithSize(R.drawable.ic_link, containerInfo.iconSize)
 
-        val iconDrawable = ResourcesCompat.getDrawable(res, R.drawable.ic_link, context.theme)!!
-        val iconSize = containerInfo.iconSize
-        val iconLayoutParams = LinearLayout.LayoutParams(iconSize, iconSize).apply {
-            gravity = Gravity.CENTER_VERTICAL
-        }
-
-        return LinkItemViewInfo(selectableItemBackground, iconDrawable, iconLayoutParams)
+        return LinkItemViewInfo(selectableItemBackground, iconDrawable)
     }
 
     private fun createActionItemViewInfo(selectableItemBackground: Drawable?): ActionItemViewInfo {
         val res = context.resources
 
-        val nameVerticalPadding = res.getDimensionPixelOffset(R.dimen.settings_actionItemNameVerticalMargin)
+        val additionalVerticalPadding =
+            res.getDimensionPixelOffset(R.dimen.settings_actionItemAdditionalVerticalPadding)
 
-        return ActionItemViewInfo(nameVerticalPadding, selectableItemBackground)
+        return ActionItemViewInfo(additionalVerticalPadding, selectableItemBackground)
     }
 
     private fun createTitleView(info: TitleViewInfo): TextView {
@@ -215,17 +202,9 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             // Tag is needed for applySnapshot to determine whether the view is 'item container'
             tag = item
 
-            info.padding.also {
-                setPadding(
-                    /* left = */ it,
-                    /* top = */ it,
-                    /* right = */ if (inflater.needsRightPadding) it else 0,
-                    /* bottom = */it
-                )
-            }
+            setPadding(info.padding)
 
-            addView(createItemIconView(item.iconRes, info))
-            addView(createItemNameView(item.nameRes, info))
+            addView(createItemNameView(item.nameRes, item.iconRes, info))
 
             val contentView = inflater.createView(context, content, onValueChanged = { value ->
                 controller.onValueChanged(item.preferenceEntry, value)
@@ -242,42 +221,37 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         containerInfo: ItemContainerViewInfo,
         linkInfo: LinkItemViewInfo,
         onClickListener: View.OnClickListener
-    ): ViewGroup {
+    ): View {
         val res = context.resources
 
-        return LinearLayout(context).apply {
+        return MaterialTextView(context).apply {
             layoutParams = ITEM_CONTAINER_LAYOUT_PARAMS
 
             // Tag is needed for click listener
             tag = item
 
-            orientation = LinearLayout.HORIZONTAL
-            background = linkInfo.selectableItemBackground?.constantState?.newDrawable(res, context.theme)
-            setPadding(containerInfo.padding)
-
             val iconRes = item.iconRes
-            addItemIconViewIfResValid(iconRes, containerInfo)
+            val iconSize = containerInfo.iconSize
 
-            addView(MaterialTextView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    gravity = Gravity.CENTER_VERTICAL
+            val padding = containerInfo.padding
+            var paddingStart = padding
+            if (iconRes == null) {
+                paddingStart += iconSize
+            }
 
-                    // If there's no icon, name text-view should be on the same place.
-                    marginStart = containerInfo.nameMarginStart + (if (iconRes != null) 0 else containerInfo.iconSize)
-                    weight = 1f
-                }
+            setPaddingRelative(paddingStart, padding, padding, padding)
+            gravity = Gravity.CENTER_VERTICAL
 
-                containerInfo.nameTextAppearance.apply(this)
-                text = res.getText(item.nameRes)
-            })
+            val startDrawable = iconRes?.let { getDrawableWithSize(it, iconSize) }
+            val endDrawable = linkInfo.iconDrawable
 
-            addView(AppCompatImageView(context).apply {
-                layoutParams = linkInfo.iconLayoutParams
-                setImageDrawable(linkInfo.iconDrawable)
-            })
+            compoundDrawablePadding = containerInfo.iconPadding
+            setCompoundDrawablesRelative(startDrawable, null, endDrawable, null)
+
+            containerInfo.nameTextAppearance.apply(this)
+            text = res.getText(item.nameRes)
+
+            background = linkInfo.selectableItemBackground?.constantState?.newDrawable(res, context.theme)
 
             setOnClickListener(onClickListener)
         }
@@ -288,65 +262,69 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         containerInfo: ItemContainerViewInfo,
         actionInfo: ActionItemViewInfo,
         onClickListener: View.OnClickListener
-    ): ViewGroup {
+    ): View {
         val res = context.resources
 
-        return LinearLayout(context).apply {
+        return MaterialTextView(context).apply {
             layoutParams = ITEM_CONTAINER_LAYOUT_PARAMS
 
             // Tag is needed for click listener
             tag = item
 
-            orientation = LinearLayout.HORIZONTAL
-            background = actionInfo.selectableItemBackground?.constantState?.newDrawable(res, context.theme)
-            setPadding(containerInfo.padding)
-
             val iconRes = item.iconRes
-            addItemIconViewIfResValid(iconRes, containerInfo)
+            val iconSize = containerInfo.iconSize
 
-            addView(MaterialTextView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    val verticalMargin = actionInfo.nameVerticalMargin
+            val additionalVerticalPadding = actionInfo.additionalVerticalPadding
+            val generalPadding = containerInfo.padding
+            val totalVerticalPadding = generalPadding + additionalVerticalPadding
 
-                    gravity = Gravity.CENTER_VERTICAL
+            var paddingStart = generalPadding
 
-                    // If there's no icon, name text-view should be on the same place.
-                    marginStart = containerInfo.nameMarginStart + (if (iconRes != null) 0 else containerInfo.iconSize)
-                    topMargin = verticalMargin
-                    bottomMargin = verticalMargin
+            if (iconRes == null) {
+                paddingStart += iconSize
+            }
 
-                    weight = 1f
-                }
+            setPaddingRelative(paddingStart, totalVerticalPadding, generalPadding, totalVerticalPadding)
+            gravity = Gravity.CENTER_VERTICAL
 
-                containerInfo.nameTextAppearance.apply(this)
-                text = res.getText(item.nameRes)
-            })
+            if (iconRes != null) {
+                val icon = getDrawableWithSize(iconRes, iconSize)
+
+                compoundDrawablePadding = containerInfo.iconPadding
+                setCompoundDrawablesRelative(icon, null, null, null)
+            }
+
+            background = actionInfo.selectableItemBackground?.constantState?.newDrawable(res, context.theme)
+
+            containerInfo.nameTextAppearance.apply(this)
+            text = res.getText(item.nameRes)
 
             setOnClickListener(onClickListener)
         }
     }
 
-    private fun ViewGroup.addItemIconViewIfResValid(@DrawableRes iconRes: Int?, info: ItemContainerViewInfo) {
-        iconRes?.let { addView(createItemIconView(it, info)) }
-    }
-
-    private fun createItemIconView(@DrawableRes iconRes: Int, info: ItemContainerViewInfo): AppCompatImageView {
-        return AppCompatImageView(context).apply {
-            layoutParams = info.iconLayoutParams
-
-            setImageResource(iconRes)
-        }
-    }
-
-    private fun createItemNameView(@StringRes nameRes: Int, info: ItemContainerViewInfo): MaterialTextView {
+    private fun createItemNameView(
+        @StringRes nameRes: Int,
+        @DrawableRes iconRes: Int,
+        info: ItemContainerViewInfo
+    ): MaterialTextView {
         return MaterialTextView(context).apply {
             layoutParams = info.nameLayoutParams
+            gravity = Gravity.CENTER_VERTICAL
+
+            val icon = getDrawableWithSize(iconRes, info.iconSize)
+
+            compoundDrawablePadding = info.iconPadding
+            setCompoundDrawablesRelative(icon, null, null, null)
 
             info.nameTextAppearance.apply(this)
             setText(nameRes)
+        }
+    }
+
+    private fun getDrawableWithSize(@DrawableRes res: Int, size: Int): Drawable {
+        return ResourcesCompat.getDrawable(context.resources, res, context.theme)!!.also {
+            it.setBounds(0, 0, size, size)
         }
     }
 
@@ -360,26 +338,22 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
     private class ItemContainerViewInfo(
         @JvmField val padding: Int,
         @JvmField val iconSize: Int,
-        @JvmField val nameMarginStart: Int,
+        @JvmField val iconPadding: Int,
         @JvmField val nameLayoutParams: LinearLayout.LayoutParams,
-        @JvmField val iconLayoutParams: LinearLayout.LayoutParams,
         @JvmField val nameTextAppearance: TextAppearance
     )
 
     private class LinkItemViewInfo(
         @JvmField val selectableItemBackground: Drawable?,
         @JvmField val iconDrawable: Drawable,
-        @JvmField val iconLayoutParams: LinearLayout.LayoutParams
     )
 
     private class ActionItemViewInfo(
-        @JvmField val nameVerticalMargin: Int,
+        @JvmField val additionalVerticalPadding: Int,
         @JvmField val selectableItemBackground: Drawable?
     )
 
     interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>, TView : View> {
-        val needsRightPadding: Boolean
-
         fun createView(context: Context, content: TContent, onValueChanged: (T) -> Unit): TView
         fun setValue(view: TView, content: TContent, value: T)
     }
@@ -392,9 +366,6 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                 it(isChecked)
             }
         }
-
-        override val needsRightPadding: Boolean
-            get() = true
 
         override fun createView(
             context: Context,
@@ -421,9 +392,6 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             @JvmField val step: Int,
             @JvmField val onValueChanged: (Int) -> Unit
         )
-
-        override val needsRightPadding: Boolean
-            get() = false
 
         private val rangeSpinnerOnItemSelected = object : AdapterView.OnItemSelectedListener {
             @Suppress("UNCHECKED_CAST")
@@ -495,7 +463,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        private const val ITEM_CONTENT_INDEX_IN_CONTAINER = 2
+        private const val ITEM_CONTENT_INDEX_IN_CONTAINER = 1
 
         @Suppress("UNCHECKED_CAST")
         internal fun <TValue : Any, TContent : SettingsDescriptor.ItemContent<TValue>> TContent.getInflater(): ItemContentInflater<TValue, TContent, View> {
