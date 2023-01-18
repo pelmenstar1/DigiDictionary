@@ -26,10 +26,6 @@ import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.R
 import kotlin.math.min
 
-private typealias ItemContentInflaterHashMap = HashMap<
-        Class<out SettingsDescriptor.ItemContent<Any>>,
-        SettingsInflater.ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View>>
-
 class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: Context) {
     @Suppress("UNCHECKED_CAST")
     fun inflate(descriptor: SettingsDescriptor, container: LinearLayout): SettingsController<TEntries> {
@@ -483,7 +479,6 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     companion object {
         private val ITEM_CONTAINER_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -504,21 +499,15 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
         private const val ITEM_CONTENT_INDEX_IN_CONTAINER = 2
 
-        private val itemInflaters = ItemContentInflaterHashMap().apply {
-            put(SwitchContentInflater)
-            put(RangeSpinnerInflater)
-        }
-
-        private inline fun <reified TContent : SettingsDescriptor.ItemContent<*>> ItemContentInflaterHashMap.put(
-            value: ItemContentInflater<*, TContent, out View>
-        ) {
-            put(TContent::class.java, value as ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View>)
-        }
-
+        @Suppress("UNCHECKED_CAST")
         internal fun <TValue : Any, TContent : SettingsDescriptor.ItemContent<TValue>> TContent.getInflater(): ItemContentInflater<TValue, TContent, View> {
-            return itemInflaters[javaClass] as ItemContentInflater<TValue, TContent, View>
+            val inflater = when (javaClass) {
+                SettingsDescriptor.SwitchItemContent::class.java -> SwitchContentInflater
+                SettingsDescriptor.RangeSpinnerItemContent::class.java -> RangeSpinnerInflater
+                else -> throw IllegalStateException("Invalid type of content")
+            }
+
+            return inflater as ItemContentInflater<TValue, TContent, View>
         }
-
-
     }
 }
