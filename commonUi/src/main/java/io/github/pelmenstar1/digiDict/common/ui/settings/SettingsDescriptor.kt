@@ -46,14 +46,14 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
 
     class LinkItem(
         @StringRes val nameRes: Int,
-        @DrawableRes val iconRes: Int,
+        @DrawableRes val iconRes: Int?,
         val directions: NavDirections
     ) : Item
 
     class ActionItem(
         val id: Int,
         @StringRes val nameRes: Int,
-        @DrawableRes val iconRes: Int
+        @DrawableRes val iconRes: Int?
     ) : Item
 
     class ItemGroup(@StringRes val titleRes: Int, val items: List<Item>) {
@@ -70,7 +70,7 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
 
             fun linkItem(
                 @StringRes nameRes: Int,
-                @DrawableRes iconRes: Int = -1,
+                @DrawableRes iconRes: Int? = null,
                 directions: NavDirections
             ) {
                 items.add(LinkItem(nameRes, iconRes, directions))
@@ -79,7 +79,7 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
             fun actionItem(
                 id: Int,
                 @StringRes nameRes: Int,
-                @DrawableRes iconRes: Int = -1
+                @DrawableRes iconRes: Int? = null
             ) {
                 items.add(ActionItem(id, nameRes, iconRes))
             }

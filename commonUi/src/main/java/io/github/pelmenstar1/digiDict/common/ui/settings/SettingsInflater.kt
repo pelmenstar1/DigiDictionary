@@ -266,7 +266,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                     gravity = Gravity.CENTER_VERTICAL
 
                     // If there's no icon, name text-view should be on the same place.
-                    marginStart = containerInfo.nameMarginStart + if (iconRes >= 0) 0 else containerInfo.iconSize
+                    marginStart = containerInfo.nameMarginStart + (if (iconRes != null) 0 else containerInfo.iconSize)
                     weight = 1f
                 }
 
@@ -314,7 +314,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                     gravity = Gravity.CENTER_VERTICAL
 
                     // If there's no icon, name text-view should be on the same place.
-                    marginStart = containerInfo.nameMarginStart + if (iconRes >= 0) 0 else containerInfo.iconSize
+                    marginStart = containerInfo.nameMarginStart + (if (iconRes != null) 0 else containerInfo.iconSize)
                     topMargin = verticalMargin
                     bottomMargin = verticalMargin
 
@@ -329,10 +329,8 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         }
     }
 
-    private fun ViewGroup.addItemIconViewIfResValid(@DrawableRes iconRes: Int, info: ItemContainerViewInfo) {
-        if (iconRes >= 0) {
-            addView(createItemIconView(iconRes, info))
-        }
+    private fun ViewGroup.addItemIconViewIfResValid(@DrawableRes iconRes: Int?, info: ItemContainerViewInfo) {
+        iconRes?.let { addView(createItemIconView(it, info)) }
     }
 
     private fun createItemIconView(@DrawableRes iconRes: Int, info: ItemContainerViewInfo): AppCompatImageView {
