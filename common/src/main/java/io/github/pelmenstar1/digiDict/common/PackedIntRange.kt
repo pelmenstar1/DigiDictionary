@@ -39,6 +39,9 @@ value class PackedIntRange(@JvmField val bits: Long) {
     val end: Int
         get() = (bits and 0xFFFFFFFF).toInt()
 
+    inline operator fun component1() = start
+    inline operator fun component2() = end
+
     override fun toString(): String {
         return "PackedIntRange(start=$start, end=$end)"
     }
@@ -68,6 +71,18 @@ value class PackedIntRangeArray(@JvmField val rawArray: LongArray) {
      */
     inline operator fun set(index: Int, value: PackedIntRange) {
         rawArray[index] = value.bits
+    }
+
+    /**
+     * Applies [transform] lambda to each element of the [PackedIntRangeArray]
+     * and saves transformed elements to [Array].
+     */
+    inline fun <reified T> map(transform: (PackedIntRange) -> T): Array<T> {
+        val arr = rawArray
+
+        return Array(arr.size) { i ->
+            transform(PackedIntRange(arr[i]))
+        }
     }
 }
 

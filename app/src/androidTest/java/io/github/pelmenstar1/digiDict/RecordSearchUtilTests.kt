@@ -1,10 +1,12 @@
 package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.PackedIntRangeList
 import io.github.pelmenstar1.digiDict.data.ConciseRecord
 import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchUtil
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -112,7 +114,7 @@ class RecordSearchUtilTests {
     }
 
     @Test
-    fun filterPredicate() {
+    fun filterPredicateTest() {
         fun testCase(expr: String, meaning: String, query: String) {
             val record = ConciseRecord(id = 0, expr, meaning, score = 0, epochSeconds = 0)
 
@@ -157,7 +159,7 @@ class RecordSearchUtilTests {
     }
 
     @Test
-    fun prepareQuery() {
+    fun prepareQueryTest() {
         fun testCase(input: String, expected: String) {
             val actual = RecordSearchUtil.prepareQuery(input)
 
@@ -174,5 +176,49 @@ class RecordSearchUtilTests {
         testCase(input = ".....;.. Some ???;;..--- ordinal   ... sentence", expected = "Some ordinal sentence")
         testCase(input = "", expected = "")
         testCase(input = ";A;", expected = "A")
+    }
+
+    @Test
+    fun calculateFoundRangesOnTextRangeTest() {
+        fun testCase(
+            text: String,
+            start: Int = 0,
+            end: Int = text.length,
+            query: String,
+            expectedRanges: Array<IntRange>
+        ) {
+            val actualPackedRanges = PackedIntRangeList()
+            RecordSearchUtil.calculateFoundRangesOnTextRange(text, start, end, query, actualPackedRanges)
+
+            val actualRanges = actualPackedRanges.toArrayUnsafe().map { (start, end) -> start until end }
+
+            assertContentEquals(expectedRanges, actualRanges)
+        }
+
+        testCase(
+            text = "ABC AB BB",
+            query = "AB",
+            expectedRanges = arrayOf(0 until 2, 4 until 6)
+        )
+
+        testCase(
+            text = "AB ABC AB BB ABBB",
+            start = 3,
+            end = 12,
+            query = "AB",
+            expectedRanges = arrayOf(3 until 5, 7 until 9)
+        )
+
+        testCase(
+            text = "BBB",
+            query = "AB",
+            expectedRanges = emptyArray()
+        )
+
+        testCase(
+            text = ";;; AA ... AA ;;;; AAB",
+            query = "AA",
+            expectedRanges = arrayOf(4 until 6, 11 until 13, 19 until 21)
+        )
     }
 }

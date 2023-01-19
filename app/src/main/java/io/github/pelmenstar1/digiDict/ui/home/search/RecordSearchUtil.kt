@@ -1,5 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
+import io.github.pelmenstar1.digiDict.common.PackedIntRange
+import io.github.pelmenstar1.digiDict.common.PackedIntRangeList
 import io.github.pelmenstar1.digiDict.common.nextLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.common.nextNonLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
@@ -72,6 +74,113 @@ object RecordSearchUtil {
         }
     }
 
+    /**
+     * Returns processed subsequence of receiver [String] in range `[start; end)`.
+     * The main idea of the 'processing' is to leave only meaningful parts of the sequence joined with spaces.
+     * Example: " .. ; . AA  BB     CC DD ;;;" becomes "AA BB CC DD"
+     */
+    fun prepareQuery(text: String): String {
+        val length = text.length
+        val strStart = text.nextLetterOrDigitIndex(0, length)
+
+        // Check if there's even an index to start with.
+        // If strStart < 0, means a string doesn't have any letter or digits -- empty string is the most appropriate result in this case.
+        if (strStart < 0) {
+            return ""
+        }
+
+        var strEnd = length - 1
+        while (strEnd >= strStart) {
+            if (text[strEnd].isLetterOrDigit()) {
+                break
+            }
+
+            strEnd--
+        }
+
+        // strEnd is inclusive, make it exclusive.
+        strEnd++
+
+        var strIndex = strStart
+        val bufferLength = strEnd - strStart
+
+        // Saves an allocation of CharArray and String.
+        if (bufferLength == 0) {
+            return ""
+        }
+
+        val buffer = CharArray(bufferLength)
+        var bufferIndex = 0
+
+        while (strIndex < strEnd) {
+            val current = text[strIndex]
+
+            if (current.isLetterOrDigit()) {
+                buffer[bufferIndex] = current
+
+                strIndex++
+            } else {
+                // strIndex can't be -1 because strEnd points to the last letter-or-digit in text.
+                // Code execution just can't be here when strIndex is the last index.
+                strIndex = text.nextLetterOrDigitIndex(strIndex + 1, strEnd)
+
+                buffer[bufferIndex] = ' '
+            }
+
+            // We write to buffer in any case.
+            bufferIndex++
+        }
+
+        return String(buffer, 0, bufferIndex)
+    }
+
+    /**
+     * Calculates the text ranges that might cause given [text] to be found by specified [query].
+     *
+     * The [text] is analyzed only starting from [textStart] up to [textEnd] (exclusive).
+     * The ranges are relative to the zero-index of [text], not [textStart].
+     *
+     * These ranges are added to [list].
+     */
+    fun calculateFoundRangesOnTextRange(
+        text: String,
+        textStart: Int,
+        textEnd: Int,
+        query: String,
+        list: PackedIntRangeList
+    ) {
+        val queryLength = query.length
+
+        // Initial value of index should point to a letter or digit, otherwise the first word will be skipped.
+        var index = text.nextLetterOrDigitIndex(textStart, textEnd)
+        if (index < 0) {
+            return
+        }
+
+        while (true) {
+            val regionLength = textEnd - index
+
+            // crossWordStartsWith expects that a region to check has the same or bigger length than query.
+            if (regionLength >= queryLength) {
+                if (crossWordStartsWith(text, index, textEnd, query)) {
+                    list.add(PackedIntRange(index, index + queryLength))
+                }
+            }
+
+            val nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, textEnd)
+            if (nextNonLetterOrDigitIndex < 0) {
+                break
+            }
+
+            val nextIndex = text.nextLetterOrDigitIndex(nextNonLetterOrDigitIndex, textEnd)
+            if (nextIndex < 0) {
+                break
+            }
+
+            index = nextIndex
+        }
+    }
+
     private fun crossWordStartsWith(text: String, start: Int, end: Int, query: String): Boolean {
         var textIndex = start
         var queryIndex = 0
@@ -112,65 +221,5 @@ object RecordSearchUtil {
         }
 
         return true
-    }
-
-    /**
-     * Returns processed subsequence of receiver [String] in range `[start; end)`.
-     * The main idea of the 'processing' is to leave only meaningful parts of the sequence joined with spaces.
-     * Example: " .. ; . AA  BB     CC DD ;;;" becomes "AA BB CC DD"
-     */
-    fun prepareQuery(text: String): String {
-        val length = text.length
-        val strStart = text.nextLetterOrDigitIndex(0, length)
-
-        // Check if there's even an index to start with.
-        // If strStart < 0, means a string doesn't have any letter or digits -- empty string is the most appropriate result in this case.
-        if (strStart < 0) {
-            return ""
-        }
-
-        var strEnd = length - 1
-        while (strEnd >= strStart) {
-            if (text[strEnd].isLetterOrDigit()) {
-                break
-            }
-
-            strEnd--
-        }
-
-        // strEnd is inclusive, make it exclusive.
-        strEnd++
-
-        var strIndex = strStart
-        val bufferLength = strEnd - strStart
-
-        // Saves an allocation of a CharArray and String.
-        if (bufferLength == 0) {
-            return ""
-        }
-
-        val buffer = CharArray(bufferLength)
-        var bufferIndex = 0
-
-        while (strIndex < strEnd) {
-            val current = text[strIndex]
-
-            if (current.isLetterOrDigit()) {
-                buffer[bufferIndex] = current
-
-                strIndex++
-            } else {
-                // strIndex can't be -1 because strEnd points to the last letter-or-digit in text.
-                // Code execution just can't be here when strIndex is the last index.
-                strIndex = text.nextLetterOrDigitIndex(strIndex + 1, strEnd)
-
-                buffer[bufferIndex] = ' '
-            }
-
-            // We write to buffer in any case.
-            bufferIndex++
-        }
-
-        return String(buffer, 0, bufferIndex)
     }
 }
