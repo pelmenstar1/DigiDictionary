@@ -15,8 +15,8 @@ interface FilteredArrayDiffItemCallback<in T> {
 internal sealed class FilteredArrayDiffManagerDelegate<T> {
     // K lines are diagonal lines in the matrix. (see the paper for details)
     // These arrays lines keep the max reachable position for each k-line.
-    protected var forwardArray = ArrayFilterDiffShared.CenteredIntArray(EmptyArray.INT)
-    protected var backwardArray = ArrayFilterDiffShared.CenteredIntArray(EmptyArray.INT)
+    protected var forwardArray = FilteredArrayDiffShared.CenteredIntArray(EmptyArray.INT)
+    protected var backwardArray = FilteredArrayDiffShared.CenteredIntArray(EmptyArray.INT)
 
     abstract fun calculateDifference(
         oldArray: FilteredArray<out T>,
@@ -31,8 +31,8 @@ internal sealed class FilteredArrayDiffManagerDelegate<T> {
         val linesLength = max * 2 + 1
 
         if (linesLength >= forward.size) {
-            forwardArray = ArrayFilterDiffShared.CenteredIntArray(linesLength)
-            backwardArray = ArrayFilterDiffShared.CenteredIntArray(linesLength)
+            forwardArray = FilteredArrayDiffShared.CenteredIntArray(linesLength)
+            backwardArray = FilteredArrayDiffShared.CenteredIntArray(linesLength)
         } else {
             // Fill with zero only those parts we'll need
             Arrays.fill(forward.array, 0, linesLength, 0)

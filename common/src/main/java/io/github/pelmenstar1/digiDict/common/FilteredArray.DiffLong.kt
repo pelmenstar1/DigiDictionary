@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
 import java.util.*
-import kotlin.Comparator
 
 private val DIAGONAL_COMPARATOR = Comparator<DiffDiagonal> { a, b -> a.x - b.x }
 
@@ -60,7 +59,7 @@ internal class FilteredArrayDiffManagerDelegateLongImpl<T> : FilteredArrayDiffMa
         val rangePool = ArrayList<DiffRange>()
         while (stack.isNotEmpty()) {
             val range = stack.removeAt(stack.size - 1)
-            val snake = ArrayFilterDiffShared.midPointFilteredArray(
+            val snake = FilteredArrayDiffShared.midPointFilteredArray(
                 oldOrigin, newOrigin,
                 cb,
                 range.oldStart, range.oldEnd, range.newStart, range.newEnd,
@@ -110,7 +109,7 @@ internal class FilteredArrayDiffManagerDelegateLongImpl<T> : FilteredArrayDiffMa
         statuses: IntArray,
         diagonals: ArrayList<DiffDiagonal>
     ): FilteredArrayDiffResult {
-        return ArrayFilterDiffShared.createDiffResult(
+        return FilteredArrayDiffShared.createDiffResult(
             oldArray, newArray, cb, statuses, diagonals,
             ArrayList<DiffDiagonal>::size, ArrayList<DiffDiagonal>::get,
             DiffDiagonal::x, DiffDiagonal::y, DiffDiagonal::size,

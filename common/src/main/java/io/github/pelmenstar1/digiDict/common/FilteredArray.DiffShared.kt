@@ -4,7 +4,7 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.min
 
-internal object ArrayFilterDiffShared {
+internal object FilteredArrayDiffShared {
     class Snake(
         @JvmField var startX: Int,
         @JvmField var startY: Int,

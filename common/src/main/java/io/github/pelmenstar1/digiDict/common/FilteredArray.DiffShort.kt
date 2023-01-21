@@ -27,8 +27,6 @@ internal value class PackedDiffRange(@JvmField val bits: Long) {
         internal const val OLD_START_SHIFT = 48
         internal const val OLD_END_SHIFT = 32
         internal const val NEW_START_SHIFT = 16
-
-        internal val NONE = PackedDiffRange(-1L)
     }
 }
 
@@ -102,14 +100,7 @@ internal class PackedDiffRangeStack {
     }
 
     fun pop(): PackedDiffRange {
-        // TODO: Remove this "if", it's unnecessary.
-        var currentSize = size
-        if (currentSize == 0) {
-            return PackedDiffRange.NONE
-        }
-
-        val lastElement = elements[--currentSize]
-        size = currentSize
+        val lastElement = elements[--size]
 
         return PackedDiffRange(lastElement)
     }
@@ -145,7 +136,7 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
         while (stack.size > 0) {
             val range = stack.pop()
 
-            val snake = ArrayFilterDiffShared.midPointFilteredArray(
+            val snake = FilteredArrayDiffShared.midPointFilteredArray(
                 oldOrigin, newOrigin,
                 cb,
                 range.oldStart, range.oldEnd, range.newStart, range.newEnd,
@@ -178,7 +169,7 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
         statuses: IntArray,
         diagonals: PackedDiffDiagonalList,
     ): FilteredArrayDiffResult {
-        return ArrayFilterDiffShared.createDiffResult(
+        return FilteredArrayDiffShared.createDiffResult(
             oldArray, newArray, cb, statuses, diagonals,
             PackedDiffDiagonalList::size, PackedDiffDiagonalList::get,
             PackedDiffDiagonal::x, PackedDiffDiagonal::y, PackedDiffDiagonal::size,
@@ -193,5 +184,4 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
             }
         )
     }
-
 }
