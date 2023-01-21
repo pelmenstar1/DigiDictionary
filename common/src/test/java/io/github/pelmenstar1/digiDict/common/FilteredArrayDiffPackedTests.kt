@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.common
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class ArrayFilterDiffPackedTests {
+class FilteredArrayDiffPackedTests {
     @Test
     fun packedDiffRange_roundtrip() {
         fun testCase(oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int) {

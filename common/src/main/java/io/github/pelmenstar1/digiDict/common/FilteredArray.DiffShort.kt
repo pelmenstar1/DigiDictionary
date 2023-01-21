@@ -136,7 +136,7 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
         while (stack.size > 0) {
             val range = stack.pop()
 
-            val snake = ArrayFilterDiffShared.midPointFilteredArray(
+            val snake = FilteredArrayDiffShared.midPointFilteredArray(
                 oldOrigin, newOrigin,
                 cb,
                 range.oldStart, range.oldEnd, range.newStart, range.newEnd,
@@ -169,7 +169,7 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
         statuses: IntArray,
         diagonals: PackedDiffDiagonalList,
     ): FilteredArrayDiffResult {
-        return ArrayFilterDiffShared.createDiffResult(
+        return FilteredArrayDiffShared.createDiffResult(
             oldArray, newArray, cb, statuses, diagonals,
             PackedDiffDiagonalList::size, PackedDiffDiagonalList::get,
             PackedDiffDiagonal::x, PackedDiffDiagonal::y, PackedDiffDiagonal::size,
