@@ -27,8 +27,6 @@ internal value class PackedDiffRange(@JvmField val bits: Long) {
         internal const val OLD_START_SHIFT = 48
         internal const val OLD_END_SHIFT = 32
         internal const val NEW_START_SHIFT = 16
-
-        internal val NONE = PackedDiffRange(-1L)
     }
 }
 
@@ -102,14 +100,7 @@ internal class PackedDiffRangeStack {
     }
 
     fun pop(): PackedDiffRange {
-        // TODO: Remove this "if", it's unnecessary.
-        var currentSize = size
-        if (currentSize == 0) {
-            return PackedDiffRange.NONE
-        }
-
-        val lastElement = elements[--currentSize]
-        size = currentSize
+        val lastElement = elements[--size]
 
         return PackedDiffRange(lastElement)
     }
@@ -193,5 +184,4 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
             }
         )
     }
-
 }
