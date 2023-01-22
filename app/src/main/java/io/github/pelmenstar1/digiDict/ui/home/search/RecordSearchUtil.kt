@@ -1,7 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
-import io.github.pelmenstar1.digiDict.common.PackedIntRange
-import io.github.pelmenstar1.digiDict.common.PackedIntRangeList
 import io.github.pelmenstar1.digiDict.common.nextLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.common.nextNonLetterOrDigitIndex
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
@@ -42,8 +40,6 @@ object RecordSearchUtil {
      */
     @TestOnly
     fun filterPredicateOnTextRange(text: String, start: Int, end: Int, query: String): Boolean {
-        val queryLength = query.length
-
         // Initial value of index should point to a letter or digit, otherwise the first word will be skipped.
         var index = text.nextLetterOrDigitIndex(start, end)
         if (index < 0) {
@@ -51,13 +47,8 @@ object RecordSearchUtil {
         }
 
         while (true) {
-            val regionLength = end - index
-
-            // crossWordStartsWith expects that a region to check has the same or bigger length than query.
-            if (regionLength >= queryLength) {
-                if (crossWordStartsWith(text, index, end, query)) {
-                    return true
-                }
+            if (match(text, index, end, query)) {
+                return true
             }
 
             val nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, end)
@@ -134,51 +125,21 @@ object RecordSearchUtil {
         return String(buffer, 0, bufferIndex)
     }
 
+
     /**
-     * Calculates the text ranges that might cause given [text] to be found by specified [query].
-     *
-     * The [text] is analyzed only starting from [textStart] up to [textEnd] (exclusive).
-     * The ranges are relative to the zero-index of [text], not [textStart].
-     *
-     * These ranges are added to [list].
+     * Returns whether given [text] at specified range (beginning from [start] up to [end] exclusive) passes a search using [query].
      */
-    fun calculateFoundRangesOnTextRange(
-        text: String,
-        textStart: Int,
-        textEnd: Int,
-        query: String,
-        list: PackedIntRangeList
-    ) {
+    fun match(text: String, start: Int, end: Int, query: String): Boolean {
+        val regionLength = end - start
         val queryLength = query.length
 
-        // Initial value of index should point to a letter or digit, otherwise the first word will be skipped.
-        var index = text.nextLetterOrDigitIndex(textStart, textEnd)
-        if (index < 0) {
-            return
+        if (regionLength >= queryLength) {
+            if (crossWordStartsWith(text, start, end, query)) {
+                return true
+            }
         }
 
-        while (true) {
-            val regionLength = textEnd - index
-
-            // crossWordStartsWith expects that a region to check has the same or bigger length than query.
-            if (regionLength >= queryLength) {
-                if (crossWordStartsWith(text, index, textEnd, query)) {
-                    list.add(PackedIntRange(index, index + queryLength))
-                }
-            }
-
-            val nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, textEnd)
-            if (nextNonLetterOrDigitIndex < 0) {
-                break
-            }
-
-            val nextIndex = text.nextLetterOrDigitIndex(nextNonLetterOrDigitIndex, textEnd)
-            if (nextIndex < 0) {
-                break
-            }
-
-            index = nextIndex
-        }
+        return false
     }
 
     private fun crossWordStartsWith(text: String, start: Int, end: Int, query: String): Boolean {

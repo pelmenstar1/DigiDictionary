@@ -1,5 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
+import android.content.Context
+import android.view.View.OnClickListener
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FilteredArray
@@ -12,8 +14,34 @@ import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolde
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
 
 class HomeSearchAdapter(
-    onViewRecord: (id: Int) -> Unit
-) : RecyclerView.Adapter<ConciseRecordWithBadgesViewHolder>() {
+    onViewRecord: (id: Int) -> Unit,
+    private val metadataProvider: HomeSearchMetadataProvider
+) : RecyclerView.Adapter<HomeSearchAdapter.ViewHolder>() {
+    class ViewHolder(
+        context: Context,
+        staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
+    ) : ConciseRecordWithBadgesViewHolder(context, staticInfo) {
+        fun bind(
+            record: ConciseRecordWithBadges,
+            metadataProvider: HomeSearchMetadataProvider,
+            hasDivider: Boolean,
+            onContainerClickListener: OnClickListener
+        ) {
+            container.hasDivider = hasDivider
+
+            val context = container.context
+
+            container.tag = record
+            container.setOnClickListener(onContainerClickListener)
+
+            expressionView.text = HomeSearchStyledTextUtil.createExpressionText(record.expression, metadataProvider)
+            meaningView.text = HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, metadataProvider)
+
+            setScore(scoreView, record.score, staticInfo)
+            setBadges(container, record.badges, staticInfo)
+        }
+    }
+
     private val onItemClickListener = ConciseRecordWithBadgesViewHolder.createOnItemClickListener(onViewRecord)
     private var staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo? = null
 
@@ -23,6 +51,8 @@ class HomeSearchAdapter(
     private val diffManager = FilteredArrayDiffManager(conciseRecordDiffCallback)
 
     fun submitResult(result: HomeSearchResult) {
+        metadataProvider.onQueryChanged(result.query)
+
         val currentData = result.currentData
         val previousData = result.previousData
 
@@ -44,7 +74,7 @@ class HomeSearchAdapter(
 
     fun submitEmpty() {
         currentData.size.let {
-            if(it > 0) {
+            if (it > 0) {
                 currentData = FilteredArray.empty()
 
                 notifyItemRangeRemoved(0, it)
@@ -54,7 +84,7 @@ class HomeSearchAdapter(
 
     override fun getItemCount() = currentData.size
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConciseRecordWithBadgesViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
         val si = getLazyValue(
             staticInfo,
@@ -62,14 +92,14 @@ class HomeSearchAdapter(
             { staticInfo = it }
         )
 
-        return ConciseRecordWithBadgesViewHolder(context, si)
+        return ViewHolder(context, si)
     }
 
-    override fun onBindViewHolder(holder: ConciseRecordWithBadgesViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val record = currentData[position]
 
         // Don't show divider if the item is the last one
-        holder.bind(record, hasDivider = position < currentData.size - 1, onItemClickListener)
+        holder.bind(record, metadataProvider, hasDivider = position < currentData.size - 1, onItemClickListener)
     }
 
     companion object {

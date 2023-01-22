@@ -5,11 +5,14 @@ import android.util.Log
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.parsePositiveInt
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 
 object MeaningTextHelper {
     class FormatException(message: String, cause: Throwable?) : Exception(message, cause)
 
     private const val TAG = "MeaningTextHelper"
+
+    const val BULLET_LIST_CHARACTER = '•'
 
     private fun throwIllegalFormat(meaning: String, cause: Exception? = null): Nothing {
         throw FormatException("Meaning has an illegal format ('$meaning')", cause)
@@ -18,11 +21,11 @@ object MeaningTextHelper {
     fun parseToFormatted(meaning: String): String {
         try {
             return when (meaning[0]) {
-                'C' -> {
+                ComplexMeaning.COMMON_MARKER -> {
                     // Leave single marker character.
                     meaning.substring(1)
                 }
-                'L' -> {
+                ComplexMeaning.LIST_MARKER -> {
                     val textLength = meaning.length
 
                     // Skip mark character
@@ -45,7 +48,7 @@ object MeaningTextHelper {
                     var bufferIndex = 0
 
                     while (textIndex < textLength) {
-                        buffer[bufferIndex++] = '•'
+                        buffer[bufferIndex++] = BULLET_LIST_CHARACTER
                         buffer[bufferIndex++] = ' '
 
                         var nextDelimiterPos = meaning.indexOf('\n', textIndex)
@@ -93,11 +96,11 @@ object MeaningTextHelper {
         } catch (e: Exception) {
             Log.e(TAG, "", e)
 
-            getErrorMessageForException(context, e)
+            getErrorMessageForFormatException(context, e)
         }
     }
 
-    private fun getErrorMessageForException(context: Context, e: Exception): String {
+    fun getErrorMessageForFormatException(context: Context, e: Exception): String {
         return try {
             val format = context.getString(R.string.meaningParseError)
             val locale = context.getLocaleCompat()
