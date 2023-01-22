@@ -17,6 +17,7 @@ import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.getNullableTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
 
@@ -85,8 +86,9 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
 
 open class ConciseRecordWithBadgesViewHolder private constructor(
     val container: RecordItemRootContainer,
-    private val staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
+    protected val staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
 ) : RecyclerView.ViewHolder(container) {
+    val expressionView: TextView
     val meaningView: TextView
     val scoreView: TextView
 
@@ -96,6 +98,7 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
 
     init {
         with(container.getTypedViewAt<ViewGroup>(MAIN_CONTENT_INDEX)) {
+            expressionView = getTypedViewAt(EXPRESSION_VIEW_INDEX)
             meaningView = getTypedViewAt(MEANING_VIEW_INDEX)
             scoreView = getTypedViewAt(SCORE_VIEW_INDEX)
         }
@@ -132,6 +135,36 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
         private const val EXPRESSION_VIEW_INDEX = 1
         private const val MEANING_VIEW_INDEX = 2
 
+        fun setScore(scoreView: TextView, score: Int, staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo) {
+            val textColorList = if (score >= 0) {
+                staticInfo.positiveScoreColorList
+            } else {
+                staticInfo.negativeScoreColorList
+            }
+
+            scoreView.setTextColor(textColorList)
+            scoreView.text = score.toString()
+        }
+
+        fun setBadges(
+            root: RecordItemRootContainer,
+            badges: Array<out RecordBadgeInfo>,
+            staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
+        ) {
+            var bc = root.getNullableTypedViewAt<BadgeContainer>(BADGE_CONTAINER_INDEX)
+
+            if (badges.isEmpty()) {
+                bc?.removeAllViews()
+            } else {
+                if (bc == null) {
+                    bc = createBadgeContainer(root.context, staticInfo)
+                    root.addView(bc)
+                }
+
+                bc.setBadges(badges)
+            }
+        }
+
         fun bind(
             root: RecordItemRootContainer,
             record: ConciseRecordWithBadges?,
@@ -155,32 +188,8 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                 expressionView.text = record.expression
                 meaningView.text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
 
-                scoreView.run {
-                    val score = record.score
-
-                    val textColorList = if (score >= 0) {
-                        staticInfo.positiveScoreColorList
-                    } else {
-                        staticInfo.negativeScoreColorList
-                    }
-
-                    setTextColor(textColorList)
-                    text = score.toString()
-                }
-
-                val badges = record.badges
-                var bc = root.getNullableTypedViewAt<BadgeContainer>(BADGE_CONTAINER_INDEX)
-
-                if (badges.isEmpty()) {
-                    bc?.removeAllViews()
-                } else {
-                    if (bc == null) {
-                        bc = createBadgeContainer(context, staticInfo)
-                        root.addView(bc)
-                    }
-
-                    bc.setBadges(record.badges)
-                }
+                setScore(scoreView, record.score, staticInfo)
+                setBadges(root, record.badges, staticInfo)
             } else {
                 root.setOnClickListener(null)
                 root.tag = null

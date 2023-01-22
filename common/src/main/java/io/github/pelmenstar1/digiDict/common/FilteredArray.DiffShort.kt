@@ -67,12 +67,12 @@ internal class PackedDiffDiagonalList {
     operator fun get(index: Int) = PackedDiffDiagonal(elements[index])
 
     fun addLast(value: PackedDiffDiagonal) {
-        elements = LongListHelper.addLast(elements, size, value.bits)
+        elements = PrimitiveListHelper.addLast(elements, size, value.bits)
         size++
     }
 
     fun addFirst(value: PackedDiffDiagonal) {
-        elements = LongListHelper.addFirst(elements, size, value.bits)
+        elements = PrimitiveListHelper.addFirst(elements, size, value.bits)
         size++
     }
 
@@ -95,7 +95,7 @@ internal class PackedDiffRangeStack {
     operator fun get(index: Int) = PackedDiffDiagonal(elements[index])
 
     fun push(value: PackedDiffRange) {
-        elements = LongListHelper.addLast(elements, size, value.bits)
+        elements = PrimitiveListHelper.addLast(elements, size, value.bits)
         size++
     }
 

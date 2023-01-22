@@ -112,7 +112,7 @@ class RecordSearchUtilTests {
     }
 
     @Test
-    fun filterPredicate() {
+    fun filterPredicateTest() {
         fun testCase(expr: String, meaning: String, query: String) {
             val record = ConciseRecord(id = 0, expr, meaning, score = 0, epochSeconds = 0)
 
@@ -157,7 +157,7 @@ class RecordSearchUtilTests {
     }
 
     @Test
-    fun prepareQuery() {
+    fun prepareQueryTest() {
         fun testCase(input: String, expected: String) {
             val actual = RecordSearchUtil.prepareQuery(input)
 

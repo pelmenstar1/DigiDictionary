@@ -40,8 +40,6 @@ object RecordSearchUtil {
      */
     @TestOnly
     fun filterPredicateOnTextRange(text: String, start: Int, end: Int, query: String): Boolean {
-        val queryLength = query.length
-
         // Initial value of index should point to a letter or digit, otherwise the first word will be skipped.
         var index = text.nextLetterOrDigitIndex(start, end)
         if (index < 0) {
@@ -49,13 +47,8 @@ object RecordSearchUtil {
         }
 
         while (true) {
-            val regionLength = end - index
-
-            // crossWordStartsWith expects that a region to check has the same or bigger length than query.
-            if (regionLength >= queryLength) {
-                if (crossWordStartsWith(text, index, end, query)) {
-                    return true
-                }
+            if (match(text, index, end, query)) {
+                return true
             }
 
             val nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, end)
@@ -70,6 +63,83 @@ object RecordSearchUtil {
 
             index = nextIndex
         }
+    }
+
+    /**
+     * Returns processed subsequence of receiver [String] in range `[start; end)`.
+     * The main idea of the 'processing' is to leave only meaningful parts of the sequence joined with spaces.
+     * Example: " .. ; . AA  BB     CC DD ;;;" becomes "AA BB CC DD"
+     */
+    fun prepareQuery(text: String): String {
+        val length = text.length
+        val strStart = text.nextLetterOrDigitIndex(0, length)
+
+        // Check if there's even an index to start with.
+        // If strStart < 0, means a string doesn't have any letter or digits -- empty string is the most appropriate result in this case.
+        if (strStart < 0) {
+            return ""
+        }
+
+        var strEnd = length - 1
+        while (strEnd >= strStart) {
+            if (text[strEnd].isLetterOrDigit()) {
+                break
+            }
+
+            strEnd--
+        }
+
+        // strEnd is inclusive, make it exclusive.
+        strEnd++
+
+        var strIndex = strStart
+        val bufferLength = strEnd - strStart
+
+        // Saves an allocation of CharArray and String.
+        if (bufferLength == 0) {
+            return ""
+        }
+
+        val buffer = CharArray(bufferLength)
+        var bufferIndex = 0
+
+        while (strIndex < strEnd) {
+            val current = text[strIndex]
+
+            if (current.isLetterOrDigit()) {
+                buffer[bufferIndex] = current
+
+                strIndex++
+            } else {
+                // strIndex can't be -1 because strEnd points to the last letter-or-digit in text.
+                // Code execution just can't be here when strIndex is the last index.
+                strIndex = text.nextLetterOrDigitIndex(strIndex + 1, strEnd)
+
+                buffer[bufferIndex] = ' '
+            }
+
+            // We write to buffer in any case.
+            bufferIndex++
+        }
+
+        return String(buffer, 0, bufferIndex)
+    }
+
+
+    /**
+     * Returns whether given [text] at specified range (beginning from [start] up to [end] exclusive) passes a search using [query].
+     */
+    fun match(text: String, start: Int, end: Int, query: String): Boolean {
+        val regionLength = end - start
+        val queryLength = query.length
+
+        if (regionLength >= queryLength) {
+            if (crossWordStartsWith(text, start, end, query)) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun crossWordStartsWith(text: String, start: Int, end: Int, query: String): Boolean {
@@ -112,65 +182,5 @@ object RecordSearchUtil {
         }
 
         return true
-    }
-
-    /**
-     * Returns processed subsequence of receiver [String] in range `[start; end)`.
-     * The main idea of the 'processing' is to leave only meaningful parts of the sequence joined with spaces.
-     * Example: " .. ; . AA  BB     CC DD ;;;" becomes "AA BB CC DD"
-     */
-    fun prepareQuery(text: String): String {
-        val length = text.length
-        val strStart = text.nextLetterOrDigitIndex(0, length)
-
-        // Check if there's even an index to start with.
-        // If strStart < 0, means a string doesn't have any letter or digits -- empty string is the most appropriate result in this case.
-        if (strStart < 0) {
-            return ""
-        }
-
-        var strEnd = length - 1
-        while (strEnd >= strStart) {
-            if (text[strEnd].isLetterOrDigit()) {
-                break
-            }
-
-            strEnd--
-        }
-
-        // strEnd is inclusive, make it exclusive.
-        strEnd++
-
-        var strIndex = strStart
-        val bufferLength = strEnd - strStart
-
-        // Saves an allocation of a CharArray and String.
-        if (bufferLength == 0) {
-            return ""
-        }
-
-        val buffer = CharArray(bufferLength)
-        var bufferIndex = 0
-
-        while (strIndex < strEnd) {
-            val current = text[strIndex]
-
-            if (current.isLetterOrDigit()) {
-                buffer[bufferIndex] = current
-
-                strIndex++
-            } else {
-                // strIndex can't be -1 because strEnd points to the last letter-or-digit in text.
-                // Code execution just can't be here when strIndex is the last index.
-                strIndex = text.nextLetterOrDigitIndex(strIndex + 1, strEnd)
-
-                buffer[bufferIndex] = ' '
-            }
-
-            // We write to buffer in any case.
-            bufferIndex++
-        }
-
-        return String(buffer, 0, bufferIndex)
     }
 }

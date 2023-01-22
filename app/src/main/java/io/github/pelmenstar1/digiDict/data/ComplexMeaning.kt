@@ -181,6 +181,32 @@ sealed class ComplexMeaning : Parcelable {
             throw IllegalArgumentException("Invalid format (rawText=$rawText)")
         }
 
+        fun getMeaningCount(rawText: String): Int {
+            if (rawText.isEmpty()) {
+                throwInvalidFormat(rawText)
+            }
+
+            return when (rawText[0]) {
+                COMMON_MARKER -> 1
+                LIST_MARKER -> {
+                    // Skip mark character
+                    val firstDelimiterIndex = rawText.indexOf('@', 1)
+                    if (firstDelimiterIndex < 0) {
+                        throwInvalidFormat(rawText)
+                    }
+
+                    // parsePositiveInt() returns -1 when format is invalid.
+                    val count = rawText.parsePositiveInt(1, firstDelimiterIndex)
+                    if (count < 0) {
+                        throwInvalidFormat(rawText)
+                    }
+
+                    count
+                }
+                else -> throwInvalidFormat(rawText)
+            }
+        }
+
         fun parse(rawText: String): ComplexMeaning {
             if (rawText.isEmpty()) {
                 throwInvalidFormat(rawText)

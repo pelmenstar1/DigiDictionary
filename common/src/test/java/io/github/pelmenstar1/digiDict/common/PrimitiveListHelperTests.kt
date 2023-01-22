@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.common
 import org.junit.Test
 import kotlin.test.assertContentEquals
 
-class LongListHelperTests {
+class PrimitiveListHelperTests {
     private inline fun addTestHelper(
         input: LongArray,
         size: Int,
@@ -20,7 +20,7 @@ class LongListHelperTests {
     @Test
     fun addLastTest() {
         fun testCase(input: LongArray, size: Int, valueToAdd: Long, expected: LongArray) {
-            addTestHelper(input, size, valueToAdd, expected, LongListHelper::addLast)
+            addTestHelper(input, size, valueToAdd, expected, PrimitiveListHelper::addLast)
         }
 
         testCase(input = longArrayOf(1, 2), size = 2, valueToAdd = 3, expected = longArrayOf(1, 2, 3))
@@ -31,7 +31,7 @@ class LongListHelperTests {
     @Test
     fun addFirstTest() {
         fun testCase(input: LongArray, size: Int, valueToAdd: Long, expected: LongArray) {
-            addTestHelper(input, size, valueToAdd, expected, LongListHelper::addFirst)
+            addTestHelper(input, size, valueToAdd, expected, PrimitiveListHelper::addFirst)
         }
 
         testCase(input = longArrayOf(1, 2), size = 2, valueToAdd = 3, expected = longArrayOf(3, 1, 2))
