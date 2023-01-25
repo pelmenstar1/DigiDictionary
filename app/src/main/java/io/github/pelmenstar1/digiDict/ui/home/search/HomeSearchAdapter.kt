@@ -23,7 +23,7 @@ class HomeSearchAdapter(
     ) : ConciseRecordWithBadgesViewHolder(context, staticInfo) {
         fun bind(
             record: ConciseRecordWithBadges,
-            metadataProvider: HomeSearchMetadataProvider,
+            style: RecordSearchItemStyle,
             hasDivider: Boolean,
             onContainerClickListener: OnClickListener
         ) {
@@ -34,8 +34,8 @@ class HomeSearchAdapter(
             container.tag = record
             container.setOnClickListener(onContainerClickListener)
 
-            expressionView.text = HomeSearchStyledTextUtil.createExpressionText(record.expression, metadataProvider)
-            meaningView.text = HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, metadataProvider)
+            expressionView.text = HomeSearchStyledTextUtil.createExpressionText(record.expression, style)
+            meaningView.text = HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, style)
 
             setScore(scoreView, record.score, staticInfo)
             setBadges(container, record.badges, staticInfo)
@@ -97,9 +97,16 @@ class HomeSearchAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val record = currentData[position]
+        val itemStyle = createItemStyle(record)
 
         // Don't show divider if the item is the last one
-        holder.bind(record, metadataProvider, hasDivider = position < currentData.size - 1, onItemClickListener)
+        holder.bind(record, itemStyle, hasDivider = position < currentData.size - 1, onItemClickListener)
+    }
+
+    private fun createItemStyle(record: ConciseRecordWithBadges): RecordSearchItemStyle {
+        val foundRanges = metadataProvider.calculateFoundRanges(record)
+
+        return RecordSearchItemStyle(foundRanges)
     }
 
     companion object {

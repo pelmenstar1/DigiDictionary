@@ -2,14 +2,16 @@ package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProviderImpl
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeDeepSearchCore
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProviderOnCore
 import io.github.pelmenstar1.digiDict.utils.IntRangeSection
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertContentEquals
 
 @RunWith(AndroidJUnit4::class)
-class HomeSearchMetadataProviderImplTests {
+class HomeSearchMetadataProviderOnCoreTests {
     private fun dataToRanges(data: IntArray, dataIndex: Int, rangeCount: Int): Array<IntRange> {
         val endIndex = dataIndex + rangeCount * 2
         var index = dataIndex
@@ -26,10 +28,10 @@ class HomeSearchMetadataProviderImplTests {
     @Test
     fun calculateFoundRangesInExpressionTest() {
         fun testCase(text: String, query: String, expectedRanges: Array<IntRange>) {
-            val provider = HomeSearchMetadataProviderImpl()
+            val provider = HomeSearchMetadataProviderOnCore(HomeDeepSearchCore)
             provider.onQueryChanged(query)
 
-            val data = provider.calculateFoundRangesInExpression(text)
+            val data = provider.calculateFoundRanges(ConciseRecordWithBadges(0, text, "C1", 0, 0, emptyArray()))
             val rangeCount = data[0]
             val actualRanges = dataToRanges(data, dataIndex = 1, rangeCount)
 
@@ -82,14 +84,14 @@ class HomeSearchMetadataProviderImplTests {
     @Test
     fun calculateFoundRangesInMeaningTest() {
         fun testCase(meaning: String, query: String, expectedSections: Array<IntRangeSection>) {
-            val provider = HomeSearchMetadataProviderImpl()
+            val provider = HomeSearchMetadataProviderOnCore(HomeDeepSearchCore)
             provider.onQueryChanged(query)
 
             val sectionList = ArrayList<IntRangeSection>()
 
-            val data = provider.calculateFoundRangesInMeaning(meaning)
+            val data = provider.calculateFoundRanges(ConciseRecordWithBadges(0, "", meaning, 0, 0, emptyArray()))
 
-            var dataIndex = 0
+            var dataIndex = data[0] /* length of expression ranges */ * 2 + 1
             val meaningElementCount = ComplexMeaning.getMeaningCount(meaning)
 
             for (i in 0 until meaningElementCount) {

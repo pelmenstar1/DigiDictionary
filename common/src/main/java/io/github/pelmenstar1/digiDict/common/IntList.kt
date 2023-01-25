@@ -25,6 +25,25 @@ class IntList(capacity: Int = 0) {
         }
 
     /**
+     * Increases the capacity of the list to ensure
+     * it can hold at least the number of elements specified by [newCapacity].
+     */
+    fun ensureCapacity(newCapacity: Int) {
+        if (newCapacity < 0) {
+            throw IllegalArgumentException("newCapacity can't be negative")
+        }
+
+        val elements = elements
+
+        if (newCapacity > elements.size) {
+            val newElements = IntArray(PrimitiveListHelper.newArraySize(newCapacity))
+            System.arraycopy(elements, 0, newElements, 0, size)
+
+            this.elements = newElements
+        }
+    }
+
+    /**
      * Gets the element at specified [index].
      */
     operator fun get(index: Int): Int {
@@ -48,16 +67,21 @@ class IntList(capacity: Int = 0) {
         }
     }
 
+    /**
+     * Adds specified [element] to the end of the list.
+     */
     fun add(element: Int) {
         elements = PrimitiveListHelper.addLast(elements, size, element)
         size++
     }
 
     /**
-     * Returns the underlying array of the list. The method does not allocate anything but the returned array is
-     * unsafe to use as the list uses this array too.
+     * Returns the [IntArray] copy of the list.
      */
-    fun getUnderlyingArray(): IntArray {
+    fun toArray(): IntArray {
+        val newElements = IntArray(size)
+        System.arraycopy(elements, 0, newElements, 0, newElements.size)
+
         return elements
     }
 }

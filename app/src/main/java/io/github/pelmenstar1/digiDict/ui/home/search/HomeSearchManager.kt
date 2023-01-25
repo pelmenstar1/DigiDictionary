@@ -5,7 +5,7 @@ import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 
-class HomeSearchManager {
+class HomeSearchManager(private val core: HomeSearchCore) {
     // _previousRecords saves the reference to _currentRecords of the previous search request. It's
     // needed to correctly handle the situation when _currentRecords is changed. Where-as _previousSavedRecords
     // saves the result of previous search request.
@@ -40,8 +40,10 @@ class HomeSearchManager {
         val isMeaningfulQuery = query.containsLetterOrDigit()
 
         val currentFilteredArray = if (isMeaningfulQuery) {
+            val preparedQuery = core.prepareQuery(query)
+
             currentRecords.toFilteredArray { record ->
-                RecordSearchUtil.filterPredicate(record, query)
+                core.filterPredicate(record, preparedQuery)
             }.also {
                 it.sort(sortType.getComparatorForConciseRecordWithBadges())
             }

@@ -20,8 +20,10 @@ import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessag
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.home.ResourcesHomeSortTypeMessageMapper
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeDeepSearchCore
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchCore
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProvider
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProviderImpl
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProviderOnCore
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -112,8 +114,13 @@ class AppModule {
     }
 
     @Provides
+    fun provideHomeSearchCore(): HomeSearchCore {
+        return HomeDeepSearchCore
+    }
+
+    @Provides
     @Singleton
-    fun provideHomeSearchMetadataProvider(): HomeSearchMetadataProvider {
-        return HomeSearchMetadataProviderImpl()
+    fun provideHomeSearchMetadataProvider(core: HomeSearchCore): HomeSearchMetadataProvider {
+        return HomeSearchMetadataProviderOnCore(core)
     }
 }
