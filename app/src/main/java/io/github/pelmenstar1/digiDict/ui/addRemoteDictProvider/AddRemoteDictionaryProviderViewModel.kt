@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider
 
-import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.regex.Pattern
 import javax.inject.Inject
 
 @HiltViewModel
@@ -155,31 +155,26 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                     else -> throw IllegalArgumentException("type")
                 }
 
-                var error: AddRemoteDictionaryProviderMessage? = null
-
-                if (value.isEmpty()) {
-                    error = AddRemoteDictionaryProviderMessage.EMPTY_TEXT
+                val error = if (value.isEmpty()) {
+                    AddRemoteDictionaryProviderMessage.EMPTY_TEXT
                 } else {
                     when (type) {
                         TYPE_NAME -> {
-                            error = AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS.takeIf {
-                                allProviders.any { it.name == value }
+                            if (allProviders.any { it.name == value }) {
+                                AddRemoteDictionaryProviderMessage.PROVIDER_NAME_EXISTS
+                            } else {
+                                null
                             }
                         }
                         TYPE_SCHEMA -> {
-                            error = when {
-                                !Patterns.WEB_URL.matcher(value).matches() ->
-                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
-
-                                !value.contains("\$query$") ->
-                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
-
-                                allProviders.any { it.schema == value } ->
-                                    AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
-
+                            when {
+                                !isValidUrl(value) -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
+                                !value.contains("\$query$") -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
+                                allProviders.any { it.schema == value } -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
                                 else -> null
                             }
                         }
+                        else -> throw IllegalStateException("Invalid message type")
                     }
                 }
 
@@ -198,10 +193,17 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         private const val TYPE_NAME = 0
         private const val TYPE_SCHEMA = 1
 
+        private val urlPattern =
+            Pattern.compile("^https?://(?:www\\.)?[-a-zA-Z\\d@:%._+~#=]{1,256}\\.[a-zA-Z\\d()]{1,6}\\b([-a-zA-Z\\d()@:%_+.~#?&/=]|(\\\$query\\\$))*\$")
+
         val nameValidityField = ValidityFlow.Field(ordinal = 0)
         val schemaValidityField = ValidityFlow.Field(ordinal = 1)
 
         private val validityScheme = ValidityFlow.Scheme(nameValidityField, schemaValidityField)
+
+        internal fun isValidUrl(value: String): Boolean {
+            return urlPattern.matcher(value).matches()
+        }
 
         internal fun getValidityField(type: Int) = when (type) {
             TYPE_NAME -> nameValidityField

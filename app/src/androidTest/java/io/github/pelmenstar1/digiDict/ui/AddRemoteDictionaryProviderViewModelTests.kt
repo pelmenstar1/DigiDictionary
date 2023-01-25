@@ -200,9 +200,6 @@ class AddRemoteDictionaryProviderViewModelTests {
         vm.use {
             testCase("https://a.com")
             testCase("https://a.com/query")
-            testCase("https://a.com/\$query")
-            testCase("https://a.com/query$")
-            testCase("https://a.com/\$q$")
         }
     }
 
@@ -328,6 +325,27 @@ class AddRemoteDictionaryProviderViewModelTests {
 
         // As we restarted checking the name and in this time getAll should return without an exception, inputs should be enabled.
         assertTrue(vm.isInputEnabledFlow.first())
+    }
+
+    @Test
+    fun isValidUrlTest() {
+        fun testCase(value: String, expected: Boolean) {
+            val actual = AddRemoteDictionaryProviderViewModel.isValidUrl(value)
+
+            assertEquals(expected, actual, "url: $value")
+        }
+
+        testCase(value = "https://aaa.com/bbb", expected = true)
+        testCase(value = "http://bbb.com/ccc", expected = true)
+        testCase(value = "https://google.com/", expected = true)
+        testCase(value = "https://google.com", expected = true)
+        testCase(value = "https:/google.com", expected = false)
+        testCase(value = ".abc.com/", expected = false)
+        testCase(value = "https://google./aa", expected = false)
+        testCase(value = "https://aaa.com/\$query", expected = false)
+        testCase(value = "https://aa.com/query$", expected = false)
+        testCase(value = "https://aabb.com/\$query$", expected = true)
+        testCase(value = "https://abc1123.mmm/\$query\$123", expected = true)
     }
 
     companion object {
