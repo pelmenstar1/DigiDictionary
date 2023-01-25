@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
 
 val Context.dataStorePreferences: DataStore<Preferences> by preferencesDataStore("preferences")
 
-class DataStoreDigitDictAppPreferences(private val dataStore: DataStore<Preferences>) : DigiDictAppPreferences() {
+class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferences>) : DigiDictAppPreferences() {
     private val prefsFlow = dataStore.data
     private val snapshotFlow = prefsFlow.map { it.toSnapshot() }
 
