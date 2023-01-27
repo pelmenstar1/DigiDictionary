@@ -19,9 +19,9 @@ import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
+import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchAdapter
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProvider
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.flatMapConcat
 import javax.inject.Inject
@@ -34,7 +34,7 @@ class HomeFragment : Fragment() {
     lateinit var homeSortTypeMessageMapper: MessageMapper<HomeSortType>
 
     @Inject
-    lateinit var searchMetadataProvider: HomeSearchMetadataProvider
+    lateinit var searchMetadataProvider: RecordSearchMetadataProvider
 
     override fun onCreateView(
         inflater: LayoutInflater,

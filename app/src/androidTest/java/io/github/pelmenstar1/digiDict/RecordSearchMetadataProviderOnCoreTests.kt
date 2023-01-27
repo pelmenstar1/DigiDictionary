@@ -3,15 +3,15 @@ package io.github.pelmenstar1.digiDict
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeDeepSearchCore
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProviderOnCore
+import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProviderOnCore
 import io.github.pelmenstar1.digiDict.utils.IntRangeSection
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertContentEquals
 
 @RunWith(AndroidJUnit4::class)
-class HomeSearchMetadataProviderOnCoreTests {
+class RecordSearchMetadataProviderOnCoreTests {
     private fun dataToRanges(data: IntArray, dataIndex: Int, rangeCount: Int): Array<IntRange> {
         val endIndex = dataIndex + rangeCount * 2
         var index = dataIndex
@@ -28,7 +28,7 @@ class HomeSearchMetadataProviderOnCoreTests {
     @Test
     fun calculateFoundRangesInExpressionTest() {
         fun testCase(text: String, query: String, expectedRanges: Array<IntRange>) {
-            val provider = HomeSearchMetadataProviderOnCore(HomeDeepSearchCore)
+            val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore)
             provider.onQueryChanged(query)
 
             val data = provider.calculateFoundRanges(ConciseRecordWithBadges(0, text, "C1", 0, 0, emptyArray()))
@@ -84,7 +84,7 @@ class HomeSearchMetadataProviderOnCoreTests {
     @Test
     fun calculateFoundRangesInMeaningTest() {
         fun testCase(meaning: String, query: String, expectedSections: Array<IntRangeSection>) {
-            val provider = HomeSearchMetadataProviderOnCore(HomeDeepSearchCore)
+            val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore)
             provider.onQueryChanged(query)
 
             val sectionList = ArrayList<IntRangeSection>()

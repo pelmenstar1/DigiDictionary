@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict
 
 import androidx.test.platform.app.InstrumentationRegistry
 
-object HomeSearchManagerTestsData {
+object RecordSearchManagerTestsData {
     private const val WORD_COUNT = 10_000
 
     val words: Array<String>

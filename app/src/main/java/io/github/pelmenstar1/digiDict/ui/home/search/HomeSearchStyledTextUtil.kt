@@ -8,6 +8,7 @@ import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 import android.util.Log
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
+import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 
 /**
@@ -21,7 +22,7 @@ object HomeSearchStyledTextUtil {
      * Returns a styled string (if neccessary) for expression [text] of a record.
      * If the expression has no special style, the method returns [String], otherwise [SpannableString].
      */
-    fun createExpressionText(text: String, style: RecordSearchItemStyle): CharSequence {
+    fun createExpressionText(text: String, style: HomeSearchItemStyle): CharSequence {
         val foundRanges = style.foundRanges
         val rangeCount = foundRanges[0]
 
@@ -43,7 +44,7 @@ object HomeSearchStyledTextUtil {
      *
      * If the [meaning] has no special style, the method returns [String], otherwise [Spannable].
      */
-    fun createMeaningText(context: Context, meaning: String, style: RecordSearchItemStyle): CharSequence {
+    fun createMeaningText(context: Context, meaning: String, style: HomeSearchItemStyle): CharSequence {
         try {
             val foundRanges = style.foundRanges
             val startIndex = foundRanges[0] /* length of expression ranges */ * 2 + 1
@@ -137,7 +138,7 @@ object HomeSearchStyledTextUtil {
      * Sets spans, created by [createFoundRangeSpan], to specified [spannable].
      *
      * @param spannable a [Spannable] to set the spans to
-     * @param foundRanges found ranges. An [IntArray] that has the format described in [HomeSearchMetadataProvider.calculateFoundRanges]
+     * @param foundRanges found ranges. An [IntArray] that has the format described in [RecordSearchMetadataProvider.calculateFoundRanges]
      * (starts and ends of ranges are sequential: start, end, start end and so).
      * @param dataIndex specifies from what index starting reading the ranges from [foundRanges].
      * @param textOffset specifies that should be applied to each range

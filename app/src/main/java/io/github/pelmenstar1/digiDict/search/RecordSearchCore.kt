@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home.search
+package io.github.pelmenstar1.digiDict.search
 
 import io.github.pelmenstar1.digiDict.common.IntList
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
@@ -7,7 +7,7 @@ import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 /**
  * Provides a core of searching mechanism.
  */
-interface HomeSearchCore {
+interface RecordSearchCore {
     /**
      * Determines whether given [record] can be found using specified [query].
      *

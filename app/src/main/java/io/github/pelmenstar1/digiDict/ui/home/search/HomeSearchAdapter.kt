@@ -9,13 +9,15 @@ import io.github.pelmenstar1.digiDict.common.FilteredArrayDiffManager
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.ui.RecyclerViewAdapterListUpdateCallback
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
+import io.github.pelmenstar1.digiDict.search.RecordSearchResult
 import io.github.pelmenstar1.digiDict.ui.EntityWitIdFilteredArrayDiffCallback
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
 
 class HomeSearchAdapter(
     onViewRecord: (id: Int) -> Unit,
-    private val metadataProvider: HomeSearchMetadataProvider
+    private val metadataProvider: RecordSearchMetadataProvider
 ) : RecyclerView.Adapter<HomeSearchAdapter.ViewHolder>() {
     class ViewHolder(
         context: Context,
@@ -23,7 +25,7 @@ class HomeSearchAdapter(
     ) : ConciseRecordWithBadgesViewHolder(context, staticInfo) {
         fun bind(
             record: ConciseRecordWithBadges,
-            style: RecordSearchItemStyle,
+            style: HomeSearchItemStyle,
             hasDivider: Boolean,
             onContainerClickListener: OnClickListener
         ) {
@@ -50,7 +52,7 @@ class HomeSearchAdapter(
 
     private val diffManager = FilteredArrayDiffManager(conciseRecordDiffCallback)
 
-    fun submitResult(result: HomeSearchResult) {
+    fun submitResult(result: RecordSearchResult) {
         metadataProvider.onQueryChanged(result.query)
 
         val currentData = result.currentData
@@ -103,10 +105,10 @@ class HomeSearchAdapter(
         holder.bind(record, itemStyle, hasDivider = position < currentData.size - 1, onItemClickListener)
     }
 
-    private fun createItemStyle(record: ConciseRecordWithBadges): RecordSearchItemStyle {
+    private fun createItemStyle(record: ConciseRecordWithBadges): HomeSearchItemStyle {
         val foundRanges = metadataProvider.calculateFoundRanges(record)
 
-        return RecordSearchItemStyle(foundRanges)
+        return HomeSearchItemStyle(foundRanges)
     }
 
     companion object {

@@ -14,16 +14,16 @@ import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.prefs.DataStoreDigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
+import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
+import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProviderOnCore
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.home.ResourcesHomeSortTypeMessageMapper
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeDeepSearchCore
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchCore
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProvider
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchMetadataProviderOnCore
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -114,13 +114,13 @@ class AppModule {
     }
 
     @Provides
-    fun provideHomeSearchCore(): HomeSearchCore {
-        return HomeDeepSearchCore
+    fun provideRecordSearchCore(): RecordSearchCore {
+        return RecordDeepSearchCore
     }
 
     @Provides
     @Singleton
-    fun provideHomeSearchMetadataProvider(core: HomeSearchCore): HomeSearchMetadataProvider {
-        return HomeSearchMetadataProviderOnCore(core)
+    fun provideRecordSearchMetadataProvider(core: RecordSearchCore): RecordSearchMetadataProvider {
+        return RecordSearchMetadataProviderOnCore(core)
     }
 }

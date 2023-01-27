@@ -2,18 +2,18 @@ package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeDeepSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
-class HomeDeepSearchCoreTests {
+class RecordDeepSearchCoreTests {
     @Test
     fun filterPredicateOnTextRangeTest() {
         fun testCase(text: String, query: String, expected: Boolean, start: Int = 0, end: Int = text.length) {
-            val actual = HomeDeepSearchCore.filterPredicateOnTextRange(text, start, end, query)
+            val actual = RecordDeepSearchCore.filterPredicateOnTextRange(text, start, end, query)
 
             assertEquals(expected, actual, "text: '$text', query: '$query'")
         }
@@ -117,7 +117,7 @@ class HomeDeepSearchCoreTests {
             val record =
                 ConciseRecordWithBadges(id = 0, expr, meaning, score = 0, epochSeconds = 0, badges = emptyArray())
 
-            assertTrue(HomeDeepSearchCore.filterPredicate(record, query))
+            assertTrue(RecordDeepSearchCore.filterPredicate(record, query))
         }
 
         testCase(
@@ -160,7 +160,7 @@ class HomeDeepSearchCoreTests {
     @Test
     fun prepareQueryTest() {
         fun testCase(input: String, expected: String) {
-            val actual = HomeDeepSearchCore.prepareQuery(input)
+            val actual = RecordDeepSearchCore.prepareQuery(input)
 
             assertEquals(expected, actual)
         }

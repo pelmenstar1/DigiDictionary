@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home.search
+package io.github.pelmenstar1.digiDict.search
 
 import io.github.pelmenstar1.digiDict.common.IntList
 import io.github.pelmenstar1.digiDict.common.nextLetterOrDigitIndex
@@ -7,7 +7,7 @@ import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import org.jetbrains.annotations.TestOnly
 
-object HomeDeepSearchCore : HomeSearchCore {
+object RecordDeepSearchCore : RecordSearchCore {
     override fun filterPredicate(record: ConciseRecordWithBadges, query: String): Boolean {
         val expr = record.expression
         val meaning = record.meaning

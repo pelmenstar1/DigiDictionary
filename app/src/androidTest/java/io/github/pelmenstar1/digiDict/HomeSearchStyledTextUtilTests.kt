@@ -7,8 +7,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchItemStyle
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchStyledTextUtil
-import io.github.pelmenstar1.digiDict.ui.home.search.RecordSearchItemStyle
 import io.github.pelmenstar1.digiDict.utils.IntRangeSection
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +33,7 @@ class HomeSearchStyledTextUtilTests {
                 }
             }
 
-            val style = RecordSearchItemStyle(foundRangesIntArray)
+            val style = HomeSearchItemStyle(foundRangesIntArray)
             val actualStyledText = HomeSearchStyledTextUtil.createExpressionText(expr, style)
 
             if (foundRanges.isEmpty()) {
@@ -83,7 +83,7 @@ class HomeSearchStyledTextUtilTests {
                 }
             }
 
-            val style = RecordSearchItemStyle(foundRangesIntArray)
+            val style = HomeSearchItemStyle(foundRangesIntArray)
             val actualStyledText = HomeSearchStyledTextUtil.createMeaningText(context, meaning, style)
             if (foundSections.isEmpty()) {
                 assertIs<String>(actualStyledText)

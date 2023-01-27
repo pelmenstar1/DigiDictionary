@@ -8,9 +8,9 @@ import io.github.pelmenstar1.digiDict.commonTestUtils.toArray
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchManager
 import io.github.pelmenstar1.digiDict.ui.EntityWitIdFilteredArrayDiffCallback
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeDeepSearchCore
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchManager
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertContentEquals
@@ -18,8 +18,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
-class HomeSearchManagerTests {
-    private val realisticRecords = mapExpressionsToRecords(HomeSearchManagerTestsData.words)
+class RecordSearchManagerTests {
+    private val realisticRecords = mapExpressionsToRecords(RecordSearchManagerTestsData.words)
 
     private fun createRecord(id: Int, expression: String): ConciseRecordWithBadges {
         return ConciseRecordWithBadges(id, expression, "CMeaning", 0, 0, emptyArray())
@@ -32,7 +32,7 @@ class HomeSearchManagerTests {
     @Test
     fun onSearchRequest_noMutations() {
         fun testCase(queries: Array<String>) {
-            val manager = HomeSearchManager(HomeDeepSearchCore)
+            val manager = RecordSearchManager(RecordDeepSearchCore)
             manager.currentRecords = realisticRecords
 
             var expectedPrevData: Array<ConciseRecordWithBadges>? = null
@@ -44,7 +44,7 @@ class HomeSearchManagerTests {
                     val actualCurrentData = result.currentData.toArray()
                     val expectedCurrentData = if (query.containsLetterOrDigit()) {
                         realisticRecords
-                            .filter { HomeDeepSearchCore.filterPredicate(it, query) }
+                            .filter { RecordDeepSearchCore.filterPredicate(it, query) }
                             .sortedWith(sortType.getComparatorForConciseRecordWithBadges())
                             .toTypedArray()
                     } else {
@@ -105,7 +105,7 @@ class HomeSearchManagerTests {
         oldExpectedCurrentExpressions: Array<String>,
         newExpectedCurrentExpressions: Array<String>
     ) {
-        val manager = HomeSearchManager(HomeDeepSearchCore)
+        val manager = RecordSearchManager(RecordDeepSearchCore)
         manager.currentRecords = mapExpressionsToRecords(oldExpressionsData)
 
         val oldResult = manager.onSearchRequest(searchQuery, HomeSortType.ALPHABETIC_BY_EXPRESSION)
@@ -176,7 +176,7 @@ class HomeSearchManagerTests {
     @Test
     fun diffTest() {
         fun testCase(queries: Array<String>) {
-            val searchManager = HomeSearchManager(HomeDeepSearchCore)
+            val searchManager = RecordSearchManager(RecordDeepSearchCore)
             searchManager.currentRecords = realisticRecords
 
             val diffManager = FilteredArrayDiffManager(filteredArrayDiffCallback)

@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home.search
+package io.github.pelmenstar1.digiDict.search
 
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
@@ -9,7 +9,7 @@ import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
  *
  * Methods of this class can be used many times during the search, so it uses approaches that are indented to minimize
  */
-interface HomeSearchMetadataProvider {
+interface RecordSearchMetadataProvider {
     /**
      * Changes the current query to a new [value].
      */

@@ -14,10 +14,10 @@ import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
+import io.github.pelmenstar1.digiDict.search.RecordSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchManager
+import io.github.pelmenstar1.digiDict.search.RecordSearchResult
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchCore
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchManager
-import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -25,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val appDatabase: AppDatabase,
-    searchCore: HomeSearchCore
+    searchCore: RecordSearchCore
 ) : ViewModel() {
     private val _sortTypeFlow = MutableStateFlow(HomeSortType.NEWEST)
     val sortTypeFlow: StateFlow<HomeSortType>
@@ -44,12 +44,12 @@ class HomeViewModel @Inject constructor(
         }
     ).flow.cachedIn(viewModelScope)
 
-    private val searchManager = HomeSearchManager(searchCore)
+    private val searchManager = RecordSearchManager(searchCore)
 
     private val searchProgressReporter = ProgressReporter()
     val searchProgressFlow = searchProgressReporter.progressFlow
 
-    private val searchStateManager = DataLoadStateManager<HomeSearchResult>(TAG)
+    private val searchStateManager = DataLoadStateManager<RecordSearchResult>(TAG)
 
     val searchStateFlow = searchStateManager.buildFlow(viewModelScope) {
         fromFlow {
