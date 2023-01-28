@@ -3,10 +3,10 @@ package io.github.pelmenstar1.digiDict
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class RecordDeepSearchCoreTests {
@@ -111,49 +111,145 @@ class RecordDeepSearchCoreTests {
         )
     }
 
-    @Test
-    fun filterPredicateTest() {
-        fun testCase(expr: String, meaning: String, query: String) {
-            val record =
-                ConciseRecordWithBadges(id = 0, expr, meaning, score = 0, epochSeconds = 0, badges = emptyArray())
+    private fun createSearchOptions(searchForExpression: Boolean, searchForMeaning: Boolean): RecordSearchOptions {
+        var flags = 0
 
-            assertTrue(RecordDeepSearchCore.filterPredicate(record, query))
+        if (searchForExpression) {
+            flags = RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION
+        }
+
+        if (searchForMeaning) {
+            flags = flags or RecordSearchOptions.FLAG_SEARCH_FOR_MEANING
+        }
+
+        return RecordSearchOptions(flags)
+    }
+
+    private fun createRecord(expr: String, meaning: String): ConciseRecordWithBadges {
+        return ConciseRecordWithBadges(id = 0, expr, meaning, score = 0, epochSeconds = 0, badges = emptyArray())
+    }
+
+    private fun filterPredicateTestHelper(
+        expr: String,
+        meaning: String,
+        query: String,
+        expectedResult: Boolean,
+        createOptions: () -> RecordSearchOptions
+    ) {
+        val record = createRecord(expr, meaning)
+        val options = createOptions()
+
+        assertEquals(expectedResult, RecordDeepSearchCore.filterPredicate(record, query, options))
+    }
+
+    @Test
+    fun filterPredicateSearchForExpressionAndMeaningTest() {
+        fun testCase(expr: String, meaning: String, query: String, expectedResult: Boolean) {
+            filterPredicateTestHelper(expr, meaning, query, expectedResult) {
+                createSearchOptions(searchForExpression = true, searchForMeaning = true)
+            }
         }
 
         testCase(
             expr = "Wow that's cool",
             meaning = "CMeaning",
-            query = "COOL"
+            query = "COOL",
+            expectedResult = true
         )
 
         testCase(
             expr = "First word",
             meaning = "CMeaning",
-            query = "fir"
+            query = "fir",
+            expectedResult = true
         )
 
         testCase(
             expr = "Expression",
             meaning = "CCommon meaning",
-            query = "COMMON"
+            query = "COMMON",
+            expectedResult = true
         )
 
         testCase(
             expr = "Expression",
             meaning = "CCommon meaning",
-            query = "meaning"
+            query = "meaning",
+            expectedResult = true
         )
 
         testCase(
             expr = "Expression",
             meaning = "L2@Mean\nKind",
-            query = "mEa"
+            query = "mEa",
+            expectedResult = true
         )
 
         testCase(
             expr = "Expression",
             meaning = "L2@Mean\nKind",
-            query = "kin"
+            query = "kin",
+            expectedResult = true
+        )
+    }
+
+    @Test
+    fun filterPredicateSearchForExpressionTest() {
+        fun testCase(expr: String, meaning: String, query: String, expectedResult: Boolean) {
+            filterPredicateTestHelper(expr, meaning, query, expectedResult) {
+                createSearchOptions(searchForExpression = true, searchForMeaning = false)
+            }
+        }
+
+        testCase(
+            expr = "google",
+            meaning = "CABC",
+            query = "goog",
+            expectedResult = true
+        )
+
+        testCase(
+            expr = "ABC",
+            meaning = "Cgoogle",
+            query = "google",
+            expectedResult = false
+        )
+
+        testCase(
+            expr = "give",
+            meaning = "L2@A\nB",
+            query = "A",
+            expectedResult = false
+        )
+    }
+
+    @Test
+    fun filterPredicateSearchForMeaningTest() {
+        fun testCase(expr: String, meaning: String, query: String, expectedResult: Boolean) {
+            filterPredicateTestHelper(expr, meaning, query, expectedResult) {
+                createSearchOptions(searchForExpression = false, searchForMeaning = true)
+            }
+        }
+
+        testCase(
+            expr = "ABC",
+            meaning = "Cgoogle",
+            query = "goog",
+            expectedResult = true
+        )
+
+        testCase(
+            expr = "ABC",
+            meaning = "Cgoogle",
+            query = "ABC",
+            expectedResult = false
+        )
+
+        testCase(
+            expr = "A",
+            meaning = "L2@C\nB",
+            query = "A",
+            expectedResult = false
         )
     }
 

@@ -16,8 +16,7 @@ import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolde
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
 
 class HomeSearchAdapter(
-    onViewRecord: (id: Int) -> Unit,
-    private val metadataProvider: RecordSearchMetadataProvider
+    onViewRecord: (id: Int) -> Unit
 ) : RecyclerView.Adapter<HomeSearchAdapter.ViewHolder>() {
     class ViewHolder(
         context: Context,
@@ -52,13 +51,14 @@ class HomeSearchAdapter(
 
     private val diffManager = FilteredArrayDiffManager(conciseRecordDiffCallback)
 
-    fun submitResult(result: RecordSearchResult) {
-        metadataProvider.onQueryChanged(result.query)
+    private var metadataProvider: RecordSearchMetadataProvider? = null
 
+    fun submitResult(result: RecordSearchResult) {
         val currentData = result.currentData
         val previousData = result.previousData
 
         this.currentData = currentData
+        metadataProvider = result.metadataProvider
 
         // calculateDifference is a quite expensive method, so it's better not to call when it's possible.
         if (previousData.size == 0) {
@@ -75,6 +75,10 @@ class HomeSearchAdapter(
     }
 
     fun submitEmpty() {
+        // Let the GC do its job. As the adapter is going to empty, onBindViewHolder, that requires metadataProvider to be non-null,
+        // won't be called
+        metadataProvider = null
+
         currentData.size.let {
             if (it > 0) {
                 currentData = FilteredArray.empty()
@@ -106,7 +110,7 @@ class HomeSearchAdapter(
     }
 
     private fun createItemStyle(record: ConciseRecordWithBadges): HomeSearchItemStyle {
-        val foundRanges = metadataProvider.calculateFoundRanges(record)
+        val foundRanges = requireNotNull(metadataProvider).calculateFoundRanges(record)
 
         return HomeSearchItemStyle(foundRanges)
     }

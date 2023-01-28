@@ -1,11 +1,13 @@
 package io.github.pelmenstar1.digiDict.common
 
+import kotlin.math.max
+
 /**
  * Represents a simple list of [Int]'s. The main difference from `ArrayList<Int>` is that the [IntList] doesn't box the elements,
  * it uses direct approach using [IntArray].
  */
 class IntList(capacity: Int = 0) {
-    private var elements = IntArray(capacity)
+    internal var elements = IntArray(capacity)
 
     /**
      * Gets or sets current size of the list.
@@ -76,12 +78,42 @@ class IntList(capacity: Int = 0) {
     }
 
     /**
+     * Adds specified [element] to the end of the list repeating it the number of times as specified in [count].
+     */
+    fun addRepeat(element: Int, count: Int) {
+        when {
+            count < 0 -> throw IllegalArgumentException("count can't be negative")
+            count == 0 -> return
+        }
+
+        var currentSize = size
+        var currentElements = elements
+
+        if (currentSize + count >= currentElements.size) {
+            val newElements = IntArray(max(currentSize + count, PrimitiveListHelper.newArraySize(currentSize)))
+            System.arraycopy(currentElements, 0, newElements, 0, currentSize)
+
+            currentElements = newElements
+            elements = newElements
+        }
+
+        for (i in currentSize until (currentSize + count)) {
+            currentElements[i] = element
+        }
+
+        currentSize += count
+        size = currentSize
+    }
+
+    /**
      * Returns the [IntArray] copy of the list.
      */
     fun toArray(): IntArray {
-        val newElements = IntArray(size)
-        System.arraycopy(elements, 0, newElements, 0, newElements.size)
+        val size = size
 
-        return elements
+        val newElements = IntArray(size)
+        System.arraycopy(elements, 0, newElements, 0, size)
+
+        return newElements
     }
 }

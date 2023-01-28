@@ -19,7 +19,6 @@ import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
-import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchAdapter
 import kotlinx.coroutines.flow.combineTransform
@@ -32,9 +31,6 @@ class HomeFragment : Fragment() {
 
     @Inject
     lateinit var homeSortTypeMessageMapper: MessageMapper<HomeSortType>
-
-    @Inject
-    lateinit var searchMetadataProvider: RecordSearchMetadataProvider
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,11 +49,8 @@ class HomeFragment : Fragment() {
             navController.navigate(directions)
         }
 
-        val pagingAdapter = HomeAdapter(onViewRecord = onViewRecord)
-        val searchAdapter = HomeSearchAdapter(
-            onViewRecord = onViewRecord,
-            searchMetadataProvider
-        )
+        val pagingAdapter = HomeAdapter(onViewRecord)
+        val searchAdapter = HomeSearchAdapter(onViewRecord)
 
         val stateContainerBinding = HomeLoadingErrorAndProgressMergeBinding.bind(binding.root)
         val retryLambda = pagingAdapter::retry

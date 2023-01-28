@@ -29,5 +29,10 @@ class RecordSearchResult(
      * Saved instances of [previousData] should be accessed with great care.
      * After the next [RecordSearchResult], [previousData] will become invalid.
      */
-    val previousData: FilteredArray<out ConciseRecordWithBadges>
+    val previousData: FilteredArray<out ConciseRecordWithBadges>,
+
+    /**
+     * A metadata provider for this search result.
+     */
+    val metadataProvider: RecordSearchMetadataProvider
 )

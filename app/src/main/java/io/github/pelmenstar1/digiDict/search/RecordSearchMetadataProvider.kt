@@ -11,11 +11,6 @@ import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
  */
 interface RecordSearchMetadataProvider {
     /**
-     * Changes the current query to a new [value].
-     */
-    fun onQueryChanged(value: String)
-
-    /**
      * Calculates "found ranges" in specified [record].
      *
      * Returns the [IntArray] instance that is divided into sections.

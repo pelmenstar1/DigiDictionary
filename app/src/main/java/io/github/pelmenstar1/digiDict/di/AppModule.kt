@@ -16,8 +16,6 @@ import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchCore
-import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
-import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProviderOnCore
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
@@ -116,11 +114,5 @@ class AppModule {
     @Provides
     fun provideRecordSearchCore(): RecordSearchCore {
         return RecordDeepSearchCore
-    }
-
-    @Provides
-    @Singleton
-    fun provideRecordSearchMetadataProvider(core: RecordSearchCore): RecordSearchMetadataProvider {
-        return RecordSearchMetadataProviderOnCore(core)
     }
 }

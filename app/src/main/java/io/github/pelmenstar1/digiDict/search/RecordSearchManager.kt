@@ -21,7 +21,7 @@ class RecordSearchManager(private val core: RecordSearchCore) {
             _currentRecords = value
         }
 
-    fun onSearchRequest(query: String, sortType: HomeSortType): RecordSearchResult {
+    fun onSearchRequest(query: String, sortType: HomeSortType, options: RecordSearchOptions): RecordSearchResult {
         val currentRecords = currentRecords
         var prevSavedRecords = _previousSavedRecords
 
@@ -38,12 +38,13 @@ class RecordSearchManager(private val core: RecordSearchCore) {
         }
 
         val isMeaningfulQuery = query.containsLetterOrDigit()
+        var preparedQuery: String? = null
 
         val currentFilteredArray = if (isMeaningfulQuery) {
-            val preparedQuery = core.prepareQuery(query)
+            preparedQuery = core.prepareQuery(query)
 
             currentRecords.toFilteredArray { record ->
-                core.filterPredicate(record, preparedQuery)
+                core.filterPredicate(record, preparedQuery, options)
             }.also {
                 it.sort(sortType.getComparatorForConciseRecordWithBadges())
             }
@@ -55,6 +56,8 @@ class RecordSearchManager(private val core: RecordSearchCore) {
         _currentRecordsSize = currentFilteredArray.size
         _previousRecords = currentRecords
 
-        return RecordSearchResult(query, isMeaningfulQuery, currentFilteredArray, prevFilteredArray)
+        val metadataProvider = RecordSearchMetadataProviderOnCore(core, preparedQuery ?: query, options)
+
+        return RecordSearchResult(query, isMeaningfulQuery, currentFilteredArray, prevFilteredArray, metadataProvider)
     }
 }

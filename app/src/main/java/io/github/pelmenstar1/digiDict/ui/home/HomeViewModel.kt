@@ -16,6 +16,7 @@ import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.search.RecordSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchManager
+import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
 import io.github.pelmenstar1.digiDict.search.RecordSearchResult
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +72,7 @@ class HomeViewModel @Inject constructor(
             combine(
                 GlobalSearchQueryProvider.queryFlow, _sortTypeFlow, recordFlow
             ) { query, sortType, _ ->
-                searchManager.onSearchRequest(query, sortType)
+                searchManager.onSearchRequest(query, sortType, RecordSearchOptions(0))
             }.flowOn(Dispatchers.Default)
         }
     }

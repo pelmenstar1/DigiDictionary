@@ -8,24 +8,33 @@ import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import org.jetbrains.annotations.TestOnly
 
 object RecordDeepSearchCore : RecordSearchCore {
-    override fun filterPredicate(record: ConciseRecordWithBadges, query: String): Boolean {
+    override fun filterPredicate(
+        record: ConciseRecordWithBadges,
+        query: String,
+        options: RecordSearchOptions
+    ): Boolean {
         val expr = record.expression
         val meaning = record.meaning
+        val flags = options.flags
 
-        if (filterPredicateOnTextRange(expr, 0, expr.length, query)) {
-            return true
+        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION) != 0) {
+            if (filterPredicateOnTextRange(expr, 0, expr.length, query)) {
+                return true
+            }
         }
 
-        when (meaning[0]) {
-            ComplexMeaning.COMMON_MARKER -> {
-                if (filterPredicateOnTextRange(meaning, 1, meaning.length, query)) {
-                    return true
-                }
-            }
-            ComplexMeaning.LIST_MARKER -> {
-                ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
-                    if (filterPredicateOnTextRange(meaning, start, end, query)) {
+        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_MEANING) != 0) {
+            when (meaning[0]) {
+                ComplexMeaning.COMMON_MARKER -> {
+                    if (filterPredicateOnTextRange(meaning, 1, meaning.length, query)) {
                         return true
+                    }
+                }
+                ComplexMeaning.LIST_MARKER -> {
+                    ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
+                        if (filterPredicateOnTextRange(meaning, start, end, query)) {
+                            return true
+                        }
                     }
                 }
             }
@@ -89,21 +98,37 @@ object RecordDeepSearchCore : RecordSearchCore {
         return String(buffer, 0, bufferIndex)
     }
 
-    override fun calculateFoundRanges(record: ConciseRecordWithBadges, query: String, list: IntList) {
+    override fun calculateFoundRanges(
+        record: ConciseRecordWithBadges,
+        query: String,
+        options: RecordSearchOptions,
+        list: IntList
+    ) {
         val expr = record.expression
         val meaning = record.meaning
+        val flags = options.flags
 
-        calculateFoundRangesOnTextRange(expr, 0, expr.length, query, list)
+        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION) != 0) {
+            calculateFoundRangesOnTextRange(expr, 0, expr.length, query, list)
+        } else {
+            // mark that there's no ranges
+            list.add(0)
+        }
 
-        when (meaning[0]) {
-            ComplexMeaning.COMMON_MARKER -> {
-                calculateFoundRangesOnTextRange(meaning, 1, meaning.length, query, list)
-            }
-            ComplexMeaning.LIST_MARKER -> {
-                ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
-                    calculateFoundRangesOnTextRange(meaning, start, end, query, list)
+        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_MEANING) != 0) {
+            when (meaning[0]) {
+                ComplexMeaning.COMMON_MARKER -> {
+                    calculateFoundRangesOnTextRange(meaning, 1, meaning.length, query, list)
+                }
+                ComplexMeaning.LIST_MARKER -> {
+                    ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
+                        calculateFoundRangesOnTextRange(meaning, start, end, query, list)
+                    }
                 }
             }
+        } else {
+            // mark that none of the meaning parts have any found ranges
+            list.addRepeat(0, ComplexMeaning.getMeaningCount(meaning))
         }
     }
 
