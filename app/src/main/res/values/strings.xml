@@ -71,6 +71,16 @@
 
     <string name="home_sortTypeDialog_title">Sorting</string>
 
+    <string name="home_searchProperty_expression">@string/expression</string>
+    <string name="home_searchProperty_meaning">@string/meaning</string>
+    <string-array name="home_searchProperties">
+        <item>@string/home_searchProperty_expression</item>
+        <item>@string/home_searchProperty_meaning</item>
+    </string-array>
+    <string name="home_searchPropertyDialog_title">Search properties</string>
+    <string name="home_searchPropertyPrefix">Search for</string>
+    <string name="home_searchProperty_all">All</string>
+
     <!-- Remind records fragment -->
     <string name="remindRecords_labelInFragment">Remind</string>
     <string name="remindRecords_label">Remind me!</string>

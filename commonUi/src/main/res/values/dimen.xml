@@ -21,9 +21,13 @@
     <dimen name="settings_titlePadding">8dp</dimen>
     <dimen name="settings_actionItemAdditionalVerticalPadding">5dp</dimen>
 
-    <dimen name="singleSelectionDialog_rootVerticalPadding">15dp</dimen>
-    <dimen name="singleSelectionDialog_rootHorizontalPadding">10dp</dimen>
-    <dimen name="singleSelectionDialog_titleMarginStart">10dp</dimen>
-    <dimen name="singleSelectionDialog_textHorizontalPadding">15dp</dimen>
-    <dimen name="singleSelectionDialog_textVerticalPadding">13dp</dimen>
+    <dimen name="selectionDialog_rootVerticalPadding">15dp</dimen>
+    <dimen name="selectionDialog_rootHorizontalPadding">10dp</dimen>
+    <dimen name="selectionDialog_titleMarginStart">10dp</dimen>
+    <dimen name="selectionDialog_textHorizontalPadding">15dp</dimen>
+    <dimen name="selectionDialog_textVerticalPadding">13dp</dimen>
+
+    <dimen name="multiSelectionDialog_errorText_marginTop">3dp</dimen>
+    <dimen name="multiSelectionDialog_errorText_marginBottom">5dp</dimen>
+    <dimen name="mutliSelectionDialog_errorText_marginStart">10dp</dimen>
 </resources>

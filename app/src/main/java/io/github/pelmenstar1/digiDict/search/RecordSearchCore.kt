@@ -13,7 +13,7 @@ interface RecordSearchCore {
      *
      * The [query] must be "prepared". It can be done using [prepareQuery].
      */
-    fun filterPredicate(record: ConciseRecordWithBadges, query: String): Boolean
+    fun filterPredicate(record: ConciseRecordWithBadges, query: String, options: RecordSearchOptions): Boolean
 
     /**
      * Transforms the query in any way that is desired by a core implementation.
@@ -33,5 +33,10 @@ interface RecordSearchCore {
      * - the first int in the subsection is the length of the range in this subsection
      * - the next `n * 2`, where `n` is the previous int, ints describe the ranges that are placed like: start, end, start, end ...
      */
-    fun calculateFoundRanges(record: ConciseRecordWithBadges, query: String, list: IntList)
+    fun calculateFoundRanges(
+        record: ConciseRecordWithBadges,
+        query: String,
+        options: RecordSearchOptions,
+        list: IntList
+    )
 }

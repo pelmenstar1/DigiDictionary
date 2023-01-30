@@ -11,13 +11,13 @@ import io.github.pelmenstar1.digiDict.common.android.LocaleProvider
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
+import io.github.pelmenstar1.digiDict.formatters.ResourcesRecordSearchPropertySetFormatter
 import io.github.pelmenstar1.digiDict.prefs.DataStoreDigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchCore
-import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
-import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProviderOnCore
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
@@ -114,13 +114,13 @@ class AppModule {
     }
 
     @Provides
-    fun provideRecordSearchCore(): RecordSearchCore {
-        return RecordDeepSearchCore
+    @Singleton
+    fun provideRecordSearchPropertySetFormatter(@ApplicationContext context: Context): RecordSearchPropertySetFormatter {
+        return ResourcesRecordSearchPropertySetFormatter(context.resources)
     }
 
     @Provides
-    @Singleton
-    fun provideRecordSearchMetadataProvider(core: RecordSearchCore): RecordSearchMetadataProvider {
-        return RecordSearchMetadataProviderOnCore(core)
+    fun provideRecordSearchCore(): RecordSearchCore {
+        return RecordDeepSearchCore
     }
 }

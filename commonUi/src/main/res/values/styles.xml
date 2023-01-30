@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="TextAppearance.DigiDictionary.ConstListDialog.Title" parent="TextAppearance.Material3.TitleLarge">
+    <style name="TextAppearance.DigiDictionary.SelectionDialog.Title" parent="TextAppearance.Material3.TitleLarge">
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.DigiDictionary.MultiSelectionDialog.Error" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">?attr/colorError</item>
     </style>
 </resources>
