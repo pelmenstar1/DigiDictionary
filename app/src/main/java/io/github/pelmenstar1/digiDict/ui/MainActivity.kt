@@ -15,9 +15,9 @@ import androidx.navigation.ui.onNavDestinationSelected
 import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.ui.SimpleSearchView
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchEditText
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         val item = menu.findItem(R.id.homeMenu_search)
 
         if (item != null) {
-            val actionView = item.actionView as SimpleSearchView
+            val actionView = item.actionView as HomeSearchEditText
 
             actionView.addTextChangedListener { text ->
                 GlobalSearchQueryProvider.query = text ?: ""

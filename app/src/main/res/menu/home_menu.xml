@@ -5,7 +5,7 @@
         android:id="@+id/homeMenu_search"
         android:icon="@drawable/ic_search"
         android:title="@string/search"
-        app:actionViewClass="io.github.pelmenstar1.digiDict.common.ui.SimpleSearchView"
+        app:actionViewClass="io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchEditText"
         app:showAsAction="ifRoom|collapseActionView" />
 
     <item
