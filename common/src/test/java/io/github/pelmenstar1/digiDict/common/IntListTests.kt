@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.common
 
 import org.junit.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
 class IntListTests {
@@ -86,6 +87,94 @@ class IntListTests {
         assertFails {
             IntList().addRepeat(element = 0, count = -1)
         }
+    }
+
+    @Test
+    fun addRangeTest() {
+        fun testCase(
+            elements: IntArray,
+            listSize: Int,
+            elementsToAdd: IntArray,
+            expectedElements: IntArray
+        ) {
+            val list = IntList()
+            list.elements = elements
+            list.size = listSize
+
+            list.addRange(elementsToAdd)
+
+            val actualElements = list.toArray()
+            assertContentEquals(expectedElements, actualElements)
+        }
+
+        testCase(
+            elements = intArrayOf(),
+            listSize = 0,
+            elementsToAdd = intArrayOf(1, 2, 3),
+            expectedElements = intArrayOf(1, 2, 3)
+        )
+
+        testCase(
+            elements = intArrayOf(),
+            listSize = 0,
+            elementsToAdd = intArrayOf(1),
+            expectedElements = intArrayOf(1)
+        )
+
+        testCase(
+            elements = intArrayOf(),
+            listSize = 0,
+            elementsToAdd = intArrayOf(),
+            expectedElements = intArrayOf()
+        )
+
+        testCase(
+            elements = intArrayOf(1, 2, 0, 0),
+            listSize = 2,
+            elementsToAdd = intArrayOf(3, 4),
+            expectedElements = intArrayOf(1, 2, 3, 4)
+        )
+
+        testCase(
+            elements = intArrayOf(1, 2, 0),
+            listSize = 2,
+            elementsToAdd = intArrayOf(3),
+            expectedElements = intArrayOf(1, 2, 3)
+        )
+
+        testCase(
+            elements = intArrayOf(1, 2, 3),
+            listSize = 3,
+            elementsToAdd = intArrayOf(4, 5),
+            expectedElements = intArrayOf(1, 2, 3, 4, 5)
+        )
+
+        testCase(
+            elements = intArrayOf(1, 2, 3),
+            listSize = 3,
+            elementsToAdd = intArrayOf(4),
+            expectedElements = intArrayOf(1, 2, 3, 4)
+        )
+
+        testCase(
+            elements = intArrayOf(1, 2, 0),
+            listSize = 2,
+            elementsToAdd = intArrayOf(4, 5),
+            expectedElements = intArrayOf(1, 2, 4, 5)
+        )
+    }
+
+    @Test
+    fun clearTest() {
+        val list = IntList()
+        list.add(0)
+        list.add(1)
+        list.add(2)
+
+        assertEquals(3, list.size)
+        list.clear()
+
+        assertEquals(0, list.size)
     }
 
     @Test

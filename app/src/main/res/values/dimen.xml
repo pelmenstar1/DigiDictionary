@@ -11,9 +11,10 @@
     <dimen name="home_dateMarker_horizontalPadding">6dp</dimen>
     <dimen name="home_dateMarker_verticalMargin">10dp</dimen>
 
-    <dimen name="home_requestListDialogButton_startPadding">10dp</dimen>
-    <dimen name="home_requestListDialogButton_endPadding">5dp</dimen>
-    <dimen name="home_requestListDialogButton_verticalPadding">4dp</dimen>
+    <dimen name="home_optionsBarButton_startPadding">10dp</dimen>
+    <dimen name="home_optionsBarButton_endPadding">5dp</dimen>
+    <dimen name="home_optionsBarButton_verticalPadding">4dp</dimen>
+    <dimen name="home_optionsBarButton_endMargin">6dp</dimen>
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>

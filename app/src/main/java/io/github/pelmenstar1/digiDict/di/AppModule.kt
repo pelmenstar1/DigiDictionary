@@ -11,6 +11,8 @@ import io.github.pelmenstar1.digiDict.common.android.LocaleProvider
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
+import io.github.pelmenstar1.digiDict.formatters.ResourcesRecordSearchPropertySetFormatter
 import io.github.pelmenstar1.digiDict.prefs.DataStoreDigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.prefs.dataStorePreferences
@@ -109,6 +111,12 @@ class AppModule {
     @Singleton
     fun provideHomeSortTypeMessageMapper(@ApplicationContext context: Context): MessageMapper<HomeSortType> {
         return ResourcesHomeSortTypeMessageMapper(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecordSearchPropertySetFormatter(@ApplicationContext context: Context): RecordSearchPropertySetFormatter {
+        return ResourcesRecordSearchPropertySetFormatter(context.resources)
     }
 
     @Provides

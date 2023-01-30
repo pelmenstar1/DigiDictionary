@@ -14,10 +14,7 @@ import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
-import io.github.pelmenstar1.digiDict.search.RecordSearchCore
-import io.github.pelmenstar1.digiDict.search.RecordSearchManager
-import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
-import io.github.pelmenstar1.digiDict.search.RecordSearchResult
+import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -31,6 +28,17 @@ class HomeViewModel @Inject constructor(
     private val _sortTypeFlow = MutableStateFlow(HomeSortType.NEWEST)
     val sortTypeFlow: StateFlow<HomeSortType>
         get() = _sortTypeFlow
+
+    private val _searchPropertiesFlow = MutableStateFlow<Array<out RecordSearchProperty>>(RecordSearchProperty.values())
+
+    val searchPropertiesFlow: StateFlow<Array<out RecordSearchProperty>>
+        get() = _searchPropertiesFlow
+
+    var searchProperties: Array<out RecordSearchProperty>
+        get() = _searchPropertiesFlow.value
+        set(value) {
+            _searchPropertiesFlow.value = value
+        }
 
     var sortType: HomeSortType
         get() = _sortTypeFlow.value
@@ -46,6 +54,9 @@ class HomeViewModel @Inject constructor(
     ).flow.cachedIn(viewModelScope)
 
     private val searchManager = RecordSearchManager(searchCore)
+    private val searchOptionsFlow = _searchPropertiesFlow.map {
+        RecordSearchOptions(it)
+    }
 
     private val searchProgressReporter = ProgressReporter()
     val searchProgressFlow = searchProgressReporter.progressFlow
@@ -70,9 +81,9 @@ class HomeViewModel @Inject constructor(
                 }
 
             combine(
-                GlobalSearchQueryProvider.queryFlow, _sortTypeFlow, recordFlow
-            ) { query, sortType, _ ->
-                searchManager.onSearchRequest(query, sortType, RecordSearchOptions(0))
+                GlobalSearchQueryProvider.queryFlow, _sortTypeFlow, searchOptionsFlow, recordFlow
+            ) { query, sortType, options, _ ->
+                searchManager.onSearchRequest(query, sortType, options)
             }.flowOn(Dispatchers.Default)
         }
     }

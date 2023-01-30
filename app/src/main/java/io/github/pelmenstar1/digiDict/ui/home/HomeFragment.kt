@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.filterTrue
@@ -19,6 +20,7 @@ import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
+import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchAdapter
 import kotlinx.coroutines.flow.combineTransform
@@ -31,6 +33,9 @@ class HomeFragment : Fragment() {
 
     @Inject
     lateinit var homeSortTypeMessageMapper: MessageMapper<HomeSortType>
+
+    @Inject
+    lateinit var recordRecordSearchPropertySetFormatter: RecordSearchPropertySetFormatter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -86,6 +91,7 @@ class HomeFragment : Fragment() {
             }
         }
         val searchAddRecordContainer = binding.homeSearchAddRecordContainer
+        val homeOptionsBar = binding.homeOptionsBar
 
         val loadStatePagingAdapter = pagingAdapter.withLoadStateHeaderAndFooter(
             HomeLoadStateAdapter(retryLambda),
@@ -97,8 +103,8 @@ class HomeFragment : Fragment() {
             it.layoutManager = LinearLayoutManager(context)
         }
 
-        initRequestSortListDialogButton(binding, pagingAdapter)
-        initSortTypeDialogIfShown(pagingAdapter)
+        initHomeOptionsBar(binding, pagingAdapter)
+        initDialogsIfShown(pagingAdapter)
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.items, pagingAdapter::submitData)
@@ -159,6 +165,8 @@ class HomeFragment : Fragment() {
                     // The initial state of search should be empty.
                     searchAdapter.submitEmpty()
                 }
+
+                homeOptionsBar.setPreset(if (isActive) optionsInSearchMode else optionsInDefaultMode)
             }
 
             launchFlowCollector(viewModel.searchProgressFlow) { progress ->
@@ -188,18 +196,35 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
-    private fun initRequestSortListDialogButton(binding: FragmentHomeBinding, pagingAdapter: HomeAdapter) {
-        val button = binding.homeRequestSortListDialogButton
+    private fun initHomeOptionsBar(binding: FragmentHomeBinding, pagingAdapter: HomeAdapter) {
+        val optionsBar = binding.homeOptionsBar
 
-        lifecycleScope.launchFlowCollector(viewModel.sortTypeFlow) { sortType ->
-            button.value = homeSortTypeMessageMapper.map(sortType)
+        lifecycleScope.run {
+            launchFlowCollector(viewModel.sortTypeFlow) { sortType ->
+                optionsBar.setOptionValue(R.id.homeOptions_sort, homeSortTypeMessageMapper.map(sortType))
+            }
+
+            launchFlowCollector(viewModel.searchPropertiesFlow) { properties ->
+                optionsBar.setOptionValue(
+                    R.id.homeOptions_searchProperty,
+                    recordRecordSearchPropertySetFormatter.format(properties)
+                )
+            }
         }
 
-        button.setOnClickListener {
-            HomeSortTypeDialogFragment.create(selectedValue = viewModel.sortType).let { dialog ->
+        optionsBar.setOptionOnClickListener(R.id.homeOptions_sort) {
+            HomeSortTypeDialogFragment.create(selectedValue = viewModel.sortType).also { dialog ->
                 initSortTypeDialog(dialog, pagingAdapter)
 
                 dialog.show(childFragmentManager, SORT_TYPE_DIALOG_TAG)
+            }
+        }
+
+        optionsBar.setOptionOnClickListener(R.id.homeOptions_searchProperty) {
+            HomeSearchPropertiesDialogFragment.create(viewModel.searchProperties).also { dialog ->
+                initSearchPropertiesDialog(dialog)
+
+                dialog.show(childFragmentManager, SEARCH_PROPERTIES_DIALOG_TAG)
             }
         }
     }
@@ -212,13 +237,44 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun initSearchPropertiesDialog(dialog: HomeSearchPropertiesDialogFragment) {
+        dialog.onValuesSelected = {
+            viewModel.searchProperties = it
+        }
+    }
+
     private fun initSortTypeDialogIfShown(pagingAdapter: HomeAdapter) {
-        childFragmentManager.findFragmentByTag(SORT_TYPE_DIALOG_TAG)?.let {
+        childFragmentManager.findFragmentByTag(SORT_TYPE_DIALOG_TAG)?.also {
             initSortTypeDialog(it as HomeSortTypeDialogFragment, pagingAdapter)
         }
     }
 
+    private fun initSearchPropertiesDialogIfShown() {
+        childFragmentManager.findFragmentByTag(SEARCH_PROPERTIES_DIALOG_TAG)?.also {
+            initSearchPropertiesDialog(it as HomeSearchPropertiesDialogFragment)
+        }
+    }
+
+    private fun initDialogsIfShown(pagingAdapter: HomeAdapter) {
+        initSortTypeDialogIfShown(pagingAdapter)
+        initSearchPropertiesDialogIfShown()
+    }
+
     companion object {
         private const val SORT_TYPE_DIALOG_TAG = "SortTypeDialog"
+        private const val SEARCH_PROPERTIES_DIALOG_TAG = "SearchPropertiesDialog"
+
+        private val sortOption = HomeOptionsBar.Option(
+            id = R.id.homeOptions_sort,
+            prefixRes = R.string.home_sort
+        )
+
+        private val searchPropertyOption = HomeOptionsBar.Option(
+            id = R.id.homeOptions_searchProperty,
+            prefixRes = R.string.home_searchPropertyPrefix
+        )
+
+        private val optionsInDefaultMode = HomeOptionsBar.Preset(sortOption)
+        private val optionsInSearchMode = HomeOptionsBar.Preset(sortOption, searchPropertyOption)
     }
 }

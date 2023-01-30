@@ -5,7 +5,8 @@ import android.os.Parcelable
 import java.util.*
 
 class FixedBitSet : Parcelable {
-    private val words: LongArray
+    @PublishedApi
+    internal val words: LongArray
 
     val size: Int
 
@@ -13,7 +14,6 @@ class FixedBitSet : Parcelable {
         this.size = size
 
         val wordCount = (size + WORD_BITS_COUNT - 1) shr WORD_SIZE
-
         words = LongArray(wordCount)
     }
 
@@ -68,6 +68,14 @@ class FixedBitSet : Parcelable {
 
     fun setAll() {
         Arrays.fill(words, -1L)
+    }
+
+    inline fun iterateSetBits(block: (bitIndex: Int) -> Unit) {
+        words.iterateSetBits(block)
+    }
+
+    fun countSetBits(): Int {
+        return words.sumOf(Long::countOneBits)
     }
 
     fun isAllBitsSet(): Boolean {

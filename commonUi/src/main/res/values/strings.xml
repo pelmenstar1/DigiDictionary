@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="retry">Retry</string>
+
+    <string name="multiSelectionDialog_apply">Apply</string>
+    <string name="multiSelectionDialog_noOptionSelectedError">At least one option must be selected</string>
 </resources>
