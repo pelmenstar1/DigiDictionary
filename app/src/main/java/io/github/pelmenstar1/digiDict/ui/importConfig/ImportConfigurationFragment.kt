@@ -17,7 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.backup.importing.ImportException
-import io.github.pelmenstar1.digiDict.common.fileExtensionOrNull
+import io.github.pelmenstar1.digiDict.common.android.fileExtensionOrNull
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.databinding.FragmentImportConfigurationBinding
