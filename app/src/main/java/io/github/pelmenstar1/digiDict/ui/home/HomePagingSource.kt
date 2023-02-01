@@ -5,11 +5,12 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.room.InvalidationTracker
 import androidx.room.withTransaction
-import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
+import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.HomeSortType
 import io.github.pelmenstar1.digiDict.data.getConciseRecordsWithBadgesForHome
+import java.util.*
 
 class HomePagingSource(
     private val appDatabase: AppDatabase,
@@ -120,10 +121,12 @@ class HomePagingSource(
         val dataSize = recordData.size
 
         return if (dataSize > 0) {
+            val zone = TimeZone.getDefault()
+
             val result = ArrayList<HomePageItem>(dataSize + (dataSize * 3) / 2)
 
             val firstRecord = recordData[0]
-            var currentEpochDay = firstRecord.epochSeconds / SECONDS_IN_DAY
+            var currentEpochDay = TimeUtils.toZonedEpochDays(firstRecord.epochSeconds, zone)
             val firstRecordIdWithEpochDay = if (sortType == HomeSortType.NEWEST) {
                 recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(currentEpochDay)
             } else {
@@ -136,7 +139,7 @@ class HomePagingSource(
 
             var isFirstRecordBeforeDateMarker = false
             if (recordData.size > 1) {
-                val nextRecordEpochDay = recordData[1].epochSeconds / SECONDS_IN_DAY
+                val nextRecordEpochDay = TimeUtils.toZonedEpochDays(recordData[1].epochSeconds, zone)
                 isFirstRecordBeforeDateMarker = nextRecordEpochDay != currentEpochDay
             }
 
@@ -144,7 +147,7 @@ class HomePagingSource(
 
             for (i in 1 until dataSize) {
                 val record = recordData[i]
-                val epochDay = record.epochSeconds / SECONDS_IN_DAY
+                val epochDay = TimeUtils.toZonedEpochDays(record.epochSeconds, zone)
 
                 if (epochDay != currentEpochDay) {
                     currentEpochDay = epochDay
@@ -155,7 +158,7 @@ class HomePagingSource(
                 var isBeforeDateMarker = false
 
                 if (i < dataSize - 1) {
-                    val nextEpochDay = recordData[i + 1].epochSeconds / SECONDS_IN_DAY
+                    val nextEpochDay = TimeUtils.toZonedEpochDays(recordData[i + 1].epochSeconds, zone)
 
                     isBeforeDateMarker = nextEpochDay != currentEpochDay
                 }

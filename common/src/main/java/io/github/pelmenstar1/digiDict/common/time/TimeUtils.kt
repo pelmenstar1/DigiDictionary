@@ -1,5 +1,7 @@
 package io.github.pelmenstar1.digiDict.common.time
 
+import java.util.*
+
 object TimeUtils {
     private val daysInMonthTable = intArrayOf(
         31, // January
@@ -104,5 +106,14 @@ object TimeUtils {
         total += (y + 3L) / 4L - (y + 99L) / 100L + (y + 399L) / 400L
 
         return total - DAYS_0000_TO_1970
+    }
+
+    /**
+     * Applies time zone offset to UTC epoch seconds and converts the result to epoch days.
+     */
+    fun toZonedEpochDays(utcEpochSeconds: Long, zone: TimeZone): Long {
+        val millis = utcEpochSeconds * 1000
+
+        return (millis + zone.getOffset(millis)) / MILLIS_IN_DAY
     }
 }
