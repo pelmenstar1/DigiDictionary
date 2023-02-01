@@ -14,7 +14,8 @@ fun Int.decimalDigitCount(): Int {
         this < 1000000 -> 6
         this < 10000000 -> 7
         this < 100000000 -> 8
-        else -> 9
+        this < 1000000000 -> 9
+        else -> 10
     }
 }
 
