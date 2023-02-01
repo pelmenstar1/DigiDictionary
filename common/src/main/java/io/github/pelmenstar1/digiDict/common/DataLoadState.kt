@@ -94,16 +94,20 @@ class DataLoadStateManager<T>(val logTag: String) {
     fun buildFlow(
         scope: CoroutineScope,
         provider: FlowBuilder<T>.() -> DataLoadStateFlow<T>
-    ): SharedFlow<DataLoadState<T>> {
+    ): Flow<DataLoadState<T>> {
         val builder = FlowBuilder(this)
 
         return retryFlow.flatMapLatest {
             builder.provider()
-        }.shareIn(scope, SharingStarted.Lazily, replay = 1)
+        }.shareIn(scope, SharingStarted.Eagerly, replay = 1)
     }
 
     fun retry() {
         retryFlow.value = Any()
+    }
+
+    internal suspend fun retrySuspend() {
+        retryFlow.emit(Any())
     }
 }
 
