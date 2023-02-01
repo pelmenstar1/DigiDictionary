@@ -19,7 +19,7 @@
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
     <dimen name="itemRecord_badgeContainerHorizontalPadding">5dp</dimen>
-    <dimen name="itemRecord_dividerHeight">1dp</dimen>
+    <dimen name="itemRecord_dividerHeight">.5dp</dimen>
 
     <dimen name="remindRecords_lastItemBottomPadding">60dp</dimen>
 
