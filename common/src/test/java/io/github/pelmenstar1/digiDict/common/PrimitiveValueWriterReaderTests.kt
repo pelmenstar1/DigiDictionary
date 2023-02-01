@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializer
 import io.github.pelmenstar1.digiDict.common.binarySerialization.PrimitiveValueReader
 import io.github.pelmenstar1.digiDict.common.binarySerialization.PrimitiveValueWriter
 import org.junit.Test
@@ -7,14 +8,39 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 
 class PrimitiveValueWriterReaderTests {
+    private data class SerializableObject(private val id: Int, private val data: String) {
+        companion object {
+            val serializer = object : BinarySerializer<SerializableObject> {
+                override fun newArrayOfNulls(size: Int) = arrayOfNulls<SerializableObject>(size)
+
+                override fun readFrom(reader: PrimitiveValueReader): SerializableObject {
+                    val id = reader.consumeInt()
+                    val data = reader.consumeStringUtf16()
+
+                    return SerializableObject(id, data)
+                }
+
+                override fun writeTo(writer: PrimitiveValueWriter, value: SerializableObject) {
+                    writer.emit(value.id)
+                    writer.emit(value.data)
+                }
+
+            }
+        }
+    }
+
     private sealed class Operation<T>(val value: T)
     private class ShortOperation(value: Short) : Operation<Short>(value)
     private class IntOperation(value: Int) : Operation<Int>(value)
     private class LongOperation(value: Long) : Operation<Long>(value)
     private class StringOperation(value: String) : Operation<String>(value)
     private class IntArrayOperation(value: IntArray) : Operation<IntArray>(value)
+    private class SerializableObjectArrayOperation(
+        value: Array<out SerializableObject>
+    ) : Operation<Array<out SerializableObject>>(value)
 
     private class OperationChainBuilder(private val ops: MutableList<Operation<out Any>>) {
         fun short(value: Short) = add(ShortOperation(value))
@@ -24,6 +50,10 @@ class PrimitiveValueWriterReaderTests {
         fun intArray(value: IntArray) = add(IntArrayOperation(value))
         fun intArray(value: Int, vararg other: Int) {
             intArray(other.withAddedElement(value))
+        }
+
+        fun serializableObjectArray(vararg values: SerializableObject) {
+            add((SerializableObjectArrayOperation(values)))
         }
 
         private fun add(op: Operation<out Any>) {
@@ -40,6 +70,7 @@ class PrimitiveValueWriterReaderTests {
         readWriteTestHelper(intArrayOf(bufferSize), block)
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun readWriteTestHelper(bufSizes: IntArray = defaultBufferSizes, block: OperationChainBuilder.() -> Unit) {
         val ops = ArrayList<Operation<out Any>>()
         OperationChainBuilder(ops).block()
@@ -56,6 +87,7 @@ class PrimitiveValueWriterReaderTests {
                         is LongOperation -> emit(op.value)
                         is StringOperation -> emit(op.value)
                         is IntArrayOperation -> emitArrayAndLength(op.value)
+                        is SerializableObjectArrayOperation -> emit(op.value, SerializableObject.serializer)
                     }
                 }
             }
@@ -71,18 +103,20 @@ class PrimitiveValueWriterReaderTests {
                         is LongOperation -> consumeLong()
                         is StringOperation -> consumeStringUtf16()
                         is IntArrayOperation -> consumeIntArrayAndLength()
+                        is SerializableObjectArrayOperation -> consumeArray(SerializableObject.serializer)
                     }
                 }
 
                 val msg = "bufferSize: $bufSize"
                 val expectedValue = op.value
 
-                if (actualValue is IntArray && expectedValue is IntArray) {
-                    assertContentEquals(expectedValue, actualValue, msg)
-                } else {
-                    assertEquals(expectedValue, actualValue, msg)
+                when {
+                    actualValue is IntArray && expectedValue is IntArray ->
+                        assertContentEquals(expectedValue, actualValue, msg)
+                    actualValue is Array<*> && expectedValue is Array<*> ->
+                        assertContentEquals(expectedValue as Array<Any>, actualValue as Array<Any>, msg)
+                    else -> assertEquals(expectedValue, actualValue, msg)
                 }
-
             }
         }
     }
@@ -132,6 +166,9 @@ class PrimitiveValueWriterReaderTests {
         short(Short.MAX_VALUE)
         int(12)
         short(Short.MIN_VALUE)
+        serializableObjectArray(SerializableObject(id = 1, data = "123"))
+        serializableObjectArray(SerializableObject(id = 2, data = "1"))
+        int(101)
     }
 
     @Test
@@ -230,6 +267,25 @@ class PrimitiveValueWriterReaderTests {
             string("111111")
             string(bigString1)
             string("33")
+        }
+    }
+
+    @Test
+    fun readWriteSerializableObjectArrayTest() {
+        readWriteTestHelper {
+            serializableObjectArray(SerializableObject(id = 0, data = "1111111"))
+            serializableObjectArray(
+                SerializableObject(id = 0, data = "1111111"),
+                SerializableObject(id = 100, data = "1234")
+            )
+        }
+    }
+
+    @Test
+    fun write_emitStringLengthThrowsWhenTooBigTest() {
+        assertFails {
+            val stream = ByteArrayOutputStream()
+            PrimitiveValueWriter(stream, bufferSize = 128).emit("1".repeat(131072))
         }
     }
 }
