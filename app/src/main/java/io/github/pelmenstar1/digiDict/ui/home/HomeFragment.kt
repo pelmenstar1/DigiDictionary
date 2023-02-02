@@ -17,7 +17,7 @@ import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
 import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
@@ -32,7 +32,7 @@ class HomeFragment : Fragment() {
     private val viewModel by viewModels<HomeViewModel>()
 
     @Inject
-    lateinit var homeSortTypeMessageMapper: MessageMapper<HomeSortType>
+    lateinit var recordSortTypeMessageMapper: MessageMapper<RecordSortType>
 
     @Inject
     lateinit var recordRecordSearchPropertySetFormatter: RecordSearchPropertySetFormatter
@@ -201,7 +201,7 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.sortTypeFlow) { sortType ->
-                optionsBar.setOptionValue(R.id.homeOptions_sort, homeSortTypeMessageMapper.map(sortType))
+                optionsBar.setOptionValue(R.id.homeOptions_sort, recordSortTypeMessageMapper.map(sortType))
             }
 
             launchFlowCollector(viewModel.searchPropertiesFlow) { properties ->

@@ -2,9 +2,9 @@ package io.github.pelmenstar1.digiDict.ui.home
 
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.ui.SingleSelectionDialogFragment
-import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.RecordSortType
 
-class HomeSortTypeDialogFragment : SingleSelectionDialogFragment<HomeSortType>() {
+class HomeSortTypeDialogFragment : SingleSelectionDialogFragment<RecordSortType>() {
     override val choicesRes: Int
         get() = R.array.home_sortTypes
 
@@ -12,7 +12,7 @@ class HomeSortTypeDialogFragment : SingleSelectionDialogFragment<HomeSortType>()
         get() = R.string.home_sortTypeDialog_title
 
 
-    override fun getValueByIndex(index: Int) = HomeSortType.fromOrdinal(index)
+    override fun getValueByIndex(index: Int) = RecordSortType.fromOrdinal(index)
 
     companion object {
         fun create(selectedIndex: Int): HomeSortTypeDialogFragment {
@@ -21,7 +21,7 @@ class HomeSortTypeDialogFragment : SingleSelectionDialogFragment<HomeSortType>()
             }
         }
 
-        fun create(selectedValue: HomeSortType): HomeSortTypeDialogFragment {
+        fun create(selectedValue: RecordSortType): HomeSortTypeDialogFragment {
             return create(selectedValue.ordinal)
         }
     }

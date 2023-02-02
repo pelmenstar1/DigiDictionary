@@ -6,7 +6,7 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.commonTestUtils.Diff
 import io.github.pelmenstar1.digiDict.commonTestUtils.toArray
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchManager
@@ -37,7 +37,7 @@ class RecordSearchManagerTests {
             manager.currentRecords = realisticRecords
 
             var expectedPrevData: Array<ConciseRecordWithBadges>? = null
-            val sortTypes = HomeSortType.values()
+            val sortTypes = RecordSortType.values()
 
             for (query in queries) {
                 for (sortType in sortTypes) {
@@ -110,7 +110,7 @@ class RecordSearchManagerTests {
         manager.currentRecords = mapExpressionsToRecords(oldExpressionsData)
 
         val oldResult =
-            manager.onSearchRequest(searchQuery, HomeSortType.ALPHABETIC_BY_EXPRESSION, defaultSearchOptions)
+            manager.onSearchRequest(searchQuery, RecordSortType.ALPHABETIC_BY_EXPRESSION, defaultSearchOptions)
         val oldActualCurrentData = oldResult.currentData.toArray()
         val oldExpectedCurrentData = mapExpressionsToRecords(oldExpectedCurrentExpressions)
 
@@ -120,7 +120,7 @@ class RecordSearchManagerTests {
         manager.currentRecords = mapExpressionsToRecords(newExpressionsData)
 
         val newResult =
-            manager.onSearchRequest(searchQuery, HomeSortType.ALPHABETIC_BY_EXPRESSION, defaultSearchOptions)
+            manager.onSearchRequest(searchQuery, RecordSortType.ALPHABETIC_BY_EXPRESSION, defaultSearchOptions)
         val newActualCurrentData = newResult.currentData.toArray()
         val newExpectedCurrentData = mapExpressionsToRecords(newExpectedCurrentExpressions)
 
@@ -187,7 +187,7 @@ class RecordSearchManagerTests {
             var expectedPrevData: Array<ConciseRecordWithBadges>? = null
 
             for (query in queries) {
-                val result = searchManager.onSearchRequest(query, HomeSortType.NEWEST, defaultSearchOptions)
+                val result = searchManager.onSearchRequest(query, RecordSortType.NEWEST, defaultSearchOptions)
                 val actualCurrentData = result.currentData
                 val actualCurrentDataArray = actualCurrentData.toArray()
 

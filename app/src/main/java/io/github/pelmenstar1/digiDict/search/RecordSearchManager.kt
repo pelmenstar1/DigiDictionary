@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict.search
 
 import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 
 class RecordSearchManager(private val core: RecordSearchCore) {
@@ -21,7 +21,7 @@ class RecordSearchManager(private val core: RecordSearchCore) {
             _currentRecords = value
         }
 
-    fun onSearchRequest(query: String, sortType: HomeSortType, options: RecordSearchOptions): RecordSearchResult {
+    fun onSearchRequest(query: String, sortType: RecordSortType, options: RecordSearchOptions): RecordSearchResult {
         val currentRecords = currentRecords
         var prevSavedRecords = _previousSavedRecords
 

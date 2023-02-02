@@ -8,13 +8,13 @@ import androidx.room.withTransaction
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.data.HomeSortType
-import io.github.pelmenstar1.digiDict.data.getConciseRecordsWithBadgesForHome
+import io.github.pelmenstar1.digiDict.data.RecordSortType
+import io.github.pelmenstar1.digiDict.data.getConciseRecordsWithBadgesLimitOffsetWithSort
 import java.util.*
 
 class HomePagingSource(
     private val appDatabase: AppDatabase,
-    private val sortType: HomeSortType
+    private val sortType: RecordSortType
 ) : PagingSource<Int, HomePageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
         override fun onInvalidated(tables: MutableSet<String>) {
@@ -88,14 +88,14 @@ class HomePagingSource(
                 }
         }
 
-        val recordData = appDatabase.getConciseRecordsWithBadgesForHome(limit, offset, sortType)
+        val recordData = appDatabase.getConciseRecordsWithBadgesLimitOffsetWithSort(limit, offset, sortType)
         val recordDataSize = recordData.size
 
         // For now, the only purpose of computePageResult is to add date markers where neccessary.
         // Doing it when sorting is not related to dates has no sense and very strange.
         //
         // As computePageResult has a single purpose, no flags are added to control the transformation for now.
-        val result = if (sortType == HomeSortType.NEWEST || sortType == HomeSortType.OLDEST) {
+        val result = if (sortType == RecordSortType.NEWEST || sortType == RecordSortType.OLDEST) {
             computePageResult(recordData, sortType)
         } else {
             recordData.map { HomePageItem.Record(it, isBeforeDateMarker = false) }
@@ -116,7 +116,7 @@ class HomePagingSource(
 
     private suspend fun computePageResult(
         recordData: Array<out ConciseRecordWithBadges>,
-        sortType: HomeSortType
+        sortType: RecordSortType
     ): List<HomePageItem> {
         val dataSize = recordData.size
 
@@ -127,7 +127,7 @@ class HomePagingSource(
 
             val firstRecord = recordData[0]
             var currentSectionEpochDay = TimeUtils.toZonedEpochDays(firstRecord.epochSeconds, zone)
-            val firstRecordIdWithEpochDay = if (sortType == HomeSortType.NEWEST) {
+            val firstRecordIdWithEpochDay = if (sortType == RecordSortType.NEWEST) {
                 recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(currentSectionEpochDay)
             } else {
                 recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayAsc(currentSectionEpochDay)

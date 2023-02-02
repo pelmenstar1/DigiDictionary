@@ -7,8 +7,6 @@ import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.android.queryArrayWithProgressReporter
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
-// TODO: Think up a better file's name or split the file to the ones whose names better reflect the purpose
-
 fun AppDatabase.compileInsertRecordStatement(): SupportSQLiteStatement {
     return compileStatement("INSERT OR REPLACE INTO records (expression, meaning, additionalNotes, score, dateTime) VALUES (?,?,?,?,?)")
 }
@@ -127,7 +125,28 @@ fun AppDatabase.getAllConciseRecordsWithBadges(progressReporter: ProgressReporte
     )
 }
 
-fun AppDatabase.queryConciseRecordsWithBadges(
+private val sqlRecordSortTypes = arrayOf(
+    "${RecordTable.epochSeconds} DESC", // RecordSortType.NEWEST
+    "${RecordTable.epochSeconds} ASC", // RecordSortType.OLDEST
+    "${RecordTable.score} DESC", // RecordSortType.GREATEST_SCORE
+    "${RecordTable.score} ASC", // RecordSortType.LEAST_SCORE
+    "${RecordTable.expression} ASC", // RecordSortType.ALPHABETIC_BY_EXPRESSION
+    "${RecordTable.expression} DESC" // RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE
+)
+
+fun AppDatabase.getConciseRecordsWithBadgesLimitOffsetWithSort(
+    limit: Int,
+    offset: Int,
+    sortType: RecordSortType
+): Array<ConciseRecordWithBadges> {
+    val rawSortStr = sqlRecordSortTypes[sortType.ordinal]
+    return queryConciseRecordsWithBadges(
+        sql = "SELECT id, expression, meaning, score, dateTime FROM records ORDER BY $rawSortStr LIMIT $limit OFFSET $offset",
+        progressReporter = null
+    )
+}
+
+private fun AppDatabase.queryConciseRecordsWithBadges(
     sql: String,
     progressReporter: ProgressReporter?
 ): Array<ConciseRecordWithBadges> {

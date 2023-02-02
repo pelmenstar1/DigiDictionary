@@ -23,7 +23,7 @@ import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
-import io.github.pelmenstar1.digiDict.ui.home.ResourcesHomeSortTypeMessageMapper
+import io.github.pelmenstar1.digiDict.ui.home.ResourcesRecordSortTypeMessageMapper
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -109,8 +109,8 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideHomeSortTypeMessageMapper(@ApplicationContext context: Context): MessageMapper<HomeSortType> {
-        return ResourcesHomeSortTypeMessageMapper(context)
+    fun provideRecordSortTypeMessageMapper(@ApplicationContext context: Context): MessageMapper<RecordSortType> {
+        return ResourcesRecordSortTypeMessageMapper(context)
     }
 
     @Provides

@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.data
 
-enum class HomeSortType {
+enum class RecordSortType {
     NEWEST,
     OLDEST,
     GREATEST_SCORE,

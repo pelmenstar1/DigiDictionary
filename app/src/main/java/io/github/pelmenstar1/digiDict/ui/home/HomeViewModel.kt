@@ -12,7 +12,7 @@ import io.github.pelmenstar1.digiDict.common.android.onDatabaseTablesUpdated
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
@@ -25,8 +25,8 @@ class HomeViewModel @Inject constructor(
     private val appDatabase: AppDatabase,
     searchCore: RecordSearchCore
 ) : ViewModel() {
-    private val _sortTypeFlow = MutableStateFlow(HomeSortType.NEWEST)
-    val sortTypeFlow: StateFlow<HomeSortType>
+    private val _sortTypeFlow = MutableStateFlow(RecordSortType.NEWEST)
+    val sortTypeFlow: StateFlow<RecordSortType>
         get() = _sortTypeFlow
 
     private val _searchPropertiesFlow = MutableStateFlow<Array<out RecordSearchProperty>>(RecordSearchProperty.values())
@@ -40,7 +40,7 @@ class HomeViewModel @Inject constructor(
             _searchPropertiesFlow.value = value
         }
 
-    var sortType: HomeSortType
+    var sortType: RecordSortType
         get() = _sortTypeFlow.value
         set(value) {
             _sortTypeFlow.value = value
