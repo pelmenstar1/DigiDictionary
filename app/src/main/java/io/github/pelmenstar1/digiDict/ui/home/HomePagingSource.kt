@@ -123,34 +123,38 @@ class HomePagingSource(
         return if (dataSize > 0) {
             val zone = TimeZone.getDefault()
 
-            val result = ArrayList<HomePageItem>(dataSize + (dataSize * 3) / 2)
+            val result = ArrayList<HomePageItem>((dataSize * 3) / 2)
 
             val firstRecord = recordData[0]
-            var currentEpochDay = TimeUtils.toZonedEpochDays(firstRecord.epochSeconds, zone)
+            var currentSectionEpochDay = TimeUtils.toZonedEpochDays(firstRecord.epochSeconds, zone)
             val firstRecordIdWithEpochDay = if (sortType == HomeSortType.NEWEST) {
-                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(currentEpochDay)
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(currentSectionEpochDay)
             } else {
-                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayAsc(currentEpochDay)
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayAsc(currentSectionEpochDay)
             }
 
             if (firstRecordIdWithEpochDay == firstRecord.id) {
-                result.add(HomePageItem.DateMarker(currentEpochDay))
+                result.add(HomePageItem.DateMarker(currentSectionEpochDay))
             }
 
             var isFirstRecordBeforeDateMarker = false
-            if (recordData.size > 1) {
-                val nextRecordEpochDay = TimeUtils.toZonedEpochDays(recordData[1].epochSeconds, zone)
-                isFirstRecordBeforeDateMarker = nextRecordEpochDay != currentEpochDay
+            var secondRecordEpochDay = -1L
+
+            if (dataSize > 1) {
+                secondRecordEpochDay = TimeUtils.toZonedEpochDays(recordData[1].epochSeconds, zone)
+                isFirstRecordBeforeDateMarker = secondRecordEpochDay != currentSectionEpochDay
             }
 
             result.add(HomePageItem.Record(firstRecord, isFirstRecordBeforeDateMarker))
 
+            var currentRecordEpochDay = secondRecordEpochDay
+
             for (i in 1 until dataSize) {
                 val record = recordData[i]
-                val epochDay = TimeUtils.toZonedEpochDays(record.epochSeconds, zone)
+                val epochDay = currentRecordEpochDay
 
-                if (epochDay != currentEpochDay) {
-                    currentEpochDay = epochDay
+                if (epochDay != currentSectionEpochDay) {
+                    currentSectionEpochDay = epochDay
 
                     result.add(HomePageItem.DateMarker(epochDay))
                 }
@@ -158,9 +162,8 @@ class HomePagingSource(
                 var isBeforeDateMarker = false
 
                 if (i < dataSize - 1) {
-                    val nextEpochDay = TimeUtils.toZonedEpochDays(recordData[i + 1].epochSeconds, zone)
-
-                    isBeforeDateMarker = nextEpochDay != currentEpochDay
+                    currentRecordEpochDay = TimeUtils.toZonedEpochDays(recordData[i + 1].epochSeconds, zone)
+                    isBeforeDateMarker = currentRecordEpochDay != currentSectionEpochDay
                 }
 
                 result.add(HomePageItem.Record(record, isBeforeDateMarker))
