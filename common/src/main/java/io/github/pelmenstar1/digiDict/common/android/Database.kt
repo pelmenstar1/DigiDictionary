@@ -6,8 +6,7 @@ import androidx.room.InvalidationTracker
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
-import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
-import io.github.pelmenstar1.digiDict.common.trackProgressWith
+import io.github.pelmenstar1.digiDict.common.closeInFinally
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
 inline fun <T : SupportSQLiteDatabase> T.runInTransactionBlocking(block: T.() -> Unit) {
@@ -41,26 +40,36 @@ inline fun ViewModel.onDatabaseTablesUpdated(
     }
 }
 
-// TODO: The method emits three try-catch blocks but apparently there can be only one.
 inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
     sql: String,
     bindArgs: Array<Any>?,
     progressReporter: ProgressReporter?,
     convertCursor: (Cursor) -> T
 ): Array<T> {
-    return trackProgressWith(progressReporter) {
-        val cursor = query(sql, bindArgs)
+    var cursor: Cursor? = null
+    var cause: Exception? = null
 
-        cursor.use {
-            val count = it.count
-            val result = unsafeNewArray<T>(count)
+    try {
+        progressReporter?.start()
 
-            trackLoopProgressWith(progressReporter, count) { i ->
-                cursor.moveToPosition(i)
-                result[i] = convertCursor(cursor)
-            }
+        cursor = query(sql, bindArgs)
+        val count = cursor.count
+        val result = unsafeNewArray<T>(count)
 
-            result
+        for (i in 0 until count) {
+            cursor.moveToPosition(i)
+            result[i] = convertCursor(cursor)
+
+            progressReporter?.onProgress(i + 1, count)
         }
+
+        return result
+    } catch (e: Exception) {
+        cause = e
+        progressReporter?.reportError()
+
+        throw e
+    } finally {
+        cursor.closeInFinally(cause)
     }
 }
