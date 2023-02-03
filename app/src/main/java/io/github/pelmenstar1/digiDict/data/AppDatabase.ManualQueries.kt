@@ -7,6 +7,8 @@ import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.android.queryArrayWithProgressReporter
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
+private const val CONCISE_RECORD_VALUES = "id, expression, meaning, score, dateTime"
+
 fun AppDatabase.compileInsertRecordStatement(): SupportSQLiteStatement {
     return compileStatement("INSERT OR REPLACE INTO records (expression, meaning, additionalNotes, score, dateTime) VALUES (?,?,?,?,?)")
 }
@@ -34,6 +36,15 @@ fun SupportSQLiteStatement.bindRecordBadgeToInsertStatement(badge: RecordBadgeIn
 
 fun AppDatabase.compileInsertRecordToBadgeRelation(): SupportSQLiteStatement {
     return compileStatement("INSERT INTO record_to_badge_relations (recordId, badgeId) VALUES (?, ?)")
+}
+
+fun SupportSQLiteStatement.bindRecordToBadgeInsertStatement(recordId: Int, badgeId: Int) {
+    bindLong(1, recordId.toLong())
+    bindLong(2, badgeId.toLong())
+}
+
+fun SupportSQLiteStatement.bindRecordToBadgeInsertStatement(relation: RecordToBadgeRelation) {
+    bindRecordToBadgeInsertStatement(relation.recordId, relation.badgeId)
 }
 
 fun AppDatabase.getAllRecordsOrderByIdAsc(progressReporter: ProgressReporter?): Array<Record> {
@@ -119,10 +130,7 @@ fun AppDatabase.getBadgesByRecordId(getQuery: GetBadgesByRecordIdQuery, recordId
 }
 
 fun AppDatabase.getAllConciseRecordsWithBadges(progressReporter: ProgressReporter?): Array<ConciseRecordWithBadges> {
-    return queryConciseRecordsWithBadges(
-        "SELECT id, expression, meaning, score, dateTime FROM records",
-        progressReporter
-    )
+    return queryConciseRecordsWithBadges("SELECT $CONCISE_RECORD_VALUES FROM records", progressReporter)
 }
 
 private val sqlRecordSortTypes = arrayOf(
@@ -130,8 +138,8 @@ private val sqlRecordSortTypes = arrayOf(
     "${RecordTable.epochSeconds} ASC", // RecordSortType.OLDEST
     "${RecordTable.score} DESC", // RecordSortType.GREATEST_SCORE
     "${RecordTable.score} ASC", // RecordSortType.LEAST_SCORE
-    "${RecordTable.expression} ASC", // RecordSortType.ALPHABETIC_BY_EXPRESSION
-    "${RecordTable.expression} DESC" // RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE
+    // RecordSortType.ALPHABETIC_BY_EXPRESSION and RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE have different handling
+    // and this array is not used in that case. See below
 )
 
 fun AppDatabase.getConciseRecordsWithBadgesLimitOffsetWithSort(
@@ -139,9 +147,22 @@ fun AppDatabase.getConciseRecordsWithBadgesLimitOffsetWithSort(
     offset: Int,
     sortType: RecordSortType
 ): Array<ConciseRecordWithBadges> {
+    // SQLite 'ORDER BY' sorts the records differently than RecordSortType's comparator does. To unify behaviour
+    // sort the array manually.
+    if (sortType == RecordSortType.ALPHABETIC_BY_EXPRESSION || sortType == RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE) {
+        val result = queryConciseRecordsWithBadges(
+            sql = "SELECT $CONCISE_RECORD_VALUES FROM records LIMIT $limit OFFSET $offset",
+            progressReporter = null
+        )
+        result.sortWith(sortType.getComparatorForConciseRecordWithBadges())
+
+        return result
+    }
+
     val rawSortStr = sqlRecordSortTypes[sortType.ordinal]
+
     return queryConciseRecordsWithBadges(
-        sql = "SELECT id, expression, meaning, score, dateTime FROM records ORDER BY $rawSortStr LIMIT $limit OFFSET $offset",
+        sql = "SELECT $CONCISE_RECORD_VALUES FROM records ORDER BY $rawSortStr LIMIT $limit OFFSET $offset",
         progressReporter = null
     )
 }

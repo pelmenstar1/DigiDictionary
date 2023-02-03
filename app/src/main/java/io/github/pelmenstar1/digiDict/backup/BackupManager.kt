@@ -303,8 +303,7 @@ object BackupManager {
                         val recordId = sortedRecordIds[recordOrdinal]
                         val badgeId = sortedBadgeIds[badgeOrdinal]
 
-                        statement.bindLong(1, recordId.toLong())
-                        statement.bindLong(2, badgeId.toLong())
+                        statement.bindRecordToBadgeInsertStatement(recordId, badgeId)
                         statement.executeInsert()
 
                         seqIndex++

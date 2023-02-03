@@ -4,7 +4,11 @@ import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.data.*
 import kotlin.test.fail
 
-fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<T>, actual: Array<T>) {
+fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<out T>, actual: Array<out T>) {
+    assertContentEqualsNoId(expected, actual) { other -> equalsNoId(other) }
+}
+
+fun <T> assertContentEqualsNoId(expected: Array<out T>, actual: Array<out T>, equalsNoId: T.(other: T) -> Boolean) {
     val expectedSize = expected.size
     val actualSize = actual.size
 

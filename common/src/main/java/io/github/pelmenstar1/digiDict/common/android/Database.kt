@@ -41,6 +41,7 @@ inline fun ViewModel.onDatabaseTablesUpdated(
     }
 }
 
+// TODO: The method emits three try-catch blocks but apparently there can be only one.
 inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
     sql: String,
     bindArgs: Array<Any>?,
