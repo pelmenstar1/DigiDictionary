@@ -84,6 +84,25 @@ class RecordSearchMetadataProviderOnCoreTests {
             query = "h",
             expectedRanges = arrayOf(0 until 1)
         )
+
+        testCase(
+            text = "abcd",
+            query = "bcd",
+            expectedRanges = arrayOf(1 until 4)
+        )
+
+        testCase(
+            text = "abcd efghe",
+            query = "ghe",
+            expectedRanges = arrayOf(7 until 10)
+        )
+
+        // There should be no ranges as the query length is less than current RecordDeepSearchCore.IN_WORD_SEARCH_MIN_LENGTH
+        testCase(
+            text = "abcd",
+            query = "bc",
+            expectedRanges = emptyArray()
+        )
     }
 
     @Test

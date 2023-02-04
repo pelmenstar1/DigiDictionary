@@ -7,7 +7,30 @@ import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import org.jetbrains.annotations.TestOnly
 
+/**
+ * An implementation of [RecordSearchCore] that provides a more deeper search than simple startsWith.
+ *
+ * The [RecordDeepSearchCore.calculateFoundRanges] is not thread-safe.
+ */
 object RecordDeepSearchCore : RecordSearchCore {
+    private class MutableIntRange {
+        @JvmField
+        var start: Int = 0
+
+        @JvmField
+        var end: Int = 0
+    }
+
+    private val cachedRange = MutableIntRange()
+
+    // Marks that the result has not been computed yet. It does not mean that the result is invalid though.
+    private const val RESULT_NOT_COMPUTED = -2
+
+    // The min length of the query to search within in-word boundary
+    private const val IN_WORD_SEARCH_MIN_LENGTH = 3
+
+    internal const val QUERY_FLAG_SINGLE_WORD = 1
+
     override fun filterPredicate(
         record: ConciseRecordWithBadges,
         query: String,
@@ -17,8 +40,10 @@ object RecordDeepSearchCore : RecordSearchCore {
         val meaning = record.meaning
         val flags = options.flags
 
+        val queryFlags = computeQueryFlags(query)
+
         if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION) != 0) {
-            if (filterPredicateOnTextRange(expr, 0, expr.length, query)) {
+            if (filterPredicateOnTextRange(expr, 0, expr.length, query, queryFlags)) {
                 return true
             }
         }
@@ -26,13 +51,13 @@ object RecordDeepSearchCore : RecordSearchCore {
         if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_MEANING) != 0) {
             when (meaning[0]) {
                 ComplexMeaning.COMMON_MARKER -> {
-                    if (filterPredicateOnTextRange(meaning, 1, meaning.length, query)) {
+                    if (filterPredicateOnTextRange(meaning, 1, meaning.length, query, queryFlags)) {
                         return true
                     }
                 }
                 ComplexMeaning.LIST_MARKER -> {
                     ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
-                        if (filterPredicateOnTextRange(meaning, start, end, query)) {
+                        if (filterPredicateOnTextRange(meaning, start, end, query, queryFlags)) {
                             return true
                         }
                     }
@@ -108,8 +133,10 @@ object RecordDeepSearchCore : RecordSearchCore {
         val meaning = record.meaning
         val flags = options.flags
 
+        val queryFlags = computeQueryFlags(query)
+
         if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION) != 0) {
-            calculateFoundRangesOnTextRange(expr, 0, expr.length, query, list)
+            calculateFoundRangesOnTextRange(expr, 0, expr.length, query, queryFlags, list)
         } else {
             // mark that there's no ranges
             list.add(0)
@@ -118,11 +145,11 @@ object RecordDeepSearchCore : RecordSearchCore {
         if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_MEANING) != 0) {
             when (meaning[0]) {
                 ComplexMeaning.COMMON_MARKER -> {
-                    calculateFoundRangesOnTextRange(meaning, 1, meaning.length, query, list)
+                    calculateFoundRangesOnTextRange(meaning, 1, meaning.length, query, queryFlags, list)
                 }
                 ComplexMeaning.LIST_MARKER -> {
                     ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
-                        calculateFoundRangesOnTextRange(meaning, start, end, query, list)
+                        calculateFoundRangesOnTextRange(meaning, start, end, query, queryFlags, list)
                     }
                 }
             }
@@ -137,6 +164,7 @@ object RecordDeepSearchCore : RecordSearchCore {
         textStart: Int,
         textEnd: Int,
         query: String,
+        queryFlags: Int,
         list: IntList
     ) {
         val listStart = list.size
@@ -150,15 +178,35 @@ object RecordDeepSearchCore : RecordSearchCore {
             return
         }
 
-        while (true) {
-            if (match(text, index, textEnd, query)) {
-                val offsetStart = index - textStart
+        val tempRange = cachedRange
+        val queryLength = query.length
 
-                list.add(offsetStart) // start
-                list.add(offsetStart + query.length) // end
+        while (true) {
+            var nextNonLetterOrDigitIndex = RESULT_NOT_COMPUTED
+
+            if (textEnd - index >= queryLength) {
+                if (crossWordStartsWith(text, index, textEnd, query)) {
+                    val offsetStart = index - textStart
+
+                    list.addRange(offsetStart, offsetStart + queryLength)
+                } else if (useInWordSearch(query, queryFlags)) {
+                    nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, textEnd)
+
+                    var wordEnd = nextNonLetterOrDigitIndex
+                    if (wordEnd < 0) {
+                        wordEnd = textEnd
+                    }
+
+                    if (inWordMatch(text, textStart, wordEnd, query, foundRange = tempRange)) {
+                        list.addRange(tempRange.start - textStart, tempRange.end - textStart)
+                    }
+                }
             }
 
-            val nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, textEnd)
+            if (nextNonLetterOrDigitIndex == RESULT_NOT_COMPUTED) {
+                nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, textEnd)
+            }
+
             if (nextNonLetterOrDigitIndex < 0) {
                 break
             }
@@ -175,25 +223,52 @@ object RecordDeepSearchCore : RecordSearchCore {
         list[listStart] = rangeCount
     }
 
+    private fun IntList.addRange(start: Int, end: Int) {
+        add(start)
+        add(end)
+    }
+
     /**
      * Returns whether text in range `[start; end)` passes a filtering with given [query].
      *
      * The logic assumes that query is prepared ([prepareQuery])
      */
     @TestOnly
-    fun filterPredicateOnTextRange(text: String, start: Int, end: Int, query: String): Boolean {
+    fun filterPredicateOnTextRange(text: String, start: Int, end: Int, query: String, queryFlags: Int): Boolean {
         // Initial value of index should point to a letter or digit, otherwise the first word will be skipped.
         var index = text.nextLetterOrDigitIndex(start, end)
         if (index < 0) {
             return false
         }
 
+        val queryLength = query.length
+
         while (true) {
-            if (match(text, index, end, query)) {
-                return true
+            var nextNonLetterOrDigitIndex = RESULT_NOT_COMPUTED
+
+            if (end - index >= queryLength) {
+                if (crossWordStartsWith(text, index, end, query)) {
+                    return true
+                }
+
+                if (useInWordSearch(query, queryFlags)) {
+                    nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, end)
+
+                    var wordEnd = nextNonLetterOrDigitIndex
+                    if (wordEnd < 0) {
+                        wordEnd = end
+                    }
+
+                    if (inWordMatch(text, start, wordEnd, query, foundRange = null)) {
+                        return true
+                    }
+                }
             }
 
-            val nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, end)
+            if (nextNonLetterOrDigitIndex == RESULT_NOT_COMPUTED) {
+                nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, end)
+            }
+
             if (nextNonLetterOrDigitIndex < 0) {
                 return false
             }
@@ -207,9 +282,16 @@ object RecordDeepSearchCore : RecordSearchCore {
         }
     }
 
-    private fun match(text: String, start: Int, end: Int, query: String): Boolean {
-        if (end - start >= query.length) {
-            if (crossWordStartsWith(text, start, end, query)) {
+    private fun inWordMatch(text: String, start: Int, end: Int, query: String, foundRange: MutableIntRange?): Boolean {
+        val queryLength = query.length
+
+        for (i in start until end) {
+            if (text.regionMatches(i, query, 0, queryLength, ignoreCase = true)) {
+                if (foundRange != null) {
+                    foundRange.start = i
+                    foundRange.end = i + queryLength
+                }
+
                 return true
             }
         }
@@ -257,5 +339,23 @@ object RecordDeepSearchCore : RecordSearchCore {
         }
 
         return true
+    }
+
+    // Computes query flags for given value. The query should be prepared
+    //
+    // The query flags are used to not extract the same information from query too many times.
+    @TestOnly
+    internal fun computeQueryFlags(query: String): Int {
+        var flags = 0
+
+        if (query.nextNonLetterOrDigitIndex(0, query.length) < 0) {
+            flags = flags or QUERY_FLAG_SINGLE_WORD
+        }
+
+        return flags
+    }
+
+    private fun useInWordSearch(query: String, queryFlags: Int): Boolean {
+        return query.length >= IN_WORD_SEARCH_MIN_LENGTH && (queryFlags and QUERY_FLAG_SINGLE_WORD) != 0
     }
 }

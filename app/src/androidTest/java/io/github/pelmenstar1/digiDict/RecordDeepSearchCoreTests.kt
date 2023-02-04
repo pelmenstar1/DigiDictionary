@@ -13,7 +13,8 @@ class RecordDeepSearchCoreTests {
     @Test
     fun filterPredicateOnTextRangeTest() {
         fun testCase(text: String, query: String, expected: Boolean, start: Int = 0, end: Int = text.length) {
-            val actual = RecordDeepSearchCore.filterPredicateOnTextRange(text, start, end, query)
+            val queryFlags = RecordDeepSearchCore.computeQueryFlags(query)
+            val actual = RecordDeepSearchCore.filterPredicateOnTextRange(text, start, end, query, queryFlags)
 
             assertEquals(expected, actual, "text: '$text', query: '$query'")
         }
@@ -108,6 +109,38 @@ class RecordDeepSearchCoreTests {
             text = "/// dll lll",
             query = "ll",
             expected = true
+        )
+
+        testCase(
+            text = "ABCD",
+            query = "bcd",
+            expected = true
+        )
+
+        testCase(
+            text = "ABCD CD",
+            query = "ABC",
+            start = 5,
+            expected = false
+        )
+
+        // False is expected as the query length is less than current RecordDeepSearchCore.IN_WORD_SEARCH_MIN_LENGTH
+        testCase(
+            text = "ABCD",
+            query = "bc",
+            expected = false
+        )
+
+        testCase(
+            text = "abcd cdef",
+            query = "def",
+            expected = true
+        )
+
+        testCase(
+            text = "ABC ADE",
+            query = "C DE",
+            expected = false
         )
     }
 
@@ -271,5 +304,18 @@ class RecordDeepSearchCoreTests {
         testCase(input = ".....;.. Some ???;;..--- ordinal   ... sentence", expected = "Some ordinal sentence")
         testCase(input = "", expected = "")
         testCase(input = ";A;", expected = "A")
+    }
+
+    @Test
+    fun computeQueryFlagsTest() {
+        fun testCase(query: String, expectedFlags: Int) {
+            val actualFlags = RecordDeepSearchCore.computeQueryFlags(RecordDeepSearchCore.prepareQuery(query))
+
+            assertEquals(expectedFlags, actualFlags)
+        }
+
+        testCase(query = "a", expectedFlags = RecordDeepSearchCore.QUERY_FLAG_SINGLE_WORD)
+        testCase(query = "abc", expectedFlags = RecordDeepSearchCore.QUERY_FLAG_SINGLE_WORD)
+        testCase(query = "abc de", expectedFlags = 0)
     }
 }
