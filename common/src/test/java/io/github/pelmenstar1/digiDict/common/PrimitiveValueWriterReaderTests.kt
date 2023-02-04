@@ -22,9 +22,6 @@ class PrimitiveValueWriterReaderTests {
         fun long(value: Long) = add(LongOperation(value))
         fun string(value: String) = add(StringOperation(value))
         fun intArray(value: IntArray) = add(IntArrayOperation(value))
-        fun intArray(value: Int, vararg other: Int) {
-            intArray(other.withAddedElement(value))
-        }
 
         private fun add(op: Operation<out Any>) {
             ops.add(op)
@@ -101,8 +98,8 @@ class PrimitiveValueWriterReaderTests {
         string("1")
         string(bigString1)
         string(bigString2)
-        intArray(0, 1, 2, 3)
-        intArray(Int.MAX_VALUE, 245, 444, 8)
+        intArray(intArrayOf(0, 1, 2, 3))
+        intArray(intArrayOf(Int.MAX_VALUE, 245, 444, 8))
         intArray(IntArray(1024) { it })
     }
 
@@ -123,7 +120,7 @@ class PrimitiveValueWriterReaderTests {
         int(344)
         string("123")
         long(1L)
-        intArray(Int.MAX_VALUE, 12, 3)
+        intArray(intArrayOf(Int.MAX_VALUE, 12, 3))
         long(0L)
         int(Int.MAX_VALUE)
         long(Long.MAX_VALUE)
@@ -157,7 +154,7 @@ class PrimitiveValueWriterReaderTests {
         readWriteTestHelper(bufferSize = 32) {
             string(" ".repeat(15))
 
-            intArray(1, 2, 3, 4)
+            intArray(intArrayOf(1, 2, 3, 4))
         }
     }
 

@@ -209,8 +209,8 @@ class AddEditRecordViewModelTests {
 
         suspend fun testCase(expectedBadges: Array<RecordBadgeInfo>) {
             testCase(ComplexMeaning.Common("Meaning"), expectedBadges)
-            testCase(ComplexMeaning.List("M1", "M2", "M3"), expectedBadges)
-            testCase(ComplexMeaning.List("M1", "M2"), expectedBadges)
+            testCase(ComplexMeaning.List(arrayOf("M1", "M2", "M3")), expectedBadges)
+            testCase(ComplexMeaning.List(arrayOf("M1", "M2")), expectedBadges)
         }
 
         testCase(expectedBadges = emptyArray())

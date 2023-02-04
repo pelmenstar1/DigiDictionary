@@ -2,9 +2,11 @@ package io.github.pelmenstar1.digiDict.data
 
 import android.os.Parcel
 import android.os.Parcelable
-import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.android.readStringOrThrow
-import java.util.*
+import io.github.pelmenstar1.digiDict.common.decimalDigitCount
+import io.github.pelmenstar1.digiDict.common.equalsPattern
+import io.github.pelmenstar1.digiDict.common.parsePositiveInt
+import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
 enum class MeaningType {
     COMMON,
@@ -86,17 +88,6 @@ sealed class ComplexMeaning : Parcelable {
         constructor(elements: Array<out String>) {
             this.elements = elements
             rawText = createListRawText(elements)
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        constructor(firstElement: String, vararg elements: String) {
-            var newElements = elements
-            if (!newElements.contains(firstElement)) {
-                newElements = elements.withAddedElement(firstElement)
-            }
-
-            this.elements = newElements
-            rawText = createListRawText(newElements)
         }
 
         internal constructor(elements: Array<out String>, rawText: String) {

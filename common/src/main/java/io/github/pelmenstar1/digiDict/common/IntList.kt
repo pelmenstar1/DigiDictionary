@@ -72,6 +72,18 @@ class IntList(capacity: Int = 0) {
         }
     }
 
+    fun indexOf(element: Int): Int {
+        val elements = elements
+
+        for (i in 0 until _size) {
+            if (elements[i] == element) {
+                return i
+            }
+        }
+
+        return -1
+    }
+
     /**
      * Returns whether the list contains specified [element].
      */
@@ -119,19 +131,6 @@ class IntList(capacity: Int = 0) {
 
         ensureCapacity(listSize + elementsLength)
         System.arraycopy(elements, 0, this.elements, listSize, elementsLength)
-
-        _size = listSize + elementsLength
-    }
-
-    inline fun <T> addMapped(elements: Array<out T>, transform: (T) -> Int) {
-        val listSize = _size
-        val listElements = this.elements
-        val elementsLength = elements.size
-
-        ensureCapacity(listSize + elementsLength)
-        for (i in elements.indices) {
-            listElements[listSize + i] = transform(elements[i])
-        }
 
         _size = listSize + elementsLength
     }
