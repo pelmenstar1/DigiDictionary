@@ -98,29 +98,59 @@ object RecordDeepSearchCore : RecordSearchCore {
             return ""
         }
 
-        val buffer = CharArray(bufferLength)
+        // In most cases the query is prepared form and no amends should be made.
+        // We allocate the buffer only when we actually need it.
+        var buffer: CharArray? = null
         var bufferIndex = 0
+        var lastStrLodIndex = -1
 
         while (strIndex < strEnd) {
             val current = value[strIndex]
 
             if (current.isLetterOrDigit()) {
-                buffer[bufferIndex] = current
+                buffer?.set(bufferIndex, current)
+                lastStrLodIndex = strIndex
 
                 strIndex++
             } else {
-                // strIndex can't be -1 because strEnd points to the last letter-or-digit in text.
-                // Code execution just can't be here when strIndex is the last index.
-                strIndex = value.nextLetterOrDigitIndex(strIndex + 1, strEnd)
+                val nextStrIndex = strIndex + 1
 
-                buffer[bufferIndex] = ' '
+                // newStrIndex can't be -1 because strEnd points to the last letter-or-digit in text.
+                // We just can't occur here when strIndex is the last index.
+                val newStrIndex = value.nextLetterOrDigitIndex(nextStrIndex, strEnd)
+
+                if (buffer == null) {
+                    // Check if the query is not prepared, if so, the buffer should be initialized.
+                    // Also check if the lastStrLodIndex is not -1
+                    // (in that case the string has no letter-or-digits up till strIndex)
+                    if (!(newStrIndex == nextStrIndex && current == ' ') && lastStrLodIndex >= 0) {
+                        buffer = CharArray(bufferLength)
+
+                        value.toCharArray(
+                            buffer,
+                            destinationOffset = 0,
+                            startIndex = strStart,
+                            endIndex = lastStrLodIndex + 1
+                        )
+                    }
+                }
+
+                buffer?.set(bufferIndex, ' ')
+                strIndex = newStrIndex
             }
 
-            // We write to buffer in any case.
+            // Increase the index regardless of even buffer existence. If we eventually creates the buffer
+            // we'll need this variable.
             bufferIndex++
         }
 
-        return String(buffer, 0, bufferIndex)
+        return if (buffer != null) {
+            String(buffer, 0, bufferIndex)
+        } else {
+            // substring won't allocate if strStart == 0 and strEnd == value.length().
+            // So we don't need to check that.
+            value.substring(strStart, strEnd)
+        }
     }
 
     override fun calculateFoundRanges(

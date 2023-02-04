@@ -304,6 +304,8 @@ class RecordDeepSearchCoreTests {
         testCase(input = ".....;.. Some ???;;..--- ordinal   ... sentence", expected = "Some ordinal sentence")
         testCase(input = "", expected = "")
         testCase(input = ";A;", expected = "A")
+        testCase(input = "  A ", expected = "A")
+        testCase(input = "  ABC ABC ABC    ", expected = "ABC ABC ABC")
     }
 
     @Test
