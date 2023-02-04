@@ -103,6 +103,18 @@ class RecordSearchMetadataProviderOnCoreTests {
             query = "bc",
             expectedRanges = emptyArray()
         )
+
+        testCase(
+            text = "abc def   xyz",
+            query = "def xyz",
+            expectedRanges = arrayOf(4 until 13)
+        )
+
+        testCase(
+            text = "abc def   xyz",
+            query = "def xy",
+            expectedRanges = arrayOf(4 until 12)
+        )
     }
 
     @Test
@@ -217,6 +229,33 @@ class RecordSearchMetadataProviderOnCoreTests {
             expectedSections = arrayOf(
                 IntRangeSection(),
                 IntRangeSection(0 until 3)
+            )
+        )
+
+        testCase(
+            meaning = "L2@aaa\nabc def  xyz",
+            query = "def xyz",
+            expectedSections = arrayOf(
+                IntRangeSection(),
+                IntRangeSection(4 until 12)
+            )
+        )
+
+        testCase(
+            meaning = "L2@aaa\nabc def  xyz",
+            query = "def xy",
+            expectedSections = arrayOf(
+                IntRangeSection(),
+                IntRangeSection(4 until 11)
+            )
+        )
+
+        testCase(
+            meaning = "L2@aaa\nabc def  xyz def   xyz",
+            query = "def xyz",
+            expectedSections = arrayOf(
+                IntRangeSection(),
+                IntRangeSection(4 until 12, 13 until 22)
             )
         )
     }

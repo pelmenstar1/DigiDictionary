@@ -185,10 +185,10 @@ object RecordDeepSearchCore : RecordSearchCore {
             var nextNonLetterOrDigitIndex = RESULT_NOT_COMPUTED
 
             if (textEnd - index >= queryLength) {
-                if (crossWordStartsWith(text, index, textEnd, query)) {
-                    val offsetStart = index - textStart
+                val foundTextEnd = interWordGetTextEnd(text, index, textEnd, query)
 
-                    list.addRange(offsetStart, offsetStart + queryLength)
+                if (foundTextEnd >= 0) {
+                    list.addRange(index - textStart, foundTextEnd - textStart)
                 } else if (useInWordSearch(query, queryFlags)) {
                     nextNonLetterOrDigitIndex = text.nextNonLetterOrDigitIndex(index, textEnd)
 
@@ -247,7 +247,7 @@ object RecordDeepSearchCore : RecordSearchCore {
             var nextNonLetterOrDigitIndex = RESULT_NOT_COMPUTED
 
             if (end - index >= queryLength) {
-                if (crossWordStartsWith(text, index, end, query)) {
+                if (interWordGetTextEnd(text, index, end, query) >= 0) {
                     return true
                 }
 
@@ -299,7 +299,12 @@ object RecordDeepSearchCore : RecordSearchCore {
         return false
     }
 
-    private fun crossWordStartsWith(text: String, start: Int, end: Int, query: String): Boolean {
+    /**
+     * Finds the index where [query] ends in given [text] on specified range (from [start] up to [end]),
+     * assuming that [query] is prepared and [text] is not. This index is not always `start + query.length`. It can differ
+     * in case when text is "aaa bb  cc" and query is "bb cc".
+     */
+    private fun interWordGetTextEnd(text: String, start: Int, end: Int, query: String): Int {
         var textIndex = start
         var queryIndex = 0
         val queryLength = query.length
@@ -316,7 +321,7 @@ object RecordDeepSearchCore : RecordSearchCore {
                     val utc = tc.uppercaseChar()
 
                     if (!(uqc == utc || utc.lowercaseChar() == uqc.lowercaseChar())) {
-                        return false
+                        return -1
                     }
                 }
 
@@ -325,12 +330,12 @@ object RecordDeepSearchCore : RecordSearchCore {
                 // As query is prepared, a range of non-letter-or-digits in text should correspond to a space in query.
                 // Example: query = "Query kkk", text = "Query ... kkk"
                 if (qc != ' ') {
-                    return false
+                    return -1
                 }
 
                 textIndex = text.nextLetterOrDigitIndex(textIndex + 1, end)
                 if (textIndex < 0) {
-                    return false
+                    return -1
                 }
             }
 
@@ -338,7 +343,7 @@ object RecordDeepSearchCore : RecordSearchCore {
             queryIndex++
         }
 
-        return true
+        return textIndex
     }
 
     // Computes query flags for given value. The query should be prepared
