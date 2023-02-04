@@ -68,7 +68,7 @@ object RecordDeepSearchCore : RecordSearchCore {
         return false
     }
 
-    override fun prepareQuery(value: String): String {
+    override fun normalizeQuery(value: String): String {
         val length = value.length
         val strStart = value.nextLetterOrDigitIndex(0, length)
 
@@ -98,7 +98,7 @@ object RecordDeepSearchCore : RecordSearchCore {
             return ""
         }
 
-        // In most cases the query is prepared form and no amends should be made.
+        // In most cases the query is normalized form and no amends should be made.
         // We allocate the buffer only when we actually need it.
         var buffer: CharArray? = null
         var bufferIndex = 0
@@ -120,7 +120,7 @@ object RecordDeepSearchCore : RecordSearchCore {
                 val newStrIndex = value.nextLetterOrDigitIndex(nextStrIndex, strEnd)
 
                 if (buffer == null) {
-                    // Check if the query is not prepared, if so, the buffer should be initialized.
+                    // Check if the query is not normalized, if so, the buffer should be initialized.
                     // Also check if the lastStrLodIndex is not -1
                     // (in that case the string has no letter-or-digits up till strIndex)
                     if (!(newStrIndex == nextStrIndex && current == ' ') && lastStrLodIndex >= 0) {
@@ -261,7 +261,7 @@ object RecordDeepSearchCore : RecordSearchCore {
     /**
      * Returns whether text in range `[start; end)` passes a filtering with given [query].
      *
-     * The logic assumes that query is prepared ([prepareQuery])
+     * The logic assumes that query is normalized.
      */
     @TestOnly
     fun filterPredicateOnTextRange(text: String, start: Int, end: Int, query: String, queryFlags: Int): Boolean {
@@ -331,7 +331,7 @@ object RecordDeepSearchCore : RecordSearchCore {
 
     /**
      * Finds the index where [query] ends in given [text] on specified range (from [start] up to [end]),
-     * assuming that [query] is prepared and [text] is not. This index is not always `start + query.length`. It can differ
+     * assuming that [query] is normalized and [text] is not. This index is not always `start + query.length`. It can differ
      * in case when text is "aaa bb  cc" and query is "bb cc".
      */
     private fun interWordGetTextEnd(text: String, start: Int, end: Int, query: String): Int {
@@ -357,7 +357,7 @@ object RecordDeepSearchCore : RecordSearchCore {
 
                 textIndex++
             } else {
-                // As query is prepared, a range of non-letter-or-digits in text should correspond to a space in query.
+                // As query is normalized, a range of non-letter-or-digits in text should correspond to a space in query.
                 // Example: query = "Query kkk", text = "Query ... kkk"
                 if (qc != ' ') {
                     return -1
@@ -376,7 +376,7 @@ object RecordDeepSearchCore : RecordSearchCore {
         return textIndex
     }
 
-    // Computes query flags for given value. The query should be prepared
+    // Computes query flags for given value. The query should be normalized
     //
     // The query flags are used to not extract the same information from query too many times.
     @TestOnly

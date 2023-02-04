@@ -11,14 +11,16 @@ interface RecordSearchCore {
     /**
      * Determines whether given [record] can be found using specified [query].
      *
-     * The [query] must be "prepared". It can be done using [prepareQuery].
+     * The [query] must be normalized by [normalizeQuery].
      */
     fun filterPredicate(record: ConciseRecordWithBadges, query: String, options: RecordSearchOptions): Boolean
 
     /**
-     * Transforms the query in any way that is desired by a core implementation.
+     * Transforms the query in almost any way that is desired by a core implementation.
+     *
+     * The only contract is that if the normalized query is empty, the search shouldn't be done.
      */
-    fun prepareQuery(value: String): String
+    fun normalizeQuery(value: String): String
 
     /**
      * Calculates the ranges because of what the given [record] was found using [query] - found ranges.

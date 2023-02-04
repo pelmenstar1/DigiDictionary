@@ -289,7 +289,7 @@ class RecordDeepSearchCoreTests {
     @Test
     fun prepareQueryTest() {
         fun testCase(input: String, expected: String) {
-            val actual = RecordDeepSearchCore.prepareQuery(input)
+            val actual = RecordDeepSearchCore.normalizeQuery(input)
 
             assertEquals(expected, actual)
         }
@@ -311,7 +311,7 @@ class RecordDeepSearchCoreTests {
     @Test
     fun computeQueryFlagsTest() {
         fun testCase(query: String, expectedFlags: Int) {
-            val actualFlags = RecordDeepSearchCore.computeQueryFlags(RecordDeepSearchCore.prepareQuery(query))
+            val actualFlags = RecordDeepSearchCore.computeQueryFlags(RecordDeepSearchCore.normalizeQuery(query))
 
             assertEquals(expectedFlags, actualFlags)
         }
