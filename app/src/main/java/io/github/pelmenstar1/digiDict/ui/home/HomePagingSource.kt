@@ -5,6 +5,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.room.InvalidationTracker
 import androidx.room.withTransaction
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
@@ -126,35 +127,42 @@ class HomePagingSource(
             val result = ArrayList<HomePageItem>((dataSize * 3) / 2)
 
             val firstRecord = recordData[0]
-            var currentSectionEpochDay = TimeUtils.toZonedEpochDays(firstRecord.epochSeconds, zone)
+
+            val firstRecordEpochSeconds = firstRecord.epochSeconds
+            val firstRecordUtcEpochDay = firstRecordEpochSeconds / SECONDS_IN_DAY
+            var currentSectionLocalEpochDay = TimeUtils.toZonedEpochDays(firstRecordEpochSeconds, zone)
+
             val firstRecordIdWithEpochDay = if (sortType == RecordSortType.NEWEST) {
-                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(currentSectionEpochDay)
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayDesc(firstRecordUtcEpochDay)
             } else {
-                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayAsc(currentSectionEpochDay)
+                recordDao.getFirstRecordIdWithEpochDayOrderByEpochDayAsc(firstRecordUtcEpochDay)
             }
 
             if (firstRecordIdWithEpochDay == firstRecord.id) {
-                result.add(HomePageItem.DateMarker(currentSectionEpochDay))
+                result.add(HomePageItem.DateMarker(currentSectionLocalEpochDay))
             }
 
             var isFirstRecordBeforeDateMarker = false
-            var secondRecordEpochDay = -1L
+            var secondRecordLocalEpochDay = -1L
 
             if (dataSize > 1) {
-                secondRecordEpochDay = TimeUtils.toZonedEpochDays(recordData[1].epochSeconds, zone)
-                isFirstRecordBeforeDateMarker = secondRecordEpochDay != currentSectionEpochDay
+                val secondRecordUtcEpochSeconds = recordData[1].epochSeconds
+                val secondRecordUtcEpochDay = secondRecordUtcEpochSeconds / SECONDS_IN_DAY
+
+                secondRecordLocalEpochDay = TimeUtils.toZonedEpochDays(secondRecordUtcEpochSeconds, zone)
+                isFirstRecordBeforeDateMarker = firstRecordUtcEpochDay != secondRecordUtcEpochDay
             }
 
             result.add(HomePageItem.Record(firstRecord, isFirstRecordBeforeDateMarker))
 
-            var currentRecordEpochDay = secondRecordEpochDay
+            var currentRecordLocalEpochDay = secondRecordLocalEpochDay
 
             for (i in 1 until dataSize) {
                 val record = recordData[i]
-                val epochDay = currentRecordEpochDay
+                val epochDay = currentRecordLocalEpochDay
 
-                if (epochDay != currentSectionEpochDay) {
-                    currentSectionEpochDay = epochDay
+                if (epochDay != currentSectionLocalEpochDay) {
+                    currentSectionLocalEpochDay = epochDay
 
                     result.add(HomePageItem.DateMarker(epochDay))
                 }
@@ -162,8 +170,8 @@ class HomePagingSource(
                 var isBeforeDateMarker = false
 
                 if (i < dataSize - 1) {
-                    currentRecordEpochDay = TimeUtils.toZonedEpochDays(recordData[i + 1].epochSeconds, zone)
-                    isBeforeDateMarker = currentRecordEpochDay != currentSectionEpochDay
+                    currentRecordLocalEpochDay = TimeUtils.toZonedEpochDays(recordData[i + 1].epochSeconds, zone)
+                    isBeforeDateMarker = currentRecordLocalEpochDay != currentSectionLocalEpochDay
                 }
 
                 result.add(HomePageItem.Record(record, isBeforeDateMarker))
