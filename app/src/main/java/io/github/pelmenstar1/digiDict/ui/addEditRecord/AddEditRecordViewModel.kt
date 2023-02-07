@@ -27,8 +27,6 @@ class AddEditRecordViewModel @Inject constructor(
     private val listAppWidgetUpdater: AppWidgetUpdater,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
 ) : ViewModel() {
-    // By default, expression and meaning are invalid but it's "real" validity state for expression and meaning, so
-    // VALIDITY_COMPUTED_BIT should be set.
     val validity = ValidityFlow(validityScheme)
 
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)

@@ -56,4 +56,9 @@
 
     <dimen name="stats_chartMarginHorizontal">10dp</dimen>
     <dimen name="stats_chartHeight">300dp</dimen>
+
+    <dimen name="manageEvents_itemMainContainerStartTopPadding">10dp</dimen>
+    <dimen name="manageEvents_itemPaddingBottom">5dp</dimen>
+    <dimen name="manageEvents_itemMenuIconSize">36dp</dimen>
+    <dimen name="manageEvents_itemStopButtonMarginTop">5dp</dimen>
 </resources>

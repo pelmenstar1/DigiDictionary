@@ -28,6 +28,10 @@
                 android:title="@string/remindRecords_label" />
 
             <item
+                android:id="@+id/manageEventsFragment"
+                android:title="@string/events" />
+
+            <item
                 android:id="@+id/settingsFragment"
                 android:icon="@drawable/ic_settings"
                 android:title="@string/settings" />

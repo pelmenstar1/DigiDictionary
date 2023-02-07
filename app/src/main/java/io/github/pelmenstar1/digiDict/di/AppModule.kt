@@ -24,6 +24,7 @@ import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessag
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.home.ResourcesRecordSortTypeMessageMapper
+import io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventError
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -78,6 +79,11 @@ class AppModule {
     }
 
     @Provides
+    fun provideEventDao(appDatabase: AppDatabase): EventDao {
+        return appDatabase.eventDao()
+    }
+
+    @Provides
     fun provideCommonStatsProvider(
         appDatabase: AppDatabase
     ): CommonStatsProvider {
@@ -117,6 +123,11 @@ class AppModule {
     @Singleton
     fun provideRecordSearchPropertySetFormatter(@ApplicationContext context: Context): RecordSearchPropertySetFormatter {
         return ResourcesRecordSearchPropertySetFormatter(context.resources)
+    }
+
+    @Provides
+    fun provideStartEditEventErrorMessageMapper(@ApplicationContext context: Context): MessageMapper<StartEditEventError> {
+        return StartEditEventError.resourcesMapper(context)
     }
 
     @Provides

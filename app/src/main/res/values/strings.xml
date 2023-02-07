@@ -10,6 +10,7 @@
     <string name="empty">Empty</string>
     <string name="search">Search</string>
     <string name="emptyTextError">Text can\'t be empty</string>
+    <string name="start">Start</string>
 
     <string name="dbError">Internal error</string>
 
@@ -214,4 +215,23 @@
     <string name="importConfig_errorMessage_unknownVersion">The version of the file is unknown to current version of the application. Update Digi Dictionary to import this file.</string>
 
     <string name="importFormatSelector_problemMessage">The format of the selected file can\'t be deduced. Please, select it manually</string>
+
+    <!-- General event related -->
+    <string name="events">Events</string>
+
+    <!-- Manage events -->
+    <string name="manageEvents_title">@string/events</string>
+    <string name="manageEvents_startEvent">Start event</string>
+    <string name="manageEvents_deleteWarning">Do you really want to delete this event? This operation can\'t be undone.</string>
+    <string name="manageEvents_deleteError">Failed to delete the event</string>
+    <string name="manageEvents_stopEvent">Stop</string>
+    <string name="manageEvents_stopEventError">Failed to stop the event</string>
+
+    <!-- Start/Edit event -->
+    <string name="startEditEvent_nameExistsError">An event with this name already exists</string>
+    <string name="startEditEvent_startModeTitle">Start event</string>
+    <string name="startEditEvent_editModeTitle">Edit event</string>
+    <string name="startEditEvent_eventLoadError">Failed to load the event</string>
+    <string name="startEditEvent_startError">Failed to start an event</string>
+    <string name="startEditEvent_editError">Failed to apply the changes</string>
 </resources>

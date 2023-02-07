@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import io.github.pelmenstar1.digiDict.common.equalsPattern
 
 /**
  * Stores the information about an event.
@@ -15,8 +16,12 @@ import androidx.room.PrimaryKey
  */
 @Entity(tableName = "events")
 data class EventInfo(
-    @PrimaryKey val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) override val id: Int = 0,
     val name: String,
     val startEpochSeconds: Long,
     val endEpochSeconds: Long
-)
+) : EntityWithPrimaryKeyId {
+    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        name == o.name && startEpochSeconds == o.startEpochSeconds && endEpochSeconds == o.endEpochSeconds
+    }
+}

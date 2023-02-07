@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal">
 
+    <!-- TODO: Cleanup -->
     <io.github.pelmenstar1.digiDict.common.ui.ColorCircleView
         android:id="@+id/itemManageRecordBadges_colorCircleView"
         android:layout_width="@dimen/itemManageRecordBadges_colorCircleSize"
