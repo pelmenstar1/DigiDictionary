@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.ui.home
 import android.content.Context
 import android.graphics.Paint
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -14,7 +15,7 @@ import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.time.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 
-object HomeDateMarkerHelper {
+object HomeDateMarkerInflater : HomePageItemInflater<HomePageItem.DateMarker, HomeDateMarkerInflater.StaticInfo> {
     private const val DATE_FORMAT = "dd MMMM yyyy"
 
     class StaticInfo(context: Context) {
@@ -48,7 +49,12 @@ object HomeDateMarkerHelper {
         }
     }
 
-    fun createView(context: Context, staticInfo: StaticInfo): TextView {
+    override val uniqueId: Int
+        get() = 2
+
+    override fun createStaticInfo(context: Context): StaticInfo = StaticInfo(context)
+
+    override fun createView(context: Context, staticInfo: StaticInfo): View {
         return MaterialTextView(context).apply {
             val horizontalPadding = staticInfo.horizontalPadding
             val verticalPadding = staticInfo.verticalPadding
@@ -64,9 +70,15 @@ object HomeDateMarkerHelper {
         }
     }
 
-    fun bind(view: TextView, epochDay: Long, staticInfo: StaticInfo) {
-        val epochSeconds = epochDay * SECONDS_IN_DAY
+    override fun bind(
+        view: View,
+        item: HomePageItem.DateMarker,
+        args: HomePageItemInflaterArgs,
+        staticInfo: StaticInfo
+    ) {
+        view as TextView
 
+        val epochSeconds = item.epochDay * SECONDS_IN_DAY
         view.text = staticInfo.dateFormatter.format(epochSeconds)
     }
 }

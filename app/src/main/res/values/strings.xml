@@ -82,6 +82,9 @@
     <string name="home_searchPropertyPrefix">Search for</string>
     <string name="home_searchProperty_all">All</string>
 
+    <string name="home_eventStartedFormat">Event \'%s\' started</string>
+    <string name="home_eventEndedFormat">Event \'%s\' ended</string>
+
     <!-- Remind records fragment -->
     <string name="remindRecords_labelInFragment">Remind</string>
     <string name="remindRecords_label">Remind me!</string>

@@ -1,76 +1,44 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
+import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
-import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
-import io.github.pelmenstar1.digiDict.ui.record.RecordItemRootContainer
 
 class HomeAdapter(
     onViewRecord: (id: Int) -> Unit
 ) : PagingDataAdapter<HomePageItem, HomeAdapter.HomeItemViewHolder>(HomePageItemDiffCallback) {
     inner class HomeItemViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
         private var type = TYPE_NONE
+        private val views = SparseArray<View>(4)
 
-        private var recordRootContainer: RecordItemRootContainer? = null
-        private var dateMarkerTextView: TextView? = null
-
+        @Suppress("UNCHECKED_CAST")
         fun bind(item: HomePageItem?) {
-            val context = container.context
+            if (item != null) {
+                val context = container.context
+                val inflater = getInflater(item) as HomePageItemInflater<HomePageItem, Any>
+                val id = inflater.uniqueId
+                val staticInfo = itemStaticInfoArray.getOrAdd(id) { inflater.createStaticInfo(context) }
+                val view = views.getOrAdd(id) { inflater.createView(context, staticInfo) }
 
-            when (item) {
-                is HomePageItem.Record -> {
-                    val staticInfo = getLazyValue(
-                        recordStaticInfo,
-                        { ConciseRecordWithBadgesViewHolderStaticInfo(context) },
-                        { recordStaticInfo = it }
-                    )
+                replaceViewIfTypeDiffers(id, view)
 
-                    val root = getLazyValue(
-                        recordRootContainer,
-                        { ConciseRecordWithBadgesViewHolder.createRootContainer(context, staticInfo) },
-                        { recordRootContainer = it }
-                    )
-
-                    replaceViewIfTypeDiffers(TYPE_RECORD, root)
-
-                    ConciseRecordWithBadgesViewHolder.bind(
-                        root,
-                        item.value,
-                        hasDivider = !item.isBeforeDateMarker,
-                        onItemClickListener,
-                        staticInfo
-                    )
-                }
-
-                is HomePageItem.DateMarker -> {
-                    val staticInfo = getLazyValue(
-                        dateMarkerStaticInfo,
-                        { HomeDateMarkerHelper.StaticInfo(context) },
-                        { dateMarkerStaticInfo = it }
-                    )
-
-                    val textView = getLazyValue(
-                        dateMarkerTextView,
-                        { HomeDateMarkerHelper.createView(context, staticInfo) },
-                        { dateMarkerTextView = it }
-                    )
-
-                    replaceViewIfTypeDiffers(TYPE_DATE_MARKER, textView)
-
-                    HomeDateMarkerHelper.bind(textView, item.epochDay, staticInfo)
-                }
-                null -> {
-                    type = TYPE_NONE
-                    container.removeAllViews()
-                }
+                inflater.bind(view, item, itemInflaterArgs, staticInfo)
+            } else {
+                type = TYPE_NONE
+                container.removeAllViews()
             }
+        }
+
+        private fun getInflater(item: HomePageItem): HomePageItemInflater<*, *> = when (item) {
+            is HomePageItem.Record -> HomeRecordInflater
+            is HomePageItem.DateMarker -> HomeDateMarkerInflater
+            is HomePageItem.EventMarker -> HomeEventMarkerInflater
         }
 
         private fun replaceViewIfTypeDiffers(expectedType: Int, view: View) {
@@ -81,12 +49,15 @@ class HomeAdapter(
                 type = expectedType
             }
         }
+
+        private inline fun <T : Any> SparseArray<T>.getOrAdd(key: Int, create: () -> T): T {
+            return getLazyValue(get(key), create) { set(key, it) }
+        }
     }
 
     private val onItemClickListener = ConciseRecordWithBadgesViewHolder.createOnItemClickListener(onViewRecord)
-
-    private var recordStaticInfo: ConciseRecordWithBadgesViewHolderStaticInfo? = null
-    private var dateMarkerStaticInfo: HomeDateMarkerHelper.StaticInfo? = null
+    private val itemInflaterArgs = HomePageItemInflaterArgs(onItemClickListener)
+    private val itemStaticInfoArray = SparseArray<Any>(4)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HomeItemViewHolder {
         val context = parent.context
@@ -110,7 +81,5 @@ class HomeAdapter(
         )
 
         private const val TYPE_NONE = 0
-        private const val TYPE_RECORD = 1
-        private const val TYPE_DATE_MARKER = 2
     }
 }

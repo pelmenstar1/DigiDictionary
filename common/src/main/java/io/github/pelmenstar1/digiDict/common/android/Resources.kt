@@ -32,3 +32,15 @@ fun Context.getPrimaryColor(): Int {
         Color.TRANSPARENT
     }
 }
+
+@ColorInt
+fun Context.getDefaultTextColor(): Int {
+    val typedValue = TypedValue()
+    val isResolved = theme.resolveAttribute(android.R.attr.textColor, typedValue, true)
+
+    return if (isResolved) {
+        typedValue.data
+    } else {
+        Color.BLACK
+    }
+}

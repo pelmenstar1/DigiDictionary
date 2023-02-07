@@ -16,6 +16,11 @@
     <dimen name="home_optionsBarButton_verticalPadding">4dp</dimen>
     <dimen name="home_optionsBarButton_endMargin">6dp</dimen>
 
+    <dimen name="home_eventMarker_textSize">12sp</dimen>
+    <dimen name="home_eventMarker_outlineStrokeWidth">2dp</dimen>
+    <dimen name="home_eventMarker_textHorizontalMargin">7dp</dimen>
+    <dimen name="home_eventMarker_textVerticalMargin">2dp</dimen>
+
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
     <dimen name="itemRecord_badgeContainerHorizontalPadding">5dp</dimen>
