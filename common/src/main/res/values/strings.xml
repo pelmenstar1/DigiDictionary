@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="less_than_minute">less than a minute</string>
+
+    <plurals name="second">
+        <item quantity="one">%s second</item>
+        <item quantity="other">%s seconds</item>
+    </plurals>
+
+    <plurals name="minute">
+        <item quantity="one">%s minute</item>
+        <item quantity="other">%s minutes</item>
+    </plurals>
+
+    <plurals name="hour">
+        <item quantity="one">%s hour</item>
+        <item quantity="other">%s hours</item>
+    </plurals>
+
+    <plurals name="day">
+        <item quantity="one">%s day</item>
+        <item quantity="other">%s days</item>
+    </plurals>
+
+    <plurals name="week">
+        <item quantity="one">%s week</item>
+        <item quantity="other">%s weeks</item>
+    </plurals>
+</resources>

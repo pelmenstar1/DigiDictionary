@@ -47,7 +47,7 @@ class ManageEventsFragment : Fragment() {
             anchorView = startEventButton
         )
 
-        val adapter = ManageEventsAdapter(::executeMenuAction, ::stopEvent)
+        val adapter = ManageEventsAdapter(::executeMenuAction, ::stopEvent, ::onEventClickListener)
 
         recyclerView.also {
             it.layoutManager = LinearLayoutManager(context)
@@ -80,6 +80,12 @@ class ManageEventsFragment : Fragment() {
         showAlertDialog(R.string.manageEvents_deleteWarning) {
             viewModel.delete(itemId)
         }
+    }
+
+    private fun onEventClickListener(eventId: Int) {
+        val directions = ManageEventsFragmentDirections.actionManageEventsFragmentToEventInfoFragment(eventId)
+
+        findNavController().navigate(directions)
     }
 
     private fun stopEvent(itemId: Int) {

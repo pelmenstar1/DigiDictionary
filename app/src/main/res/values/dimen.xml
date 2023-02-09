@@ -66,4 +66,6 @@
     <dimen name="manageEvents_itemPaddingBottom">5dp</dimen>
     <dimen name="manageEvents_itemMenuIconSize">36dp</dimen>
     <dimen name="manageEvents_itemStopButtonMarginTop">5dp</dimen>
+
+    <dimen name="eventInfo_propertyViewMarginTop">10dp</dimen>
 </resources>

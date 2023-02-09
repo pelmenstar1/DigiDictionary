@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.manageEvents
 
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.DiffUtil
@@ -8,15 +9,20 @@ import io.github.pelmenstar1.digiDict.data.EventInfo
 import io.github.pelmenstar1.digiDict.ui.ArrayDiffCallback
 
 class ManageEventsAdapter(
-    private val executeAction: (itemId: Int, actionId: Int) -> Unit,
-    private val stopEvent: (itemId: Int) -> Unit
+    private val executeMenuAction: (eventId: Int, actionId: Int) -> Unit,
+    private val stopEvent: (eventId: Int) -> Unit,
+    private val onEventClickListener: (eventId: Int) -> Unit
 ) : RecyclerView.Adapter<ManageEventsAdapter.ViewHolder>() {
-    inner class ViewHolder(private val container: ManageEventItemContainer) : RecyclerView.ViewHolder(container) {
+    class ViewHolder(private val container: ManageEventItemContainer) : RecyclerView.ViewHolder(container) {
         fun bind(event: EventInfo) {
             container.eventId = event.id
             container.name = event.name
             container.isEventNotEnded = event.endEpochSeconds == -1L
         }
+    }
+
+    private val onContainerClickListener = View.OnClickListener {
+        onEventClickListener((it as ManageEventItemContainer).eventId)
     }
 
     private var elements: Array<out EventInfo> = emptyArray()
@@ -38,7 +44,9 @@ class ManageEventsAdapter(
             )
 
             setStopEventListener { stopEvent(eventId) }
-            onExecuteAction = executeAction
+            onExecuteAction = executeMenuAction
+
+            setOnClickListener(onContainerClickListener)
         }
 
         return ViewHolder(container)

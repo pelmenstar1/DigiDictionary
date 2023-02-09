@@ -183,6 +183,10 @@
         <action
             android:id="@+id/action_manageEventsFragment_to_startEditEventFragment"
             app:destination="@id/startEditEventFragment" />
+
+        <action
+            android:id="@+id/action_manageEventsFragment_to_eventInfoFragment"
+            app:destination="@id/eventInfoFragment" />
     </fragment>
 
     <fragment
@@ -190,6 +194,14 @@
         android:name="io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventFragment">
         <argument
             android:name="currentEventId"
+            app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/eventInfoFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.eventInfo.EventInfoFragment">
+        <argument
+            android:name="id"
             app:argType="integer" />
     </fragment>
 </navigation>

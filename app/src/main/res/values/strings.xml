@@ -237,4 +237,12 @@
     <string name="startEditEvent_eventLoadError">Failed to load the event</string>
     <string name="startEditEvent_startError">Failed to start an event</string>
     <string name="startEditEvent_editError">Failed to apply the changes</string>
+
+    <!-- Event info -->
+    <string name="eventInfo_nameFormatOngoing">%s (Ongoing)</string>
+    <string name="eventInfo_startTime">Start time</string>
+    <string name="eventInfo_endTime">End time</string>
+    <string name="eventInfo_duration">Duration</string>
+    <string name="eventInfo_totalRecordsAdded">Total records added</string>
+    <string name="eventInfo_eventNotEnded">not ended</string>
 </resources>
