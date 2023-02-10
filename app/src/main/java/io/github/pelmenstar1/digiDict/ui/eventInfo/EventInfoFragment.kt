@@ -39,6 +39,8 @@ class EventInfoFragment : Fragment() {
                     eventInfoEndTimeView.setValue(dateFormatter.format(endTime))
                     eventInfoDurationView.setValue(timeDiffFormatter.formatDifference(duration))
                 } else {
+                    // TODO: SHOW RECORDS IN EVENTS INFO FRAGMENT
+
                     // Explicitly show that the event is ongoing.
                     eventInfoNameView.text = getString(R.string.eventInfo_nameFormatOngoing, event.name)
 

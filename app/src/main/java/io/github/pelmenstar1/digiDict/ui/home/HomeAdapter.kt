@@ -8,20 +8,21 @@ import android.widget.LinearLayout
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.getLazyValue
-import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
+import io.github.pelmenstar1.digiDict.ui.paging.*
+import io.github.pelmenstar1.digiDict.ui.record.*
 
 class HomeAdapter(
     onViewRecord: (id: Int) -> Unit
-) : PagingDataAdapter<HomePageItem, HomeAdapter.HomeItemViewHolder>(HomePageItemDiffCallback) {
+) : PagingDataAdapter<PageItem, HomeAdapter.HomeItemViewHolder>(HomePageItemDiffCallback) {
     inner class HomeItemViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
         private var type = TYPE_NONE
         private val views = SparseArray<View>(4)
 
         @Suppress("UNCHECKED_CAST")
-        fun bind(item: HomePageItem?) {
+        fun bind(item: PageItem?) {
             if (item != null) {
                 val context = container.context
-                val inflater = getInflater(item) as HomePageItemInflater<HomePageItem, Any>
+                val inflater = getInflater(item) as PageItemInflater<PageItem, Any>
                 val id = inflater.uniqueId
                 val staticInfo = itemStaticInfoArray.getOrAdd(id) { inflater.createStaticInfo(context) }
                 val view = views.getOrAdd(id) { inflater.createView(context, staticInfo) }
@@ -35,10 +36,10 @@ class HomeAdapter(
             }
         }
 
-        private fun getInflater(item: HomePageItem): HomePageItemInflater<*, *> = when (item) {
-            is HomePageItem.Record -> HomeRecordInflater
-            is HomePageItem.DateMarker -> HomeDateMarkerInflater
-            is HomePageItem.EventMarker -> HomeEventMarkerInflater
+        private fun getInflater(item: PageItem): PageItemInflater<*, *> = when (item) {
+            is PageItem.Record -> RecordItemInflater
+            is PageItem.DateMarker -> DateMarkerInflater
+            is PageItem.EventMarker -> EventMarkerInflater
         }
 
         private fun replaceViewIfTypeDiffers(expectedType: Int, view: View) {
@@ -56,7 +57,7 @@ class HomeAdapter(
     }
 
     private val onItemClickListener = ConciseRecordWithBadgesViewHolder.createOnItemClickListener(onViewRecord)
-    private val itemInflaterArgs = HomePageItemInflaterArgs(onItemClickListener)
+    private val itemInflaterArgs = PageItemInflaterArgs(onItemClickListener)
     private val itemStaticInfoArray = SparseArray<Any>(4)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HomeItemViewHolder {

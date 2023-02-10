@@ -51,23 +51,23 @@
 
     <!-- Home fragment -->
     <string name="home_label">Home</string>
-    <string name="home_loadingError">There was an error during the loading of the records.</string>
     <string name="home_searchNoResultsMessage">No results? Add a record then.</string>
     <string name="home_sort">Sort</string>
 
-    <string name="home_sortType_newest">Newest</string>
-    <string name="home_sortType_oldest">Oldest</string>
-    <string name="home_sortType_greatestScore">Greatest score</string>
-    <string name="home_sortType_leastScore">Least score</string>
-    <string name="home_sortType_byExpression">By expression (A-Z)</string>
-    <string name="home_sortType_byExpressionInverse">By expression (Z-A)</string>
-    <string-array name="home_sortTypes">
-        <item>@string/home_sortType_newest</item>
-        <item>@string/home_sortType_oldest</item>
-        <item>@string/home_sortType_greatestScore</item>
-        <item>@string/home_sortType_leastScore</item>
-        <item>@string/home_sortType_byExpression</item>
-        <item>@string/home_sortType_byExpressionInverse</item>
+    <string name="recordSortType_newest">Newest</string>
+    <string name="recordSortType_oldest">Oldest</string>
+    <string name="recordSortType_greatestScore">Greatest score</string>
+    <string name="recordSortType_leastScore">Least score</string>
+    <string name="recordSortType_byExpression">By expression (A-Z)</string>
+    <string name="recordSortType_byExpressionInverse">By expression (Z-A)</string>
+
+    <string-array name="recordSortTypes">
+        <item>@string/recordSortType_newest</item>
+        <item>@string/recordSortType_oldest</item>
+        <item>@string/recordSortType_greatestScore</item>
+        <item>@string/recordSortType_leastScore</item>
+        <item>@string/recordSortType_byExpression</item>
+        <item>@string/recordSortType_byExpressionInverse</item>
     </string-array>
 
     <string name="home_sortTypeDialog_title">Sorting</string>
@@ -101,6 +101,7 @@
     <string name="meaningAndOrdinalFormat">Meaning %d</string>
 
     <string name="recordLoadingError">Failed to load record</string>
+    <string name="recordCollectionLoadingError">There was an error during the loading of the records.</string>
 
     <!-- Add/Edit record fragment -->
     <string name="addEditRecord_addButtonText">@string/add</string>

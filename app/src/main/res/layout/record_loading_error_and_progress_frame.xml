@@ -3,5 +3,5 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <include layout="@layout/home_loading_error_and_progress_merge" />
+    <include layout="@layout/record_loading_error_and_progress_merge" />
 </FrameLayout>

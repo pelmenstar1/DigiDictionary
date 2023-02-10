@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.paging
 
 import android.util.Log
 import androidx.paging.PagingSource
@@ -7,16 +7,15 @@ import androidx.room.InvalidationTracker
 import androidx.room.withTransaction
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.data.RecordSortType
-import io.github.pelmenstar1.digiDict.data.getConciseRecordsWithBadgesLimitOffsetWithSort
+import io.github.pelmenstar1.digiDict.data.*
 import java.util.*
 
-class HomePagingSource(
+class AppPagingSource(
     private val appDatabase: AppDatabase,
-    private val sortType: RecordSortType
-) : PagingSource<Int, HomePageItem>() {
+    private val sortType: RecordSortType,
+    private val startEpochSeconds: Long = 0L,
+    private val endEpochSeconds: Long = Long.MAX_VALUE
+) : PagingSource<Int, PageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
         override fun onInvalidated(tables: MutableSet<String>) {
             invalidate()
@@ -27,6 +26,12 @@ class HomePagingSource(
     private val recordDao = appDatabase.recordDao()
 
     init {
+        // Both startEpochSeconds and endEpochSeconds should be positive, and startEpochSeconds should be
+        // less than or equal to endEpochSeconds. That's the range the logic expects.
+        require((startEpochSeconds or endEpochSeconds) > 0 && startEpochSeconds <= endEpochSeconds) {
+            "Invalid time range (start=$startEpochSeconds, end=$endEpochSeconds)"
+        }
+
         val invalidationTracker = appDatabase.invalidationTracker
         invalidationTracker.addObserver(observer)
 
@@ -36,21 +41,30 @@ class HomePagingSource(
     }
 
     private fun queryItemCount(): Int {
-        val countStatement = appDatabase.compileStatement("SELECT COUNT(*) FROM records")
+        val startTime = startEpochSeconds
+        val endTime = endEpochSeconds
 
-        return countStatement.use {
+        val statement = if (startTime == 0L && endTime == Long.MAX_VALUE) {
+            appDatabase.compileCountStatement()
+        } else {
+            appDatabase.compileTimeRangedCountStatement().also {
+                it.bindToTimeRangedCountStatement(startTime, endTime)
+            }
+        }
+
+        return statement.use {
             it.simpleQueryForLong().toInt()
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, HomePageItem>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, PageItem>): Int? {
         return when (val anchorPosition = state.anchorPosition) {
             null -> null
             else -> maxOf(0, anchorPosition - (state.config.initialLoadSize / 2))
         }
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, HomePageItem> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, PageItem> {
         return try {
             appDatabase.withTransaction {
                 if (itemCount >= 0) {
@@ -68,7 +82,7 @@ class HomePagingSource(
         }
     }
 
-    private suspend fun load(params: LoadParams<Int>, count: Int): LoadResult.Page<Int, HomePageItem> {
+    private suspend fun load(params: LoadParams<Int>, count: Int): LoadResult.Page<Int, PageItem> {
         val key = params.key ?: 0
         val loadSize = params.loadSize
 
@@ -89,7 +103,12 @@ class HomePagingSource(
                 }
         }
 
-        val recordData = appDatabase.getConciseRecordsWithBadgesLimitOffsetWithSort(limit, offset, sortType)
+        val recordData = appDatabase.getConciseRecordsWithBadgesForAppPagingSource(
+            limit, offset,
+            sortType,
+            startEpochSeconds, endEpochSeconds
+        )
+
         val recordDataSize = recordData.size
 
         // For now, the only purpose of computePageResult is to add date markers where neccessary.
@@ -99,7 +118,7 @@ class HomePagingSource(
         val result = if (sortType == RecordSortType.NEWEST || sortType == RecordSortType.OLDEST) {
             computePageResult(recordData, sortType)
         } else {
-            recordData.map { HomePageItem.Record(it, isBeforeDateMarker = false) }
+            recordData.map { PageItem.Record(it, isBeforeDateMarker = false) }
         }
 
         val nextPosToLoad = offset + recordDataSize
@@ -118,13 +137,13 @@ class HomePagingSource(
     private suspend fun computePageResult(
         recordData: Array<out ConciseRecordWithBadges>,
         sortType: RecordSortType
-    ): List<HomePageItem> {
+    ): List<PageItem> {
         val dataSize = recordData.size
 
         return if (dataSize > 0) {
             val zone = TimeZone.getDefault()
 
-            val result = ArrayList<HomePageItem>((dataSize * 3) / 2)
+            val result = ArrayList<PageItem>((dataSize * 3) / 2)
 
             val firstRecord = recordData[0]
 
@@ -139,7 +158,7 @@ class HomePagingSource(
             }
 
             if (firstRecordIdWithEpochDay == firstRecord.id) {
-                result.add(HomePageItem.DateMarker(currentSectionLocalEpochDay))
+                result.add(PageItem.DateMarker(currentSectionLocalEpochDay))
             }
 
             var isFirstRecordBeforeDateMarker = false
@@ -153,7 +172,7 @@ class HomePagingSource(
                 isFirstRecordBeforeDateMarker = firstRecordUtcEpochDay != secondRecordUtcEpochDay
             }
 
-            result.add(HomePageItem.Record(firstRecord, isFirstRecordBeforeDateMarker))
+            result.add(PageItem.Record(firstRecord, isFirstRecordBeforeDateMarker))
 
             var currentRecordLocalEpochDay = secondRecordLocalEpochDay
 
@@ -164,7 +183,7 @@ class HomePagingSource(
                 if (epochDay != currentSectionLocalEpochDay) {
                     currentSectionLocalEpochDay = epochDay
 
-                    result.add(HomePageItem.DateMarker(epochDay))
+                    result.add(PageItem.DateMarker(epochDay))
                 }
 
                 var isBeforeDateMarker = false
@@ -174,7 +193,7 @@ class HomePagingSource(
                     isBeforeDateMarker = currentRecordLocalEpochDay != currentSectionLocalEpochDay
                 }
 
-                result.add(HomePageItem.Record(record, isBeforeDateMarker))
+                result.add(PageItem.Record(record, isBeforeDateMarker))
             }
 
             result

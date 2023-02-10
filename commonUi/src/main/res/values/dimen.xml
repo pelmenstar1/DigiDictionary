@@ -29,5 +29,10 @@
 
     <dimen name="multiSelectionDialog_errorText_marginTop">3dp</dimen>
     <dimen name="multiSelectionDialog_errorText_marginBottom">5dp</dimen>
-    <dimen name="mutliSelectionDialog_errorText_marginStart">10dp</dimen>
+    <dimen name="multiSelectionDialog_errorText_marginStart">10dp</dimen>
+
+    <dimen name="optionsBarButton_startPadding">10dp</dimen>
+    <dimen name="optionsBarButton_endPadding">5dp</dimen>
+    <dimen name="optionsBarButton_verticalPadding">4dp</dimen>
+    <dimen name="optionsBarButton_endMargin">6dp</dimen>
 </resources>

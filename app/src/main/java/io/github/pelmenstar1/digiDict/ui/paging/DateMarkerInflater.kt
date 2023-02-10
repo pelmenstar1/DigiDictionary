@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.paging
 
 import android.content.Context
 import android.graphics.Paint
@@ -15,7 +15,7 @@ import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.time.CompatDateTimeFormatter
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 
-object HomeDateMarkerInflater : HomePageItemInflater<HomePageItem.DateMarker, HomeDateMarkerInflater.StaticInfo> {
+object DateMarkerInflater : PageItemInflater<PageItem.DateMarker, DateMarkerInflater.StaticInfo> {
     private const val DATE_FORMAT = "dd MMMM yyyy"
 
     class StaticInfo(context: Context) {
@@ -72,8 +72,8 @@ object HomeDateMarkerInflater : HomePageItemInflater<HomePageItem.DateMarker, Ho
 
     override fun bind(
         view: View,
-        item: HomePageItem.DateMarker,
-        args: HomePageItemInflaterArgs,
+        item: PageItem.DateMarker,
+        args: PageItemInflaterArgs,
         staticInfo: StaticInfo
     ) {
         view as TextView

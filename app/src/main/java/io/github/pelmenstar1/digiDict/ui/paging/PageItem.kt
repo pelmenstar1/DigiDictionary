@@ -1,35 +1,35 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.paging
 
 import androidx.recyclerview.widget.DiffUtil
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.EventInfo
 
 /**
- * Describes the data holder for page item in the home fragment.
+ * Describes the data holder of page item for use in the application.
  */
-sealed interface HomePageItem {
+sealed interface PageItem {
     /**
      * Determines whether this page item represents the same item as [other] page item.
      * It should check the whole contents rather some kind of id.
      *
      * The expected behaviour is alike to [DiffUtil.ItemCallback.areItemsTheSame]
      */
-    fun isTheSameTo(other: HomePageItem): Boolean
+    fun isTheSameTo(other: PageItem): Boolean
 
     /**
      * Determines whether this page item holds the same content as [other] page item.
      *
      *  The expected behaviour is alike to [DiffUtil.ItemCallback.areContentsTheSame]
      */
-    fun isSameContentWith(other: HomePageItem): Boolean
+    fun isSameContentWith(other: PageItem): Boolean
 
     /**
      * Represents a record item that holds the [ConciseRecordWithBadges] and some other flags.
      *
      * @param isBeforeDateMarker marks whether this record is before [DateMarker] in a collection or sequence of any kind
      */
-    class Record(val record: ConciseRecordWithBadges, val isBeforeDateMarker: Boolean) : HomePageItem {
-        override fun isTheSameTo(other: HomePageItem): Boolean {
+    class Record(val record: ConciseRecordWithBadges, val isBeforeDateMarker: Boolean) : PageItem {
+        override fun isTheSameTo(other: PageItem): Boolean {
             return if (other is Record) {
                 other.record.id == record.id
             } else {
@@ -37,7 +37,7 @@ sealed interface HomePageItem {
             }
         }
 
-        override fun isSameContentWith(other: HomePageItem): Boolean {
+        override fun isSameContentWith(other: PageItem): Boolean {
             return if (other is Record) {
                 other.record == record && other.isBeforeDateMarker == isBeforeDateMarker
             } else {
@@ -51,10 +51,10 @@ sealed interface HomePageItem {
      *
      * @param epochDay epoch day that describes the date. It's expected to be local epoch day.
      */
-    class DateMarker(val epochDay: Long) : HomePageItem {
-        override fun isTheSameTo(other: HomePageItem) = isSameContentWith(other)
+    class DateMarker(val epochDay: Long) : PageItem {
+        override fun isTheSameTo(other: PageItem) = isSameContentWith(other)
 
-        override fun isSameContentWith(other: HomePageItem): Boolean {
+        override fun isSameContentWith(other: PageItem): Boolean {
             return if (other is DateMarker) {
                 epochDay == other.epochDay
             } else {
@@ -68,8 +68,8 @@ sealed interface HomePageItem {
      *
      * @param isStarted determines whether this is the marker that shows that event is started
      */
-    class EventMarker(val isStarted: Boolean, val event: EventInfo) : HomePageItem {
-        override fun isTheSameTo(other: HomePageItem): Boolean {
+    class EventMarker(val isStarted: Boolean, val event: EventInfo) : PageItem {
+        override fun isTheSameTo(other: PageItem): Boolean {
             return if (other is EventMarker) {
                 event.id == other.event.id
             } else {
@@ -77,7 +77,7 @@ sealed interface HomePageItem {
             }
         }
 
-        override fun isSameContentWith(other: HomePageItem): Boolean {
+        override fun isSameContentWith(other: PageItem): Boolean {
             return if (other is EventMarker) {
                 isStarted == other.isStarted && event == other.event
             } else {
@@ -88,14 +88,14 @@ sealed interface HomePageItem {
 }
 
 /**
- * An implementation of [DiffUtil.ItemCallback] that compares [HomePageItem]'s
+ * An implementation of [DiffUtil.ItemCallback] that compares [PageItem]'s
  */
-object HomePageItemDiffCallback : DiffUtil.ItemCallback<HomePageItem>() {
-    override fun areItemsTheSame(oldItem: HomePageItem, newItem: HomePageItem): Boolean {
+object HomePageItemDiffCallback : DiffUtil.ItemCallback<PageItem>() {
+    override fun areItemsTheSame(oldItem: PageItem, newItem: PageItem): Boolean {
         return oldItem.isTheSameTo(newItem)
     }
 
-    override fun areContentsTheSame(oldItem: HomePageItem, newItem: HomePageItem): Boolean {
+    override fun areContentsTheSame(oldItem: PageItem, newItem: PageItem): Boolean {
         return oldItem.isSameContentWith(newItem)
     }
 }

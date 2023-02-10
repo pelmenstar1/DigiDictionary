@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.paging
 
 import android.content.Context
 import android.view.View
@@ -6,7 +6,7 @@ import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolde
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
 import io.github.pelmenstar1.digiDict.ui.record.RecordItemRootContainer
 
-object HomeRecordInflater : HomePageItemInflater<HomePageItem.Record, ConciseRecordWithBadgesViewHolderStaticInfo> {
+object RecordItemInflater : PageItemInflater<PageItem.Record, ConciseRecordWithBadgesViewHolderStaticInfo> {
     override val uniqueId: Int
         get() = 1
 
@@ -20,8 +20,8 @@ object HomeRecordInflater : HomePageItemInflater<HomePageItem.Record, ConciseRec
 
     override fun bind(
         view: View,
-        item: HomePageItem.Record,
-        args: HomePageItemInflaterArgs,
+        item: PageItem.Record,
+        args: PageItemInflaterArgs,
         staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
     ) {
         ConciseRecordWithBadgesViewHolder.bind(

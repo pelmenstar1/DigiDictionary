@@ -23,7 +23,7 @@ import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
 import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
-import io.github.pelmenstar1.digiDict.ui.home.ResourcesRecordSortTypeMessageMapper
+import io.github.pelmenstar1.digiDict.ui.misc.ResourcesRecordSortTypeMessageMapper
 import io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventError
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget

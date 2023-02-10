@@ -17,12 +17,15 @@ import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.OptionsBar
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
-import io.github.pelmenstar1.digiDict.databinding.HomeLoadingErrorAndProgressMergeBinding
+import io.github.pelmenstar1.digiDict.databinding.RecordLoadingErrorAndProgressMergeBinding
 import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchAdapter
+import io.github.pelmenstar1.digiDict.ui.misc.RecordSortTypeDialogFragment
+import io.github.pelmenstar1.digiDict.ui.paging.AppPagingLoadStateAdapter
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.flatMapConcat
 import javax.inject.Inject
@@ -57,11 +60,11 @@ class HomeFragment : Fragment() {
         val pagingAdapter = HomeAdapter(onViewRecord)
         val searchAdapter = HomeSearchAdapter(onViewRecord)
 
-        val stateContainerBinding = HomeLoadingErrorAndProgressMergeBinding.bind(binding.root)
+        val stateContainerBinding = RecordLoadingErrorAndProgressMergeBinding.bind(binding.root)
         val retryLambda = pagingAdapter::retry
 
-        val loadingIndicator = stateContainerBinding.homeLoadingIndicator
-        val errorContainer = stateContainerBinding.homeErrorContainer
+        val loadingIndicator = stateContainerBinding.loadingErrorAndProgressLoadingIndicator
+        val errorContainer = stateContainerBinding.loadingErrorAndProgressErrorContainer
 
         errorContainer.setOnRetryListener {
             if (GlobalSearchQueryProvider.isActive) {
@@ -94,8 +97,8 @@ class HomeFragment : Fragment() {
         val homeOptionsBar = binding.homeOptionsBar
 
         val loadStatePagingAdapter = pagingAdapter.withLoadStateHeaderAndFooter(
-            HomeLoadStateAdapter(retryLambda),
-            HomeLoadStateAdapter(retryLambda)
+            AppPagingLoadStateAdapter(retryLambda),
+            AppPagingLoadStateAdapter(retryLambda)
         )
 
         recyclerView.also {
@@ -213,7 +216,7 @@ class HomeFragment : Fragment() {
         }
 
         optionsBar.setOptionOnClickListener(R.id.homeOptions_sort) {
-            HomeSortTypeDialogFragment.create(selectedValue = viewModel.sortType).also { dialog ->
+            RecordSortTypeDialogFragment.create(selectedValue = viewModel.sortType).also { dialog ->
                 initSortTypeDialog(dialog, pagingAdapter)
 
                 dialog.show(childFragmentManager, SORT_TYPE_DIALOG_TAG)
@@ -229,7 +232,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun initSortTypeDialog(dialog: HomeSortTypeDialogFragment, pagingAdapter: HomeAdapter) {
+    private fun initSortTypeDialog(dialog: RecordSortTypeDialogFragment, pagingAdapter: HomeAdapter) {
         dialog.onValueSelected = { sortType ->
             viewModel.sortType = sortType
 
@@ -245,7 +248,7 @@ class HomeFragment : Fragment() {
 
     private fun initSortTypeDialogIfShown(pagingAdapter: HomeAdapter) {
         childFragmentManager.findFragmentByTag(SORT_TYPE_DIALOG_TAG)?.also {
-            initSortTypeDialog(it as HomeSortTypeDialogFragment, pagingAdapter)
+            initSortTypeDialog(it as RecordSortTypeDialogFragment, pagingAdapter)
         }
     }
 
@@ -264,17 +267,17 @@ class HomeFragment : Fragment() {
         private const val SORT_TYPE_DIALOG_TAG = "SortTypeDialog"
         private const val SEARCH_PROPERTIES_DIALOG_TAG = "SearchPropertiesDialog"
 
-        private val sortOption = HomeOptionsBar.Option(
+        private val sortOption = OptionsBar.Option(
             id = R.id.homeOptions_sort,
             prefixRes = R.string.home_sort
         )
 
-        private val searchPropertyOption = HomeOptionsBar.Option(
+        private val searchPropertyOption = OptionsBar.Option(
             id = R.id.homeOptions_searchProperty,
             prefixRes = R.string.home_searchPropertyPrefix
         )
 
-        private val optionsInDefaultMode = HomeOptionsBar.Preset(sortOption)
-        private val optionsInSearchMode = HomeOptionsBar.Preset(sortOption, searchPropertyOption)
+        private val optionsInDefaultMode = OptionsBar.Preset(sortOption)
+        private val optionsInSearchMode = OptionsBar.Preset(sortOption, searchPropertyOption)
     }
 }

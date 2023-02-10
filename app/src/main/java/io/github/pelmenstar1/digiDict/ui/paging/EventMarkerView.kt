@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.paging
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -13,7 +13,7 @@ import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.android.getPrimaryColor
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 
-class HomeEventMarkerViewStaticInfo(context: Context) {
+class EventMarkerViewStaticInfo(context: Context) {
     val textSize: Float
     val textHorizontalMargin: Float
     val textVerticalMargin: Float
@@ -41,9 +41,9 @@ class HomeEventMarkerViewStaticInfo(context: Context) {
 
 // This view should be created only in HomeEventMarkerInflater
 @SuppressLint("ViewConstructor")
-class HomeEventMarkerView constructor(
+class EventMarkerView constructor(
     context: Context,
-    private val staticInfo: HomeEventMarkerViewStaticInfo
+    private val staticInfo: EventMarkerViewStaticInfo
 ) : View(context) {
     private var eventStartedFormat: String? = null
     private var eventEndedFormat: String? = null

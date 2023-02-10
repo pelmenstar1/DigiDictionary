@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.common.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -11,20 +11,18 @@ import androidx.annotation.IdRes
 import androidx.annotation.StringRes
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.button.MaterialButton
-import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.android.MaxRoundRectDrawable
+import io.github.pelmenstar1.digiDict.common.android.getColorSurfaceVariant
 import io.github.pelmenstar1.digiDict.common.equalsPattern
-import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
-import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 
 /**
- * An options bar for home fragment.
+ * A scrollable bar with options.
  *
  * All the options are represented by buttons that are alike to dropdown - that's done on purpose.
  */
-class HomeOptionsBar : HorizontalScrollView {
+class OptionsBar : HorizontalScrollView {
     /**
-     * Stores the information about an option for [HomeOptionsBar].
+     * Stores the information about an option for [OptionsBar].
      *
      * @param id the id of the option. It must be unique among the [Preset]'s
      * @param prefixRes the string resource of prefix of the option
@@ -35,7 +33,7 @@ class HomeOptionsBar : HorizontalScrollView {
     )
 
     /**
-     * Stores the information about preset for [HomeOptionsBar].
+     * Stores the information about preset for [OptionsBar].
      *
      * @param options the options for this preset. The ids of [options] must be unique although it's not validated
      */
@@ -70,17 +68,17 @@ class HomeOptionsBar : HorizontalScrollView {
             val theme = context.theme
 
             background = MaxRoundRectDrawable().apply {
-                color = ResourcesCompat.getColor(res, R.color.request_list_dialog_button_background, theme)
+                color = context.getColorSurfaceVariant()
             }
             backgroundTintList = null
 
             icon = ResourcesCompat.getDrawable(res, R.drawable.ic_arrow_down, theme)
             iconGravity = ICON_GRAVITY_END
-            iconTint = ResourcesCompat.getColorStateList(res, R.color.request_list_dialog_button_icon_tint, theme)
+            iconTint = ResourcesCompat.getColorStateList(res, R.color.options_bar_button_icon_tint, theme)
 
-            val verticalPadding = res.getDimensionPixelOffset(R.dimen.home_optionsBarButton_verticalPadding)
-            val startPadding = res.getDimensionPixelOffset(R.dimen.home_optionsBarButton_startPadding)
-            val endPadding = res.getDimensionPixelOffset(R.dimen.home_optionsBarButton_endPadding)
+            val verticalPadding = res.getDimensionPixelOffset(R.dimen.optionsBarButton_verticalPadding)
+            val startPadding = res.getDimensionPixelOffset(R.dimen.optionsBarButton_startPadding)
+            val endPadding = res.getDimensionPixelOffset(R.dimen.optionsBarButton_endPadding)
 
             setPaddingRelative(startPadding, verticalPadding, endPadding, verticalPadding)
 
@@ -140,7 +138,7 @@ class HomeOptionsBar : HorizontalScrollView {
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply {
-            marginEnd = res.getDimensionPixelOffset(R.dimen.home_optionsBarButton_endMargin)
+            marginEnd = res.getDimensionPixelOffset(R.dimen.optionsBarButton_endMargin)
         }
 
         addView(LinearLayout(context).apply {

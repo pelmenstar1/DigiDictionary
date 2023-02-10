@@ -64,7 +64,4 @@
     <color name="stats_chart_avg_color">#FFB300</color>
 
     <color name="home_date_marker_background_color">@color/color_surface_variant</color>
-
-    <color name="request_list_dialog_button_background">@color/color_surface_variant</color>
-    <color name="request_list_dialog_button_icon_tint">#616060</color>
 </resources>
