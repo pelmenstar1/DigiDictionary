@@ -64,4 +64,8 @@
     <color name="stats_chart_avg_color">#FFB300</color>
 
     <color name="home_date_marker_background_color">@color/color_surface_variant</color>
+
+    <color name="manage_event_item_container_animation_start">#C51162</color>
+    <color name="manage_event_item_container_animation_end">#810B40</color>
+    <color name="manage_event_divider_color">#66A8A7A7</color>
 </resources>

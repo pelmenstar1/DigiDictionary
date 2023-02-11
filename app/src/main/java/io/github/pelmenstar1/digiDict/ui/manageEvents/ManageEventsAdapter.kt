@@ -14,10 +14,11 @@ class ManageEventsAdapter(
     private val onEventClickListener: (eventId: Int) -> Unit
 ) : RecyclerView.Adapter<ManageEventsAdapter.ViewHolder>() {
     class ViewHolder(private val container: ManageEventItemContainer) : RecyclerView.ViewHolder(container) {
-        fun bind(event: EventInfo) {
+        fun bind(event: EventInfo, isBeforeEventNotEnded: Boolean) {
             container.eventId = event.id
             container.name = event.name
             container.isEventNotEnded = event.endEpochSeconds == -1L
+            container.isBeforeEventNotEnded = isBeforeEventNotEnded
         }
     }
 
@@ -53,6 +54,13 @@ class ManageEventsAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(elements[position])
+        val elements = elements
+
+        var isBeforeEventNotEnded = false
+        if (position < elements.size - 1) {
+            isBeforeEventNotEnded = elements[position + 1].endEpochSeconds < 0
+        }
+
+        holder.bind(elements[position], isBeforeEventNotEnded)
     }
 }
