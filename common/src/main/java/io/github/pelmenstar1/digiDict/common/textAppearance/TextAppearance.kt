@@ -3,12 +3,12 @@ package io.github.pelmenstar1.digiDict.common.textAppearance
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.content.res.TypedArray
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.os.LocaleList
-import android.util.Log
 import android.util.TypedValue
 import android.widget.TextView
 import androidx.annotation.ColorInt
@@ -17,6 +17,7 @@ import androidx.annotation.StyleableRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.TextViewCompat
 import java.util.*
+import kotlin.math.min
 
 /**
  * Provides a way to save text appearance style data and apply it to [TextView]. There can be some minor inconsistencies when using
@@ -28,7 +29,7 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
     private val textColorHint: ColorStateList?
     private val textColorLink: ColorStateList?
 
-    private val allCaps: AllCapsTransformationMethod?
+    private val isAllCaps: Boolean
 
     @ColorInt
     private val shadowColor: Int
@@ -42,68 +43,49 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
 
     private val lineHeight: Int
 
-    private val textLocale: Locale?
-    private val textLocaleList: LocaleList?
+    // If API level >= 24, the type is LocaleList, otherwise Locale.
+    // If there's no locale set, it's null.
+    private val textLocaleOrList: Any?
 
     init {
         val theme = context.theme
 
         val a = theme.obtainStyledAttributes(styleRes, com.google.android.material.R.styleable.TextAppearance)
 
-        textSize = a.getDimension(androidx.appcompat.R.styleable.TextAppearance_android_textSize, 0f)
-        textColor = a.getColorStateList(androidx.appcompat.R.styleable.TextAppearance_android_textColor)
-        textColorHint = a.getColorStateList(androidx.appcompat.R.styleable.TextAppearance_android_textColorHint)
-        textColorLink = a.getColorStateList(androidx.appcompat.R.styleable.TextAppearance_android_textColorLink)
-
-        allCaps = if (a.getBoolean(androidx.appcompat.R.styleable.TextAppearance_textAllCaps, false)) {
-            AllCapsTransformationMethod(context)
-        } else {
-            null
-        }
-
-        shadowColor =
-            a.getColor(androidx.appcompat.R.styleable.TextAppearance_android_shadowColor, Color.TRANSPARENT)
-        shadowDx = a.getFloat(androidx.appcompat.R.styleable.TextAppearance_android_shadowDx, 0f)
-        shadowDy = a.getFloat(androidx.appcompat.R.styleable.TextAppearance_android_shadowDy, 0f)
-        shadowRadius = a.getFloat(androidx.appcompat.R.styleable.TextAppearance_android_shadowRadius, 0f)
-
-        val materialAttrs =
-            theme.obtainStyledAttributes(styleRes, com.google.android.material.R.styleable.MaterialTextAppearance)
         try {
-            letterSpacing = materialAttrs.getFloat(
-                com.google.android.material.R.styleable.MaterialTextAppearance_android_letterSpacing,
-                Float.NaN
-            )
-        } finally {
-            materialAttrs.recycle()
-        }
+            textSize = a.getDimension(androidx.appcompat.R.styleable.TextAppearance_android_textSize, 0f)
+            textColor = a.getColorStateList(androidx.appcompat.R.styleable.TextAppearance_android_textColor)
+            textColorHint = a.getColorStateList(androidx.appcompat.R.styleable.TextAppearance_android_textColorHint)
+            textColorLink = a.getColorStateList(androidx.appcompat.R.styleable.TextAppearance_android_textColorLink)
 
-        this.font = resolveFont(context, a)
+            isAllCaps = a.getBoolean(androidx.appcompat.R.styleable.TextAppearance_textAllCaps, false)
 
-        lineHeight = if (canApplyTextAppearanceLineHeight(context)) {
-            getLineHeight(context, styleRes)
-        } else {
-            -1
-        }
+            shadowColor =
+                a.getColor(androidx.appcompat.R.styleable.TextAppearance_android_shadowColor, Color.TRANSPARENT)
 
-        fontVariationSettings = if (Build.VERSION.SDK_INT >= 26) {
-            a.getString(androidx.appcompat.R.styleable.TextAppearance_fontVariationSettings)
-        } else {
-            null
-        }
-
-        val localeStr = a.getString(androidx.appcompat.R.styleable.TextAppearance_textLocale)
-        if (localeStr != null) {
-            if (Build.VERSION.SDK_INT >= 24) {
-                textLocale = null
-                textLocaleList = LocaleList.forLanguageTags(localeStr)
+            if (shadowColor != Color.TRANSPARENT) {
+                shadowDx = a.getFloat(androidx.appcompat.R.styleable.TextAppearance_android_shadowDx, 0f)
+                shadowDy = a.getFloat(androidx.appcompat.R.styleable.TextAppearance_android_shadowDy, 0f)
+                shadowRadius = a.getFloat(androidx.appcompat.R.styleable.TextAppearance_android_shadowRadius, 0f)
             } else {
-                textLocale = Locale.forLanguageTag(localeStr)
-                textLocaleList = null
+                shadowDx = 0f
+                shadowDy = 0f
+                shadowRadius = 0f
             }
-        } else {
-            textLocale = null
-            textLocaleList = null
+
+            letterSpacing = getLetterSpacing(theme, styleRes)
+            font = resolveFont(context, a)
+            lineHeight = getLineHeightIfCanApply(theme, styleRes)
+
+            fontVariationSettings = if (Build.VERSION.SDK_INT >= 26) {
+                a.getString(androidx.appcompat.R.styleable.TextAppearance_fontVariationSettings)
+            } else {
+                null
+            }
+
+            textLocaleOrList = getLocale(a)
+        } finally {
+            a.recycle()
         }
     }
 
@@ -113,86 +95,129 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
         textColor?.also(textView::setTextColor)
         textColorHint?.also(textView::setHintTextColor)
         textColorLink?.also(textView::setLinkTextColor)
-        allCaps?.let(textView::setTransformationMethod)
 
+        textView.isAllCaps = isAllCaps
         textView.typeface = font
 
+        val shadowColor = shadowColor
         if (shadowColor != Color.TRANSPARENT) {
             textView.setShadowLayer(shadowRadius, shadowDx, shadowDy, shadowColor)
         }
 
-        if (!letterSpacing.isNaN()) {
-            textView.letterSpacing = letterSpacing
+        letterSpacing.also {
+            if (!it.isNaN()) {
+                textView.letterSpacing = it
+            }
         }
 
-        if (lineHeight >= 0) {
-            TextViewCompat.setLineHeight(textView, lineHeight)
+        lineHeight.also {
+            if (it >= 0) {
+                TextViewCompat.setLineHeight(textView, it)
+            }
         }
 
         if (Build.VERSION.SDK_INT >= 26) {
             fontVariationSettings?.also(textView::setFontVariationSettings)
         }
 
+        val textLocaleOrList = textLocaleOrList
+
         if (Build.VERSION.SDK_INT >= 24) {
-            textLocaleList?.also(textView::setTextLocales)
+            (textLocaleOrList as LocaleList?)?.also(textView::setTextLocales)
         } else {
-            textLocale?.also(textView::setTextLocale)
+            (textLocaleOrList as Locale?)?.also(textView::setTextLocale)
         }
     }
 
     companion object {
-        private const val TAG = "TextAppearance"
-
         // Enums from AppCompatTextHelper.
         private const val TYPEFACE_SANS = 1
         private const val TYPEFACE_SERIF = 2
         private const val TYPEFACE_MONOSPACE = 3
 
-        internal fun canApplyTextAppearanceLineHeight(context: Context): Boolean {
-            val value = TypedValue()
-            val resolved = context.theme.resolveAttribute(
+        internal fun getLocale(a: TypedArray): Any? {
+            val localeStr = a.getString(androidx.appcompat.R.styleable.TextAppearance_textLocale)
+
+            return if (localeStr != null) {
+                if (Build.VERSION.SDK_INT >= 24) {
+                    LocaleList.forLanguageTags(localeStr)
+                } else {
+                    Locale.forLanguageTag(localeStr)
+                }
+            } else {
+                null
+            }
+        }
+
+        internal fun getLetterSpacing(theme: Resources.Theme, styleRes: Int): Float {
+            val materialAttrs =
+                theme.obtainStyledAttributes(styleRes, com.google.android.material.R.styleable.MaterialTextAppearance)
+
+            try {
+                return materialAttrs.getFloat(
+                    com.google.android.material.R.styleable.MaterialTextAppearance_android_letterSpacing,
+                    Float.NaN
+                )
+            } finally {
+                materialAttrs.recycle()
+            }
+        }
+
+        private fun canApplyTextAppearanceLineHeight(theme: Resources.Theme, tempValue: TypedValue): Boolean {
+            val resolved = theme.resolveAttribute(
                 com.google.android.material.R.attr.textAppearanceLineHeightEnabled,
-                value,
+                tempValue,
                 true
             )
 
-            return if (resolved && value.type == TypedValue.TYPE_INT_BOOLEAN) {
-                value.data != 0
+            return if (resolved && tempValue.type == TypedValue.TYPE_INT_BOOLEAN) {
+                tempValue.data != 0
             } else {
                 true
             }
         }
 
-        internal fun getLineHeight(context: Context, @StyleRes styleRes: Int): Int {
-            val attrs = context.theme.obtainStyledAttributes(
+        private fun getLineHeight(theme: Resources.Theme, @StyleRes styleRes: Int, tempValue: TypedValue): Int {
+            val attrs = theme.obtainStyledAttributes(
                 styleRes,
                 com.google.android.material.R.styleable.MaterialTextAppearance
             )
 
             var lineHeight = getDimensionPixelSize(
-                context,
+                theme,
                 attrs,
                 com.google.android.material.R.styleable.MaterialTextAppearance_android_lineHeight,
-                -1
+                tempValue
             )
 
             if (lineHeight < 0) {
                 lineHeight = getDimensionPixelSize(
-                    context,
+                    theme,
                     attrs,
                     com.google.android.material.R.styleable.MaterialTextAppearance_lineHeight,
-                    -1
+                    tempValue
                 )
             }
 
             return lineHeight
         }
 
+        internal fun getLineHeightIfCanApply(theme: Resources.Theme, @StyleRes styleRes: Int): Int {
+            val tempValue = TypedValue()
+
+            return if (canApplyTextAppearanceLineHeight(theme, tempValue)) {
+                getLineHeight(theme, styleRes, tempValue)
+            } else {
+                -1
+            }
+        }
+
         internal fun resolveFont(context: Context, a: TypedArray): Typeface {
-            val fontFamilyIndex = if (a.hasValue(androidx.appcompat.R.styleable.TextAppearance_fontFamily))
+            val fontFamilyIndex = if (a.hasValue(androidx.appcompat.R.styleable.TextAppearance_fontFamily)) {
                 androidx.appcompat.R.styleable.TextAppearance_fontFamily
-            else
+            } else {
                 androidx.appcompat.R.styleable.TextAppearance_android_fontFamily
+            }
 
             val fontFamilyResourceId = a.getResourceId(fontFamilyIndex, 0)
             val fontFamily = a.getString(fontFamilyIndex)
@@ -208,7 +233,7 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
                         font = Typeface.create(family, textStyle)
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error loading font $fontFamily", e)
+                    // Expected when the resource is not found.
                 }
             }
 
@@ -227,28 +252,41 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
                         TYPEFACE_MONOSPACE -> Typeface.MONOSPACE
                         else -> Typeface.DEFAULT
                     }, textStyle
-                )
+                )!!
             }
 
-            return font!!
+            if (Build.VERSION.SDK_INT >= 28) {
+                val italic = (textStyle and Typeface.ITALIC) != 0
+                var weight = a.getInt(androidx.appcompat.R.styleable.TextAppearance_android_textFontWeight, -1)
+
+                if (weight >= 0) {
+                    // 1000 is max value of weight. Force it.
+                    weight = min(1000, weight)
+
+                    font = Typeface.create(font, weight, italic)
+                }
+            }
+
+            return font
         }
 
-        fun getDimensionPixelSize(
-            context: Context,
+        private fun getDimensionPixelSize(
+            theme: Resources.Theme,
             attributes: TypedArray,
             @StyleableRes index: Int,
-            defaultValue: Int
+            tempValue: TypedValue
         ): Int {
-            val value = TypedValue()
-            if (!attributes.getValue(index, value) || value.type != TypedValue.TYPE_ATTRIBUTE) {
-                return attributes.getDimensionPixelSize(index, defaultValue)
+            if (!attributes.getValue(index, tempValue) || tempValue.type != TypedValue.TYPE_ATTRIBUTE) {
+                return attributes.getDimensionPixelSize(index, -1)
             }
 
-            val styledAttrs = context.theme.obtainStyledAttributes(intArrayOf(value.data))
-            val dimension = styledAttrs.getDimensionPixelSize(0, defaultValue)
-            styledAttrs.recycle()
+            val styledAttrs = theme.obtainStyledAttributes(intArrayOf(tempValue.data))
 
-            return dimension
+            try {
+                return styledAttrs.getDimensionPixelSize(0, -1)
+            } finally {
+                styledAttrs.recycle()
+            }
         }
     }
 }
