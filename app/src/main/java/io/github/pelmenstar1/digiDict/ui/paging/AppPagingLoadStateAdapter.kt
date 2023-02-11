@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.paging
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -13,12 +13,13 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.ui.ErrorContainer
 
-class HomeLoadStateAdapter(
+class AppPagingLoadStateAdapter(
     private val retry: () -> Unit
-) : LoadStateAdapter<HomeLoadStateAdapter.ViewHolder>() {
+) : LoadStateAdapter<AppPagingLoadStateAdapter.ViewHolder>() {
     inner class ViewHolder(container: ViewGroup) : RecyclerView.ViewHolder(container) {
-        private val progressIndicator = container.findViewById<CircularProgressIndicator>(R.id.home_loadingIndicator)
-        private val errorContainer = container.findViewById<ErrorContainer>(R.id.home_errorContainer)
+        private val progressIndicator =
+            container.findViewById<CircularProgressIndicator>(R.id.loadingErrorAndProgress_loadingIndicator)
+        private val errorContainer = container.findViewById<ErrorContainer>(R.id.loadingErrorAndProgress_errorContainer)
 
         init {
             errorContainer.setOnRetryListener(retryOnClickListener)
@@ -59,7 +60,7 @@ class HomeLoadStateAdapter(
             { itemLayoutParams = it }
         )
 
-        val container = inflater.inflate(R.layout.home_loading_error_and_progress_frame, parent, false).also {
+        val container = inflater.inflate(R.layout.record_loading_error_and_progress_frame, parent, false).also {
             it.layoutParams = layoutParams
         }
 

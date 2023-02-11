@@ -169,6 +169,9 @@ abstract class RecordDao {
     @Query("SELECT id FROM records WHERE dateTime >= :epochSeconds")
     abstract suspend fun getIdsAfter(epochSeconds: Long): IntArray
 
+    @Query("SELECT COUNT(*) FROM records WHERE dateTime BETWEEN :startEpochSeconds AND :endEpochSeconds")
+    abstract suspend fun countRecordsDuringTimeRange(startEpochSeconds: Long, endEpochSeconds: Long): Int
+
     suspend fun getRandomConciseRecordsWithBadgesRegardlessScore(
         random: Random,
         requestedSize: Int

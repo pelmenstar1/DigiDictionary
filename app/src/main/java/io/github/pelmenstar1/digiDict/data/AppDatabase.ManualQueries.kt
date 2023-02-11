@@ -47,6 +47,44 @@ fun SupportSQLiteStatement.bindRecordToBadgeInsertStatement(relation: RecordToBa
     bindRecordToBadgeInsertStatement(relation.recordId, relation.badgeId)
 }
 
+/**
+ * Builds an SQL query for the statement that counts the records within some time range
+ * The expected queries are:
+ * - If [startEpochSeconds] = 0 and [endEpochSeconds] = [Long.MAX_VALUE], query is `SELECT COUNT(*) FROM records`
+ * - If [startEpochSeconds] != 0 and [endEpochSeconds] != [Long.MAX_VALUE], query is `SELECT COUNT(*) FROM records BETWEEN start AND end`
+ * - If [startEpochSeconds] > 0, query is `SELECT COUNT(*) FROM records dateTime >= start`
+ * - If [endEpochSeconds] < [Long.MAX_VALUE], query = `SELECT COUNT(*) FROM records dateTime <= end`
+ */
+internal fun buildQueryForCountStatement(startEpochSeconds: Long, endEpochSeconds: Long): String {
+    if (startEpochSeconds == 0L && endEpochSeconds == Long.MAX_VALUE) {
+        return "SELECT COUNT(*) FROM records"
+    }
+
+    return buildString(64) {
+        append("SELECT COUNT(*) FROM records WHERE dateTime ")
+
+        if (startEpochSeconds > 0 && endEpochSeconds < Long.MAX_VALUE) {
+            append("BETWEEN ")
+            append(startEpochSeconds)
+            append(" AND ")
+            append(endEpochSeconds)
+        } else if (startEpochSeconds > 0) {
+            append(">= ")
+            append(startEpochSeconds)
+        } else {
+            append("<= ")
+            append(endEpochSeconds)
+        }
+    }
+}
+
+fun AppDatabase.compileCountStatement(
+    startEpochSeconds: Long = 0L,
+    endEpochSeconds: Long = Long.MAX_VALUE
+): SupportSQLiteStatement {
+    return compileStatement(buildQueryForCountStatement(startEpochSeconds, endEpochSeconds))
+}
+
 fun AppDatabase.getAllRecordsOrderByIdAsc(progressReporter: ProgressReporter?): Array<Record> {
     return queryArrayWithProgressReporter(
         "SELECT id, expression, meaning, additionalNotes, score, dateTime FROM records ORDER BY id ASC",
@@ -142,29 +180,63 @@ private val sqlRecordSortTypes = arrayOf(
     // and this array is not used in that case. See below
 )
 
-fun AppDatabase.getConciseRecordsWithBadgesLimitOffsetWithSort(
-    limit: Int,
-    offset: Int,
-    sortType: RecordSortType
-): Array<ConciseRecordWithBadges> {
-    // SQLite 'ORDER BY' sorts the records differently than RecordSortType's comparator does. To unify behaviour
-    // sort the array manually.
-    if (sortType == RecordSortType.ALPHABETIC_BY_EXPRESSION || sortType == RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE) {
-        val result = queryConciseRecordsWithBadges(
-            sql = "SELECT $CONCISE_RECORD_VALUES FROM records LIMIT $limit OFFSET $offset",
-            progressReporter = null
-        )
-        result.sortWith(sortType.getComparatorForConciseRecordWithBadges())
+internal fun buildQueryForGetRecordsForAppPagingSource(
+    limit: Int, offset: Int,
+    sortType: RecordSortType,
+    startEpochSeconds: Long, endEpochSeconds: Long
+): String {
+    return buildString(128) {
+        append("SELECT $CONCISE_RECORD_VALUES FROM records")
 
-        return result
+        if (startEpochSeconds > 0L && endEpochSeconds < Long.MAX_VALUE) {
+            append(" WHERE dateTime BETWEEN ")
+            append(startEpochSeconds)
+            append(" AND ")
+            append(endEpochSeconds)
+        } else if (startEpochSeconds > 0L) {
+            append(" WHERE dateTime >= ")
+            append(startEpochSeconds)
+        } else if (endEpochSeconds < Long.MAX_VALUE) {
+            append(" WHERE dateTime <= ")
+            append(endEpochSeconds)
+        }
+
+        // SQLite 'ORDER BY' sorts strings differently than RecordSortType's comparator does. To unify behaviour
+        // we sort the array manually and don't need additional ORDER BY
+        //
+        // RecordSortType.ALPHABETIC_BY_EXPRESSION.ordinal = 4
+        // RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE.ordinal = 5
+        val sortTypeOrdinal = sortType.ordinal
+
+        if (sortTypeOrdinal != 4 && sortTypeOrdinal != 5) {
+            append(" ORDER BY ")
+            append(sqlRecordSortTypes[sortTypeOrdinal])
+        }
+
+        append(" LIMIT ")
+        append(limit)
+        append(" OFFSET ")
+        append(offset)
     }
+}
 
-    val rawSortStr = sqlRecordSortTypes[sortType.ordinal]
-
-    return queryConciseRecordsWithBadges(
-        sql = "SELECT $CONCISE_RECORD_VALUES FROM records ORDER BY $rawSortStr LIMIT $limit OFFSET $offset",
+fun AppDatabase.getConciseRecordsWithBadgesForAppPagingSource(
+    limit: Int, offset: Int,
+    sortType: RecordSortType,
+    startEpochSeconds: Long, endEpochSeconds: Long
+): Array<ConciseRecordWithBadges> {
+    val result = queryConciseRecordsWithBadges(
+        buildQueryForGetRecordsForAppPagingSource(limit, offset, sortType, startEpochSeconds, endEpochSeconds),
         progressReporter = null
     )
+
+    // SQLite 'ORDER BY' sorts strings differently than RecordSortType's comparator does. To unify behaviour
+    // we sort the array manually.
+    if (sortType == RecordSortType.ALPHABETIC_BY_EXPRESSION || sortType == RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE) {
+        result.sortWith(sortType.getComparatorForConciseRecordWithBadges())
+    }
+
+    return result
 }
 
 private fun AppDatabase.queryConciseRecordsWithBadges(

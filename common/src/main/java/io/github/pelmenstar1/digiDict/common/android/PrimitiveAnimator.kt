@@ -1,18 +1,15 @@
 package io.github.pelmenstar1.digiDict.common.android
 
 import android.view.Choreographer
+import io.github.pelmenstar1.digiDict.common.time.NANOSECONDS_IN_MILLISECOND
 import kotlin.math.max
 
-class PrimitiveAnimator(private val callback: TickCallback) {
-    fun interface TickCallback {
-        fun onTick(fraction: Float)
-    }
-
+class PrimitiveAnimator(private val callback: AnimationTickCallback) {
     private var durationNs = 0L
     var duration = 0L
         set(value) {
             field = value
-            durationNs = value * 1_000_000
+            durationNs = value * NANOSECONDS_IN_MILLISECOND
         }
 
     private var _isRunning = false

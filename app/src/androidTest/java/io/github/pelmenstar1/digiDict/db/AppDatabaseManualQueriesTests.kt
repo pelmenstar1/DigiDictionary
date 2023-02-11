@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 
 @RunWith(AndroidJUnit4::class)
 class AppDatabaseManualQueriesTests {
@@ -324,8 +325,202 @@ class AppDatabaseManualQueriesTests {
         assertContentEquals(expectedConciseRecords, actualConciseRecords)
     }
 
+    @Test
+    fun buildQueryForGetRecordsForAppPagingSourceTest() {
+        fun testCase(
+            limit: Int,
+            offset: Int,
+            sortType: RecordSortType,
+            startEpochSeconds: Long,
+            endEpochSeconds: Long,
+            expectedQuery: String
+        ) {
+            val actualQuery =
+                buildQueryForGetRecordsForAppPagingSource(limit, offset, sortType, startEpochSeconds, endEpochSeconds)
+
+            assertEquals(expectedQuery, actualQuery)
+        }
+
+        // For RecordSortType.NEWEST
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.NEWEST,
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records ORDER BY dateTime DESC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.NEWEST,
+            startEpochSeconds = 100L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime BETWEEN 100 AND 123 ORDER BY dateTime DESC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.NEWEST,
+            startEpochSeconds = 100L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime >= 100 ORDER BY dateTime DESC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.NEWEST,
+            startEpochSeconds = 0L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime <= 123 ORDER BY dateTime DESC LIMIT 1 OFFSET 10"
+        )
+
+        // For RecordSortType.OLDEST
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.OLDEST,
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records ORDER BY dateTime ASC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.OLDEST,
+            startEpochSeconds = 100L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime BETWEEN 100 AND 123 ORDER BY dateTime ASC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.OLDEST,
+            startEpochSeconds = 100L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime >= 100 ORDER BY dateTime ASC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.OLDEST,
+            startEpochSeconds = 0L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime <= 123 ORDER BY dateTime ASC LIMIT 1 OFFSET 10"
+        )
+
+        // For RecordSortType.GREATEST_SCORE
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.GREATEST_SCORE,
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records ORDER BY score DESC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.GREATEST_SCORE,
+            startEpochSeconds = 100L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime BETWEEN 100 AND 123 ORDER BY score DESC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.GREATEST_SCORE,
+            startEpochSeconds = 100L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime >= 100 ORDER BY score DESC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.GREATEST_SCORE,
+            startEpochSeconds = 0L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime <= 123 ORDER BY score DESC LIMIT 1 OFFSET 10"
+        )
+
+
+        // For RecordSortType.LEAST_SCORE
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.LEAST_SCORE,
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records ORDER BY score ASC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.LEAST_SCORE,
+            startEpochSeconds = 100L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime BETWEEN 100 AND 123 ORDER BY score ASC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.LEAST_SCORE,
+            startEpochSeconds = 100L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime >= 100 ORDER BY score ASC LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.LEAST_SCORE,
+            startEpochSeconds = 0L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime <= 123 ORDER BY score ASC LIMIT 1 OFFSET 10"
+        )
+
+        // For RecordSortType.ALPHABETIC_BY_EXPRESSION
+        // The queries should not have a ORDER BY as the result is sorted on managed side.
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION,
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION,
+            startEpochSeconds = 100L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime BETWEEN 100 AND 123 LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION,
+            startEpochSeconds = 100L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime >= 100 LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION,
+            startEpochSeconds = 0L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime <= 123 LIMIT 1 OFFSET 10"
+        )
+
+        // For RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE
+        // The queries should not have a ORDER BY as the result is sorted on managed side.
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE,
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE,
+            startEpochSeconds = 100L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime BETWEEN 100 AND 123 LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE,
+            startEpochSeconds = 100L, endEpochSeconds = Long.MAX_VALUE,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime >= 100 LIMIT 1 OFFSET 10"
+        )
+
+        testCase(
+            limit = 1, offset = 10,
+            sortType = RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE,
+            startEpochSeconds = 0L, endEpochSeconds = 123L,
+            expectedQuery = "SELECT id, expression, meaning, score, dateTime FROM records WHERE dateTime <= 123 LIMIT 1 OFFSET 10"
+        )
+    }
+
     @Suppress("UNCHECKED_CAST")
-    private fun getConciseRecordsWithBadgesLimitOffsetWithSortTestHelper(sortType: RecordSortType) {
+    private fun getConciseRecordsWithBadgesForAppPagingSourceTestHelper(sortType: RecordSortType) {
         val db = createEmptyDatabase()
 
         val records = Array(20) { i ->
@@ -348,7 +543,11 @@ class AppDatabaseManualQueriesTests {
 
         db.insertRecordsAndBadges(records, badges, relations)
 
-        val actualConciseRecords = db.getConciseRecordsWithBadgesLimitOffsetWithSort(limit = 10, offset = 5, sortType)
+        val actualConciseRecords = db.getConciseRecordsWithBadgesForAppPagingSource(
+            limit = 10, offset = 5,
+            sortType,
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE
+        )
         val expectedConciseRecords = Array(10) { i ->
             val indexWithOffset = i + 5
 
@@ -368,32 +567,128 @@ class AppDatabaseManualQueriesTests {
     }
 
     @Test
-    fun getConciseRecordsWithBadgesLimitOffsetWithSortNewestTest() {
-        getConciseRecordsWithBadgesLimitOffsetWithSortTestHelper(RecordSortType.NEWEST)
+    fun getConciseRecordsWithBadgesForAppPagingSource_newestTest() {
+        getConciseRecordsWithBadgesForAppPagingSourceTestHelper(RecordSortType.NEWEST)
     }
 
     @Test
-    fun getConciseRecordsWithBadgesLimitOffsetWithSortOldestTest() {
-        getConciseRecordsWithBadgesLimitOffsetWithSortTestHelper(RecordSortType.OLDEST)
+    fun getConciseRecordsWithBadgesForAppPagingSource_oldestTest() {
+        getConciseRecordsWithBadgesForAppPagingSourceTestHelper(RecordSortType.OLDEST)
     }
 
     @Test
-    fun getConciseRecordsWithBadgesLimitOffsetWithSortGreatestScoreTest() {
-        getConciseRecordsWithBadgesLimitOffsetWithSortTestHelper(RecordSortType.GREATEST_SCORE)
+    fun getConciseRecordsWithBadgesForAppPagingSource_greatestScoreTest() {
+        getConciseRecordsWithBadgesForAppPagingSourceTestHelper(RecordSortType.GREATEST_SCORE)
     }
 
     @Test
-    fun getConciseRecordsWithBadgesLimitOffsetWithSortLeastScoreTest() {
-        getConciseRecordsWithBadgesLimitOffsetWithSortTestHelper(RecordSortType.LEAST_SCORE)
+    fun getConciseRecordsWithBadgesForAppPagingSource_leastScoreTest() {
+        getConciseRecordsWithBadgesForAppPagingSourceTestHelper(RecordSortType.LEAST_SCORE)
     }
 
     @Test
-    fun getConciseRecordsWithBadgesLimitOffsetWithSortAlphabeticByExpressionTest() {
-        getConciseRecordsWithBadgesLimitOffsetWithSortTestHelper(RecordSortType.ALPHABETIC_BY_EXPRESSION)
+    fun getConciseRecordsWithBadgesForAppPagingSource_alphabeticByExpressionTest() {
+        getConciseRecordsWithBadgesForAppPagingSourceTestHelper(RecordSortType.ALPHABETIC_BY_EXPRESSION)
     }
 
     @Test
-    fun getConciseRecordsWithBadgesLimitOffsetWithSortAlphabeticByExpressionInverseTest() {
-        getConciseRecordsWithBadgesLimitOffsetWithSortTestHelper(RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE)
+    fun getConciseRecordsWithBadgesForAppPagingSource_alphabeticByExpressionInverseTest() {
+        getConciseRecordsWithBadgesForAppPagingSourceTestHelper(RecordSortType.ALPHABETIC_BY_EXPRESSION_INVERSE)
+    }
+
+    @Test
+    fun buildQueryForCountStatementTest() {
+        fun testCase(startEpochSeconds: Long, endEpochSeconds: Long, expectedSql: String) {
+            val actualSql = buildQueryForCountStatement(startEpochSeconds, endEpochSeconds)
+
+            assertEquals(expectedSql, actualSql)
+        }
+
+        testCase(
+            startEpochSeconds = 0L,
+            endEpochSeconds = Long.MAX_VALUE,
+            expectedSql = "SELECT COUNT(*) FROM records"
+        )
+
+        testCase(
+            startEpochSeconds = 100L,
+            endEpochSeconds = 123L,
+            expectedSql = "SELECT COUNT(*) FROM records WHERE dateTime BETWEEN 100 AND 123"
+        )
+
+        testCase(
+            startEpochSeconds = 100L,
+            endEpochSeconds = Long.MAX_VALUE,
+            expectedSql = "SELECT COUNT(*) FROM records WHERE dateTime >= 100"
+        )
+
+        testCase(
+            startEpochSeconds = 0L,
+            endEpochSeconds = 123L,
+            expectedSql = "SELECT COUNT(*) FROM records WHERE dateTime <= 123"
+        )
+    }
+
+    @Test
+    fun compileCountStatementTest() {
+        fun testCase(recordCount: Int) {
+            val db = createEmptyDatabase()
+            val recordDao = db.recordDao()
+            val countStatement = db.compileCountStatement()
+
+            runBlocking {
+                repeat(recordCount) { i ->
+                    recordDao.insert(
+                        Record(
+                            id = 0,
+                            expression = "Ex$i",
+                            meaning = "C$i",
+                            additionalNotes = "A$i",
+                            score = i,
+                            epochSeconds = i * 10L
+                        )
+                    )
+                }
+            }
+
+            val actualCount = countStatement.simpleQueryForLong().toInt()
+            assertEquals(recordCount, actualCount)
+        }
+
+        testCase(recordCount = 0)
+        testCase(recordCount = 1)
+        testCase(recordCount = 100)
+    }
+
+    @Test
+    fun compileTimeRangedCountStatementTest() {
+        fun testCase(startEpochSeconds: Long, endEpochSeconds: Long, expectedCount: Int) {
+            val db = createEmptyDatabase()
+            val recordDao = db.recordDao()
+            val countStatement = db.compileCountStatement(startEpochSeconds, endEpochSeconds)
+
+            runBlocking {
+                repeat(10) { i ->
+                    recordDao.insert(
+                        Record(
+                            id = 0,
+                            expression = "Ex$i",
+                            meaning = "C$i",
+                            additionalNotes = "A$i",
+                            score = i,
+                            epochSeconds = i * 10L
+                        )
+                    )
+                }
+            }
+
+            val actualCount = countStatement.simpleQueryForLong().toInt()
+
+            assertEquals(expectedCount, actualCount)
+        }
+
+        testCase(startEpochSeconds = 0, endEpochSeconds = Long.MAX_VALUE, expectedCount = 10)
+        testCase(startEpochSeconds = 10, endEpochSeconds = 70, expectedCount = 7)
+        testCase(startEpochSeconds = 110, endEpochSeconds = 200, expectedCount = 0)
     }
 }

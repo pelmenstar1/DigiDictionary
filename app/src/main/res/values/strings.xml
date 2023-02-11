@@ -10,6 +10,8 @@
     <string name="empty">Empty</string>
     <string name="search">Search</string>
     <string name="emptyTextError">Text can\'t be empty</string>
+    <string name="start">Start</string>
+    <string name="sort">Sort</string>
 
     <string name="dbError">Internal error</string>
 
@@ -50,26 +52,8 @@
 
     <!-- Home fragment -->
     <string name="home_label">Home</string>
-    <string name="home_loadingError">There was an error during the loading of the records.</string>
     <string name="home_searchNoResultsMessage">No results? Add a record then.</string>
-    <string name="home_sort">Sort</string>
 
-    <string name="home_sortType_newest">Newest</string>
-    <string name="home_sortType_oldest">Oldest</string>
-    <string name="home_sortType_greatestScore">Greatest score</string>
-    <string name="home_sortType_leastScore">Least score</string>
-    <string name="home_sortType_byExpression">By expression (A-Z)</string>
-    <string name="home_sortType_byExpressionInverse">By expression (Z-A)</string>
-    <string-array name="home_sortTypes">
-        <item>@string/home_sortType_newest</item>
-        <item>@string/home_sortType_oldest</item>
-        <item>@string/home_sortType_greatestScore</item>
-        <item>@string/home_sortType_leastScore</item>
-        <item>@string/home_sortType_byExpression</item>
-        <item>@string/home_sortType_byExpressionInverse</item>
-    </string-array>
-
-    <string name="home_sortTypeDialog_title">Sorting</string>
 
     <string name="home_searchProperty_expression">@string/expression</string>
     <string name="home_searchProperty_meaning">@string/meaning</string>
@@ -80,6 +64,9 @@
     <string name="home_searchPropertyDialog_title">Search properties</string>
     <string name="home_searchPropertyPrefix">Search for</string>
     <string name="home_searchProperty_all">All</string>
+
+    <string name="home_eventStartedFormat">Event \'%s\' started</string>
+    <string name="home_eventEndedFormat">Event \'%s\' ended</string>
 
     <!-- Remind records fragment -->
     <string name="remindRecords_labelInFragment">Remind</string>
@@ -97,6 +84,25 @@
     <string name="meaningAndOrdinalFormat">Meaning %d</string>
 
     <string name="recordLoadingError">Failed to load record</string>
+    <string name="recordCollectionLoadingError">There was an error during the loading of the records.</string>
+
+    <string name="recordSortType_newest">Newest</string>
+    <string name="recordSortType_oldest">Oldest</string>
+    <string name="recordSortType_greatestScore">Greatest score</string>
+    <string name="recordSortType_leastScore">Least score</string>
+    <string name="recordSortType_byExpression">By expression (A-Z)</string>
+    <string name="recordSortType_byExpressionInverse">By expression (Z-A)</string>
+
+    <string-array name="recordSortTypes">
+        <item>@string/recordSortType_newest</item>
+        <item>@string/recordSortType_oldest</item>
+        <item>@string/recordSortType_greatestScore</item>
+        <item>@string/recordSortType_leastScore</item>
+        <item>@string/recordSortType_byExpression</item>
+        <item>@string/recordSortType_byExpressionInverse</item>
+    </string-array>
+
+    <string name="recordSortTypeDialog_title">Sorting</string>
 
     <!-- Add/Edit record fragment -->
     <string name="addEditRecord_addButtonText">@string/add</string>
@@ -214,4 +220,33 @@
     <string name="importConfig_errorMessage_unknownVersion">The version of the file is unknown to current version of the application. Update Digi Dictionary to import this file.</string>
 
     <string name="importFormatSelector_problemMessage">The format of the selected file can\'t be deduced. Please, select it manually</string>
+
+    <!-- General event related -->
+    <string name="events">Events</string>
+    <string name="eventLoadError">Failed to load the event</string>
+
+    <!-- Manage events -->
+    <string name="manageEvents_title">@string/events</string>
+    <string name="manageEvents_startEvent">Start event</string>
+    <string name="manageEvents_deleteWarning">Do you really want to delete this event? This operation can\'t be undone.</string>
+    <string name="manageEvents_deleteError">Failed to delete the event</string>
+    <string name="manageEvents_stopEvent">Stop</string>
+    <string name="manageEvents_stopEventError">Failed to stop the event</string>
+
+    <!-- Start/Edit event -->
+    <string name="startEditEvent_nameExistsError">An event with this name already exists</string>
+    <string name="startEditEvent_startModeTitle">Start event</string>
+    <string name="startEditEvent_editModeTitle">Edit event</string>
+
+    <string name="startEditEvent_startError">Failed to start an event</string>
+    <string name="startEditEvent_editError">Failed to apply the changes</string>
+
+    <!-- Event info -->
+    <string name="eventInfo_nameFormatOngoing">%s (Ongoing)</string>
+    <string name="eventInfo_startTime">Start time</string>
+    <string name="eventInfo_endTime">End time</string>
+    <string name="eventInfo_duration">Duration</string>
+    <string name="eventInfo_totalRecordsAdded">Total records added</string>
+    <string name="eventInfo_eventNotEnded">not ended</string>
+    <string name="eventInfo_showRecords">Show records</string>
 </resources>

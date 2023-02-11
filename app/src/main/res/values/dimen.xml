@@ -11,10 +11,10 @@
     <dimen name="home_dateMarker_horizontalPadding">6dp</dimen>
     <dimen name="home_dateMarker_verticalMargin">10dp</dimen>
 
-    <dimen name="home_optionsBarButton_startPadding">10dp</dimen>
-    <dimen name="home_optionsBarButton_endPadding">5dp</dimen>
-    <dimen name="home_optionsBarButton_verticalPadding">4dp</dimen>
-    <dimen name="home_optionsBarButton_endMargin">6dp</dimen>
+    <dimen name="home_eventMarker_textSize">12sp</dimen>
+    <dimen name="home_eventMarker_outlineStrokeWidth">2dp</dimen>
+    <dimen name="home_eventMarker_textHorizontalMargin">7dp</dimen>
+    <dimen name="home_eventMarker_textVerticalMargin">2dp</dimen>
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
@@ -56,4 +56,14 @@
 
     <dimen name="stats_chartMarginHorizontal">10dp</dimen>
     <dimen name="stats_chartHeight">300dp</dimen>
+
+    <dimen name="manageEvents_itemMainContainerStartTopPadding">10dp</dimen>
+    <dimen name="manageEvents_itemPaddingBottom">5dp</dimen>
+    <dimen name="manageEvents_itemMenuIconSize">36dp</dimen>
+    <dimen name="manageEvents_itemStopButtonMarginTop">5dp</dimen>
+    <dimen name="manageEvents_itemOutlineStrokeWidth">3dp</dimen>
+    <dimen name="manageEvents_itemOutlineRoundRadius">8dp</dimen>
+    <dimen name="manageEvents_itemDividerStrokeWidth">1dp</dimen>
+
+    <dimen name="eventInfo_propertyViewMarginTop">10dp</dimen>
 </resources>

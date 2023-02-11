@@ -175,7 +175,7 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
             ).apply {
                 topMargin = res.getDimensionPixelOffset(R.dimen.multiSelectionDialog_errorText_marginTop)
                 bottomMargin = res.getDimensionPixelOffset(R.dimen.multiSelectionDialog_errorText_marginBottom)
-                marginStart = res.getDimensionPixelOffset(R.dimen.mutliSelectionDialog_errorText_marginStart)
+                marginStart = res.getDimensionPixelOffset(R.dimen.multiSelectionDialog_errorText_marginStart)
             }
 
             text = res.getText(R.string.multiSelectionDialog_noOptionSelectedError)

@@ -175,4 +175,49 @@
         android:id="@+id/importConfigurationFragment"
         android:name="io.github.pelmenstar1.digiDict.ui.importConfig.ImportConfigurationFragment"
         android:label="@string/importConfig_title" />
+
+    <fragment
+        android:id="@+id/manageEventsFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.manageEvents.ManageEventsFragment"
+        android:label="@string/manageEvents_title">
+        <action
+            android:id="@+id/action_manageEventsFragment_to_startEditEventFragment"
+            app:destination="@id/startEditEventFragment" />
+
+        <action
+            android:id="@+id/action_manageEventsFragment_to_eventInfoFragment"
+            app:destination="@id/eventInfoFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/startEditEventFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventFragment">
+        <argument
+            android:name="currentEventId"
+            app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/eventInfoFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.eventInfo.EventInfoFragment">
+        <argument
+            android:name="id"
+            app:argType="integer" />
+
+        <action
+            android:id="@+id/action_eventInfoFragment_eventInfoRecordsFragment"
+            app:destination="@id/eventInfoRecordsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/eventInfoRecordsFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.eventInfoRecords.EventInfoRecordsFragment">
+        <argument
+            android:name="id"
+            app:argType="integer" />
+
+        <action
+            android:id="@+id/action_eventInfoRecordsFragment_viewRecordFragment"
+            app:destination="@id/viewRecordFragment" />
+    </fragment>
 </navigation>

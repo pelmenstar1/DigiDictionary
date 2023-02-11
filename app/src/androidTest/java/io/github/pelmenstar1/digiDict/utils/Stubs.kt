@@ -133,6 +133,10 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
+    override suspend fun countRecordsDuringTimeRange(startEpochSeconds: Long, endEpochSeconds: Long): Int {
+        throw NotImplementedError()
+    }
+
     override suspend fun getFirstRecordIdWithEpochDayOrderByEpochDayDesc(epochDay: Long): Int? {
         throw NotImplementedError()
     }

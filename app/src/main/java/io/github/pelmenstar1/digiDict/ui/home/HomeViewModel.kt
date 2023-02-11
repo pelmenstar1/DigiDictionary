@@ -16,6 +16,7 @@ import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
+import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -49,7 +50,7 @@ class HomeViewModel @Inject constructor(
     val items = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = {
-            HomePagingSource(appDatabase, sortType)
+            AppPagingSource(appDatabase, sortType)
         }
     ).flow.cachedIn(viewModelScope)
 
