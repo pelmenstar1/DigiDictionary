@@ -69,17 +69,7 @@ class AppPagingSource(
     }
 
     private fun queryItemCount(timeRange: EpochSecondsRange): Int {
-        val (startTime, endTime) = timeRange
-
-        val statement = if (startTime == 0L && endTime == Long.MAX_VALUE) {
-            appDatabase.compileCountStatement()
-        } else {
-            appDatabase.compileTimeRangedCountStatement().also {
-                it.bindToTimeRangedCountStatement(startTime, endTime)
-            }
-        }
-
-        return statement.use {
+        return appDatabase.compileCountStatement(timeRange.start, timeRange.endInclusive).use {
             it.simpleQueryForLong().toInt()
         }
     }

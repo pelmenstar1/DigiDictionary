@@ -47,17 +47,42 @@ fun SupportSQLiteStatement.bindRecordToBadgeInsertStatement(relation: RecordToBa
     bindRecordToBadgeInsertStatement(relation.recordId, relation.badgeId)
 }
 
-fun AppDatabase.compileCountStatement(): SupportSQLiteStatement {
-    return compileStatement("SELECT COUNT(*) FROM records")
+/**
+ * Builds an SQL query for the statement that counts the records within some time range
+ * The expected queries are:
+ * - If [startEpochSeconds] = 0 and [endEpochSeconds] = [Long.MAX_VALUE], query is `SELECT COUNT(*) FROM records`
+ * - If [startEpochSeconds] != 0 and [endEpochSeconds] != [Long.MAX_VALUE], query is `SELECT COUNT(*) FROM records BETWEEN start AND end`
+ * - If [startEpochSeconds] > 0, query is `SELECT COUNT(*) FROM records dateTime >= start`
+ * - If [endEpochSeconds] < [Long.MAX_VALUE], query = `SELECT COUNT(*) FROM records dateTime <= end`
+ */
+internal fun buildQueryForCountStatement(startEpochSeconds: Long, endEpochSeconds: Long): String {
+    if (startEpochSeconds == 0L && endEpochSeconds == Long.MAX_VALUE) {
+        return "SELECT COUNT(*) FROM records"
+    }
+
+    return buildString(64) {
+        append("SELECT COUNT(*) FROM records WHERE dateTime ")
+
+        if (startEpochSeconds > 0 && endEpochSeconds < Long.MAX_VALUE) {
+            append("BETWEEN ")
+            append(startEpochSeconds)
+            append(" AND ")
+            append(endEpochSeconds)
+        } else if (startEpochSeconds > 0) {
+            append(">= ")
+            append(startEpochSeconds)
+        } else {
+            append("<= ")
+            append(endEpochSeconds)
+        }
+    }
 }
 
-fun AppDatabase.compileTimeRangedCountStatement(): SupportSQLiteStatement {
-    return compileStatement("SELECT COUNT(*) FROM records WHERE dateTime BETWEEN ? AND ?")
-}
-
-fun SupportSQLiteStatement.bindToTimeRangedCountStatement(startEpochSeconds: Long, endEpochSeconds: Long) {
-    bindLong(1, startEpochSeconds)
-    bindLong(2, endEpochSeconds)
+fun AppDatabase.compileCountStatement(
+    startEpochSeconds: Long = 0L,
+    endEpochSeconds: Long = Long.MAX_VALUE
+): SupportSQLiteStatement {
+    return compileStatement(buildQueryForCountStatement(startEpochSeconds, endEpochSeconds))
 }
 
 fun AppDatabase.getAllRecordsOrderByIdAsc(progressReporter: ProgressReporter?): Array<Record> {
@@ -167,6 +192,12 @@ internal fun buildQueryForGetRecordsForAppPagingSource(
             append(" WHERE dateTime BETWEEN ")
             append(startEpochSeconds)
             append(" AND ")
+            append(endEpochSeconds)
+        } else if (startEpochSeconds > 0L) {
+            append(" WHERE dateTime >= ")
+            append(startEpochSeconds)
+        } else if (endEpochSeconds < Long.MAX_VALUE) {
+            append(" WHERE dateTime <= ")
             append(endEpochSeconds)
         }
 
