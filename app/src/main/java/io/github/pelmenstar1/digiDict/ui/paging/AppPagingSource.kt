@@ -5,16 +5,26 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.room.InvalidationTracker
 import androidx.room.withTransaction
+import io.github.pelmenstar1.digiDict.common.time.EpochSecondsRange
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 
+/**
+ * [PagingSource] implementation that shows the records info, events, date markers.
+ *
+ * @param appDatabase database instance
+ * @param sortType determines the way to sort the records
+ * @param getTimeRangeLambda suspend lambda that returns the time range in which the paging source will work.
+ * If there's no limit on time, it should be null. The lambda is called only once.
+ */
 class AppPagingSource(
     private val appDatabase: AppDatabase,
     private val sortType: RecordSortType,
-    private val startEpochSeconds: Long = 0L,
-    private val endEpochSeconds: Long = Long.MAX_VALUE
+    private val getTimeRangeLambda: (suspend () -> EpochSecondsRange)? = null
 ) : PagingSource<Int, PageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
         override fun onInvalidated(tables: MutableSet<String>) {
@@ -22,15 +32,18 @@ class AppPagingSource(
         }
     }
 
+    private val mutex = Mutex()
+
     private var itemCount = -1
+
+    @Volatile
+    private var timeRange: EpochSecondsRange? = null
+
     private val recordDao = appDatabase.recordDao()
 
     init {
         // Both startEpochSeconds and endEpochSeconds should be positive, and startEpochSeconds should be
         // less than or equal to endEpochSeconds. That's the range the logic expects.
-        require((startEpochSeconds or endEpochSeconds) > 0 && startEpochSeconds <= endEpochSeconds) {
-            "Invalid time range (start=$startEpochSeconds, end=$endEpochSeconds)"
-        }
 
         val invalidationTracker = appDatabase.invalidationTracker
         invalidationTracker.addObserver(observer)
@@ -40,9 +53,23 @@ class AppPagingSource(
         }
     }
 
-    private fun queryItemCount(): Int {
-        val startTime = startEpochSeconds
-        val endTime = endEpochSeconds
+    private suspend fun getTimeRange(): EpochSecondsRange {
+        val lambda = getTimeRangeLambda ?: return EpochSecondsRange.ALL_TIME_SPAN
+
+        return mutex.withLock {
+            var range = timeRange
+
+            if (range == null) {
+                range = lambda()
+                timeRange = range
+            }
+
+            range
+        }
+    }
+
+    private fun queryItemCount(timeRange: EpochSecondsRange): Int {
+        val (startTime, endTime) = timeRange
 
         val statement = if (startTime == 0L && endTime == Long.MAX_VALUE) {
             appDatabase.compileCountStatement()
@@ -67,13 +94,15 @@ class AppPagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, PageItem> {
         return try {
             appDatabase.withTransaction {
-                if (itemCount >= 0) {
-                    load(params, itemCount)
-                } else {
-                    itemCount = queryItemCount()
+                val timeRange = getTimeRange()
 
-                    load(params, itemCount)
+                var count = itemCount
+                if (count < 0) {
+                    count = queryItemCount(timeRange)
+                    itemCount = count
                 }
+
+                loadInternal(params, count, timeRange)
             }
         } catch (e: Exception) {
             Log.e(TAG, "during loading", e)
@@ -82,7 +111,11 @@ class AppPagingSource(
         }
     }
 
-    private suspend fun load(params: LoadParams<Int>, count: Int): LoadResult.Page<Int, PageItem> {
+    private suspend fun loadInternal(
+        params: LoadParams<Int>,
+        count: Int,
+        timeRange: EpochSecondsRange
+    ): LoadResult.Page<Int, PageItem> {
         val key = params.key ?: 0
         val loadSize = params.loadSize
 
@@ -106,7 +139,7 @@ class AppPagingSource(
         val recordData = appDatabase.getConciseRecordsWithBadgesForAppPagingSource(
             limit, offset,
             sortType,
-            startEpochSeconds, endEpochSeconds
+            timeRange.start, timeRange.endInclusive
         )
 
         val recordDataSize = recordData.size

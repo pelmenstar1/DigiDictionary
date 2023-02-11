@@ -90,7 +90,7 @@ sealed interface PageItem {
 /**
  * An implementation of [DiffUtil.ItemCallback] that compares [PageItem]'s
  */
-object HomePageItemDiffCallback : DiffUtil.ItemCallback<PageItem>() {
+object PageItemDiffCallback : DiffUtil.ItemCallback<PageItem>() {
     override fun areItemsTheSame(oldItem: PageItem, newItem: PageItem): Boolean {
         return oldItem.isTheSameTo(newItem)
     }

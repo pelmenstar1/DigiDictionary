@@ -88,7 +88,7 @@ class StartEditEventFragment : Fragment() {
 
                         if (container != null) {
                             currentEventErrorSnackbar = Snackbar
-                                .make(container, R.string.startEditEvent_eventLoadError, Snackbar.LENGTH_INDEFINITE)
+                                .make(container, R.string.eventLoadError, Snackbar.LENGTH_INDEFINITE)
                                 .setAnchorView(actionButton)
                                 .setAction(io.github.pelmenstar1.digiDict.common.ui.R.string.retry) {
                                     vm.retryLoadCurrentEvent()

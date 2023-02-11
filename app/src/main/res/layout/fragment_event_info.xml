@@ -53,6 +53,14 @@
             android:layout_marginTop="@dimen/eventInfo_propertyViewMarginTop"
             app:prefix="@string/eventInfo_totalRecordsAdded" />
 
+        <Button
+            android:id="@+id/eventInfo_showRecordsButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:text="@string/eventInfo_showRecords" />
 
     </LinearLayout>
 

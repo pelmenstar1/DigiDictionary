@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
@@ -22,6 +23,8 @@ class EventInfoFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vm = viewModel
         val binding = FragmentEventInfoBinding.inflate(inflater, container, false)
+
+        val eventId = args.id
 
         with(binding) {
             eventInfoContainer.setupLoadStateFlow(lifecycleScope, vm) { event ->
@@ -39,8 +42,6 @@ class EventInfoFragment : Fragment() {
                     eventInfoEndTimeView.setValue(dateFormatter.format(endTime))
                     eventInfoDurationView.setValue(timeDiffFormatter.formatDifference(duration))
                 } else {
-                    // TODO: SHOW RECORDS IN EVENTS INFO FRAGMENT
-
                     // Explicitly show that the event is ongoing.
                     eventInfoNameView.text = getString(R.string.eventInfo_nameFormatOngoing, event.name)
 
@@ -53,9 +54,15 @@ class EventInfoFragment : Fragment() {
                 eventInfoStartTimeView.setValue(dateFormatter.format(startTime))
                 eventInfoTotalRecordsAddedView.setValue(event.totalRecordsAdded)
             }
+
+            eventInfoShowRecordsButton.setOnClickListener {
+                val directions = EventInfoFragmentDirections.actionEventInfoFragmentEventInfoRecordsFragment(eventId)
+
+                findNavController().navigate(directions)
+            }
         }
 
-        vm.eventId = args.id
+        vm.eventId = eventId
 
         return binding.root
     }

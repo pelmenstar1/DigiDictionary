@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.home
+package io.github.pelmenstar1.digiDict.ui.paging
 
 import android.util.SparseArray
 import android.view.View
@@ -11,10 +11,10 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.ui.paging.*
 import io.github.pelmenstar1.digiDict.ui.record.*
 
-class HomeAdapter(
+class AppPagingAdapter(
     onViewRecord: (id: Int) -> Unit
-) : PagingDataAdapter<PageItem, HomeAdapter.HomeItemViewHolder>(HomePageItemDiffCallback) {
-    inner class HomeItemViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
+) : PagingDataAdapter<PageItem, AppPagingAdapter.ViewHolder>(PageItemDiffCallback) {
+    inner class ViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
         private var type = TYPE_NONE
         private val views = SparseArray<View>(4)
 
@@ -60,19 +60,16 @@ class HomeAdapter(
     private val itemInflaterArgs = PageItemInflaterArgs(onItemClickListener)
     private val itemStaticInfoArray = SparseArray<Any>(4)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HomeItemViewHolder {
-        val context = parent.context
-        val container = FrameLayout(context).apply {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val container = FrameLayout(parent.context).apply {
             layoutParams = CONTAINER_LAYOUT_PARAMS
         }
 
-        return HomeItemViewHolder(container)
+        return ViewHolder(container)
     }
 
-    override fun onBindViewHolder(holder: HomeItemViewHolder, position: Int) {
-        val item = getItem(position)
-
-        holder.bind(item)
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(getItem(position))
     }
 
     companion object {

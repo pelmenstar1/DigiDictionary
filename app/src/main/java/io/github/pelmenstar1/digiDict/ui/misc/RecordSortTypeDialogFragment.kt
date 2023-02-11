@@ -9,7 +9,7 @@ class RecordSortTypeDialogFragment : SingleSelectionDialogFragment<RecordSortTyp
         get() = R.array.recordSortTypes
 
     override val titleRes: Int
-        get() = R.string.home_sortTypeDialog_title
+        get() = R.string.recordSortTypeDialog_title
 
 
     override fun getValueByIndex(index: Int) = RecordSortType.fromOrdinal(index)

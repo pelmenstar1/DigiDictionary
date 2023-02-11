@@ -203,5 +203,21 @@
         <argument
             android:name="id"
             app:argType="integer" />
+
+        <action
+            android:id="@+id/action_eventInfoFragment_eventInfoRecordsFragment"
+            app:destination="@id/eventInfoRecordsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/eventInfoRecordsFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.eventInfoRecords.EventInfoRecordsFragment">
+        <argument
+            android:name="id"
+            app:argType="integer" />
+
+        <action
+            android:id="@+id/action_eventInfoRecordsFragment_viewRecordFragment"
+            app:destination="@id/viewRecordFragment" />
     </fragment>
 </navigation>
