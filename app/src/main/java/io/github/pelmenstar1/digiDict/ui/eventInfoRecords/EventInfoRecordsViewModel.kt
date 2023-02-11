@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.common.time.EpochSecondsRange
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
+import io.github.pelmenstar1.digiDict.ui.paging.RecordPageItemPrecomputeController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -80,6 +81,7 @@ class EventInfoRecordsViewModel @Inject constructor(
             AppPagingSource(
                 appDatabase,
                 sortType,
+                RecordPageItemPrecomputeController.createNoOp(),
                 getTimeRangeLambda = {
                     eventTimeRangeStateFlow.first { it.isLoaded }.toEpochSecondsRange()
                 }

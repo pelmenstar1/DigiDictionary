@@ -24,6 +24,7 @@ import java.util.*
 class AppPagingSource(
     private val appDatabase: AppDatabase,
     private val sortType: RecordSortType,
+    private val precomputeController: RecordPageItemPrecomputeController,
     private val getTimeRangeLambda: (suspend () -> EpochSecondsRange)? = null
 ) : PagingSource<Int, PageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
@@ -141,7 +142,7 @@ class AppPagingSource(
         val result = if (sortType == RecordSortType.NEWEST || sortType == RecordSortType.OLDEST) {
             computePageResult(recordData, sortType)
         } else {
-            recordData.map { PageItem.Record(it, isBeforeDateMarker = false) }
+            recordData.map { createRecordPageItem(it, isBeforeDateMarker = false) }
         }
 
         val nextPosToLoad = offset + recordDataSize
@@ -195,7 +196,7 @@ class AppPagingSource(
                 isFirstRecordBeforeDateMarker = firstRecordUtcEpochDay != secondRecordUtcEpochDay
             }
 
-            result.add(PageItem.Record(firstRecord, isFirstRecordBeforeDateMarker))
+            result.add(createRecordPageItem(firstRecord, isFirstRecordBeforeDateMarker))
 
             var currentRecordLocalEpochDay = secondRecordLocalEpochDay
 
@@ -216,13 +217,19 @@ class AppPagingSource(
                     isBeforeDateMarker = currentRecordLocalEpochDay != currentSectionLocalEpochDay
                 }
 
-                result.add(PageItem.Record(record, isBeforeDateMarker))
+                result.add(createRecordPageItem(record, isBeforeDateMarker))
             }
 
             result
         } else {
             emptyList()
         }
+    }
+
+    private fun createRecordPageItem(record: ConciseRecordWithBadges, isBeforeDateMarker: Boolean): PageItem.Record {
+        val precomputedInfo = precomputeController.compute(record)
+
+        return PageItem.Record(record, isBeforeDateMarker, precomputedInfo)
     }
 
     companion object {

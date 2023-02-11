@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.paging
 
+import android.text.PrecomputedText
 import androidx.recyclerview.widget.DiffUtil
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.EventInfo
@@ -28,7 +29,16 @@ sealed interface PageItem {
      *
      * @param isBeforeDateMarker marks whether this record is before [DateMarker] in a collection or sequence of any kind
      */
-    class Record(val record: ConciseRecordWithBadges, val isBeforeDateMarker: Boolean) : PageItem {
+    class Record(
+        val record: ConciseRecordWithBadges,
+        val isBeforeDateMarker: Boolean,
+        val precomputedInfo: PrecomputedInfo?
+    ) : PageItem {
+        class PrecomputedInfo(
+            val expressionPrecomputedText: PrecomputedText?,
+            val meaningPrecomputedText: PrecomputedText?
+        )
+
         override fun isTheSameTo(other: PageItem): Boolean {
             return if (other is Record) {
                 other.record.id == record.id
