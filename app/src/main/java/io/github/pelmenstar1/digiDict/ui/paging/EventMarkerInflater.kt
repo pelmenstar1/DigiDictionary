@@ -13,12 +13,7 @@ object EventMarkerInflater : PageItemInflater<PageItem.EventMarker, EventMarkerV
         return EventMarkerView(context, staticInfo)
     }
 
-    override fun bind(
-        view: View,
-        item: PageItem.EventMarker,
-        args: PageItemInflaterArgs,
-        staticInfo: EventMarkerViewStaticInfo
-    ) {
+    override fun bind(view: View, item: PageItem.EventMarker, staticInfo: EventMarkerViewStaticInfo) {
         view as EventMarkerView
 
         view.setContent(item.isStarted, item.event.name)

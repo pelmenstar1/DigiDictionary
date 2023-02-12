@@ -17,7 +17,7 @@ import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
-import io.github.pelmenstar1.digiDict.ui.paging.RecordPageItemPrecomputeController
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -48,13 +48,20 @@ class HomeViewModel @Inject constructor(
             _sortTypeFlow.value = value
         }
 
+    /**
+     * Gets or sets [RecordTextPrecomputeController] of the view-model.
+     *
+     * The paging should be notified manually about the change.
+     */
+    var recordTextPrecomputeController: RecordTextPrecomputeController = RecordTextPrecomputeController.createNoOp()
+
     val items = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = {
             AppPagingSource(
                 appDatabase,
                 sortType,
-                RecordPageItemPrecomputeController.createNoOp()
+                recordTextPrecomputeController
             )
         }
     ).flow.cachedIn(viewModelScope)

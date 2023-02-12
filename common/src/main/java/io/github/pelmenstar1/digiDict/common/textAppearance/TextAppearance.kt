@@ -9,8 +9,10 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.os.LocaleList
+import android.text.TextPaint
 import android.util.TypedValue
 import android.widget.TextView
+import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleRes
 import androidx.annotation.StyleableRes
@@ -120,12 +122,46 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
             fontVariationSettings?.also(textView::setFontVariationSettings)
         }
 
-        val textLocaleOrList = textLocaleOrList
+        useLocaleOrList(
+            onLocale = { textView.textLocale = it },
+            onLocaleList = { textView.textLocales = it }
+        )
+    }
 
-        if (Build.VERSION.SDK_INT >= 24) {
-            (textLocaleOrList as LocaleList?)?.also(textView::setTextLocales)
-        } else {
-            (textLocaleOrList as Locale?)?.also(textView::setTextLocale)
+    fun getTextPaintForMeasure(): TextPaint {
+        val paint = TextPaint()
+
+        paint.textSize = textSize
+        paint.typeface = font
+
+        letterSpacing.also {
+            if (!it.isNaN()) {
+                paint.letterSpacing = it
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= 26) {
+            fontVariationSettings?.also(paint::setFontVariationSettings)
+        }
+
+        useLocaleOrList(
+            onLocale = { paint.textLocale = it },
+            onLocaleList = { paint.textLocales = it }
+        )
+
+        return paint
+    }
+
+    @ChecksSdkIntAtLeast(api = 24, lambda = 1)
+    private inline fun useLocaleOrList(onLocale: (Locale) -> Unit, onLocaleList: (LocaleList) -> Unit) {
+        val obj = textLocaleOrList
+
+        if (obj != null) {
+            if (Build.VERSION.SDK_INT >= 24) {
+                onLocaleList(obj as LocaleList)
+            } else {
+                onLocale(obj as Locale)
+            }
         }
     }
 

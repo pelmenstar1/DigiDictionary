@@ -67,6 +67,25 @@ class HomeFragment : Fragment() {
         val loadingIndicator = stateContainerBinding.loadingErrorAndProgressLoadingIndicator
         val errorContainer = stateContainerBinding.loadingErrorAndProgressErrorContainer
 
+        /* TODO: Remove it
+        if (Build.VERSION.SDK_INT >= 28) {
+            val params = PrecomputedText.Params.Builder(pagingAdapter.getExpressionTextPaintForMeasure(context))
+                .setBreakStrategy(Layout.BREAK_STRATEGY_HIGH_QUALITY)
+                .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_FULL)
+                .build()
+
+            pagingAdapter.setTextBreakAndHyphenationInfo(TextBreakAndHyphenationInfo(
+                breakStrategy = Layout.BREAK_STRATEGY_HIGH_QUALITY,
+                hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_FULL
+            ))
+
+            viewModel.recordTextPrecomputeController = RecordTextPrecomputeController.create(
+                context,
+                RecordTextPrecomputeParams(params, params)
+            )
+        }
+        */
+
         errorContainer.setOnRetryListener {
             if (GlobalSearchQueryProvider.isActive) {
                 viewModel.retrySearch()

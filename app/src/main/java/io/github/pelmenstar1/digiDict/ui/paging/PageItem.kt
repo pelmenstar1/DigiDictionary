@@ -1,9 +1,9 @@
 package io.github.pelmenstar1.digiDict.ui.paging
 
-import android.text.PrecomputedText
 import androidx.recyclerview.widget.DiffUtil
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.EventInfo
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputedValues
 
 /**
  * Describes the data holder of page item for use in the application.
@@ -32,13 +32,8 @@ sealed interface PageItem {
     class Record(
         val record: ConciseRecordWithBadges,
         val isBeforeDateMarker: Boolean,
-        val precomputedInfo: PrecomputedInfo?
+        val precomputedValues: RecordTextPrecomputedValues?
     ) : PageItem {
-        class PrecomputedInfo(
-            val expressionPrecomputedText: PrecomputedText?,
-            val meaningPrecomputedText: PrecomputedText?
-        )
-
         override fun isTheSameTo(other: PageItem): Boolean {
             return if (other is Record) {
                 other.record.id == record.id

@@ -9,6 +9,7 @@ import io.github.pelmenstar1.digiDict.common.time.EpochSecondsRange
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.*
@@ -24,7 +25,7 @@ import java.util.*
 class AppPagingSource(
     private val appDatabase: AppDatabase,
     private val sortType: RecordSortType,
-    private val precomputeController: RecordPageItemPrecomputeController,
+    private val recordPrecomputeController: RecordTextPrecomputeController,
     private val getTimeRangeLambda: (suspend () -> EpochSecondsRange)? = null
 ) : PagingSource<Int, PageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
@@ -227,7 +228,7 @@ class AppPagingSource(
     }
 
     private fun createRecordPageItem(record: ConciseRecordWithBadges, isBeforeDateMarker: Boolean): PageItem.Record {
-        val precomputedInfo = precomputeController.compute(record)
+        val precomputedInfo = recordPrecomputeController.compute(record)
 
         return PageItem.Record(record, isBeforeDateMarker, precomputedInfo)
     }
