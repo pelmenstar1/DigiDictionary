@@ -15,6 +15,13 @@ data class RecordTextPrecomputeParams(
     val expressionParams: PrecomputedText.Params,
     val meaningParams: PrecomputedText.Params
 ) {
+    /**
+     * Constructs [RecordTextPrecomputeParams] instance from [TextPaint]s for expression and meaning and
+     * info about break strategy and hyphenation frequency.
+     *
+     * The [info] value is expected to be valid that break strategy and hyphenation frequency must not
+     * be `-1`.
+     */
     constructor(expressionPaint: TextPaint, meaningPaint: TextPaint, info: TextBreakAndHyphenationInfo) :
             this(createPrecomputedTextParams(expressionPaint, info), createPrecomputedTextParams(meaningPaint, info))
 
@@ -23,9 +30,16 @@ data class RecordTextPrecomputeParams(
             paint: TextPaint,
             info: TextBreakAndHyphenationInfo
         ): PrecomputedText.Params {
+            val breakStrategy = info.breakStrategy
+            val hyphenationFreq = info.hyphenationFrequency
+
+            if ((breakStrategy or hyphenationFreq) < 0) {
+                throw IllegalArgumentException("info should not be unspecified")
+            }
+
             return PrecomputedText.Params.Builder(paint)
-                .setBreakStrategy(info.breakStrategy)
-                .setHyphenationFrequency(info.hyphenationFrequency)
+                .setBreakStrategy(breakStrategy)
+                .setHyphenationFrequency(hyphenationFreq)
                 .build()
         }
     }
