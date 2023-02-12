@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.prefs
 
 import android.content.Context
+import android.os.Build
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -19,15 +20,11 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
     override fun getSnapshotFlow() = snapshotFlow
 
     override suspend fun <TValue : Any> get(entry: Entry<TValue, Entries>): TValue {
-        val prefs = prefsFlow.first()
-
-        return prefs.getValue(entry.getKey(), entry)
+        return prefsFlow.first().getValue(entry)
     }
 
     override fun <TValue : Any> getFlow(entry: Entry<TValue, Entries>): Flow<TValue> {
-        val key = entry.getKey()
-
-        return prefsFlow.map { it.getValue(key, entry) }
+        return prefsFlow.map { it.getValue(entry) }
     }
 
     override suspend fun <TValue : Any> set(entry: Entry<TValue, Entries>, value: TValue) {
@@ -38,35 +35,43 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         }
     }
 
-    private fun Preferences.toSnapshot() = Snapshot(
-        getValue(
-            SCORE_POINTS_PER_CORRECT_ANSWER_KEY,
-            Entries.scorePointsPerCorrectAnswer
-        ),
-        getValue(
-            SCORE_POINTS_PER_WRONG_ANSWER_KEY,
-            Entries.scorePointsPerWrongAnswer
-        ),
-        getValue(
-            USE_CUSTOM_TABS_KEY,
-            Entries.useCustomTabs
-        ),
-        getValue(
-            REMIND_ITEMS_SIZE_KEY,
-            Entries.remindItemsSize
-        ),
-        getValue(
-            REMIND_SHOW_MEANING_KEY,
-            Entries.remindShowMeaning
-        ),
-        getValue(
-            WIDGET_LIST_MAX_SIZE_KEY,
-            Entries.widgetListMaxSize
+    private fun Preferences.toSnapshot(): Snapshot {
+        val scorePointsPerCorrectAnswer = getValue { scorePointsPerCorrectAnswer }
+        val scorePointsPerWrongAnswer = getValue { scorePointsPerWrongAnswer }
+        val useCustomTabs = getValue { useCustomTabs }
+        val remindItemsSize = getValue { remindItemsSize }
+        val remindShowMeaning = getValue { remindShowMeaning }
+        val widgetListMaxSize = getValue { widgetListMaxSize }
+
+        var recordBreakStrategy = -1
+        var recordHyphenationFrequency = -1
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            recordBreakStrategy = getValue { recordTextBreakStrategy }
+            recordHyphenationFrequency = getValue { recordTextHyphenationFrequency }
+        }
+
+        return Snapshot(
+            scorePointsPerCorrectAnswer,
+            scorePointsPerWrongAnswer,
+            useCustomTabs,
+            remindItemsSize,
+            remindShowMeaning,
+            widgetListMaxSize,
+            recordBreakStrategy,
+            recordHyphenationFrequency
         )
-    )
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun <TValue : Any> Entry<TValue, Entries>.getKey(): Preferences.Key<TValue> {
+        if (Build.VERSION.SDK_INT >= 23) {
+            when (this) {
+                Entries.recordTextBreakStrategy -> return RECORD_TEXT_BREAK_STRATEGY as Preferences.Key<TValue>
+                Entries.recordTextHyphenationFrequency -> return RECORD_TEXT_HYPHENATION_FREQUENCY as Preferences.Key<TValue>
+            }
+        }
+
         return when {
             this === Entries.scorePointsPerCorrectAnswer -> SCORE_POINTS_PER_CORRECT_ANSWER_KEY
             this === Entries.scorePointsPerWrongAnswer -> SCORE_POINTS_PER_WRONG_ANSWER_KEY
@@ -78,11 +83,12 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         } as Preferences.Key<TValue>
     }
 
-    private fun <TValue : Any> Preferences.getValue(
-        key: Preferences.Key<TValue>,
-        entry: Entry<TValue, Entries>
-    ): TValue {
-        return this[key] ?: entry.defaultValue
+    private fun <TValue : Any> Preferences.getValue(entry: Entry<TValue, Entries>): TValue {
+        return this[entry.getKey()] ?: entry.defaultValue
+    }
+
+    private inline fun <TValue : Any> Preferences.getValue(getEntry: Entries.() -> Entry<TValue, Entries>): TValue {
+        return getValue(Entries.getEntry())
     }
 
     companion object {
@@ -92,5 +98,7 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         private val REMIND_ITEMS_SIZE_KEY = intPreferencesKey("remindItemsSize")
         private val REMIND_SHOW_MEANING_KEY = booleanPreferencesKey("remindShowMeaning")
         private val WIDGET_LIST_MAX_SIZE_KEY = intPreferencesKey("widgetListMaxSize")
+        private val RECORD_TEXT_BREAK_STRATEGY = intPreferencesKey("recordTextBreakStrategy")
+        private val RECORD_TEXT_HYPHENATION_FREQUENCY = intPreferencesKey("recordTextHyphenationFrequency")
     }
 }

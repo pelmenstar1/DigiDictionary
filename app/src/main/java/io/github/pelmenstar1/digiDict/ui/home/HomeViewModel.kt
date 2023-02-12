@@ -48,12 +48,13 @@ class HomeViewModel @Inject constructor(
             _sortTypeFlow.value = value
         }
 
+
     /**
      * Gets or sets [RecordTextPrecomputeController] of the view-model.
      *
-     * The paging should be notified manually about the change.
+     * By the time of collecting [items] flow, the [recordTextPrecomputeController] value should be non-null.
      */
-    var recordTextPrecomputeController: RecordTextPrecomputeController = RecordTextPrecomputeController.createNoOp()
+    var recordTextPrecomputeController: RecordTextPrecomputeController? = null
 
     val items = Pager(
         config = PagingConfig(pageSize = 20),
@@ -61,7 +62,7 @@ class HomeViewModel @Inject constructor(
             AppPagingSource(
                 appDatabase,
                 sortType,
-                recordTextPrecomputeController
+                recordTextPrecomputeController!!
             )
         }
     ).flow.cachedIn(viewModelScope)

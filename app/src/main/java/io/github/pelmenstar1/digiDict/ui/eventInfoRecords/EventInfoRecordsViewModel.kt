@@ -75,13 +75,21 @@ class EventInfoRecordsViewModel @Inject constructor(
             _sortTypeFlow.value = value
         }
 
+
+    /**
+     * Gets or sets [RecordTextPrecomputeController] of the view-model.
+     *
+     * By the time of collecting [items] flow, the [recordTextPrecomputeController] value should be non-null.
+     */
+    var recordTextPrecomputeController: RecordTextPrecomputeController? = null
+
     val items = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = {
             AppPagingSource(
                 appDatabase,
                 sortType,
-                RecordTextPrecomputeController.createNoOp(),
+                recordTextPrecomputeController!!,
                 getTimeRangeLambda = {
                     eventTimeRangeStateFlow.first { it.isLoaded }.toEpochSecondsRange()
                 }
