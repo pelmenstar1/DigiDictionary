@@ -70,12 +70,7 @@ object DateMarkerInflater : PageItemInflater<PageItem.DateMarker, DateMarkerInfl
         }
     }
 
-    override fun bind(
-        view: View,
-        item: PageItem.DateMarker,
-        args: PageItemInflaterArgs,
-        staticInfo: StaticInfo
-    ) {
+    override fun bind(view: View, item: PageItem.DateMarker, staticInfo: StaticInfo) {
         view as TextView
 
         val epochSeconds = item.epochDay * SECONDS_IN_DAY

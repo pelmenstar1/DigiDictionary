@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.remindRecords
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
+import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.LastElementVerticalSpaceDecoration
 import io.github.pelmenstar1.digiDict.databinding.FragmentRemindRecordsBinding
 import kotlinx.coroutines.flow.first
@@ -23,48 +25,55 @@ class RemindRecordsFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
-        val binding = FragmentRemindRecordsBinding.inflate(inflater, container, false)
         val vm = viewModel
+        val ls = lifecycleScope
 
-        with(binding) {
-            val adapter = RemindRecordsAdapter().also {
-                remindRecordsAdapter = it
-            }
+        val binding = FragmentRemindRecordsBinding.inflate(inflater, container, false)
 
-            val lastItemSpaceDecorHeight =
-                context.resources.getDimensionPixelOffset(R.dimen.remindRecords_lastItemBottomPadding)
-            val lastItemSpaceDecor = LastElementVerticalSpaceDecoration(lastItemSpaceDecorHeight)
+        val adapter = RemindRecordsAdapter().also {
+            remindRecordsAdapter = it
+        }
 
-            remindRecordsContentRecyclerView.also {
-                it.adapter = adapter
-                it.layoutManager = LinearLayoutManager(context)
-                it.itemAnimator = null
+        val lastItemSpaceDecorHeight =
+            context.resources.getDimensionPixelOffset(R.dimen.remindRecords_lastItemBottomPadding)
+        val lastItemSpaceDecor = LastElementVerticalSpaceDecoration(lastItemSpaceDecorHeight)
 
-                it.addItemDecoration(lastItemSpaceDecor)
-            }
+        binding.remindRecordsContentRecyclerView.also {
+            it.adapter = adapter
+            it.layoutManager = LinearLayoutManager(context)
+            it.itemAnimator = null
 
-            remindRecordsRepeat.setOnClickListener {
-                // Every time retryLoadResult() is called, resultStateFlow should receive different result
-                // even if current state is Success.
-                vm.retryLoadData()
-            }
+            it.addItemDecoration(lastItemSpaceDecor)
+        }
 
-            var isSavedStateApplied = false
+        binding.remindRecordsRepeat.setOnClickListener {
+            // Every time retryLoadResult() is called, resultStateFlow should receive different result
+            // even if current state is Success.
+            vm.retryLoadData()
+        }
 
-            remindRecordsContainer.setupLoadStateFlow(lifecycleScope, vm) { items ->
-                val defaultRevealState = vm.showMeaningFlow.first()
+        var isSavedStateApplied = false
 
-                adapter.submitItems(items, defaultRevealState)
+        binding.remindRecordsContainer.setupLoadStateFlow(ls, vm) { items ->
+            // TODO: Properly handle situation when an exception is thrown on collecting the showMeaningFlow
+            val defaultRevealState = vm.showMeaningFlow.first()
 
-                // Saved state shouldn't be applied to the next items if it was already.
-                // The fact of receiving new items makes the saved state invalid.
-                if (savedInstanceState != null && !isSavedStateApplied) {
-                    isSavedStateApplied = true
+            adapter.submitItems(items, defaultRevealState)
 
-                    savedInstanceState.getParcelable<FixedBitSet>(SAVED_STATE_REVEALED_STATES)?.also { states ->
-                        adapter.revealedStates = states
-                    }
+            // Saved state shouldn't be applied to the next items if it was already.
+            // The fact of receiving new items makes the saved state invalid.
+            if (savedInstanceState != null && !isSavedStateApplied) {
+                isSavedStateApplied = true
+
+                savedInstanceState.getParcelable<FixedBitSet>(SAVED_STATE_REVEALED_STATES)?.also { states ->
+                    adapter.revealedStates = states
                 }
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            ls.launchFlowCollector(vm.breakAndHyphenationInfoSource.flow) { info ->
+                adapter.setBreakAndHyphenationInfo(info)
             }
         }
 

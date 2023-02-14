@@ -17,6 +17,7 @@ import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -47,10 +48,22 @@ class HomeViewModel @Inject constructor(
             _sortTypeFlow.value = value
         }
 
+
+    /**
+     * Gets or sets [RecordTextPrecomputeController] of the view-model.
+     *
+     * By the time of collecting [items] flow, the [recordTextPrecomputeController] value should be non-null.
+     */
+    var recordTextPrecomputeController: RecordTextPrecomputeController? = null
+
     val items = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = {
-            AppPagingSource(appDatabase, sortType)
+            AppPagingSource(
+                appDatabase,
+                sortType,
+                recordTextPrecomputeController!!
+            )
         }
     ).flow.cachedIn(viewModelScope)
 

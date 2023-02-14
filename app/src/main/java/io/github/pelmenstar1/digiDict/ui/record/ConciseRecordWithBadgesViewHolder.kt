@@ -2,16 +2,22 @@ package io.github.pelmenstar1.digiDict.ui.record
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.os.Build
+import android.text.PrecomputedText
+import android.text.TextPaint
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorRes
+import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.getNullableTypedViewAt
@@ -28,6 +34,8 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
     private var _positiveScoreColorList: ColorStateList? = null
     private var _negativeScoreColorList: ColorStateList? = null
     private var _badgeContainerHorizontalPadding = -1
+
+    private var _expressionMeaningTextPaintForMeasure: TextPaint? = null
 
     val positiveScoreColorList: ColorStateList
         get() = getLazyColorStateList(
@@ -69,6 +77,32 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
 
     val rootPadding = res.getDimensionPixelOffset(R.dimen.itemRecord_padding)
 
+    /**
+     * Gets the [TextPaint] instance that copies those properties of [TextPaint] in expression [TextView]
+     * that affect the text measuring.
+     *
+     * The returned value is cached and shouldn't be mutated.
+     */
+    val expressionTextPaintForMeasure: TextPaint
+        get() = getExpressionMeaningTextPaintForMeasure()
+
+    /**
+     * Gets the [TextPaint] instance that copies those properties of [TextPaint] in meaning [TextView]
+     * that affect the text measuring.
+     *
+     * The returned value is cached and shouldn't be mutated.
+     */
+    val meaningTextPaintForMeasure: TextPaint
+        get() = getExpressionMeaningTextPaintForMeasure()
+
+    private fun getExpressionMeaningTextPaintForMeasure(): TextPaint {
+        return getLazyValue(
+            _expressionMeaningTextPaintForMeasure,
+            { bodyLargeTextAppearance.getTextPaintForMeasure() },
+            { _expressionMeaningTextPaintForMeasure = it }
+        )
+    }
+
     private inline fun getLazyColorStateList(
         @ColorRes colorRes: Int,
         currentValue: ColorStateList?,
@@ -104,11 +138,23 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
         }
     }
 
-    fun bind(record: ConciseRecordWithBadges?, hasDivider: Boolean, onContainerClickListener: View.OnClickListener) {
-        bind(container, record, hasDivider, onContainerClickListener, staticInfo)
+    fun bind(
+        record: ConciseRecordWithBadges?,
+        hasDivider: Boolean,
+        precomputedValues: RecordTextPrecomputedValues?,
+        onContainerClickListener: View.OnClickListener
+    ) {
+        bind(container, record, hasDivider, precomputedValues, onContainerClickListener, staticInfo)
+    }
+
+    @RequiresApi(23)
+    fun bindTextBreakAndHyphenationInfo(info: TextBreakAndHyphenationInfo) {
+        Companion.bindTextBreakAndHyphenationInfo(container, info)
     }
 
     companion object {
+        private const val TAG = "RecordViewHolder"
+
         private val MATCH_WRAP_LAYOUT_PARAMS = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -169,9 +215,11 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
             root: RecordItemRootContainer,
             record: ConciseRecordWithBadges?,
             hasDivider: Boolean,
+            precomputedValues: RecordTextPrecomputedValues?,
             onContainerClickListener: View.OnClickListener,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
         ) {
+            // TODO: Add getters to the RecordItemRootContainer that extract views
             val mainContentContainer = root.getTypedViewAt<ViewGroup>(MAIN_CONTENT_INDEX)
             val scoreView = mainContentContainer.getTypedViewAt<TextView>(SCORE_VIEW_INDEX)
             val expressionView = mainContentContainer.getTypedViewAt<TextView>(EXPRESSION_VIEW_INDEX)
@@ -185,8 +233,12 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                 root.tag = record
                 root.setOnClickListener(onContainerClickListener)
 
-                expressionView.text = record.expression
-                meaningView.text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
+                setExpressionAndMeaning(
+                    context,
+                    expressionView, meaningView,
+                    record.expression, record.meaning,
+                    precomputedValues
+                )
 
                 setScore(scoreView, record.score, staticInfo)
                 setBadges(root, record.badges, staticInfo)
@@ -198,6 +250,71 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
                 meaningView.text = ""
                 scoreView.text = ""
             }
+        }
+
+        @RequiresApi(23)
+        fun bindTextBreakAndHyphenationInfo(root: RecordItemRootContainer, info: TextBreakAndHyphenationInfo) {
+            val mainContentContainer = root.getTypedViewAt<ViewGroup>(MAIN_CONTENT_INDEX)
+            val expressionView = mainContentContainer.getTypedViewAt<TextView>(EXPRESSION_VIEW_INDEX)
+            val meaningView = mainContentContainer.getTypedViewAt<TextView>(MEANING_VIEW_INDEX)
+
+            expressionView.setTextBreakAndHyphenationInfo(info)
+            meaningView.setTextBreakAndHyphenationInfo(info)
+        }
+
+        @RequiresApi(23)
+        private fun TextView.setTextBreakAndHyphenationInfo(info: TextBreakAndHyphenationInfo) {
+            val hf = info.hyphenationFrequency.layoutInt
+            val bs = info.breakStrategy.layoutInt
+
+            // TextView doesn't check whether the breakStrategy or hyphenationFrequency are really changed
+            // and simply calls invalidate() and requestLayout().
+            // As bindTextBreakAndHyphenationInfo can be called frequently,
+            // change the value only when it matters.
+            if (hyphenationFrequency != hf) {
+                hyphenationFrequency = hf
+            }
+
+            if (breakStrategy != bs) {
+                breakStrategy = bs
+            }
+        }
+
+        private fun setExpressionAndMeaning(
+            context: Context,
+            exprView: TextView,
+            meaningView: TextView,
+            expr: String,
+            meaning: String,
+            precomputedValues: RecordTextPrecomputedValues?
+        ) {
+            var isExprSet = false
+            var isMeaningSet = false
+
+            if (Build.VERSION.SDK_INT >= 28 && precomputedValues != null) {
+                isExprSet = exprView.trySetPrecomputedText(precomputedValues.expression)
+                isMeaningSet = meaningView.trySetPrecomputedText(precomputedValues.meaning)
+            }
+
+            if (!isExprSet) {
+                exprView.text = expr
+            }
+
+            if (!isMeaningSet) {
+                meaningView.text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, meaning)
+            }
+        }
+
+        @RequiresApi(28)
+        private fun TextView.trySetPrecomputedText(precomputed: PrecomputedText): Boolean {
+            try {
+                text = precomputed
+                return true
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to set precomputed text. Falling back to simple text", e)
+            }
+
+            return false
         }
 
         inline fun createOnItemClickListener(crossinline block: (id: Int) -> Unit) = View.OnClickListener {
@@ -219,7 +336,7 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
             addView(createMainContentContainer(context, staticInfo))
         }
 
-        internal fun createBadgeContainer(
+        private fun createBadgeContainer(
             context: Context,
             staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
         ) = BadgeContainer(context).apply {

@@ -23,6 +23,7 @@ import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.R
+import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import kotlin.math.min
 
 class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: Context) {
@@ -36,8 +37,14 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
         val titleViewInfo = createTitleViewInfo(bodyMediumTextAppearance)
         val itemContainerViewInfo = createItemContainerViewInfo(bodyLargeTextAppearance)
+        val contentItemViewInfo = createContentItemViewInfo(selectableItemBackground)
         val actionItemViewInfo = createActionItemViewInfo(selectableItemBackground)
         val linkItemViewInfo = createLinkItemViewInfo(itemContainerViewInfo, selectableItemBackground)
+
+        val contentOnClickListener = View.OnClickListener {
+            val item = it.tag as SettingsDescriptor.ContentItem<*, *>
+            controller.performContentItemClickListener(item.id)
+        }
 
         val actionOnClickListener = View.OnClickListener {
             val item = it.tag as SettingsDescriptor.ActionItem
@@ -62,7 +69,9 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                         createContentItemContainer(
                             controller,
                             item as SettingsDescriptor.ContentItem<out Any, TEntries>,
-                            itemContainerViewInfo
+                            itemContainerViewInfo,
+                            contentItemViewInfo,
+                            contentOnClickListener
                         )
                     }
                     is SettingsDescriptor.LinkItem -> {
@@ -91,7 +100,11 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun applySnapshot(snapshot: AppPreferences.Snapshot<TEntries>, container: LinearLayout) {
+    fun applySnapshot(
+        controller: SettingsController<*>,
+        snapshot: AppPreferences.Snapshot<TEntries>,
+        container: LinearLayout
+    ) {
         for (i in 0 until container.childCount) {
             val itemContainer = container.getChildAt(i)
             val tag = itemContainer.tag
@@ -102,7 +115,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                 val contentView = (itemContainer as ViewGroup).getChildAt(ITEM_CONTENT_INDEX_IN_CONTAINER)
                 val content = item.content
 
-                content.getInflater().setValue(contentView, content, value)
+                content.getInflater().setValue(controller, item.id, contentView, content, value)
             }
         }
     }
@@ -157,6 +170,12 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         )
     }
 
+    private fun createContentItemViewInfo(
+        selectableItemBackground: Drawable?
+    ): ContentItemViewInfo {
+        return ContentItemViewInfo(selectableItemBackground)
+    }
+
     private fun createLinkItemViewInfo(
         containerInfo: ItemContainerViewInfo,
         selectableItemBackground: Drawable?
@@ -190,7 +209,9 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
     private fun createContentItemContainer(
         controller: SettingsController<TEntries>,
         item: SettingsDescriptor.ContentItem<out Any, TEntries>,
-        info: ItemContainerViewInfo
+        containerInfo: ItemContainerViewInfo,
+        contentInfo: ContentItemViewInfo,
+        onContainerClickListener: View.OnClickListener
     ): ViewGroup {
         val content = item.content
         val inflater = content.getInflater()
@@ -202,9 +223,15 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             // Tag is needed for applySnapshot to determine whether the view is 'item container'
             tag = item
 
-            setPadding(info.padding)
+            setPadding(containerInfo.padding)
 
-            addView(createItemNameView(item.nameRes, item.iconRes, info))
+            if (item.clickable) {
+                background = copyDrawable(context, contentInfo.selectableItemBackground)
+
+                setOnClickListener(onContainerClickListener)
+            }
+
+            addView(createItemNameView(item.nameRes, item.iconRes, containerInfo))
 
             val contentView = inflater.createView(context, content, onValueChanged = { value ->
                 controller.onValueChanged(item.preferenceEntry, value)
@@ -251,7 +278,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             containerInfo.nameTextAppearance.apply(this)
             text = res.getText(item.nameRes)
 
-            background = linkInfo.selectableItemBackground?.constantState?.newDrawable(res, context.theme)
+            background = copyDrawable(context, linkInfo.selectableItemBackground)
 
             setOnClickListener(onClickListener)
         }
@@ -294,7 +321,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                 setCompoundDrawablesRelative(icon, null, null, null)
             }
 
-            background = actionInfo.selectableItemBackground?.constantState?.newDrawable(res, context.theme)
+            background = copyDrawable(context, actionInfo.selectableItemBackground)
 
             containerInfo.nameTextAppearance.apply(this)
             text = res.getText(item.nameRes)
@@ -305,17 +332,22 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
     private fun createItemNameView(
         @StringRes nameRes: Int,
-        @DrawableRes iconRes: Int,
+        @DrawableRes iconRes: Int?,
         info: ItemContainerViewInfo
     ): MaterialTextView {
         return MaterialTextView(context).apply {
             layoutParams = info.nameLayoutParams
             gravity = Gravity.CENTER_VERTICAL
 
-            val icon = getDrawableWithSize(iconRes, info.iconSize)
+            val iconSize = info.iconSize
+            if (iconRes != null) {
+                val icon = getDrawableWithSize(iconRes, iconSize)
 
-            compoundDrawablePadding = info.iconPadding
-            setCompoundDrawablesRelative(icon, null, null, null)
+                compoundDrawablePadding = info.iconPadding
+                setCompoundDrawablesRelative(icon, null, null, null)
+            } else {
+                setPaddingRelative(iconSize, 0, 0, 0)
+            }
 
             info.nameTextAppearance.apply(this)
             setText(nameRes)
@@ -326,6 +358,10 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         return ResourcesCompat.getDrawable(context.resources, res, context.theme)!!.also {
             it.setBounds(0, 0, size, size)
         }
+    }
+
+    private fun copyDrawable(context: Context, value: Drawable?): Drawable? {
+        return value?.constantState?.newDrawable(context.resources, context.theme)
     }
 
     private class TitleViewInfo(
@@ -340,7 +376,11 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         @JvmField val iconSize: Int,
         @JvmField val iconPadding: Int,
         @JvmField val nameLayoutParams: LinearLayout.LayoutParams,
-        @JvmField val nameTextAppearance: TextAppearance
+        @JvmField val nameTextAppearance: TextAppearance,
+    )
+
+    private class ContentItemViewInfo(
+        @JvmField val selectableItemBackground: Drawable?
     )
 
     private class LinkItemViewInfo(
@@ -355,7 +395,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
     interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>, TView : View> {
         fun createView(context: Context, content: TContent, onValueChanged: (T) -> Unit): TView
-        fun setValue(view: TView, content: TContent, value: T)
+        fun setValue(controller: SettingsController<*>, itemId: Int, view: TView, content: TContent, value: T)
     }
 
     private object SwitchContentInflater :
@@ -373,7 +413,13 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             }
         }
 
-        override fun setValue(view: SwitchMaterial, content: SettingsDescriptor.SwitchItemContent, value: Boolean) {
+        override fun setValue(
+            controller: SettingsController<*>,
+            itemId: Int,
+            view: SwitchMaterial,
+            content: SettingsDescriptor.SwitchItemContent,
+            value: Boolean
+        ) {
             view.isChecked = value
         }
     }
@@ -411,7 +457,13 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
         }
 
-        override fun setValue(view: AppCompatSpinner, content: SettingsDescriptor.RangeSpinnerItemContent, value: Int) {
+        override fun setValue(
+            controller: SettingsController<*>,
+            itemId: Int,
+            view: AppCompatSpinner,
+            content: SettingsDescriptor.RangeSpinnerItemContent,
+            value: Int
+        ) {
             val start = content.start
             val end = content.endInclusive
             val step = content.step
@@ -420,6 +472,29 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             val position = (constrainedValue - start) / step
 
             view.setSelection(position)
+        }
+    }
+
+    private object FormattedTextItemInflater :
+        ItemContentInflater<Any, SettingsDescriptor.TextContent<Any>, MaterialTextView> {
+        override fun createView(
+            context: Context,
+            content: SettingsDescriptor.TextContent<Any>,
+            onValueChanged: (Any) -> Unit
+        ): MaterialTextView {
+            return MaterialTextView(context).apply {
+                setTextAppearance { BodyLarge }
+            }
+        }
+
+        override fun setValue(
+            controller: SettingsController<*>,
+            itemId: Int,
+            view: MaterialTextView,
+            content: SettingsDescriptor.TextContent<Any>,
+            value: Any
+        ) {
+            view.text = controller.getTextFormatter(itemId)!!.format(value)
         }
     }
 
@@ -444,14 +519,15 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         private const val ITEM_CONTENT_INDEX_IN_CONTAINER = 1
 
         @Suppress("UNCHECKED_CAST")
-        internal fun <TValue : Any, TContent : SettingsDescriptor.ItemContent<TValue>> TContent.getInflater(): ItemContentInflater<TValue, TContent, View> {
+        internal fun SettingsDescriptor.ItemContent<*>.getInflater(): ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View> {
             val inflater = when (javaClass) {
                 SettingsDescriptor.SwitchItemContent::class.java -> SwitchContentInflater
                 SettingsDescriptor.RangeSpinnerItemContent::class.java -> RangeSpinnerInflater
+                SettingsDescriptor.TextContent::class.java -> FormattedTextItemInflater
                 else -> throw IllegalStateException("Invalid type of content")
             }
 
-            return inflater as ItemContentInflater<TValue, TContent, View>
+            return inflater as ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View>
         }
     }
 }

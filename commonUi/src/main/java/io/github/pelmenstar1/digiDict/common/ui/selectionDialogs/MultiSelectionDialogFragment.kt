@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.selectionDialogs
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
@@ -18,6 +18,8 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
 import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
+import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
+import io.github.pelmenstar1.digiDict.common.ui.R
 
 /**
  * Represents a base class for a dialog fragment that provides a list of choices and multiple of them can be selected
@@ -208,14 +210,30 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
             onSelectedStateChanged(showAnimation = true)
         }
 
-        SelectionDialogFragmentUtils.createAndAddViewsForItems(
-            context,
-            choices,
-            root,
-            itemOnCheckedChangedListener,
-            createView = { MaterialCheckBox(context) },
-            isChoiceChecked = { index -> bitSet[index] }
+        val res = context.resources
+
+        val textVerticalPadding = res.getDimensionPixelOffset(R.dimen.selectionDialog_textVerticalPadding)
+        val textHorizontalPadding = res.getDimensionPixelOffset(R.dimen.selectionDialog_textHorizontalPadding)
+        val textAppearance = TextAppearance(context) { BodyLarge }
+
+        val itemLayoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
         )
+
+        for ((index, choice) in choices.withIndex()) {
+            root.addView(MaterialCheckBox(context).apply {
+                layoutParams = itemLayoutParams
+                setPadding(textHorizontalPadding, textVerticalPadding, textHorizontalPadding, textVerticalPadding)
+
+                tag = index
+                text = choice
+                isChecked = bitSet[index]
+                textAppearance.apply(this)
+
+                setOnCheckedChangeListener(itemOnCheckedChangedListener)
+            })
+        }
     }
 
     private fun initFromArgs() {
