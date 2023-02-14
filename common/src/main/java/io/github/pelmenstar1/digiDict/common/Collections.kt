@@ -1,5 +1,7 @@
 package io.github.pelmenstar1.digiDict.common
 
+import android.util.SparseArray
+
 inline fun <TArray, TValue> TArray.swap(
     i: Int, j: Int,
     get: TArray.(Int) -> TValue,
@@ -93,4 +95,13 @@ fun IntArray.sum(start: Int = 0, end: Int = size): Int {
     }
 
     return acc
+}
+
+/**
+ * Gets the value from given [SparseArray] by specified [key].
+ *
+ * If the value doesn't exist, the object [T] is created via [create] lambda and added to the [SparseArray].
+ */
+inline fun <T : Any> SparseArray<T>.getOrAdd(key: Int, create: () -> T): T {
+    return getLazyValue(get(key), create) { put(key, it) }
 }

@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.common.time.EpochSecondsRange
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -74,12 +75,21 @@ class EventInfoRecordsViewModel @Inject constructor(
             _sortTypeFlow.value = value
         }
 
+
+    /**
+     * Gets or sets [RecordTextPrecomputeController] of the view-model.
+     *
+     * By the time of collecting [items] flow, the [recordTextPrecomputeController] value should be non-null.
+     */
+    var recordTextPrecomputeController: RecordTextPrecomputeController? = null
+
     val items = Pager(
         config = PagingConfig(pageSize = 20),
         pagingSourceFactory = {
             AppPagingSource(
                 appDatabase,
                 sortType,
+                recordTextPrecomputeController!!,
                 getTimeRangeLambda = {
                     eventTimeRangeStateFlow.first { it.isLoaded }.toEpochSecondsRange()
                 }

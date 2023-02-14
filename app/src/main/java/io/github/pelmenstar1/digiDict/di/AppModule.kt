@@ -1,13 +1,17 @@
 package io.github.pelmenstar1.digiDict.di
 
 import android.content.Context
+import android.os.Build
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.pelmenstar1.digiDict.PreferencesTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.android.LocaleProvider
+import io.github.pelmenstar1.digiDict.common.android.NoOpTextBreakAndHyphenationInfoSource
+import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.data.*
@@ -133,5 +137,14 @@ class AppModule {
     @Provides
     fun provideRecordSearchCore(): RecordSearchCore {
         return RecordDeepSearchCore
+    }
+
+    @Provides
+    fun provideTextBreakAndHyphenationInfoSource(prefs: DigiDictAppPreferences): TextBreakAndHyphenationInfoSource {
+        return if (Build.VERSION.SDK_INT >= 23) {
+            PreferencesTextBreakAndHyphenationInfoSource(prefs)
+        } else {
+            NoOpTextBreakAndHyphenationInfoSource
+        }
     }
 }

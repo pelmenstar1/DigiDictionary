@@ -3,8 +3,6 @@ package io.github.pelmenstar1.digiDict.ui.paging
 import android.content.Context
 import android.view.View
 
-data class PageItemInflaterArgs(val onRecordClickListener: View.OnClickListener)
-
 /**
  * Provides a set of methods that assist in creating a visual representation of [PageItem].
  */
@@ -29,5 +27,5 @@ interface PageItemInflater<TItem : PageItem, TStaticInfo> {
     /**
      * Binds the specific [item] to the [view] created by [createView] of exactly this inflater.
      */
-    fun bind(view: View, item: TItem, args: PageItemInflaterArgs, staticInfo: TStaticInfo)
+    fun bind(view: View, item: TItem, staticInfo: TStaticInfo)
 }

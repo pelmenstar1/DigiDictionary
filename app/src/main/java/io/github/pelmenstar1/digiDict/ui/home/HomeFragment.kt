@@ -1,6 +1,8 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
+import android.os.Build
 import android.os.Bundle
+import android.text.TextPaint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.OptionsBar
@@ -27,6 +30,8 @@ import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchAdapter
 import io.github.pelmenstar1.digiDict.ui.misc.RecordSortTypeDialogFragment
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingAdapter
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingLoadStateAdapter
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeParams
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.flatMapConcat
 import javax.inject.Inject
@@ -40,6 +45,9 @@ class HomeFragment : Fragment() {
 
     @Inject
     lateinit var recordRecordSearchPropertySetFormatter: RecordSearchPropertySetFormatter
+
+    @Inject
+    lateinit var textBreakAndHyphenationInfoSource: TextBreakAndHyphenationInfoSource
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -66,6 +74,9 @@ class HomeFragment : Fragment() {
 
         val loadingIndicator = stateContainerBinding.loadingErrorAndProgressLoadingIndicator
         val errorContainer = stateContainerBinding.loadingErrorAndProgressErrorContainer
+
+        // This needs to be initialized before collecting HomeViewModel.items
+        viewModel.recordTextPrecomputeController = RecordTextPrecomputeController.create(context)
 
         errorContainer.setOnRetryListener {
             if (GlobalSearchQueryProvider.isActive) {
@@ -109,6 +120,7 @@ class HomeFragment : Fragment() {
 
         initHomeOptionsBar(binding, pagingAdapter)
         initDialogsIfShown(pagingAdapter)
+        initTextBreakAndHyphenationCustomization(pagingAdapter, searchAdapter)
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.items, pagingAdapter::submitData)
@@ -198,6 +210,39 @@ class HomeFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun initTextBreakAndHyphenationCustomization(
+        pagingAdapter: AppPagingAdapter,
+        searchAdapter: HomeSearchAdapter
+    ) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            val vm = viewModel
+            val context = requireContext()
+
+            val expressionTextPaint: TextPaint?
+            val meaningTextPaint: TextPaint?
+
+            if (Build.VERSION.SDK_INT >= 28) {
+                expressionTextPaint = pagingAdapter.getExpressionTextPaintForMeasure(context)
+                meaningTextPaint = pagingAdapter.getMeaningTextPaintForMeasure(context)
+            } else {
+                expressionTextPaint = null
+                meaningTextPaint = null
+            }
+
+            lifecycleScope.launchFlowCollector(textBreakAndHyphenationInfoSource.flow) { info ->
+                if (Build.VERSION.SDK_INT >= 28) {
+                    // expressionTextPaint and meaningTextPaint will never be null on API level >= 28
+                    val params = RecordTextPrecomputeParams(expressionTextPaint!!, meaningTextPaint!!, info)
+
+                    vm.recordTextPrecomputeController?.params = params
+                }
+
+                pagingAdapter.setTextBreakAndHyphenationInfo(info)
+                searchAdapter.setTextBreakAndHyphenationInfo(info)
+            }
+        }
     }
 
     private fun initHomeOptionsBar(binding: FragmentHomeBinding, pagingAdapter: AppPagingAdapter) {
