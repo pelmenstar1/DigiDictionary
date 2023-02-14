@@ -26,6 +26,7 @@
     <dimen name="selectionDialog_titleMarginStart">10dp</dimen>
     <dimen name="selectionDialog_textHorizontalPadding">15dp</dimen>
     <dimen name="selectionDialog_textVerticalPadding">13dp</dimen>
+    <dimen name="selectionDialog_infoStartMargin">25dp</dimen>
 
     <dimen name="multiSelectionDialog_errorText_marginTop">3dp</dimen>
     <dimen name="multiSelectionDialog_errorText_marginBottom">5dp</dimen>

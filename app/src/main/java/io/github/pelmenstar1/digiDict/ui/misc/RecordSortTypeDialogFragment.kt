@@ -1,7 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.misc
 
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.ui.SingleSelectionDialogFragment
+import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 
 class RecordSortTypeDialogFragment : SingleSelectionDialogFragment<RecordSortType>() {

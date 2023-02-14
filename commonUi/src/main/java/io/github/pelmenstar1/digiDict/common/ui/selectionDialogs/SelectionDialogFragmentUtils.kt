@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.selectionDialogs
 
 import android.content.Context
 import android.widget.CompoundButton
@@ -8,6 +8,7 @@ import androidx.annotation.StringRes
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
+import io.github.pelmenstar1.digiDict.common.ui.R
 
 internal object SelectionDialogFragmentUtils {
     fun createTitleView(context: Context, @StringRes titleRes: Int): TextView {

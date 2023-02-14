@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -38,19 +39,28 @@ class SettingsFragment : Fragment() {
     ): View {
         val vm = viewModel
         val context = requireContext()
+        val res = context.resources
 
         val binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val contentContainer = binding.settingsContentContainer
 
         val settingsInflater = SettingsInflater<DigiDictAppPreferences.Entries>(context)
-        settingsInflater.inflate(descriptor, container = contentContainer).apply {
+        val settingsController = settingsInflater.inflate(descriptor, contentContainer).apply {
             onValueChangedHandler = viewModel::changePreferenceValue
             navController = findNavController()
 
             bindActionHandler(ACTION_DELETE_ALL_RECORDS) {
                 requestDeleteAllRecords()
             }
+
+            // On lower API levels, there are no break strategy and hyphenation items
+            if (Build.VERSION.SDK_INT >= 23) {
+                bindTextFormatter(ITEM_BREAK_STRATEGY, ResourcesBreakStrategyStringFormatter(res))
+                bindTextFormatter(ITEM_HYPHENATION_FREQUENCY, ResourcesHyphenationStringFormatter(res))
+            }
         }
+
+        showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
 
         lifecycleScope.also { ls ->
             ls.launchFlowCollector(vm.deleteAllRecordsAction.successFlow) {
@@ -59,8 +69,6 @@ class SettingsFragment : Fragment() {
                         .showLifecycleAwareSnackbar(lifecycle)
                 }
             }
-
-            showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
 
             ls.launchFlowCollector(
                 vm.dataStateFlow.transform {
@@ -73,7 +81,7 @@ class SettingsFragment : Fragment() {
             }
 
             binding.settingsContainer.setupLoadStateFlow(ls, vm) { snapshot ->
-                settingsInflater.applySnapshot(snapshot, contentContainer)
+                settingsInflater.applySnapshot(settingsController, snapshot, contentContainer)
             }
         }
 
@@ -91,6 +99,8 @@ class SettingsFragment : Fragment() {
 
     companion object {
         private const val ACTION_DELETE_ALL_RECORDS = 0
+        private const val ITEM_BREAK_STRATEGY = 1
+        private const val ITEM_HYPHENATION_FREQUENCY = 2
 
         private val descriptor = settingsDescriptor {
             group(R.string.settings_generalGroup) {
@@ -182,6 +192,24 @@ class SettingsFragment : Fragment() {
 
             group(R.string.settings_miscGroup) {
                 actionItem(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
+
+                if (Build.VERSION.SDK_INT >= 23) {
+                    item(
+                        id = ITEM_BREAK_STRATEGY,
+                        nameRes = R.string.settings_breakStrategy,
+                        preferenceEntry = { recordTextBreakStrategy },
+                    ) {
+                        text()
+                    }
+
+                    item(
+                        id = ITEM_HYPHENATION_FREQUENCY,
+                        nameRes = R.string.settings_hyphenation,
+                        preferenceEntry = { recordTextHyphenationFrequency }
+                    ) {
+                        text()
+                    }
+                }
             }
         }
     }

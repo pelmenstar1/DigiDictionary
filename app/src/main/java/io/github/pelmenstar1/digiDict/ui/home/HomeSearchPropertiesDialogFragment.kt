@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict.ui.home
 
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.mapToIntArray
-import io.github.pelmenstar1.digiDict.common.ui.MultiSelectionDialogFragment
+import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.MultiSelectionDialogFragment
 import io.github.pelmenstar1.digiDict.search.RecordSearchProperty
 
 class HomeSearchPropertiesDialogFragment : MultiSelectionDialogFragment<RecordSearchProperty>() {

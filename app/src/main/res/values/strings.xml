@@ -191,6 +191,40 @@
     <string name="settings_linkToManageRemoteDictProviders">Manage remote. dict providers</string>
     <string name="settings_linkToManageRecordBadges">Manage record badges</string>
     <string name="settings_miscGroup">Miscellaneous</string>
+    <string name="settings_breakStrategy">Break strategy</string>
+    <string name="settings_hyphenation">Hyphenation</string>
+
+    <string name="settings_breakStrategy_simple">Simple</string>
+    <string name="settings_breakStrategy_balanced">Balanced</string>
+    <string name="settings_breakStrategy_highQuality">High quality</string>
+
+    <string name="settings_hyphenation_none">None</string>
+    <string name="settings_hyphenation_normal">Normal</string>
+    <string name="settings_hyphenation_full">Full</string>
+
+    <string-array name="settings_breakStrategy_dialogChoices">
+        <item>@string/settings_breakStrategy_simple</item>
+        <item>@string/settings_breakStrategy_balanced</item>
+        <item>@string/settings_breakStrategy_highQuality</item>
+    </string-array>
+
+    <string-array name="settings_breakStrategy_dialogChoicesInfo">
+        <item></item>
+        <item></item>
+        <item></item>
+    </string-array>
+
+    <string-array name="settings_hyphenation_dialogChoices">
+        <item>@string/settings_hyphenation_none</item>
+        <item>@string/settings_hyphenation_normal</item>
+        <item>@string/settings_hyphenation_full</item>
+    </string-array>
+
+    <string-array name="settings_hyphenation_dialogChoicesInfo">
+        <item></item>
+        <item></item>
+        <item></item>
+    </string-array>
 
     <!-- List widget -->
     <string name="listWidget_description">Widget which shows you most recent expressions you added</string>

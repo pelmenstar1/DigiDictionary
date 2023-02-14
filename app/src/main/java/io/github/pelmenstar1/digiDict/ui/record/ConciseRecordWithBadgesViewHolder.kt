@@ -264,8 +264,8 @@ open class ConciseRecordWithBadgesViewHolder private constructor(
 
         @RequiresApi(23)
         private fun TextView.setTextBreakAndHyphenationInfo(info: TextBreakAndHyphenationInfo) {
-            val hf = info.hyphenationFrequency
-            val bs = info.breakStrategy
+            val hf = info.hyphenationFrequency.layoutInt
+            val bs = info.breakStrategy.layoutInt
 
             // TextView doesn't check whether the breakStrategy or hyphenationFrequency are really changed
             // and simply calls invalidate() and requestLayout().

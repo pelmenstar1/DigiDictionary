@@ -3,6 +3,8 @@ package io.github.pelmenstar1.digiDict.ui.record
 import android.text.PrecomputedText
 import android.text.TextPaint
 import androidx.annotation.RequiresApi
+import io.github.pelmenstar1.digiDict.common.android.BreakStrategy
+import io.github.pelmenstar1.digiDict.common.android.HyphenationFrequency
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
 
 /**
@@ -33,13 +35,13 @@ data class RecordTextPrecomputeParams(
             val breakStrategy = info.breakStrategy
             val hyphenationFreq = info.hyphenationFrequency
 
-            if ((breakStrategy or hyphenationFreq) < 0) {
+            if (breakStrategy == BreakStrategy.UNSPECIFIED || hyphenationFreq == HyphenationFrequency.UNSPECIFIED) {
                 throw IllegalArgumentException("info should not be unspecified")
             }
 
             return PrecomputedText.Params.Builder(paint)
-                .setBreakStrategy(breakStrategy)
-                .setHyphenationFrequency(hyphenationFreq)
+                .setBreakStrategy(breakStrategy.layoutInt)
+                .setHyphenationFrequency(hyphenationFreq.layoutInt)
                 .build()
         }
     }
