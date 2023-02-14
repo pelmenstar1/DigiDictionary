@@ -1,11 +1,13 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
 import android.content.Context
+import android.os.Build
 import android.view.View.OnClickListener
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FilteredArray
 import io.github.pelmenstar1.digiDict.common.FilteredArrayDiffManager
+import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.ui.RecyclerViewAdapterListUpdateCallback
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
@@ -52,6 +54,17 @@ class HomeSearchAdapter(
     private val diffManager = FilteredArrayDiffManager(conciseRecordDiffCallback)
 
     private var metadataProvider: RecordSearchMetadataProvider? = null
+    private var breakAndHyphenationInfo: TextBreakAndHyphenationInfo? = null
+
+    fun setTextBreakAndHyphenationInfo(info: TextBreakAndHyphenationInfo) {
+        breakAndHyphenationInfo = info
+
+        currentData.size.also {
+            if (it > 0) {
+                notifyItemRangeChanged(0, it, updateBreakAndHyphenationInfoPayload)
+            }
+        }
+    }
 
     fun submitResult(result: RecordSearchResult) {
         val currentData = result.currentData
@@ -98,15 +111,39 @@ class HomeSearchAdapter(
             { staticInfo = it }
         )
 
-        return ViewHolder(context, si)
+        return ViewHolder(context, si).also {
+            bindCurrentBreakAndHyphenationInfo(it)
+        }
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val record = currentData[position]
+        val data = currentData
+
+        val record = data[position]
         val itemStyle = createItemStyle(record)
 
         // Don't show divider if the item is the last one
-        holder.bind(record, itemStyle, hasDivider = position < currentData.size - 1, onItemClickListener)
+        holder.bind(record, itemStyle, hasDivider = position < data.size - 1, onItemClickListener)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) {
+            onBindViewHolder(holder, position)
+        } else {
+            val payload = payloads[0]
+
+            if (payload === updateBreakAndHyphenationInfoPayload) {
+                bindCurrentBreakAndHyphenationInfo(holder)
+            }
+        }
+    }
+
+    private fun bindCurrentBreakAndHyphenationInfo(vh: ViewHolder) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            breakAndHyphenationInfo?.also {
+                vh.bindTextBreakAndHyphenationInfo(it)
+            }
+        }
     }
 
     private fun createItemStyle(record: ConciseRecordWithBadges): HomeSearchItemStyle {
@@ -117,5 +154,7 @@ class HomeSearchAdapter(
 
     companion object {
         private val conciseRecordDiffCallback = EntityWitIdFilteredArrayDiffCallback<ConciseRecordWithBadges>()
+
+        private val updateBreakAndHyphenationInfoPayload = Any()
     }
 }

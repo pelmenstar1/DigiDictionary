@@ -120,7 +120,7 @@ class HomeFragment : Fragment() {
 
         initHomeOptionsBar(binding, pagingAdapter)
         initDialogsIfShown(pagingAdapter)
-        initTextBreakAndHyphenationCustomization(pagingAdapter)
+        initTextBreakAndHyphenationCustomization(pagingAdapter, searchAdapter)
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.items, pagingAdapter::submitData)
@@ -212,7 +212,10 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
-    private fun initTextBreakAndHyphenationCustomization(pagingAdapter: AppPagingAdapter) {
+    private fun initTextBreakAndHyphenationCustomization(
+        pagingAdapter: AppPagingAdapter,
+        searchAdapter: HomeSearchAdapter
+    ) {
         if (Build.VERSION.SDK_INT >= 23) {
             val vm = viewModel
             val context = requireContext()
@@ -237,6 +240,7 @@ class HomeFragment : Fragment() {
                 }
 
                 pagingAdapter.setTextBreakAndHyphenationInfo(info)
+                searchAdapter.setTextBreakAndHyphenationInfo(info)
             }
         }
     }
