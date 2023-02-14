@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -15,8 +16,11 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
+import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
 import io.github.pelmenstar1.digiDict.common.ui.settings.SettingsInflater
 import io.github.pelmenstar1.digiDict.common.ui.settings.settingsDescriptor
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
@@ -25,6 +29,7 @@ import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
@@ -57,7 +62,16 @@ class SettingsFragment : Fragment() {
             if (Build.VERSION.SDK_INT >= 23) {
                 bindTextFormatter(ITEM_BREAK_STRATEGY, ResourcesBreakStrategyStringFormatter(res))
                 bindTextFormatter(ITEM_HYPHENATION_FREQUENCY, ResourcesHyphenationStringFormatter(res))
+
+                bindContentItemClickListener(ITEM_BREAK_STRATEGY) { showBreakStrategyDialog() }
+                bindContentItemClickListener(ITEM_HYPHENATION_FREQUENCY) { showHyphenationDialog() }
             }
+        }
+
+        // On lower API levels these dialog can't be shown.
+        if (Build.VERSION.SDK_INT >= 23) {
+            initBreakStrategyDialogIfShown()
+            initHyphenationDialogIfShown()
         }
 
         showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
@@ -97,10 +111,84 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    private fun <TValue : Any> initChangePreferenceValueDialog(
+        dialog: SingleSelectionDialogFragment<TValue>,
+        entry: AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>
+    ) {
+        dialog.onValueSelected = { value ->
+            viewModel.changePreferenceValue(entry, value)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <TValue : Any> initChangePreferenceValueDialogIfShown(
+        tag: String,
+        entry: AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>
+    ) {
+        childFragmentManager.findFragmentByTag(tag)?.also {
+            initChangePreferenceValueDialog(it as SingleSelectionDialogFragment<TValue>, entry)
+        }
+    }
+
+    private inline fun <TValue : Any> showPreferenceEntryDialogAsync(
+        tag: String,
+        crossinline getEntry: DigiDictAppPreferences.Entries.() -> AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>,
+        crossinline createDialog: (TValue) -> SingleSelectionDialogFragment<TValue>
+    ) {
+        lifecycleScope.launch {
+            val snapshot = viewModel.dataStateFlow.firstSuccess()
+            val entry = DigiDictAppPreferences.Entries.getEntry()
+            val value = snapshot[entry]
+
+            createDialog(value).also {
+                initChangePreferenceValueDialog(it, entry)
+
+                it.show(childFragmentManager, tag)
+            }
+        }
+    }
+
+    @RequiresApi(23)
+    private fun initBreakStrategyDialogIfShown() {
+        initChangePreferenceValueDialogIfShown(
+            TAG_BREAK_STRATEGY_DIALOG,
+            DigiDictAppPreferences.Entries.recordTextBreakStrategy
+        )
+    }
+
+    @RequiresApi(23)
+    private fun initHyphenationDialogIfShown() {
+        initChangePreferenceValueDialogIfShown(
+            TAG_HYPHENATION_DIALOG,
+            DigiDictAppPreferences.Entries.recordTextHyphenationFrequency
+        )
+    }
+
+    @RequiresApi(23)
+    private fun showBreakStrategyDialog() {
+        showPreferenceEntryDialogAsync(
+            TAG_BREAK_STRATEGY_DIALOG,
+            { recordTextBreakStrategy },
+            BreakStrategyDialogFragment::create
+        )
+    }
+
+    @RequiresApi(23)
+    private fun showHyphenationDialog() {
+        showPreferenceEntryDialogAsync(
+            TAG_HYPHENATION_DIALOG,
+            { recordTextHyphenationFrequency },
+            HyphenationDialogFragment::create
+        )
+    }
+
     companion object {
         private const val ACTION_DELETE_ALL_RECORDS = 0
         private const val ITEM_BREAK_STRATEGY = 1
         private const val ITEM_HYPHENATION_FREQUENCY = 2
+
+        private const val TAG_BREAK_STRATEGY_DIALOG = "BreakStrategyDialog"
+        private const val TAG_HYPHENATION_DIALOG = "HyphenationDialog"
 
         private val descriptor = settingsDescriptor {
             group(R.string.settings_generalGroup) {
@@ -198,6 +286,7 @@ class SettingsFragment : Fragment() {
                         id = ITEM_BREAK_STRATEGY,
                         nameRes = R.string.settings_breakStrategy,
                         preferenceEntry = { recordTextBreakStrategy },
+                        clickable = true
                     ) {
                         text()
                     }
@@ -205,7 +294,8 @@ class SettingsFragment : Fragment() {
                     item(
                         id = ITEM_HYPHENATION_FREQUENCY,
                         nameRes = R.string.settings_hyphenation,
-                        preferenceEntry = { recordTextHyphenationFrequency }
+                        preferenceEntry = { recordTextHyphenationFrequency },
+                        clickable = true
                     ) {
                         text()
                     }

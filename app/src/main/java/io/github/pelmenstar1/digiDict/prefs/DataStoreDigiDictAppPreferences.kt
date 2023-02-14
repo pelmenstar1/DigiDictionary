@@ -32,24 +32,30 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
     override suspend fun <TValue : Any> set(entry: Entry<TValue, Entries>, value: TValue) {
         dataStore.updateData {
             it.toMutablePreferences().also { prefs ->
-                prefs[entry.getKey()] = value
+                if (value is Enum<*>) {
+                    prefs[entry.getKeyForEnum()] = value.ordinal
+                } else {
+                    prefs[entry.getKeyForNonEnum()] = value
+                }
             }
         }
     }
 
     private fun Preferences.toSnapshot(): Snapshot {
-        val scorePointsPerCorrectAnswer = getValue { scorePointsPerCorrectAnswer }
-        val scorePointsPerWrongAnswer = getValue { scorePointsPerWrongAnswer }
-        val useCustomTabs = getValue { useCustomTabs }
-        val remindItemsSize = getValue { remindItemsSize }
-        val remindShowMeaning = getValue { remindShowMeaning }
-        val widgetListMaxSize = getValue { widgetListMaxSize }
+        val scorePointsPerCorrectAnswer = getNonEnumValue { scorePointsPerCorrectAnswer }
+        val scorePointsPerWrongAnswer = getNonEnumValue { scorePointsPerWrongAnswer }
+        val useCustomTabs = getNonEnumValue { useCustomTabs }
+        val remindItemsSize = getNonEnumValue { remindItemsSize }
+        val remindShowMeaning = getNonEnumValue { remindShowMeaning }
+        val widgetListMaxSize = getNonEnumValue { widgetListMaxSize }
 
         var recordBreakStrategy = BreakStrategy.UNSPECIFIED
         var recordHyphenationFrequency = HyphenationFrequency.UNSPECIFIED
 
         if (Build.VERSION.SDK_INT >= 23) {
-            recordBreakStrategy = getEnumValue({ recordTextBreakStrategy }, BreakStrategy::fromOrdinal)
+            recordBreakStrategy =
+                getEnumValue({ recordTextBreakStrategy }, BreakStrategy::fromOrdinal)
+
             recordHyphenationFrequency =
                 getEnumValue({ recordTextHyphenationFrequency }, HyphenationFrequency::fromOrdinal)
         }
@@ -67,7 +73,7 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <TValue : Any> Entry<TValue, Entries>.getKey(): Preferences.Key<TValue> {
+    private fun <TValue : Any> Entry<TValue, Entries>.getKeyForNonEnum(): Preferences.Key<TValue> {
         return when {
             this === Entries.scorePointsPerCorrectAnswer -> SCORE_POINTS_PER_CORRECT_ANSWER_KEY
             this === Entries.scorePointsPerWrongAnswer -> SCORE_POINTS_PER_WRONG_ANSWER_KEY
@@ -75,41 +81,65 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
             this === Entries.remindItemsSize -> REMIND_ITEMS_SIZE_KEY
             this === Entries.remindShowMeaning -> REMIND_SHOW_MEANING_KEY
             this === Entries.widgetListMaxSize -> WIDGET_LIST_MAX_SIZE_KEY
-            else -> throw IllegalStateException("Invalid preference entry")
+            else -> throwIllegalPreferenceKey()
         } as Preferences.Key<TValue>
     }
 
-    private fun <TValue : Enum<TValue>> Entry<TValue, Entries>.getKeyForEnum(): Preferences.Key<Int> {
+    private fun <TValue : Any> Entry<TValue, Entries>.getKeyForEnum(): Preferences.Key<Int> {
         if (Build.VERSION.SDK_INT >= 23) {
-            when (this) {
-                Entries.recordTextBreakStrategy -> return RECORD_TEXT_BREAK_STRATEGY
-                Entries.recordTextHyphenationFrequency -> return RECORD_TEXT_HYPHENATION_FREQUENCY
+            when {
+                this === Entries.recordTextBreakStrategy -> return RECORD_TEXT_BREAK_STRATEGY
+                this === Entries.recordTextHyphenationFrequency -> return RECORD_TEXT_HYPHENATION_FREQUENCY
             }
         }
 
-        throw IllegalArgumentException("Invalid preference entry")
+        // There's no enums on lower API levels
+        throwIllegalPreferenceKey()
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun <TValue : Any> Preferences.getValue(entry: Entry<TValue, Entries>): TValue {
-        return this[entry.getKey()] ?: entry.defaultValue
+        val defaultValue = entry.defaultValue
+
+        if (defaultValue is Enum<*>) {
+            val ordinal = this[entry.getKeyForEnum()] ?: return defaultValue
+
+            if (Build.VERSION.SDK_INT >= 23) {
+                when (entry) {
+                    Entries.recordTextBreakStrategy -> return BreakStrategy.fromOrdinal(ordinal) as TValue
+                    Entries.recordTextHyphenationFrequency -> return HyphenationFrequency.fromOrdinal(ordinal) as TValue
+                }
+            }
+
+            // There's no enums on lower API levels
+            throwIllegalPreferenceKey()
+        }
+
+        return getNonEnumValue(entry)
     }
 
-    private inline fun <TValue : Any> Preferences.getValue(getEntry: Entries.() -> Entry<TValue, Entries>): TValue {
-        return getValue(Entries.getEntry())
+    private fun <TValue : Any> Preferences.getNonEnumValue(entry: Entry<TValue, Entries>): TValue {
+        return this[entry.getKeyForNonEnum()] ?: entry.defaultValue
     }
 
-    private inline fun <TValue : Enum<TValue>> Preferences.getEnumValue(
+    private inline fun <TValue : Any> Preferences.getNonEnumValue(getEntry: Entries.() -> Entry<TValue, Entries>): TValue {
+        return getNonEnumValue(Entries.getEntry())
+    }
+
+    private inline fun <TValue : Any> Preferences.getEnumValue(
+        entry: Entry<TValue, Entries>,
+        fromOrdinal: (Int) -> TValue
+    ): TValue {
+        val ordinal = this[entry.getKeyForEnum()] ?: return entry.defaultValue
+
+        return fromOrdinal(ordinal)
+    }
+
+    private inline fun <TValue : Any> Preferences.getEnumValue(
         getEntry: Entries.() -> Entry<TValue, Entries>,
         fromOrdinal: (Int) -> TValue
     ): TValue {
-        val entry = Entries.getEntry()
-        val ordinal = this[entry.getKeyForEnum()]
-
-        return if (ordinal == null) {
-            entry.defaultValue
-        } else {
-            fromOrdinal(ordinal)
-        }
+        return getEnumValue(Entries.getEntry(), fromOrdinal)
     }
 
     companion object {
@@ -121,5 +151,9 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         private val WIDGET_LIST_MAX_SIZE_KEY = intPreferencesKey("widgetListMaxSize")
         private val RECORD_TEXT_BREAK_STRATEGY = intPreferencesKey("recordTextBreakStrategy")
         private val RECORD_TEXT_HYPHENATION_FREQUENCY = intPreferencesKey("recordTextHyphenationFrequency")
+
+        internal fun throwIllegalPreferenceKey(): Nothing {
+            throw IllegalArgumentException("Invalid preference key")
+        }
     }
 }

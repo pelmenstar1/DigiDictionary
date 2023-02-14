@@ -11,12 +11,14 @@ inline fun <TValue : Any> SettingsDescriptor.ItemGroup.ItemListBuilder.item(
     @StringRes nameRes: Int,
     @DrawableRes iconRes: Int? = null,
     preferenceEntry: DigiDictAppPreferences.Entries.() -> AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>,
+    clickable: Boolean = false,
     content: SettingsDescriptor.ItemContentBuilder.() -> SettingsDescriptor.ItemContent<TValue>,
 ) {
     item(
         id,
         nameRes, iconRes,
         DigiDictAppPreferences.Entries.preferenceEntry(),
+        clickable,
         SettingsDescriptor.ItemContentBuilder.content(),
     )
 }

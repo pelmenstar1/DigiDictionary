@@ -41,10 +41,6 @@ class SettingsController<TEntries : AppPreferences.Entries> {
         handler?.invoke()
     }
 
-    fun hasContentItemClickListener(id: Int): Boolean {
-        return contentItemClickListeners.indexOfKey(id) >= 0
-    }
-
     fun performContentItemClickListener(id: Int) {
         val handler = contentItemClickListeners.get(id)
 

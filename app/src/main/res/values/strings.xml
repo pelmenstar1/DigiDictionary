@@ -191,7 +191,7 @@
     <string name="settings_linkToManageRemoteDictProviders">Manage remote. dict providers</string>
     <string name="settings_linkToManageRecordBadges">Manage record badges</string>
     <string name="settings_miscGroup">Miscellaneous</string>
-    <string name="settings_breakStrategy">Break strategy</string>
+    <string name="settings_breakStrategy">Line break strategy</string>
     <string name="settings_hyphenation">Hyphenation</string>
 
     <string name="settings_breakStrategy_simple">Simple</string>
@@ -209,9 +209,9 @@
     </string-array>
 
     <string-array name="settings_breakStrategy_dialogChoicesInfo">
-        <item></item>
-        <item></item>
-        <item></item>
+        <item>Simple line breaking, not the best quality, but provides high performance. Use it if you experience lags during scrolling the records</item>
+        <item>The breaks are chosen to make all lines as close to the same length as possible, including automatic hyphenation. It can negatively impact performance</item>
+        <item>High quality line breaking, including automatic hyphenation. It can negatively impact performance</item>
     </string-array>
 
     <string-array name="settings_hyphenation_dialogChoices">
@@ -221,9 +221,9 @@
     </string-array>
 
     <string-array name="settings_hyphenation_dialogChoicesInfo">
-        <item></item>
-        <item></item>
-        <item></item>
+        <item>No hyphenation applied. Use it if you experience lags during scrolling the records</item>
+        <item>Light amount of automatic hyphenation</item>
+        <item>The full amount of automatic hyphenation</item>
     </string-array>
 
     <!-- List widget -->

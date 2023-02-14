@@ -28,10 +28,10 @@ enum class HyphenationFrequency(@JvmField val layoutInt: Int) {
         fun fromOrdinal(ordinal: Int): HyphenationFrequency {
             if (Build.VERSION.SDK_INT >= 23) {
                 when (ordinal) {
-                    0 -> UNSPECIFIED
-                    1 -> NONE
-                    2 -> NORMAL
-                    3 -> FULL
+                    0 -> return UNSPECIFIED
+                    1 -> return NONE
+                    2 -> return NORMAL
+                    3 -> return FULL
                 }
             } else {
                 if (ordinal == 0) {

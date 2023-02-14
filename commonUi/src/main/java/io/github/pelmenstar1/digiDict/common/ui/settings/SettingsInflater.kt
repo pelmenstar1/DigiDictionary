@@ -225,8 +225,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
             setPadding(containerInfo.padding)
 
-            val itemId = item.id
-            if (itemId >= 0 && controller.hasContentItemClickListener(itemId)) {
+            if (item.clickable) {
                 background = copyDrawable(context, contentInfo.selectableItemBackground)
 
                 setOnClickListener(onContainerClickListener)

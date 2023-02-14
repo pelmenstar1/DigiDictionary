@@ -18,6 +18,6 @@ class ResourcesBreakStrategyStringFormatter(
         BreakStrategy.UNSPECIFIED -> throw IllegalStateException("Can't format UNSPECIFIED")
         BreakStrategy.SIMPLE -> R.string.settings_breakStrategy_simple
         BreakStrategy.BALANCED -> R.string.settings_breakStrategy_balanced
-        BreakStrategy.HIGH_QUALITY -> R.string.settings_breakStrategy_balanced
+        BreakStrategy.HIGH_QUALITY -> R.string.settings_breakStrategy_highQuality
     }
 }

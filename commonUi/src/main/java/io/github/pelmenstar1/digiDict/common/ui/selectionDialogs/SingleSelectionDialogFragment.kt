@@ -96,6 +96,7 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             ).apply {
                 marginStart = res.getDimensionPixelOffset(R.dimen.selectionDialog_infoStartMargin)
+                bottomMargin = res.getDimensionPixelOffset(R.dimen.selectionDialog_infoBottomMargin)
             }
 
             if (choicesInfoArray.size != choices.size) {

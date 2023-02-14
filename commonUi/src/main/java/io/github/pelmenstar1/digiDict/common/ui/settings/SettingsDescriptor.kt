@@ -44,8 +44,9 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
     class ContentItem<TValue : Any, TEntries : AppPreferences.Entries>(
         val id: Int,
         @StringRes val nameRes: Int,
-        @DrawableRes val iconRes: Int? = null,
+        @DrawableRes val iconRes: Int?,
         val preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
+        val clickable: Boolean,
         val content: ItemContent<TValue>
     ) : Item
 
@@ -79,9 +80,10 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
                 @StringRes nameRes: Int,
                 @DrawableRes iconRes: Int? = null,
                 preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
+                clickable: Boolean = false,
                 content: ItemContent<TValue>,
             ) {
-                items.add(ContentItem(id, nameRes, iconRes, preferenceEntry, content))
+                items.add(ContentItem(id, nameRes, iconRes, preferenceEntry, clickable, content))
             }
 
             /**
