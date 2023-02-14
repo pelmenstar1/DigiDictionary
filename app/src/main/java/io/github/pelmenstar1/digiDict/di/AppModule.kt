@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.pelmenstar1.digiDict.PreferencesTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.MessageMapper
 import io.github.pelmenstar1.digiDict.common.android.LocaleProvider
 import io.github.pelmenstar1.digiDict.common.android.NoOpTextBreakAndHyphenationInfoSource
@@ -27,7 +28,6 @@ import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessag
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.misc.ResourcesRecordSortTypeMessageMapper
-import io.github.pelmenstar1.digiDict.ui.record.PreferencesTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventError
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget

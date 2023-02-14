@@ -1,12 +1,15 @@
 package io.github.pelmenstar1.digiDict.ui.quiz
 
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -15,14 +18,15 @@ import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.EmptyArray
-import io.github.pelmenstar1.digiDict.common.android.getByteArrayOrThrow
-import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
-import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.android.*
 import io.github.pelmenstar1.digiDict.common.ui.launchSetEnabledFlowCollector
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentQuizBinding
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class QuizFragment : Fragment() {
@@ -121,44 +125,71 @@ class QuizFragment : Fragment() {
         val ls = lifecycleScope
         itemBackgroundHelper = QuizItemBackgroundHelper(context)
 
-        val binding = FragmentQuizBinding.inflate(inflater, container, false)
-
-        vm.mode = args.mode
-        popBackStackOnSuccess(vm.saveAction, navController)
-
         // itemStates should be restored before it might be used.
         if (savedInstanceState != null) {
             itemStates = savedInstanceState.getByteArrayOrThrow(STATE_QUIZ_ITEM_STATES)
         }
 
-        with(binding) {
-            showSnackbarEventHandlerOnError(
-                vm.saveAction,
-                container,
-                msgId = R.string.quiz_saveError,
-                anchorView = quizSaveResults
-            )
+        val binding = FragmentQuizBinding.inflate(inflater, container, false)
+        val saveResultsButton = binding.quizSaveResults.also {
+            it.setOnClickListener { vm.saveResults() }
+        }
 
-            quizSaveResults.run {
-                ls.launchSetEnabledFlowCollector(this, vm.isAllAnswered)
+        val emptyTextView = binding.quizEmptyText
+        val quizContainer = binding.quizContainer
+        val itemsContainer = binding.quizItemsContainer
 
-                setOnClickListener { vm.saveResults() }
+        vm.mode = args.mode
+        popBackStackOnSuccess(vm.saveAction, navController)
+
+        showSnackbarEventHandlerOnError(
+            vm.saveAction,
+            container,
+            msgId = R.string.quiz_saveError,
+            anchorView = saveResultsButton
+        )
+
+        ls.launchSetEnabledFlowCollector(saveResultsButton, vm.isAllAnswered)
+
+        ls.launch {
+            // Don't start a coroutine when it won't be used.
+            //
+            // Async here is used to load quiz data and 'break and hyphenation info' simultaneously.
+            val breakAndHyphenationInfoAsync = if (Build.VERSION.SDK_INT >= 23) {
+                async {
+                    vm.textBreakAndHyphenationInfoSource.flow.first()
+                }
+            } else {
+                null
             }
 
-            quizContainer.setupLoadStateFlow(ls, vm) {
+            quizContainer.setupLoadStateFlowSuspend(vm) {
                 if (it.isEmpty()) {
-                    quizEmptyText.visibility = View.VISIBLE
-                    quizSaveResults.visibility = View.GONE
+                    emptyTextView.visibility = View.VISIBLE
+                    saveResultsButton.visibility = View.GONE
                 } else {
                     // Don't re-write and clear the content of itemStates if it's non-empty (restored from saved state)
                     if (itemStates.isEmpty()) {
                         itemStates = ByteArray(it.size)
                     }
 
-                    submitItemsToContainer(quizItemsContainer, it)
+                    submitItemsToContainer(itemsContainer, it)
+                    emptyTextView.visibility = View.GONE
+                    saveResultsButton.visibility = View.VISIBLE
 
-                    quizEmptyText.visibility = View.GONE
-                    quizSaveResults.visibility = View.VISIBLE
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        try {
+                            val breakAndHyphenationInfo = breakAndHyphenationInfoAsync!!.await()
+
+                            setBreakStrategyAndHyphenationToItems(itemsContainer, breakAndHyphenationInfo)
+                        } catch (e: Exception) {
+                            // PreferencesTextBreakAndHyphenationInfoSource possibly can throw exception
+                            // when loading the data. On error here we do nothing, because it's not that
+                            // critical that formatting is a little bit off.
+
+                            Log.e(TAG, "failed to load break and hyphenation info", e)
+                        }
+                    }
                 }
             }
         }
@@ -177,6 +208,32 @@ class QuizFragment : Fragment() {
             }
 
             container.addView(viewHolder.container)
+        }
+    }
+
+    @RequiresApi(23)
+    private fun setBreakStrategyAndHyphenationToItems(container: LinearLayout, info: TextBreakAndHyphenationInfo) {
+        val hf = info.hyphenationFrequency
+        val bs = info.breakStrategy
+
+        if (bs == BreakStrategy.UNSPECIFIED || hf == HyphenationFrequency.UNSPECIFIED) {
+            throw IllegalStateException("break strategy and hyphenation info can't be unspecified")
+        }
+
+        val hfInt = hf.layoutInt
+        val bsInt = bs.layoutInt
+
+        for (i in 0 until container.childCount) {
+            val itemContainer = container.getChildAt(i)
+
+            val exprView = itemContainer.findViewById<TextView>(R.id.itemQuizRecord_expression)
+            val meaningView = itemContainer.findViewById<TextView>(R.id.itemQuizRecord_meaning)
+
+            exprView.breakStrategy = bsInt
+            exprView.hyphenationFrequency = hfInt
+
+            meaningView.breakStrategy = bsInt
+            meaningView.hyphenationFrequency = hfInt
         }
     }
 
@@ -199,6 +256,7 @@ class QuizFragment : Fragment() {
     }
 
     companion object {
+        private const val TAG = "QuizFragment"
         private const val STATE_QUIZ_ITEM_STATES = "io.github.pelmenstar1.digiDict.QuizFragment.quizState"
 
         private val ITEM_LAYOUT_PARAMS = LinearLayout.LayoutParams(

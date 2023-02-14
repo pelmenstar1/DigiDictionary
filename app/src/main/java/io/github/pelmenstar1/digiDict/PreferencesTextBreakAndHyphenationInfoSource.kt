@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.ui.record
+package io.github.pelmenstar1.digiDict
 
 import androidx.annotation.RequiresApi
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo

@@ -4,6 +4,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
+import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.android.viewModelAction
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
@@ -20,7 +21,8 @@ import kotlin.random.Random
 class QuizViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val appPreferences: DigiDictAppPreferences,
-    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
+    val textBreakAndHyphenationInfoSource: TextBreakAndHyphenationInfoSource
 ) : SingleDataLoadStateViewModel<Array<ConciseRecordWithBadges>>(TAG) {
     override val canRefreshAfterSuccess: Boolean
         get() = false
