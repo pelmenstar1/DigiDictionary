@@ -1,10 +1,13 @@
 package io.github.pelmenstar1.digiDict.ui.remindRecords
 
 import android.content.Context
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
+import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
@@ -36,6 +39,8 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     private var items = emptyArray<ConciseRecordWithBadges>()
     private var staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo? = null
 
+    private var breakAndHyphenationInfo: TextBreakAndHyphenationInfo? = null
+
     private var _revealedStates = FixedBitSet.EMPTY
     var revealedStates: FixedBitSet
         get() = _revealedStates
@@ -48,6 +53,17 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
 
             notifyItemRangeChanged(0, items.size, updateRevealStatePayload)
         }
+
+    @RequiresApi(23)
+    fun setBreakAndHyphenationInfo(value: TextBreakAndHyphenationInfo) {
+        breakAndHyphenationInfo = value
+
+        val itemsLength = items.size
+
+        if (itemsLength > 0) {
+            notifyItemRangeChanged(0, itemsLength, updateBreakStrategyAndHyphenationPayload)
+        }
+    }
 
     fun submitItems(newItems: Array<ConciseRecordWithBadges>, defaultRevealState: Boolean) {
         val newSize = newItems.size
@@ -86,7 +102,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     }
 
     private fun reveal(index: Int) {
-        revealedStates.set(index)
+        _revealedStates.set(index)
 
         notifyItemChanged(index, updateRevealStatePayload)
     }
@@ -99,12 +115,20 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
             { staticInfo = it }
         )
 
-        return ViewHolder(context, si)
+        return ViewHolder(context, si).also { vh ->
+            bindCurrentBreakStrategyAndHyphenationInfo(vh)
+        }
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position], hasDivider = position < items.size - 1, null, onContainerClickListener)
-        holder.setRevealed(revealedStates[position])
+        holder.bind(
+            record = items[position],
+            hasDivider = position < items.size - 1,
+            precomputedValues = null,
+            onContainerClickListener
+        )
+
+        holder.setRevealed(_revealedStates[position])
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -113,15 +137,27 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
         } else {
             val payload = payloads[0]
 
-            if (payload === updateRevealStatePayload) {
-                holder.setRevealed(_revealedStates[position])
+            when {
+                payload === updateRevealStatePayload -> {
+                    holder.setRevealed(_revealedStates[position])
+                }
+                payload == updateBreakStrategyAndHyphenationPayload -> {
+                    bindCurrentBreakStrategyAndHyphenationInfo(holder)
+                }
             }
         }
     }
 
     override fun getItemCount() = items.size
 
+    private fun bindCurrentBreakStrategyAndHyphenationInfo(vh: ViewHolder) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            breakAndHyphenationInfo?.also { vh.bindTextBreakAndHyphenationInfo(it) }
+        }
+    }
+
     companion object {
         private val updateRevealStatePayload = Any()
+        private val updateBreakStrategyAndHyphenationPayload = Any()
     }
 }
