@@ -12,16 +12,15 @@ import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
  */
 abstract class RecordTextPrecomputeController {
     private object Api21 : RecordTextPrecomputeController() {
-        override fun compute(record: ConciseRecordWithBadges): RecordTextPrecomputedValues? {
-            return null
-        }
+        override fun compute(record: ConciseRecordWithBadges): RecordTextPrecomputedValues? = null
     }
 
     @RequiresApi(28)
     private class Api28(private val context: Context) : RecordTextPrecomputeController() {
-        override fun compute(record: ConciseRecordWithBadges): RecordTextPrecomputedValues {
+        override fun compute(record: ConciseRecordWithBadges): RecordTextPrecomputedValues? {
+            val params = params ?: return null
+
             val meaningFormattedText = MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
-            val params = params
 
             val exprPrecomputedText = PrecomputedText.create(record.expression, params.expressionParams)
             val meaningPrecomputedText = PrecomputedText.create(meaningFormattedText, params.meaningParams)
@@ -30,18 +29,12 @@ abstract class RecordTextPrecomputeController {
         }
     }
 
-    private var _params: RecordTextPrecomputeParams? = null
-
     /**
      * Gets or sets the [RecordTextPrecomputeParams] required for precomputing the text.
      *
-     * It will throw a [IllegalStateException] unless the [params] has a value, by default [params] has no value.
+     * If the value is null, [compute] returns `null`.
      */
-    var params: RecordTextPrecomputeParams
-        get() = _params ?: throw IllegalStateException("params is not initialized")
-        set(value) {
-            _params = value
-        }
+    var params: RecordTextPrecomputeParams? = null
 
     /**
      * Precomputes text values of given [record].
@@ -57,11 +50,7 @@ abstract class RecordTextPrecomputeController {
          * On lower API levels, the implementation will always return null in [compute] method.
          */
         fun create(context: Context): RecordTextPrecomputeController {
-            return if (Build.VERSION.SDK_INT >= 28) {
-                Api28(context)
-            } else {
-                Api21
-            }
+            return if (Build.VERSION.SDK_INT >= 28) Api28(context) else Api21
         }
     }
 }
