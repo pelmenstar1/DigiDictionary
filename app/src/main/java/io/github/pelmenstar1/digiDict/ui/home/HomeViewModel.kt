@@ -57,7 +57,7 @@ class HomeViewModel @Inject constructor(
     var recordTextPrecomputeController: RecordTextPrecomputeController? = null
 
     val items = Pager(
-        config = PagingConfig(pageSize = 20),
+        config = PagingConfig(pageSize = 20, enablePlaceholders = false),
         pagingSourceFactory = {
             AppPagingSource(
                 appDatabase,

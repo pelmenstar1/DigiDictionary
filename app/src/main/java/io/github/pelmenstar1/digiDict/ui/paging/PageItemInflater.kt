@@ -8,12 +8,6 @@ import android.view.View
  */
 interface PageItemInflater<TItem : PageItem, TStaticInfo> {
     /**
-     * Gets the unique integer id of the [PageItem] this inflater is representing.
-     * It shouldn't match among the other inflaters and **shouldn't be 0**.
-     */
-    val uniqueId: Int
-
-    /**
      * Creates instance of [TStaticInfo] using given [context].
      */
     fun createStaticInfo(context: Context): TStaticInfo

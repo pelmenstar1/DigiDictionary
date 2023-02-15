@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.text.TextPaint
 import android.util.Log
-import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -14,66 +13,38 @@ import androidx.annotation.RequiresApi
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
-import io.github.pelmenstar1.digiDict.common.getOrAdd
-import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
+import io.github.pelmenstar1.digiDict.common.getOrCreateAndSet
 import io.github.pelmenstar1.digiDict.ui.paging.*
 import io.github.pelmenstar1.digiDict.ui.record.*
 
 class AppPagingAdapter(
     onViewRecord: (id: Int) -> Unit
-) : PagingDataAdapter<PageItem, AppPagingAdapter.ViewHolder>(PageItemDiffCallback) {
-    inner class ViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
-        private var type = TYPE_NONE
-
-        // TODO: Use simple array instead. We can treat uniqueId as index.
-        private val views = SparseArray<View>(4)
-
-        @Suppress("UNCHECKED_CAST")
-        fun bind(item: PageItem?) {
-            if (item != null) {
-                val context = container.context
-
-                // Record item should be handled specially
-                // due to the need of accessing onRecordClickListener and precomputed text support.
-                if (item is PageItem.Record) {
-                    val staticInfo = getRecordStaticInfo(context)
-                    val view = views.getOrAdd(RECORD_ITEM_UNIQUE_ID) {
-                        ConciseRecordWithBadgesViewHolder.createRootContainer(context, staticInfo).also { container ->
-                            // Assign initial breakStrategy and hyphenationFrequency values
-                            // if they exist.
-                            if (Build.VERSION.SDK_INT >= 23) {
-                                textBreakAndHyphenationInfo?.let { info ->
-                                    ConciseRecordWithBadgesViewHolder.bindTextBreakAndHyphenationInfo(container, info)
-                                }
-                            }
-                        }
-                    }
-
-                    replaceViewIfTypeDiffers(RECORD_ITEM_UNIQUE_ID, view)
-
-                    ConciseRecordWithBadgesViewHolder.bind(
-                        view as RecordItemRootContainer,
-                        item.record,
-                        hasDivider = true,
-                        item.precomputedValues,
-                        onItemClickListener,
-                        staticInfo
-                    )
-                } else {
-                    val inflater = getInflater(item) as PageItemInflater<PageItem, Any>
-                    val id = inflater.uniqueId
-                    val staticInfo = itemStaticInfoArray.getOrAdd(id) { inflater.createStaticInfo(context) }
-                    val view = views.getOrAdd(id) { inflater.createView(context, staticInfo) }
-
-                    replaceViewIfTypeDiffers(id, view)
-
-                    inflater.bind(view, item, staticInfo)
+) : PagingDataAdapter<PageItem, RecyclerView.ViewHolder>(PageItemDiffCallback) {
+    inner class RecordViewHolder(private val root: RecordItemRootContainer) : RecyclerView.ViewHolder(root) {
+        init {
+            // Assign initial breakStrategy and hyphenationFrequency values
+            // if they exist.
+            if (Build.VERSION.SDK_INT >= 23) {
+                textBreakAndHyphenationInfo?.let { info ->
+                    ConciseRecordWithBadgesViewHolder.bindTextBreakAndHyphenationInfo(root, info)
                 }
-            } else {
-                type = TYPE_NONE
-                container.removeAllViews()
             }
         }
+
+        fun bind(item: PageItem.Record) {
+            val context = root.context
+            val staticInfo = getRecordStaticInfo(context)
+
+            ConciseRecordWithBadgesViewHolder.bind(
+                root,
+                item.record,
+                hasDivider = !item.isBeforeDateMarker,
+                item.precomputedValues,
+                onItemClickListener,
+                staticInfo
+            )
+        }
+
 
         /**
          * Updates breakStrategy and hyphenationFrequency in record's view holder.
@@ -82,33 +53,29 @@ class AppPagingAdapter(
          */
         @RequiresApi(23)
         fun updateTextBreakAndHyphenationInfo() {
-            if (type == RECORD_ITEM_UNIQUE_ID) {
-                val root = container.getTypedViewAt<RecordItemRootContainer>(0)
-
-                ConciseRecordWithBadgesViewHolder.bindTextBreakAndHyphenationInfo(root, textBreakAndHyphenationInfo!!)
-            }
+            ConciseRecordWithBadgesViewHolder.bindTextBreakAndHyphenationInfo(root, textBreakAndHyphenationInfo!!)
         }
+    }
 
-        private fun getInflater(item: PageItem): PageItemInflater<*, *> = when (item) {
-            is PageItem.Record -> throw IllegalArgumentException("PageItem.Record should not be passed to getInflater()")
-            is PageItem.DateMarker -> DateMarkerInflater
-            is PageItem.EventMarker -> EventMarkerInflater
-        }
+    inner class NonRecordViewHolder(
+        viewContainer: ViewGroup,
+        private val type: Int
+    ) : RecyclerView.ViewHolder(viewContainer) {
+        private val view = viewContainer.getChildAt(0)
+        private val inflater = getNonRecordInflater(type)
 
-        private fun replaceViewIfTypeDiffers(expectedType: Int, view: View) {
-            if (type != expectedType) {
-                container.removeAllViews()
-                container.addView(view)
+        fun bind(item: PageItem) {
+            val context = view.context
+            val staticInfo = getNonRecordStaticInfo(context, inflater, type)
 
-                type = expectedType
-            }
+            inflater.bind(view, item, staticInfo)
         }
     }
 
     private val onItemClickListener = ConciseRecordWithBadgesViewHolder.createOnItemClickListener(onViewRecord)
 
-    // TODO: Use simple array instead. We can treat uniqueId as index.
-    private val itemStaticInfoArray = SparseArray<Any>(4)
+    // We have only 3 different page items.
+    private val itemStaticInfoArray = arrayOfNulls<Any>(3)
 
     private var textBreakAndHyphenationInfo: TextBreakAndHyphenationInfo? = null
 
@@ -136,28 +103,49 @@ class AppPagingAdapter(
     fun setTextBreakAndHyphenationInfo(value: TextBreakAndHyphenationInfo) {
         textBreakAndHyphenationInfo = value
 
-        notifyItemRangeChanged(0, itemCount, CHANGE_TEXT_BREAK_AND_HYPHENATION_INFO)
-    }
-
-    private fun getRecordStaticInfo(context: Context): ConciseRecordWithBadgesViewHolderStaticInfo {
-        return itemStaticInfoArray.getOrAdd(RECORD_ITEM_UNIQUE_ID) {
-            ConciseRecordWithBadgesViewHolderStaticInfo(context)
-        } as ConciseRecordWithBadgesViewHolderStaticInfo
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val container = FrameLayout(parent.context).apply {
-            layoutParams = CONTAINER_LAYOUT_PARAMS
+        itemCount.also {
+            if (it > 0) {
+                notifyItemRangeChanged(0, it, updateTextBreakAndHyphenationInfoPayload)
+            }
         }
 
-        return ViewHolder(container)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+    override fun getItemViewType(position: Int): Int {
+        return getItemType(getItemNotNull(position))
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val context = parent.context
+
+        return when (viewType) {
+            TYPE_RECORD -> {
+                val staticInfo = getRecordStaticInfo(context)
+                val root = ConciseRecordWithBadgesViewHolder.createRootContainer(context, staticInfo)
+
+                RecordViewHolder(root)
+            }
+            TYPE_DATE_MARKER, TYPE_EVENT_MARKER -> {
+                val inflater = getNonRecordInflater(viewType)
+                val staticInfo = getNonRecordStaticInfo(context, inflater, viewType)
+                val view = inflater.createView(context, staticInfo)
+
+                NonRecordViewHolder(createNonRecordItemContainer(context, view), viewType)
+            }
+            else -> throw IllegalArgumentException("Invalid viewType")
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val item = getItemNotNull(position)
+
+        when (holder) {
+            is RecordViewHolder -> holder.bind(item as PageItem.Record)
+            is NonRecordViewHolder -> holder.bind(item)
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
         if (payloads.isEmpty()) {
             onBindViewHolder(holder, position)
 
@@ -166,9 +154,9 @@ class AppPagingAdapter(
 
         val payload = payloads[0]
 
-        if (payload === CHANGE_TEXT_BREAK_AND_HYPHENATION_INFO) {
+        if (payload === updateTextBreakAndHyphenationInfoPayload) {
             if (Build.VERSION.SDK_INT >= 23) {
-                if (textBreakAndHyphenationInfo != null) {
+                if (holder is RecordViewHolder && textBreakAndHyphenationInfo != null) {
                     holder.updateTextBreakAndHyphenationInfo()
                 }
             } else {
@@ -177,21 +165,57 @@ class AppPagingAdapter(
         } else {
             Log.e(TAG, "Failed to bind when payload is unknown (${payload})")
         }
+    }
 
-        super.onBindViewHolder(holder, position, payloads)
+    private fun createNonRecordItemContainer(context: Context, itemView: View): ViewGroup {
+        return FrameLayout(context).apply {
+            layoutParams = NON_RECORD_CONTAINER_LAYOUT_PARAMS
+
+            addView(itemView)
+        }
+    }
+
+    private fun getRecordStaticInfo(context: Context): ConciseRecordWithBadgesViewHolderStaticInfo {
+        return itemStaticInfoArray.getOrCreateAndSet(TYPE_RECORD) {
+            ConciseRecordWithBadgesViewHolderStaticInfo(context)
+        } as ConciseRecordWithBadgesViewHolderStaticInfo
+    }
+
+    private fun getNonRecordStaticInfo(context: Context, inflater: PageItemInflater<*, Any>, type: Int): Any {
+        return itemStaticInfoArray.getOrCreateAndSet(type) {
+            inflater.createStaticInfo(context)
+        }
+    }
+
+    private fun getItemNotNull(position: Int): PageItem {
+        return requireNotNull(getItem(position)) { "Placeholders are forbidden" }
     }
 
     companion object {
         private const val TAG = "AppPagingAdapter"
 
-        private val CHANGE_TEXT_BREAK_AND_HYPHENATION_INFO = Any()
+        private val updateTextBreakAndHyphenationInfoPayload = Any()
 
-        private val CONTAINER_LAYOUT_PARAMS = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
+        private val NON_RECORD_CONTAINER_LAYOUT_PARAMS = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
         )
 
-        private const val TYPE_NONE = 0
-        private const val RECORD_ITEM_UNIQUE_ID = 1
+        private const val TYPE_RECORD = 0
+        private const val TYPE_DATE_MARKER = 1
+        private const val TYPE_EVENT_MARKER = 2
+
+        internal fun getItemType(item: PageItem): Int = when (item) {
+            is PageItem.Record -> TYPE_RECORD
+            is PageItem.DateMarker -> TYPE_DATE_MARKER
+            is PageItem.EventMarker -> TYPE_EVENT_MARKER
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        internal fun getNonRecordInflater(type: Int): PageItemInflater<PageItem, Any> = when (type) {
+            TYPE_DATE_MARKER -> DateMarkerInflater
+            TYPE_EVENT_MARKER -> EventMarkerInflater
+            else -> throw IllegalArgumentException("Invalid ordinal")
+        } as PageItemInflater<PageItem, Any>
     }
 }

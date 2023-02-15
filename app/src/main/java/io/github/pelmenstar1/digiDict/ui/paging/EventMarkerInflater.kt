@@ -4,9 +4,6 @@ import android.content.Context
 import android.view.View
 
 object EventMarkerInflater : PageItemInflater<PageItem.EventMarker, EventMarkerViewStaticInfo> {
-    override val uniqueId: Int
-        get() = 3
-
     override fun createStaticInfo(context: Context) = EventMarkerViewStaticInfo(context)
 
     override fun createView(context: Context, staticInfo: EventMarkerViewStaticInfo): View {

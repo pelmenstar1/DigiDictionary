@@ -25,7 +25,9 @@ object DateMarkerInflater : PageItemInflater<PageItem.DateMarker, DateMarkerInfl
         ).apply {
             val verticalMargin = context.resources.getDimensionPixelOffset(R.dimen.home_dateMarker_verticalMargin)
 
+            //weight = 1f
             gravity = Gravity.CENTER_HORIZONTAL
+
             topMargin = verticalMargin
             bottomMargin = verticalMargin
         }
@@ -48,9 +50,6 @@ object DateMarkerInflater : PageItemInflater<PageItem.DateMarker, DateMarkerInfl
             backgroundColor = ResourcesCompat.getColor(res, R.color.home_date_marker_background_color, theme)
         }
     }
-
-    override val uniqueId: Int
-        get() = 2
 
     override fun createStaticInfo(context: Context): StaticInfo = StaticInfo(context)
 
