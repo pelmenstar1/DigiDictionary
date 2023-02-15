@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.ui.remindRecords
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +16,6 @@ import io.github.pelmenstar1.digiDict.common.FixedBitSet
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.LastElementVerticalSpaceDecoration
 import io.github.pelmenstar1.digiDict.databinding.FragmentRemindRecordsBinding
-import kotlinx.coroutines.flow.first
 
 @AndroidEntryPoint
 class RemindRecordsFragment : Fragment() {
@@ -55,11 +55,11 @@ class RemindRecordsFragment : Fragment() {
         var isSavedStateApplied = false
 
         binding.remindRecordsContainer.setupLoadStateFlow(ls, vm) { items ->
-            // TODO: Properly handle situation when an exception is thrown on collecting the showMeaningFlow
-            val defaultRevealState = vm.showMeaningFlow.first()
+            adapter.submitItems(items)
 
-            adapter.submitItems(items, defaultRevealState)
-
+            // submitItems rewrite revealedStates, so if we have saved state, we need to restore it
+            // after submitItems.
+            //
             // Saved state shouldn't be applied to the next items if it was already.
             // The fact of receiving new items makes the saved state invalid.
             if (savedInstanceState != null && !isSavedStateApplied) {
@@ -71,9 +71,25 @@ class RemindRecordsFragment : Fragment() {
             }
         }
 
+        try {
+            ls.launchFlowCollector(vm.showMeaningFlow) {
+                adapter.setDefaultRevealState(it)
+            }
+        } catch (e: Exception) {
+            // If we're unable to load default reveal state, that's not critical if we don't show
+            // meaning when we should.
+            Log.e(TAG, "failed to load default reveal state", e)
+        }
+
         if (Build.VERSION.SDK_INT >= 23) {
-            ls.launchFlowCollector(vm.breakAndHyphenationInfoSource.flow) { info ->
-                adapter.setBreakAndHyphenationInfo(info)
+            try {
+                ls.launchFlowCollector(vm.breakAndHyphenationInfoSource.flow) { info ->
+                    adapter.setBreakAndHyphenationInfo(info)
+                }
+            } catch (e: Exception) {
+                // If we're unable to load break and hyphenation info, that's not critical that the formatting
+                // will be a little bit off.
+                Log.e(TAG, "failed to load break and hyphenation info", e)
             }
         }
 
@@ -85,6 +101,8 @@ class RemindRecordsFragment : Fragment() {
     }
 
     companion object {
+        private const val TAG = "RemindRecordsFragment"
+
         private const val SAVED_STATE_REVEALED_STATES =
             "io.github.pelmenstar1.digiDict.RemindRecordsFragment.revealedStates"
     }

@@ -40,6 +40,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     private var staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo? = null
 
     private var breakAndHyphenationInfo: TextBreakAndHyphenationInfo? = null
+    private var defaultRevealState = false
 
     private var _revealedStates = FixedBitSet.EMPTY
     var revealedStates: FixedBitSet
@@ -51,50 +52,62 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
                 throw IllegalStateException("revealedStates should be set after submitItems() and size should be equal to items size")
             }
 
-            notifyItemRangeChanged(0, items.size, updateRevealStatePayload)
+            notifyAllItemsChanged(updateRevealStatePayload)
         }
 
     @RequiresApi(23)
     fun setBreakAndHyphenationInfo(value: TextBreakAndHyphenationInfo) {
         breakAndHyphenationInfo = value
 
-        val itemsLength = items.size
+        notifyAllItemsChanged(updateBreakStrategyAndHyphenationPayload)
+    }
 
-        if (itemsLength > 0) {
-            notifyItemRangeChanged(0, itemsLength, updateBreakStrategyAndHyphenationPayload)
+    fun setDefaultRevealState(value: Boolean) {
+        if (defaultRevealState != value) {
+            defaultRevealState = value
+
+            notifyAllItemsChanged(updateRevealStatePayload)
         }
     }
 
-    fun submitItems(newItems: Array<ConciseRecordWithBadges>, defaultRevealState: Boolean) {
+    fun submitItems(newItems: Array<ConciseRecordWithBadges>) {
         val newSize = newItems.size
         val revStates = _revealedStates
+        val defRevealState = defaultRevealState
 
         if (revStates.size != newItems.size) {
             _revealedStates = FixedBitSet(newSize).also {
-                if (defaultRevealState) {
+                // Bit set is all zero by default, so that if defRevealState is false,
+                // there's no sense to set it all zero again.
+                if (defRevealState) {
                     it.setAll()
                 }
             }
         } else {
-            revStates.setAll(defaultRevealState)
+            revStates.setAll(defRevealState)
         }
 
-        val oldItems = items
-        val oldSize = oldItems.size
-
+        val oldItemsLength = items.size
         items = newItems
 
+        notifyItemsChanged(oldItemsLength, newSize)
+    }
+
+    private fun notifyItemsChanged(oldSize: Int, newSize: Int) {
+        // Don't do complex diff here, because:
+        // - old and new elements are almost always different.
+        // - old and new sizes are almost always the same.
         when {
             oldSize == 0 && newSize > 0 -> {
                 notifyItemRangeInserted(0, newSize)
             }
-            // Almost impossible situation but should be handled.
             oldSize != newSize -> {
                 notifyItemRangeRemoved(0, oldSize)
                 notifyItemRangeInserted(0, newSize)
 
                 notifyItemRangeChanged(0, newSize)
             }
+            // oldSize == newSize
             else -> {
                 notifyItemRangeChanged(0, newSize)
             }
@@ -153,6 +166,13 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
     private fun bindCurrentBreakStrategyAndHyphenationInfo(vh: ViewHolder) {
         if (Build.VERSION.SDK_INT >= 23) {
             breakAndHyphenationInfo?.also { vh.bindTextBreakAndHyphenationInfo(it) }
+        }
+    }
+
+    private fun notifyAllItemsChanged(payload: Any?) {
+        val size = items.size
+        if (size > 0) {
+            notifyItemRangeChanged(0, size, payload)
         }
     }
 
