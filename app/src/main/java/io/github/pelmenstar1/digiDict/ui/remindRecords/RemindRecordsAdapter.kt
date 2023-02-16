@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.remindRecords
 
 import android.content.Context
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
@@ -16,18 +15,19 @@ import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolde
 class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolder>() {
     class ViewHolder(
         context: Context,
+        onItemClickListener: View.OnClickListener,
         staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-    ) : ConciseRecordWithBadgesViewHolder(context, staticInfo) {
+    ) : ConciseRecordWithBadgesViewHolder(context, onItemClickListener, staticInfo) {
         fun setRevealed(state: Boolean) {
             // Use INVISIBLE instead of GONE to reduce jumps on revealing.
             val visibility = if (state) View.VISIBLE else View.INVISIBLE
 
-            meaningView.visibility = visibility
-            scoreView.visibility = visibility
+            container.meaningView.visibility = visibility
+            container.scoreView.visibility = visibility
         }
     }
 
-    private val onContainerClickListener = View.OnClickListener {
+    private val onItemClickListener = View.OnClickListener {
         val record = it.tag as ConciseRecordWithBadges
         val index = items.indexOf(record)
 
@@ -120,6 +120,8 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
         notifyItemChanged(index, updateRevealStatePayload)
     }
 
+    override fun getItemCount() = items.size
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
         val si = getLazyValue(
@@ -128,8 +130,8 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
             { staticInfo = it }
         )
 
-        return ViewHolder(context, si).also { vh ->
-            bindCurrentBreakStrategyAndHyphenationInfo(vh)
+        return ViewHolder(context, onItemClickListener, si).also {
+            it.setTextBreakAndHyphenationInfoCompat(breakAndHyphenationInfo)
         }
     }
 
@@ -137,8 +139,7 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
         holder.bind(
             record = items[position],
             hasDivider = position < items.size - 1,
-            precomputedValues = null,
-            onContainerClickListener
+            precomputedValues = null
         )
 
         holder.setRevealed(_revealedStates[position])
@@ -155,17 +156,9 @@ class RemindRecordsAdapter : RecyclerView.Adapter<RemindRecordsAdapter.ViewHolde
                     holder.setRevealed(_revealedStates[position])
                 }
                 payload == updateBreakStrategyAndHyphenationPayload -> {
-                    bindCurrentBreakStrategyAndHyphenationInfo(holder)
+                    holder.setTextBreakAndHyphenationInfoCompat(breakAndHyphenationInfo)
                 }
             }
-        }
-    }
-
-    override fun getItemCount() = items.size
-
-    private fun bindCurrentBreakStrategyAndHyphenationInfo(vh: ViewHolder) {
-        if (Build.VERSION.SDK_INT >= 23) {
-            breakAndHyphenationInfo?.also { vh.bindTextBreakAndHyphenationInfo(it) }
         }
     }
 

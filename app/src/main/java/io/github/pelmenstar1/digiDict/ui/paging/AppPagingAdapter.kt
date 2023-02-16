@@ -1,9 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.paging
 
 import android.content.Context
-import android.os.Build
 import android.text.TextPaint
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -20,40 +18,12 @@ import io.github.pelmenstar1.digiDict.ui.record.*
 class AppPagingAdapter(
     onViewRecord: (id: Int) -> Unit
 ) : PagingDataAdapter<PageItem, RecyclerView.ViewHolder>(PageItemDiffCallback) {
-    inner class RecordViewHolder(private val root: RecordItemRootContainer) : RecyclerView.ViewHolder(root) {
-        init {
-            // Assign initial breakStrategy and hyphenationFrequency values
-            // if they exist.
-            if (Build.VERSION.SDK_INT >= 23) {
-                textBreakAndHyphenationInfo?.let { info ->
-                    ConciseRecordWithBadgesViewHolder.bindTextBreakAndHyphenationInfo(root, info)
-                }
-            }
-        }
-
+    class RecordViewHolder(
+        container: RecordItemRootContainer,
+        onItemClickListener: View.OnClickListener
+    ) : ConciseRecordWithBadgesViewHolder(container, onItemClickListener) {
         fun bind(item: PageItem.Record) {
-            val context = root.context
-            val staticInfo = getRecordStaticInfo(context)
-
-            ConciseRecordWithBadgesViewHolder.bind(
-                root,
-                item.record,
-                hasDivider = !item.isBeforeDateMarker,
-                item.precomputedValues,
-                onItemClickListener,
-                staticInfo
-            )
-        }
-
-
-        /**
-         * Updates breakStrategy and hyphenationFrequency in record's view holder.
-         *
-         * [textBreakAndHyphenationInfo] must not be null.
-         */
-        @RequiresApi(23)
-        fun updateTextBreakAndHyphenationInfo() {
-            ConciseRecordWithBadgesViewHolder.bindTextBreakAndHyphenationInfo(root, textBreakAndHyphenationInfo!!)
+            bind(item.record, hasDivider = !item.isBeforeDateMarker, item.precomputedValues)
         }
     }
 
@@ -108,7 +78,6 @@ class AppPagingAdapter(
                 notifyItemRangeChanged(0, it, updateTextBreakAndHyphenationInfoPayload)
             }
         }
-
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -123,7 +92,9 @@ class AppPagingAdapter(
                 val staticInfo = getRecordStaticInfo(context)
                 val root = ConciseRecordWithBadgesViewHolder.createRootContainer(context, staticInfo)
 
-                RecordViewHolder(root)
+                RecordViewHolder(root, onItemClickListener).also {
+                    it.setTextBreakAndHyphenationInfoCompat(textBreakAndHyphenationInfo)
+                }
             }
             TYPE_DATE_MARKER, TYPE_EVENT_MARKER -> {
                 val inflater = getNonRecordInflater(viewType)
@@ -155,15 +126,9 @@ class AppPagingAdapter(
         val payload = payloads[0]
 
         if (payload === updateTextBreakAndHyphenationInfoPayload) {
-            if (Build.VERSION.SDK_INT >= 23) {
-                if (holder is RecordViewHolder && textBreakAndHyphenationInfo != null) {
-                    holder.updateTextBreakAndHyphenationInfo()
-                }
-            } else {
-                Log.e(TAG, "Request to re-bind break strategy and hyphenation frequency but API level < 23")
+            if (holder is RecordViewHolder) {
+                holder.setTextBreakAndHyphenationInfoCompat(textBreakAndHyphenationInfo)
             }
-        } else {
-            Log.e(TAG, "Failed to bind when payload is unknown (${payload})")
         }
     }
 
@@ -192,8 +157,6 @@ class AppPagingAdapter(
     }
 
     companion object {
-        private const val TAG = "AppPagingAdapter"
-
         private val updateTextBreakAndHyphenationInfoPayload = Any()
 
         private val NON_RECORD_CONTAINER_LAYOUT_PARAMS = LinearLayout.LayoutParams(

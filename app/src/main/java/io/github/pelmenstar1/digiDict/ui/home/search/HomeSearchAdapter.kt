@@ -1,8 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.home.search
 
 import android.content.Context
-import android.os.Build
-import android.view.View.OnClickListener
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.FilteredArray
@@ -22,26 +21,21 @@ class HomeSearchAdapter(
 ) : RecyclerView.Adapter<HomeSearchAdapter.ViewHolder>() {
     class ViewHolder(
         context: Context,
+        onItemClickListener: View.OnClickListener,
         staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
-    ) : ConciseRecordWithBadgesViewHolder(context, staticInfo) {
-        fun bind(
-            record: ConciseRecordWithBadges,
-            style: HomeSearchItemStyle,
-            hasDivider: Boolean,
-            onContainerClickListener: OnClickListener
-        ) {
-            container.hasDivider = hasDivider
-
+    ) : ConciseRecordWithBadgesViewHolder(context, onItemClickListener, staticInfo) {
+        fun bind(record: ConciseRecordWithBadges, style: HomeSearchItemStyle, hasDivider: Boolean) {
             val context = container.context
 
+            val exprText = HomeSearchStyledTextUtil.createExpressionText(record.expression, style)
+            val meaningText = HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, style)
+
+            container.hasDivider = hasDivider
             container.tag = record
-            container.setOnClickListener(onContainerClickListener)
 
-            expressionView.text = HomeSearchStyledTextUtil.createExpressionText(record.expression, style)
-            meaningView.text = HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, style)
-
-            setScore(scoreView, record.score, staticInfo)
-            setBadges(container, record.badges, staticInfo)
+            container.setExpressionAndMeaning(exprText, meaningText)
+            container.setScore(record.score)
+            container.setBadges(record.badges)
         }
     }
 
@@ -111,8 +105,8 @@ class HomeSearchAdapter(
             { staticInfo = it }
         )
 
-        return ViewHolder(context, si).also {
-            bindCurrentBreakAndHyphenationInfo(it)
+        return ViewHolder(context, onItemClickListener, si).also {
+            it.setTextBreakAndHyphenationInfoCompat(breakAndHyphenationInfo)
         }
     }
 
@@ -123,7 +117,7 @@ class HomeSearchAdapter(
         val itemStyle = createItemStyle(record)
 
         // Don't show divider if the item is the last one
-        holder.bind(record, itemStyle, hasDivider = position < data.size - 1, onItemClickListener)
+        holder.bind(record, itemStyle, hasDivider = position < data.size - 1)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -133,15 +127,7 @@ class HomeSearchAdapter(
             val payload = payloads[0]
 
             if (payload === updateBreakAndHyphenationInfoPayload) {
-                bindCurrentBreakAndHyphenationInfo(holder)
-            }
-        }
-    }
-
-    private fun bindCurrentBreakAndHyphenationInfo(vh: ViewHolder) {
-        if (Build.VERSION.SDK_INT >= 23) {
-            breakAndHyphenationInfo?.also {
-                vh.bindTextBreakAndHyphenationInfo(it)
+                holder.setTextBreakAndHyphenationInfoCompat(breakAndHyphenationInfo)
             }
         }
     }
