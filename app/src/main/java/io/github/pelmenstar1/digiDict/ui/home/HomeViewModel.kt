@@ -14,6 +14,7 @@ import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
+import io.github.pelmenstar1.digiDict.data.getAllSortedPackedRecordToBadgeRelations
 import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
@@ -88,7 +89,9 @@ class HomeViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .map {
                     trackProgressWith(searchProgressReporter) {
-                        appDatabase.getAllConciseRecordsWithBadges(searchProgressReporter)
+                        val relations = appDatabase.getAllSortedPackedRecordToBadgeRelations()
+
+                        appDatabase.getAllConciseRecordsWithBadges(relations, searchProgressReporter)
                     }
                 }.onEach {
                     searchManager.currentRecords = it

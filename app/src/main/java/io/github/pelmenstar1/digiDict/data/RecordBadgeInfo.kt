@@ -62,6 +62,9 @@ class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
 
     companion object {
         @JvmField
+        val EMPTY_ARRAY = emptyArray<RecordBadgeInfo>()
+
+        @JvmField
         val CREATOR = object : Parcelable.Creator<RecordBadgeInfo> {
             override fun createFromParcel(parcel: Parcel) = RecordBadgeInfo(parcel)
             override fun newArray(size: Int) = arrayOfNulls<RecordBadgeInfo>(size)

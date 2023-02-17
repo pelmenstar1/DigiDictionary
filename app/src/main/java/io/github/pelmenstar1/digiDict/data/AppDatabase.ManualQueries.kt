@@ -1,7 +1,5 @@
 package io.github.pelmenstar1.digiDict.data
 
-import androidx.sqlite.db.SupportSQLiteProgram
-import androidx.sqlite.db.SupportSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteStatement
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.android.queryArrayWithProgressReporter
@@ -130,45 +128,15 @@ fun AppDatabase.getAllRecordToBadgeRelations(progressReporter: ProgressReporter?
     }
 }
 
-class GetBadgesByRecordIdQuery : SupportSQLiteQuery {
-    var recordId: Int = 0
-
-    override fun getSql() = """
-        SELECT rb.id, rb.name, rb.outlineColor
-        FROM record_badges AS rb 
-        WHERE rb.id IN (SELECT rbr.badgeId FROM record_to_badge_relations AS rbr WHERE rbr.recordId=?) 
-        """
-
-    override fun bindTo(statement: SupportSQLiteProgram) {
-        statement.bindLong(1, recordId.toLong())
-    }
-
-    override fun getArgCount() = 1
-}
-
-fun AppDatabase.getBadgesByRecordId(getQuery: GetBadgesByRecordIdQuery, recordId: Int): Array<RecordBadgeInfo> {
-    getQuery.recordId = recordId
-
-    return query(getQuery).use { c ->
-        val count = c.count
-        val result = unsafeNewArray<RecordBadgeInfo>(count)
-
-        for (i in 0 until count) {
-            c.moveToPosition(i)
-
-            val id = c.getInt(0)
-            val name = c.getString(1)
-            val outlineColor = c.getInt(2)
-
-            result[i] = RecordBadgeInfo(id, name, outlineColor)
-        }
-
-        result
-    }
-}
-
-fun AppDatabase.getAllConciseRecordsWithBadges(progressReporter: ProgressReporter?): Array<ConciseRecordWithBadges> {
-    return queryConciseRecordsWithBadges("SELECT $CONCISE_RECORD_VALUES FROM records", progressReporter)
+fun AppDatabase.getAllConciseRecordsWithBadges(
+    allSortedPackedRelations: PackedRecordToBadgeRelationArray,
+    progressReporter: ProgressReporter?
+): Array<ConciseRecordWithBadges> {
+    return getConciseRecordsWithBadges(
+        "SELECT $CONCISE_RECORD_VALUES FROM records",
+        allSortedPackedRelations,
+        progressReporter
+    )
 }
 
 private val sqlRecordSortTypes = arrayOf(
@@ -223,10 +191,12 @@ internal fun buildQueryForGetRecordsForAppPagingSource(
 fun AppDatabase.getConciseRecordsWithBadgesForAppPagingSource(
     limit: Int, offset: Int,
     sortType: RecordSortType,
-    startEpochSeconds: Long, endEpochSeconds: Long
+    startEpochSeconds: Long, endEpochSeconds: Long,
+    allSortedPackedRelations: PackedRecordToBadgeRelationArray
 ): Array<ConciseRecordWithBadges> {
-    val result = queryConciseRecordsWithBadges(
+    val result = getConciseRecordsWithBadges(
         buildQueryForGetRecordsForAppPagingSource(limit, offset, sortType, startEpochSeconds, endEpochSeconds),
+        allSortedPackedRelations,
         progressReporter = null
     )
 
@@ -239,12 +209,100 @@ fun AppDatabase.getConciseRecordsWithBadgesForAppPagingSource(
     return result
 }
 
-private fun AppDatabase.queryConciseRecordsWithBadges(
+private fun findRecordIdStartInBadgeRelations(
+    index: Int,
+    recordId: Int,
+    sortedRelations: PackedRecordToBadgeRelationArray,
+): Int {
+    var i = index
+
+    while (i > 0) {
+        val prevRecordId = sortedRelations[--i].recordId
+
+        if (prevRecordId != recordId) {
+            return i + 1
+        }
+    }
+
+    return i
+}
+
+private fun findRecordIdEndInBadgeRelations(
+    index: Int,
+    recordId: Int,
+    sortedRelations: PackedRecordToBadgeRelationArray
+): Int {
+    val size = sortedRelations.size
+
+    for (i in (index + 1) until size) {
+        if (sortedRelations[i].recordId != recordId) {
+            return i
+        }
+    }
+
+    return size
+}
+
+private fun buildGetBadgesByRecordIdQuery(relations: PackedRecordToBadgeRelationArray, start: Int, end: Int): String {
+    return buildString(64) {
+        append("SELECT * FROM record_badges WHERE id IN (")
+
+        for (i in start until end) {
+            append(relations[i].badgeId)
+
+            if (i < end - 1) {
+                append(',')
+            }
+        }
+        append(')')
+    }
+}
+
+/**
+ * Makes a query to DB in order to get all badges assigned to specified [recordId].
+ * [relations] is an array of all record-to-badge relations sorted by record id.
+ */
+fun AppDatabase.getBadgesByRecordId(
+    recordId: Int,
+    relations: PackedRecordToBadgeRelationArray,
+): Array<RecordBadgeInfo> {
+    val index = relations.binarySearchRecordId(recordId)
+    if (index < 0) {
+        return RecordBadgeInfo.EMPTY_ARRAY
+    }
+
+    val start = findRecordIdStartInBadgeRelations(index, recordId, relations)
+    val end = findRecordIdEndInBadgeRelations(index, recordId, relations)
+    val sql = buildGetBadgesByRecordIdQuery(relations, start, end)
+
+    return query(sql, null).use { c ->
+        val count = c.count
+        val result = unsafeNewArray<RecordBadgeInfo>(count)
+
+        for (i in 0 until count) {
+            c.moveToPosition(i)
+
+            val id = c.getInt(0)
+            val name = c.getString(1)
+            val outlineColor = c.getInt(2)
+
+            result[i] = RecordBadgeInfo(id, name, outlineColor)
+        }
+
+        result
+    }
+}
+
+/**
+ * Make a query, with specified [sql], to DB in order to get concise records.
+ * A progress can be reported to [progressReporter] if supplied.
+ * [allSortedPackedRelations] is an array of all record-to-badge relations sorted by record id.
+ */
+private fun AppDatabase.getConciseRecordsWithBadges(
     sql: String,
+    allSortedPackedRelations: PackedRecordToBadgeRelationArray,
     progressReporter: ProgressReporter?
 ): Array<ConciseRecordWithBadges> {
-    val getBadgesByRecordIdQuery = GetBadgesByRecordIdQuery()
-
     return queryArrayWithProgressReporter(sql, null, progressReporter) { c ->
         val id = c.getInt(0)
         val expr = c.getString(1)
@@ -252,8 +310,29 @@ private fun AppDatabase.queryConciseRecordsWithBadges(
         val score = c.getInt(3)
         val epochSeconds = c.getLong(4)
 
-        val badges = getBadgesByRecordId(getBadgesByRecordIdQuery, id)
+        val badges = getBadgesByRecordId(id, allSortedPackedRelations)
 
         ConciseRecordWithBadges(id, expr, meaning, score, epochSeconds, badges)
+    }
+}
+
+/**
+ * Makes a query to DB in order to get all record to badge relations packed into [Long] and sorted by record id.
+ */
+fun AppDatabase.getAllSortedPackedRecordToBadgeRelations(): PackedRecordToBadgeRelationArray {
+    return query("SELECT recordId, badgeId FROM record_to_badge_relations ORDER BY recordId ASC", null).use { cursor ->
+        val count = cursor.count
+        val result = PackedRecordToBadgeRelationArray(count)
+
+        for (i in 0 until count) {
+            cursor.moveToPosition(i)
+
+            val recordId = cursor.getInt(0)
+            val badgeId = cursor.getInt(1)
+
+            result[i] = PackedRecordToBadgeRelation(recordId, badgeId)
+        }
+
+        result
     }
 }

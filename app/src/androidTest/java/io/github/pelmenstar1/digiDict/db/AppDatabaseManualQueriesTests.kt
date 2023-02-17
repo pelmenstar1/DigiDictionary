@@ -6,6 +6,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
+import io.github.pelmenstar1.digiDict.utils.toPackedArray
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -218,33 +219,82 @@ class AppDatabaseManualQueriesTests {
 
     @Test
     fun getBadgesByRecordIdTest() {
-        val db = createEmptyDatabase()
+        fun testCase(
+            allBadges: Array<RecordBadgeInfo>,
+            expectedBadges: Array<RecordBadgeInfo>,
+            relations: Array<RecordToBadgeRelation>,
+            recordId: Int
+        ) {
+            val db = createEmptyDatabase()
 
-        val badges = arrayOf(
-            RecordBadgeInfo(name = "Badge1", outlineColor = 123),
-            RecordBadgeInfo(name = "Badge2", outlineColor = 124),
-            RecordBadgeInfo(name = "Badge3", outlineColor = 125)
-        )
+            runBlocking {
+                db.recordBadgeDao().insertAll(allBadges)
+                db.recordToBadgeRelationDao().insertAll(relations)
+            }
 
-        val recordId1Badges = arrayOf(
-            RecordBadgeInfo(name = "Badge1", outlineColor = 123),
-            RecordBadgeInfo(name = "Badge2", outlineColor = 124)
-        )
+            val actualRecordIdBadges = db.getBadgesByRecordId(recordId, relations.toPackedArray())
 
-        val relations = arrayOf(
-            RecordToBadgeRelation(recordId = 1, badgeId = 1),
-            RecordToBadgeRelation(recordId = 1, badgeId = 2)
-        )
-
-        runBlocking {
-            db.recordBadgeDao().insertAll(badges)
-            db.recordToBadgeRelationDao().insertAll(relations)
+            assertContentEqualsNoId(expectedBadges, actualRecordIdBadges)
         }
 
-        val query = GetBadgesByRecordIdQuery()
-        val actualRecordIdBadges = db.getBadgesByRecordId(query, recordId = 1)
+        testCase(
+            allBadges = arrayOf(
+                RecordBadgeInfo(name = "Badge1", outlineColor = 123),
+                RecordBadgeInfo(name = "Badge2", outlineColor = 124),
+                RecordBadgeInfo(name = "Badge3", outlineColor = 125)
+            ),
+            expectedBadges = arrayOf(
+                RecordBadgeInfo(name = "Badge1", outlineColor = 123),
+                RecordBadgeInfo(name = "Badge2", outlineColor = 124)
+            ),
+            relations = arrayOf(
+                RecordToBadgeRelation(recordId = 1, badgeId = 1),
+                RecordToBadgeRelation(recordId = 1, badgeId = 2)
+            ),
+            recordId = 1
+        )
 
-        assertContentEqualsNoId(recordId1Badges, actualRecordIdBadges)
+        testCase(
+            allBadges = arrayOf(
+                RecordBadgeInfo(name = "Badge1", outlineColor = 123),
+                RecordBadgeInfo(name = "Badge2", outlineColor = 124),
+                RecordBadgeInfo(name = "Badge3", outlineColor = 125)
+            ),
+            expectedBadges = arrayOf(
+                RecordBadgeInfo(name = "Badge1", outlineColor = 123)
+            ),
+            relations = arrayOf(
+                RecordToBadgeRelation(recordId = 1, badgeId = 1),
+                RecordToBadgeRelation(recordId = 1, badgeId = 2),
+                RecordToBadgeRelation(recordId = 1, badgeId = 3),
+                RecordToBadgeRelation(recordId = 2, badgeId = 3),
+                RecordToBadgeRelation(recordId = 2, badgeId = 2),
+                RecordToBadgeRelation(recordId = 5, badgeId = 1),
+                RecordToBadgeRelation(recordId = 6, badgeId = 1),
+                RecordToBadgeRelation(recordId = 7, badgeId = 1),
+            ),
+            recordId = 5
+        )
+
+        testCase(
+            allBadges = arrayOf(
+                RecordBadgeInfo(name = "Badge1", outlineColor = 123),
+                RecordBadgeInfo(name = "Badge2", outlineColor = 124),
+                RecordBadgeInfo(name = "Badge3", outlineColor = 125)
+            ),
+            expectedBadges = emptyArray(),
+            relations = arrayOf(
+                RecordToBadgeRelation(recordId = 1, badgeId = 1),
+                RecordToBadgeRelation(recordId = 1, badgeId = 2),
+                RecordToBadgeRelation(recordId = 1, badgeId = 3),
+                RecordToBadgeRelation(recordId = 2, badgeId = 3),
+                RecordToBadgeRelation(recordId = 2, badgeId = 2),
+                RecordToBadgeRelation(recordId = 5, badgeId = 1),
+                RecordToBadgeRelation(recordId = 6, badgeId = 1),
+                RecordToBadgeRelation(recordId = 7, badgeId = 1),
+            ),
+            recordId = 4
+        )
     }
 
     @Test
@@ -289,7 +339,7 @@ class AppDatabaseManualQueriesTests {
 
         db.insertRecordsAndBadges(records, badges, relations)
 
-        val actualConciseRecords = db.getAllConciseRecordsWithBadges(progressReporter = null)
+        val actualConciseRecords = db.getAllConciseRecordsWithBadges(relations.toPackedArray(), progressReporter = null)
         val expectedConciseRecords = arrayOf(
             ConciseRecordWithBadges(
                 id = 1,
@@ -546,7 +596,8 @@ class AppDatabaseManualQueriesTests {
         val actualConciseRecords = db.getConciseRecordsWithBadgesForAppPagingSource(
             limit = 10, offset = 5,
             sortType,
-            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE
+            startEpochSeconds = 0L, endEpochSeconds = Long.MAX_VALUE,
+            relations.toPackedArray()
         )
         val expectedConciseRecords = Array(10) { i ->
             val indexWithOffset = i + 5
@@ -690,5 +741,69 @@ class AppDatabaseManualQueriesTests {
         testCase(startEpochSeconds = 0, endEpochSeconds = Long.MAX_VALUE, expectedCount = 10)
         testCase(startEpochSeconds = 10, endEpochSeconds = 70, expectedCount = 7)
         testCase(startEpochSeconds = 110, endEpochSeconds = 200, expectedCount = 0)
+    }
+
+    @Test
+    fun getAllSortedPackedRecordToBadgeRelationsTest() {
+        fun testCase(
+            relations: Array<out RecordToBadgeRelation>,
+            expectedRelations: Array<out PackedRecordToBadgeRelation>
+        ) {
+            val expectedPackedArray = PackedRecordToBadgeRelationArray(expectedRelations.size)
+
+            expectedRelations.forEachIndexed { index, value ->
+                expectedPackedArray[index] = value
+            }
+
+            val db = createEmptyDatabase()
+
+            runBlocking {
+                db.recordToBadgeRelationDao().insertAll(relations)
+            }
+
+            val actualPackedArray = db.getAllSortedPackedRecordToBadgeRelations()
+            assertContentEquals(expectedPackedArray.array, actualPackedArray.array)
+        }
+
+        testCase(
+            relations = arrayOf(
+                RecordToBadgeRelation(recordId = 5, badgeId = 1),
+                RecordToBadgeRelation(recordId = 4, badgeId = 2),
+                RecordToBadgeRelation(recordId = 6, badgeId = 3),
+                RecordToBadgeRelation(recordId = 7, badgeId = 4),
+                RecordToBadgeRelation(recordId = 2, badgeId = 5),
+            ),
+            expectedRelations = arrayOf(
+                PackedRecordToBadgeRelation(recordId = 2, badgeId = 5),
+                PackedRecordToBadgeRelation(recordId = 4, badgeId = 2),
+                PackedRecordToBadgeRelation(recordId = 5, badgeId = 1),
+                PackedRecordToBadgeRelation(recordId = 6, badgeId = 3),
+                PackedRecordToBadgeRelation(recordId = 7, badgeId = 4),
+            )
+        )
+
+        testCase(
+            relations = arrayOf(
+                RecordToBadgeRelation(recordId = 3, badgeId = 1),
+                RecordToBadgeRelation(recordId = 4, badgeId = 2),
+                RecordToBadgeRelation(recordId = 5, badgeId = 3),
+            ),
+            expectedRelations = arrayOf(
+                PackedRecordToBadgeRelation(recordId = 3, badgeId = 1),
+                PackedRecordToBadgeRelation(recordId = 4, badgeId = 2),
+                PackedRecordToBadgeRelation(recordId = 5, badgeId = 3)
+            )
+        )
+
+        testCase(
+            relations = arrayOf(
+                RecordToBadgeRelation(recordId = 1, badgeId = 2),
+            ),
+            expectedRelations = arrayOf(
+                PackedRecordToBadgeRelation(recordId = 1, badgeId = 2)
+            )
+        )
+
+        testCase(relations = emptyArray(), expectedRelations = emptyArray())
     }
 }

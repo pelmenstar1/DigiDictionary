@@ -50,3 +50,13 @@ suspend fun AppDatabase.addRecordAndBadges(
 
     return recordWithBadges
 }
+
+fun Array<out RecordToBadgeRelation>.toPackedArray(): PackedRecordToBadgeRelationArray {
+    val result = PackedRecordToBadgeRelationArray(size)
+
+    forEachIndexed { index, value ->
+        result[index] = PackedRecordToBadgeRelation(value.recordId, value.badgeId)
+    }
+
+    return result
+}

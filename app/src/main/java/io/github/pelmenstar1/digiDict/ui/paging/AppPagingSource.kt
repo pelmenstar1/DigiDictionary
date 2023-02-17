@@ -5,13 +5,12 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import androidx.room.InvalidationTracker
 import androidx.room.withTransaction
+import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.time.EpochSecondsRange
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.util.*
 
 /**
@@ -34,12 +33,14 @@ class AppPagingSource(
         }
     }
 
-    private val mutex = Mutex()
-
+    @Volatile
     private var itemCount = -1
 
     @Volatile
     private var timeRange: EpochSecondsRange? = null
+
+    @Volatile
+    private var packedRecordToBadgeRelations: PackedRecordToBadgeRelationArray? = null
 
     private val recordDao = appDatabase.recordDao()
 
@@ -58,22 +59,31 @@ class AppPagingSource(
     private suspend fun getTimeRange(): EpochSecondsRange {
         val lambda = getTimeRangeLambda ?: return EpochSecondsRange.ALL_TIME_SPAN
 
-        return mutex.withLock {
-            var range = timeRange
-
-            if (range == null) {
-                range = lambda()
-                timeRange = range
-            }
-
-            range
-        }
+        return getLazyValue(timeRange, { lambda() }, { timeRange = it })
     }
 
     private fun queryItemCount(timeRange: EpochSecondsRange): Int {
         return appDatabase.compileCountStatement(timeRange.start, timeRange.endInclusive).use {
             it.simpleQueryForLong().toInt()
         }
+    }
+
+    private fun getItemCount(timeRange: EpochSecondsRange): Int {
+        var count = itemCount
+        if (count < 0) {
+            count = queryItemCount(timeRange)
+            itemCount = count
+        }
+
+        return count
+    }
+
+    private fun getAllRecordToBadgeRelations(): PackedRecordToBadgeRelationArray {
+        return getLazyValue(
+            packedRecordToBadgeRelations,
+            { appDatabase.getAllSortedPackedRecordToBadgeRelations() },
+            { packedRecordToBadgeRelations = it }
+        )
     }
 
     override fun getRefreshKey(state: PagingState<Int, PageItem>): Int? {
@@ -87,14 +97,10 @@ class AppPagingSource(
         return try {
             appDatabase.withTransaction {
                 val timeRange = getTimeRange()
+                val count = getItemCount(timeRange)
+                val recordToBadgeRelations = getAllRecordToBadgeRelations()
 
-                var count = itemCount
-                if (count < 0) {
-                    count = queryItemCount(timeRange)
-                    itemCount = count
-                }
-
-                loadInternal(params, count, timeRange)
+                loadInternal(params, count, timeRange, recordToBadgeRelations)
             }
         } catch (e: Exception) {
             Log.e(TAG, "during loading", e)
@@ -106,7 +112,8 @@ class AppPagingSource(
     private suspend fun loadInternal(
         params: LoadParams<Int>,
         count: Int,
-        timeRange: EpochSecondsRange
+        timeRange: EpochSecondsRange,
+        recordToBadgeRelations: PackedRecordToBadgeRelationArray
     ): LoadResult.Page<Int, PageItem> {
         val key = params.key ?: 0
         val loadSize = params.loadSize
@@ -131,7 +138,8 @@ class AppPagingSource(
         val recordData = appDatabase.getConciseRecordsWithBadgesForAppPagingSource(
             limit, offset,
             sortType,
-            timeRange.start, timeRange.endInclusive
+            timeRange.start, timeRange.endInclusive,
+            recordToBadgeRelations
         )
 
         val recordDataSize = recordData.size
