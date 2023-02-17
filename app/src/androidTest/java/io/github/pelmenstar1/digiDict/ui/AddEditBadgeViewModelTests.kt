@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui
 
 import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.test.core.app.ApplicationProvider
 import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
 import io.github.pelmenstar1.digiDict.commonTestUtils.use
@@ -32,7 +33,7 @@ class AddEditBadgeViewModelTests {
         badgeDao: RecordBadgeDao = db.recordBadgeDao(),
         block: (AddEditBadgeViewModel) -> Unit
     ) {
-        AddEditBadgeViewModel(badgeDao).use(block)
+        AddEditBadgeViewModel(badgeDao, SavedStateHandle()).use(block)
     }
 
     @Test

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -13,23 +14,17 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.DataLoadState
-import io.github.pelmenstar1.digiDict.common.StringFormatter
+import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import io.github.pelmenstar1.digiDict.common.mapToIntArray
-import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
 import io.github.pelmenstar1.digiDict.common.ui.setText
+import io.github.pelmenstar1.digiDict.common.ui.setTextIfCharsChanged
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
-import io.github.pelmenstar1.digiDict.data.RecordWithBadges
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -46,7 +41,8 @@ class AddEditRecordFragment : Fragment() {
     lateinit var recordBadgeDao: RecordBadgeDao
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val navController = findNavController()
@@ -87,7 +83,12 @@ class AddEditRecordFragment : Fragment() {
                         }
                     }
                     is DataLoadState.Success -> {
-                        setRecord(it.value)
+                        val (value) = it
+
+                        // Expression and additional notes will be updated through other flows. See initViews
+                        binding.addRecordMeaningListInteraction.meaning = ComplexMeaning.parse(value.meaning)
+                        binding.addRecordBadgeInteraction.badges = value.badges
+
                         setInputsEnabled(true)
                     }
                 }
@@ -114,9 +115,7 @@ class AddEditRecordFragment : Fragment() {
         lifecycleScope.launch {
             val updatedBadges = recordBadgeDao.getByIds(badgeIds)
 
-            withContext(Dispatchers.Main) {
-                badgeInteraction.badges = updatedBadges
-            }
+            badgeInteraction.badges = updatedBadges
         }
     }
 
@@ -129,27 +128,17 @@ class AddEditRecordFragment : Fragment() {
         }
     }
 
-    private fun setRecord(value: RecordWithBadges) {
-        binding.run {
-            addRecordExpressionInputLayout.setText(value.expression)
-            addRecordAdditionalNotesInputLayout.setText(value.additionalNotes)
-            addRecordMeaningListInteraction.meaning = ComplexMeaning.parse(value.meaning)
-            addRecordBadgeInteraction.badges = value.badges
-        }
-    }
-
     private fun initViews(currentRecordId: Int) {
         binding.run {
             val vm = viewModel
             val ls = lifecycleScope
 
-            addRecordExpressionInputLayout.addTextChangedListener {
-                vm.expression = it
-            }
+            val expressionEditText = addRecordExpressionInput
+            val additionalNotesEditText = addRecordAdditionalNotesInput
+            val doNotChangeCreationDateBox = addRecordDoNotChangeCreationTimeBox
 
-            addRecordAdditionalNotesInputLayout.addTextChangedListener {
-                vm.additionalNotes = it
-            }
+            expressionEditText.addTextChangedListener { vm.expression = it.toStringOrEmpty() }
+            additionalNotesEditText.addTextChangedListener { vm.additionalNotes = it.toStringOrEmpty() }
 
             addRecordAddButton.run {
                 text = resources.getString(
@@ -161,7 +150,7 @@ class AddEditRecordFragment : Fragment() {
 
             addRecordSearchExpression.setOnClickListener {
                 val directions = AddEditRecordFragmentDirections.actionAddEditRecordToChooseRemoteDictionaryProvider(
-                    vm.expression.toString()
+                    vm.expression.trim()
                 )
 
                 findNavController().navigate(directions)
@@ -190,12 +179,24 @@ class AddEditRecordFragment : Fragment() {
                 vm.getBadges = { badges }
             }
 
-            addRecordDoNotChangeCreationTimeBox.also {
+            doNotChangeCreationDateBox.also {
                 it.isVisible = currentRecordId >= 0
 
                 it.setOnCheckedChangeListener { _, isChecked ->
                     vm.changeCreationTime = !isChecked
                 }
+            }
+
+            ls.launchFlowCollector(vm.expressionFlow) {
+                expressionEditText.setTextIfCharsChanged(it)
+            }
+
+            ls.launchFlowCollector(vm.additionalNotesFlow) {
+                additionalNotesEditText.setTextIfCharsChanged(it)
+            }
+
+            ls.launchFlowCollector(vm.changeCreationTimeFlow) {
+                doNotChangeCreationDateBox.isChecked = !it
             }
 
             ls.launchFlowCollector(vm.expressionErrorFlow) {

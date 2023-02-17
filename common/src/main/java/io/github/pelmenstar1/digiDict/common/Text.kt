@@ -197,3 +197,26 @@ fun createNumberRangeList(start: Int, endInclusive: Int, step: Int = 1): List<St
 
     return list
 }
+
+fun Any?.toStringOrEmpty(): String = this?.toString() ?: ""
+
+fun CharSequence?.equalsByChar(other: CharSequence): Boolean {
+    if (this == null) {
+        return false
+    }
+
+    val thisLength = length
+    val otherLength = other.length
+
+    if (thisLength != otherLength) {
+        return false
+    }
+
+    for (i in 0 until thisLength) {
+        if (this[i] != other[i]) {
+            return false
+        }
+    }
+
+    return true
+}

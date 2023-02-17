@@ -19,10 +19,11 @@ import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import io.github.pelmenstar1.digiDict.common.trimToString
+import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 import io.github.pelmenstar1.digiDict.common.ui.ColorPaletteView
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
+import io.github.pelmenstar1.digiDict.common.ui.setTextIfCharsChanged
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditBadgeBinding
 import javax.inject.Inject
 
@@ -57,7 +58,7 @@ class AddEditBadgeFragment : Fragment() {
     private fun initViews(currentBadgeId: Int) {
         val vm = viewModel
 
-        binding.addBadgeDialogColorPalette.run {
+        binding.addBadgeDialogColorPalette.apply {
             onColorSelectedListener = ColorPaletteView.OnColorSelectedListener { color ->
                 vm.outlineColor = color
             }
@@ -68,16 +69,14 @@ class AddEditBadgeFragment : Fragment() {
             }
         }
 
-        binding.addBadgeDialogNameInput.run {
-            addTextChangedListener { text -> vm.name = text.trimToString() }
+        binding.addBadgeDialogNameInput.apply {
+            addTextChangedListener { vm.name = it.toStringOrEmpty() }
         }
 
-        binding.addBadgeDialogAddButton.run {
+        binding.addBadgeDialogAddButton.apply {
             setText(if (currentBadgeId >= 0) R.string.applyChanges else R.string.add)
 
-            setOnClickListener {
-                vm.addOrEditBadge()
-            }
+            setOnClickListener { vm.addOrEditBadge() }
         }
     }
 
@@ -108,16 +107,18 @@ class AddEditBadgeFragment : Fragment() {
                             }
                         }
                         is DataLoadState.Success -> {
-                            val (value) = it
-
                             setInputsEnabled(true)
-                            nameInput.setText(value.name)
-
-                            // The change shouldn't be animated, because logically it isn't even a change, it's initializing the state.
-                            colorPalette.selectColorOrLast(value.outlineColor, animate = false)
                         }
                     }
                 }
+            }
+
+            launchFlowCollector(vm.nameFlow) {
+                nameInput.setTextIfCharsChanged(it)
+            }
+
+            launchFlowCollector(vm.outlineColorFlow) {
+                colorPalette.selectColorOrLast(it, animate = true)
             }
 
             launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageStringFormatter)

@@ -6,7 +6,7 @@ import kotlin.test.assertFailsWith
 
 class TextTests {
     @Test
-    fun `appendPaddedTwoDigit test`() {
+    fun appendPaddedTwoDigitTest() {
         fun testCase(number: Int, expected: String) {
             val actual = buildString {
                 appendPaddedTwoDigit(number)
@@ -23,7 +23,7 @@ class TextTests {
     }
 
     @Test
-    fun `appendPaddedFourDigit test`() {
+    fun appendPaddedFourDigitTest() {
         fun testCase(number: Int, expected: String) {
             val actual = buildString {
                 appendPaddedFourDigit(number)
@@ -43,27 +43,27 @@ class TextTests {
     }
 
     @Test
-    fun `parsePositiveInt returns -1 when invalid input`() {
+    fun parsePositiveIntReturnsMinusOneWhenInvalidInputTest() {
         assertEquals(-1, "-111".parsePositiveInt())
         assertEquals(-1, "aaa".parsePositiveInt())
     }
 
     @Test
-    fun `parsePositiveInt test`() {
+    fun parsePositiveIntTest() {
         assertEquals(595, "595".parsePositiveInt())
         assertEquals(0, "0".parsePositiveInt())
         assertEquals(1, "1".parsePositiveInt())
     }
 
     @Test
-    fun `trimToString test`() {
+    fun trimToStringTest() {
         assertEquals("aaa", "   aaa    ".trimToString())
         assertEquals("", "".trimToString())
         assertEquals("", "    ".trimToString())
     }
 
     @Test
-    fun `createNumberRangeList throws when min is greater than max`() {
+    fun createNumberRangeListThrowsWhenMinGreaterThanMaxTest() {
         assertFailsWith(IllegalArgumentException::class) {
             createNumberRangeList(3, 2)
         }
@@ -74,7 +74,7 @@ class TextTests {
     }
 
     @Test
-    fun `createNumberRangeList test`() {
+    fun createNumberRangeListTest() {
         fun testCase(start: Int, endInclusive: Int, step: Int, expected: List<String>) {
             val actual = createNumberRangeList(start, endInclusive, step)
 
@@ -84,5 +84,29 @@ class TextTests {
         testCase(start = 0, endInclusive = 5, step = 1, expected = listOf("0", "1", "2", "3", "4", "5"))
         testCase(start = 5, endInclusive = 20, step = 5, expected = listOf("5", "10", "15", "20"))
         testCase(start = 3, endInclusive = 13, step = 3, expected = listOf("3", "6", "9", "12"))
+    }
+
+    @Test
+    fun toStringOrEmptyTest() {
+        assertEquals("", (null as Any?).toStringOrEmpty())
+        assertEquals("1", 1.toStringOrEmpty())
+    }
+
+    @Test
+    fun equalsByCharTest() {
+        fun testCase(firstString: String?, secondString: String, expected: Boolean) {
+            val actual = firstString.equalsByChar(secondString)
+
+            assertEquals(expected, actual)
+        }
+
+        testCase("123", "123", true)
+        testCase("", "123", false)
+        testCase("", "", true)
+        testCase(null, "123", false)
+        testCase("1", "1", true)
+        testCase("123", "124", false)
+        testCase("123", "321", false)
+        testCase("1", "123", false)
     }
 }

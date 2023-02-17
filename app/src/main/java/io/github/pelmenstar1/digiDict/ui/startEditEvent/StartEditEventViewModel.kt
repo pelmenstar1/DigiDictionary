@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.startEditEvent
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,7 +10,6 @@ import io.github.pelmenstar1.digiDict.common.android.viewModelAction
 import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.get
-import io.github.pelmenstar1.digiDict.common.trimToString
 import io.github.pelmenstar1.digiDict.data.EventDao
 import io.github.pelmenstar1.digiDict.data.EventInfo
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class StartEditEventViewModel @Inject constructor(
     private val eventDao: EventDao,
-    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val currentEventIdFlow = MutableStateFlow<Int?>(null)
     private val checkEventNameChannel = Channel<String>(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -51,8 +52,9 @@ class StartEditEventViewModel @Inject constructor(
                 }
 
                 _nameErrorFlow.value = StartEditEventError.EMPTY_TEXT
-                startCheckEventNameJob()
             }
+
+            startCheckEventNameJob()
         }
 
     private val currentEventStateManager = DataLoadStateManager<EventInfo>(TAG)
@@ -61,39 +63,42 @@ class StartEditEventViewModel @Inject constructor(
             currentEventIdFlow.filterNotNull().map { id ->
                 val currentEvent = eventDao.getById(id)!!
 
+                setNameInternal(currentEvent.name)
+
                 validity.mutate {
                     set(nameValidityField, true)
                 }
-
-                startCheckEventNameJob()
 
                 currentEvent
             }
         }
     }
 
-    private var _name: String = ""
-    var name: CharSequence
-        get() = _name
+    val nameFlow = savedStateHandle.getStateFlow(KEY_NAME, "")
+
+    var name: String
+        get() = nameFlow.value
         set(value) {
-            val trimmed = value.trimToString()
-            _name = trimmed
+            if (nameFlow.value != value) {
+                savedStateHandle[KEY_NAME] = value
 
-            validity.mutate {
-                set(nameValidityField, value = false, isComputed = false)
+                validity.mutate {
+                    set(nameValidityField, value = false, isComputed = false)
+                }
+
+                checkEventNameChannel.trySendBlocking(value)
             }
-
-            checkEventNameChannel.trySendBlocking(trimmed)
         }
 
     val startOrEditAction = viewModelAction(TAG) {
         val curEventId = currentEventId
+        val trimmedName = name.trim()
 
         if (curEventId >= 0) {
             val currentEvent = currentEventStateFlow.firstSuccess()
             val updatedEvent = EventInfo(
                 id = curEventId,
-                name = _name,
+                name = trimmedName,
                 currentEvent.startEpochSeconds, currentEvent.endEpochSeconds
             )
 
@@ -103,13 +108,17 @@ class StartEditEventViewModel @Inject constructor(
 
             val newEvent = EventInfo(
                 id = 0,
-                name = _name,
+                name = trimmedName,
                 startEpochSeconds = nowEpochSeconds,
                 endEpochSeconds = -1
             )
 
             eventDao.insert(newEvent)
         }
+    }
+
+    private fun setNameInternal(value: String) {
+        savedStateHandle[KEY_NAME] = value
     }
 
     private fun startCheckEventNameJob() {
@@ -122,7 +131,7 @@ class StartEditEventViewModel @Inject constructor(
             }
 
             while (isActive) {
-                val name = checkEventNameChannel.receive()
+                val name = checkEventNameChannel.receive().trim()
                 val error = when {
                     name.isEmpty() -> StartEditEventError.EMPTY_TEXT
                     name != currentName && names.contains(name) -> StartEditEventError.NAME_EXISTS
@@ -148,9 +157,11 @@ class StartEditEventViewModel @Inject constructor(
     }
 
     companion object {
+        private const val TAG = "StartEditEventViewModel"
+
+        private const val KEY_NAME = "io.github.pelmenstar1.StartEditEventViewModel.name"
+
         private val nameValidityField = ValidityFlow.Field(ordinal = 0)
         private val validityScheme = ValidityFlow.Scheme(nameValidityField)
-
-        private const val TAG = "StartEditEventViewModel"
     }
 }

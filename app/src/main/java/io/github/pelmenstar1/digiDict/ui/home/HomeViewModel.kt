@@ -32,6 +32,7 @@ class HomeViewModel @Inject constructor(
     val sortTypeFlow: StateFlow<RecordSortType>
         get() = _sortTypeFlow
 
+    // TODO: Save it via SavedStateHandle
     private val _searchPropertiesFlow = MutableStateFlow<Array<out RecordSearchProperty>>(RecordSearchProperty.values())
 
     val searchPropertiesFlow: StateFlow<Array<out RecordSearchProperty>>
@@ -48,7 +49,6 @@ class HomeViewModel @Inject constructor(
         set(value) {
             _sortTypeFlow.value = value
         }
-
 
     /**
      * Gets or sets [RecordTextPrecomputeController] of the view-model.

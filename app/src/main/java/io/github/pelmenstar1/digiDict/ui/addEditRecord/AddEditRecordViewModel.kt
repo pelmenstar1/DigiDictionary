@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.addEditRecord
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -25,12 +26,15 @@ class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val recordToBadgeRelationDao: RecordToBadgeRelationDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
-    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider
+    private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     val validity = ValidityFlow(validityScheme)
 
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
-    val expressionErrorFlow = _expressionErrorFlow.asStateFlow()
+
+    val expressionErrorFlow: StateFlow<AddEditRecordMessage?>
+        get() = _expressionErrorFlow
 
     private val currentRecordIdFlow = MutableStateFlow<Int?>(null)
 
@@ -44,28 +48,29 @@ class AddEditRecordViewModel @Inject constructor(
                 currentRecordIdFlow.value = value
             } else {
                 // Only after we're sure the ViewModel is not in edit-mode (there's no record to edit), we can safely
-                // start 'check expression job' and show the error message about expression being empty.
+                // show the error message about expression being empty.
                 // On the contrary, if there's a record to load, the expression just can't be empty and the error message shouldn't be shown.
-                startCheckExpressionJob()
-
                 _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
             }
+
+            startCheckExpressionJob()
         }
 
     private val currentRecordStateManager = DataLoadStateManager<RecordWithBadges>(TAG)
     val currentRecordStateFlow = currentRecordStateManager.buildFlow(viewModelScope) {
         fromFlow {
             currentRecordIdFlow.filterNotNull().map { id ->
-                // !! will throw an expression if the record is actually null but in that case something is really
+                // If the record is null, then something is really
                 // wrong with the state because the record id is pointing to just can't be deleted when the logic is loading it.
                 val currentRecord = recordDao.getRecordWithBadgesById(id)!!
+
+                setExpressionInternal(currentRecord.expression)
+                additionalNotes = currentRecord.additionalNotes
 
                 validity.mutate {
                     enable(expressionValidityField)
                     enable(meaningValidityField)
                 }
-
-                startCheckExpressionJob()
 
                 currentRecord
             }
@@ -77,23 +82,39 @@ class AddEditRecordViewModel @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
-    private var _expression = ""
+    val expressionFlow = savedStateHandle.getStateFlow(KEY_EXPRESSION, "")
+    val additionalNotesFlow = savedStateHandle.getStateFlow(KEY_ADDITIONAL_NOTES, "")
+    val changeCreationTimeFlow = savedStateHandle.getStateFlow(KEY_CHANGE_CREATION_TIME, true)
 
-    var expression: CharSequence
-        get() = _expression
+    var expression: String
+        get() = expressionFlow.value
         set(value) {
-            setExpressionInternal(value.trimToString())
+            if (expressionFlow.value != value) {
+                setExpressionInternal(value)
+
+                validity.mutate { disable(expressionValidityField, isComputed = false) }
+                checkExpressionChannel.trySend(value)
+            }
+        }
+
+    var additionalNotes: String
+        get() = additionalNotesFlow.value
+        set(value) {
+            savedStateHandle[KEY_ADDITIONAL_NOTES] = value
+        }
+
+    var changeCreationTime: Boolean
+        get() = changeCreationTimeFlow.value
+        set(value) {
+            savedStateHandle[KEY_CHANGE_CREATION_TIME] = value
         }
 
     var getMeaning: (() -> ComplexMeaning)? = null
     var getBadges: (() -> Array<RecordBadgeInfo>)? = null
-    var additionalNotes: CharSequence = ""
-
-    var changeCreationTime = true
 
     val addOrEditAction = viewModelAction(TAG) {
-        val expr = _expression.trimToString()
-        val additionalNotes = additionalNotes.trimToString()
+        val expr = expression.trim()
+        val additionalNotes = additionalNotes.trim()
         val rawMeaning = getMeaning.invokeOrThrow().rawText
         val badges = getBadges.invokeOrThrow()
         val currentEpochSeconds = currentEpochSecondsProvider.get { Utc }
@@ -140,13 +161,8 @@ class AddEditRecordViewModel @Inject constructor(
         currentRecordStateManager.retry()
     }
 
-    // setExpressionInternal shouldn't be called when there's 'current record' and it's not loaded.
-    // It's not critical except 'check expression job' will be started earlier than it should be.
     private fun setExpressionInternal(value: String) {
-        _expression = value
-
-        validity.mutate { disable(expressionValidityField, isComputed = false) }
-        checkExpressionChannel.trySend(value)
+        savedStateHandle[KEY_EXPRESSION] = value
     }
 
     // Must not be started if there's current record and it's null at the moment of calling the method
@@ -167,15 +183,15 @@ class AddEditRecordViewModel @Inject constructor(
             }
 
             while (isActive) {
-                val expr = checkExpressionChannel.receive()
+                val expr = checkExpressionChannel.receive().trimToString()
 
-                val isBlank = expr.isBlank()
+                val isEmpty = expr.isEmpty()
                 val isMeaningfulExpr = expr.containsLetterOrDigit()
 
                 // If we are is edit mode (currentRecordExpression is not null then),
                 // input expression shouldn't be considered as "existing"
                 // even if it does exist to allow editing meaning, origin or notes and not expression.
-                val isValid = !isBlank &&
+                val isValid = !isEmpty &&
                         isMeaningfulExpr &&
                         (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
 
@@ -185,7 +201,7 @@ class AddEditRecordViewModel @Inject constructor(
 
                 _expressionErrorFlow.value = when {
                     isValid -> null
-                    isBlank -> AddEditRecordMessage.EMPTY_TEXT
+                    isEmpty -> AddEditRecordMessage.EMPTY_TEXT
                     !isMeaningfulExpr -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT
                     else -> AddEditRecordMessage.EXISTING_EXPRESSION
                 }
@@ -202,6 +218,11 @@ class AddEditRecordViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "AddExpressionVM"
+
+        private const val KEY_EXPRESSION = "io.github.pelmenstar1.digiDict.AddEditRecordViewModel.expression"
+        private const val KEY_ADDITIONAL_NOTES = "io.github.pelmenstar1.digiDict.AddEditRecordViewModel.notes"
+        private const val KEY_CHANGE_CREATION_TIME =
+            "io.github.pelmenstar1.digiDict.AddEditRecordViewModel.changeCreationTime"
 
         val expressionValidityField = ValidityFlow.Field(ordinal = 0)
         val meaningValidityField = ValidityFlow.Field(ordinal = 1)

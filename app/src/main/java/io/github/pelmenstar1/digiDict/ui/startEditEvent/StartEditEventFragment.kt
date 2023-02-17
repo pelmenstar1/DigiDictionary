@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -20,10 +21,10 @@ import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
+import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
-import io.github.pelmenstar1.digiDict.common.ui.setText
+import io.github.pelmenstar1.digiDict.common.ui.setTextIfCharsChanged
 import io.github.pelmenstar1.digiDict.databinding.FragmentStartEditEventBinding
 import javax.inject.Inject
 
@@ -46,6 +47,8 @@ class StartEditEventFragment : Fragment() {
         val binding = FragmentStartEditEventBinding.inflate(inflater, container, false)
 
         val nameInputLayout = binding.startEditEventNameInputLayout
+        val nameEditText = binding.startEditEventNameEditText
+
         val actionButton = binding.startEditEventActionButton
 
         popBackStackOnSuccess(vm.startOrEditAction, navController)
@@ -68,13 +71,13 @@ class StartEditEventFragment : Fragment() {
             }
         }
 
-        nameInputLayout.also {
-            it.addTextChangedListener { text ->
-                vm.name = text
-            }
-        }
+        nameEditText.addTextChangedListener { vm.name = it.toStringOrEmpty() }
 
         ls.launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, errorStringFormatter)
+
+        ls.launchFlowCollector(vm.nameFlow) {
+            nameEditText.setTextIfCharsChanged(it)
+        }
 
         if (currentEventId >= 0) {
             ls.launchFlowCollector(vm.currentEventStateFlow) {
@@ -97,13 +100,10 @@ class StartEditEventFragment : Fragment() {
                         }
                     }
                     is DataLoadState.Success -> {
-                        val (event) = it
-
                         currentEventErrorSnackbar?.dismiss()
                         currentEventErrorSnackbar = null
 
                         nameInputLayout.isEnabled = true
-                        nameInputLayout.setText(event.name)
                     }
                 }
             }
