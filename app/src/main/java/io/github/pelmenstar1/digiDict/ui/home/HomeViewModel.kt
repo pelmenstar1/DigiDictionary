@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -26,28 +27,22 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val appDatabase: AppDatabase,
-    searchCore: RecordSearchCore
+    searchCore: RecordSearchCore,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val _sortTypeFlow = MutableStateFlow(RecordSortType.NEWEST)
-    val sortTypeFlow: StateFlow<RecordSortType>
-        get() = _sortTypeFlow
+    val sortTypeFlow = savedStateHandle.getStateFlow(KEY_SORT_TYPE, RecordSortType.NEWEST)
+    val searchPropertiesFlow = savedStateHandle.getStateFlow(KEY_SEARCH_PROPERTIES, RecordSearchPropertySet.all())
 
-    // TODO: Save it via SavedStateHandle
-    private val _searchPropertiesFlow = MutableStateFlow<Array<out RecordSearchProperty>>(RecordSearchProperty.values())
-
-    val searchPropertiesFlow: StateFlow<Array<out RecordSearchProperty>>
-        get() = _searchPropertiesFlow
-
-    var searchProperties: Array<out RecordSearchProperty>
-        get() = _searchPropertiesFlow.value
+    var searchProperties: RecordSearchPropertySet
+        get() = searchPropertiesFlow.value
         set(value) {
-            _searchPropertiesFlow.value = value
+            savedStateHandle[KEY_SEARCH_PROPERTIES] = value
         }
 
     var sortType: RecordSortType
-        get() = _sortTypeFlow.value
+        get() = sortTypeFlow.value
         set(value) {
-            _sortTypeFlow.value = value
+            savedStateHandle[KEY_SORT_TYPE] = value
         }
 
     /**
@@ -69,7 +64,7 @@ class HomeViewModel @Inject constructor(
     ).flow.cachedIn(viewModelScope)
 
     private val searchManager = RecordSearchManager(searchCore)
-    private val searchOptionsFlow = _searchPropertiesFlow.map {
+    private val searchOptionsFlow = searchPropertiesFlow.map {
         RecordSearchOptions(it)
     }
 
@@ -98,7 +93,7 @@ class HomeViewModel @Inject constructor(
                 }
 
             combine(
-                GlobalSearchQueryProvider.queryFlow, _sortTypeFlow, searchOptionsFlow, recordFlow
+                GlobalSearchQueryProvider.queryFlow, sortTypeFlow, searchOptionsFlow, recordFlow
             ) { query, sortType, options, _ ->
                 searchManager.onSearchRequest(query, sortType, options)
             }.flowOn(Dispatchers.Default)
@@ -120,5 +115,8 @@ class HomeViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "HomeViewModel"
+
+        private const val KEY_SORT_TYPE = "io.github.pelmenstar1.digiDict.HomeViewModel.sortType"
+        private const val KEY_SEARCH_PROPERTIES = "io.github.pelmenstar1.digiDict.HomeViewModel.searchProperties"
     }
 }

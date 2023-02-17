@@ -38,17 +38,17 @@ object RecordDeepSearchCore : RecordSearchCore {
     ): Boolean {
         val expr = record.expression
         val meaning = record.meaning
-        val flags = options.flags
+        val props = options.properties
 
         val queryFlags = computeQueryFlags(query)
 
-        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION) != 0) {
+        if (props.contains(RecordSearchProperty.EXPRESSION)) {
             if (filterPredicateOnTextRange(expr, 0, expr.length, query, queryFlags)) {
                 return true
             }
         }
 
-        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_MEANING) != 0) {
+        if (props.contains(RecordSearchProperty.MEANING)) {
             when (meaning[0]) {
                 ComplexMeaning.COMMON_MARKER -> {
                     if (filterPredicateOnTextRange(meaning, 1, meaning.length, query, queryFlags)) {
@@ -161,18 +161,18 @@ object RecordDeepSearchCore : RecordSearchCore {
     ) {
         val expr = record.expression
         val meaning = record.meaning
-        val flags = options.flags
+        val props = options.properties
 
         val queryFlags = computeQueryFlags(query)
 
-        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION) != 0) {
+        if (props.contains(RecordSearchProperty.EXPRESSION)) {
             calculateFoundRangesOnTextRange(expr, 0, expr.length, query, queryFlags, list)
         } else {
             // mark that there's no ranges
             list.add(0)
         }
 
-        if ((flags and RecordSearchOptions.FLAG_SEARCH_FOR_MEANING) != 0) {
+        if (props.contains(RecordSearchProperty.MEANING)) {
             when (meaning[0]) {
                 ComplexMeaning.COMMON_MARKER -> {
                     calculateFoundRangesOnTextRange(meaning, 1, meaning.length, query, queryFlags, list)

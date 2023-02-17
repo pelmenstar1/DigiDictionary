@@ -4,6 +4,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
+import io.github.pelmenstar1.digiDict.search.RecordSearchProperty
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -145,17 +147,19 @@ class RecordDeepSearchCoreTests {
     }
 
     private fun createSearchOptions(searchForExpression: Boolean, searchForMeaning: Boolean): RecordSearchOptions {
-        var flags = 0
+        val props = ArrayList<RecordSearchProperty>()
 
         if (searchForExpression) {
-            flags = RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION
+            props.add(RecordSearchProperty.EXPRESSION)
         }
 
         if (searchForMeaning) {
-            flags = flags or RecordSearchOptions.FLAG_SEARCH_FOR_MEANING
+            props.add(RecordSearchProperty.MEANING)
         }
 
-        return RecordSearchOptions(flags)
+        val propsSet = RecordSearchPropertySet(props.toTypedArray())
+
+        return RecordSearchOptions(propsSet)
     }
 
     private fun createRecord(expr: String, meaning: String): ConciseRecordWithBadges {

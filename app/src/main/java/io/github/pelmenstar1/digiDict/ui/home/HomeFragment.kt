@@ -25,6 +25,7 @@ import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.RecordLoadingErrorAndProgressMergeBinding
 import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchAdapter
 import io.github.pelmenstar1.digiDict.ui.misc.RecordSortTypeDialogFragment
@@ -288,7 +289,7 @@ class HomeFragment : Fragment() {
 
     private fun initSearchPropertiesDialog(dialog: HomeSearchPropertiesDialogFragment) {
         dialog.onValuesSelected = {
-            viewModel.searchProperties = it
+            viewModel.searchProperties = RecordSearchPropertySet(it)
         }
     }
 

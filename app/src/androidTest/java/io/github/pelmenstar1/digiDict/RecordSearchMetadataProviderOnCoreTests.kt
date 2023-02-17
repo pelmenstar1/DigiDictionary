@@ -3,9 +3,7 @@ package io.github.pelmenstar1.digiDict
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
-import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProviderOnCore
-import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
+import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.utils.IntRangeSection
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -119,7 +117,8 @@ class RecordSearchMetadataProviderOnCoreTests {
 
     @Test
     fun calculateFoundRangesInExpressionWhenFlagDisabledTest() {
-        val options = RecordSearchOptions(RecordSearchOptions.FLAG_SEARCH_FOR_MEANING)
+        val props = RecordSearchPropertySet(arrayOf(RecordSearchProperty.MEANING))
+        val options = RecordSearchOptions(props)
         val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore, query = "AB", options)
 
         val data = provider.calculateFoundRanges(createRecord(expr = "ABC", meaning = "C1"))
@@ -262,7 +261,8 @@ class RecordSearchMetadataProviderOnCoreTests {
 
     @Test
     fun calculateFoundRangesInCommonMeaningWhenFlagDisabledTest() {
-        val options = RecordSearchOptions(RecordSearchOptions.FLAG_SEARCH_FOR_MEANING)
+        val props = RecordSearchPropertySet(arrayOf(RecordSearchProperty.MEANING))
+        val options = RecordSearchOptions(props)
         val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore, query = "AB", options)
 
         val data = provider.calculateFoundRanges(createRecord(expr = "123", meaning = "CABC"))
@@ -271,7 +271,9 @@ class RecordSearchMetadataProviderOnCoreTests {
 
     @Test
     fun calculateFoundRangesInListMeaningWhenFlagDisabledTest() {
-        val options = RecordSearchOptions(RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION)
+        val props = RecordSearchPropertySet(arrayOf(RecordSearchProperty.EXPRESSION))
+        val options = RecordSearchOptions(props)
+
         val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore, query = "AB", options)
 
         val data = provider.calculateFoundRanges(createRecord(expr = "AB", meaning = "L3@AB\nBC\nCD"))
@@ -285,8 +287,6 @@ class RecordSearchMetadataProviderOnCoreTests {
     }
 
     companion object {
-        private val defaultSearchOptions = RecordSearchOptions(
-            RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION or RecordSearchOptions.FLAG_SEARCH_FOR_MEANING
-        )
+        private val defaultSearchOptions = RecordSearchOptions(RecordSearchPropertySet.all())
     }
 }

@@ -11,6 +11,7 @@ import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadg
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchManager
 import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
 import io.github.pelmenstar1.digiDict.ui.EntityWitIdFilteredArrayDiffCallback
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -265,8 +266,6 @@ class RecordSearchManagerTests {
     companion object {
         val filteredArrayDiffCallback = EntityWitIdFilteredArrayDiffCallback<ConciseRecordWithBadges>()
 
-        private val defaultSearchOptions = RecordSearchOptions(
-            RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION or RecordSearchOptions.FLAG_SEARCH_FOR_MEANING
-        )
+        private val defaultSearchOptions = RecordSearchOptions(RecordSearchPropertySet.all())
     }
 }
