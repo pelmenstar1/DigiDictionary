@@ -14,7 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
-import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
@@ -40,7 +40,7 @@ class AddEditRecordFragment : Fragment() {
     private lateinit var binding: FragmentAddEditRecordBinding
 
     @Inject
-    lateinit var messageMapper: MessageMapper<AddEditRecordMessage>
+    lateinit var messageStringFormatter: StringFormatter<AddEditRecordMessage>
 
     @Inject
     lateinit var recordBadgeDao: RecordBadgeDao
@@ -199,7 +199,7 @@ class AddEditRecordFragment : Fragment() {
             }
 
             ls.launchFlowCollector(vm.expressionErrorFlow) {
-                addRecordExpressionInputLayout.error = it?.let(messageMapper::map)
+                addRecordExpressionInputLayout.error = it?.let(messageStringFormatter::format)
                 addRecordSearchExpression.isEnabled = it == null
             }
 

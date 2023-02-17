@@ -13,7 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
@@ -31,7 +31,7 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
     private val viewModel by viewModels<AddRemoteDictionaryProviderViewModel>()
 
     @Inject
-    lateinit var messageMapper: MessageMapper<AddRemoteDictionaryProviderMessage>
+    lateinit var messageStringFormatter: StringFormatter<AddRemoteDictionaryProviderMessage>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val navController = findNavController()
@@ -57,8 +57,8 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         lifecycleScope.run {
             addButton.setEnabledWhenValid(vm.validityFlow, scope = this)
 
-            launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageMapper)
-            launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageMapper)
+            launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageStringFormatter)
+            launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageStringFormatter)
 
             launchFlowCollector(vm.isInputEnabledFlow) { isEnabled ->
                 nameInputLayout.isEnabled = isEnabled

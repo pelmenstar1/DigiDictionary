@@ -44,7 +44,6 @@ class SettingsFragment : Fragment() {
     ): View {
         val vm = viewModel
         val context = requireContext()
-        val res = context.resources
 
         val binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val contentContainer = binding.settingsContentContainer
@@ -60,8 +59,8 @@ class SettingsFragment : Fragment() {
 
             // On lower API levels, there are no break strategy and hyphenation items
             if (Build.VERSION.SDK_INT >= 23) {
-                bindTextFormatter(ITEM_BREAK_STRATEGY, ResourcesBreakStrategyStringFormatter(res))
-                bindTextFormatter(ITEM_HYPHENATION_FREQUENCY, ResourcesHyphenationStringFormatter(res))
+                bindTextFormatter(ITEM_BREAK_STRATEGY, ResourcesBreakStrategyStringFormatter(context))
+                bindTextFormatter(ITEM_HYPHENATION_FREQUENCY, ResourcesHyphenationStringFormatter(context))
 
                 bindContentItemClickListener(ITEM_BREAK_STRATEGY) { showBreakStrategyDialog() }
                 bindContentItemClickListener(ITEM_HYPHENATION_FREQUENCY) { showHyphenationDialog() }

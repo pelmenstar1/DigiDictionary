@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
@@ -37,7 +37,7 @@ class EventInfoRecordsFragment : Fragment() {
     private val viewModel by viewModels<EventInfoRecordsViewModel>()
 
     @Inject
-    lateinit var sortTypeMessageMapper: MessageMapper<RecordSortType>
+    lateinit var sortTypeStringFormatter: StringFormatter<RecordSortType>
 
     @Inject
     lateinit var textBreakAndHyphenationInfoSource: TextBreakAndHyphenationInfoSource
@@ -92,7 +92,7 @@ class EventInfoRecordsFragment : Fragment() {
             launchFlowCollector(vm.items, adapter::submitData)
 
             launchFlowCollector(vm.sortTypeFlow) {
-                optionsBar.setOptionValue(R.id.optionsBar_sort, sortTypeMessageMapper.map(it))
+                optionsBar.setOptionValue(R.id.optionsBar_sort, sortTypeStringFormatter.format(it))
             }
 
             launchFlowCollector(vm.isEventSuccessfullyLoadedFlow) { success ->

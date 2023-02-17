@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import java.util.*
 
+// TODO: Remove it, it's not used.
 fun interface LocaleProvider {
     fun get(): Locale
 

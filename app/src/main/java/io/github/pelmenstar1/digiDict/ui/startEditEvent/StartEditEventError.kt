@@ -2,18 +2,18 @@ package io.github.pelmenstar1.digiDict.ui.startEditEvent
 
 import android.content.Context
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.android.resourcesMessageMapper
+import io.github.pelmenstar1.digiDict.common.android.EnumResourcesStringFormatter
 
 enum class StartEditEventError {
     EMPTY_TEXT,
-    NAME_EXISTS;
+    NAME_EXISTS
+}
 
-    companion object {
-        fun resourcesMapper(context: Context) = resourcesMessageMapper<StartEditEventError>(context) {
-            when (it) {
-                EMPTY_TEXT -> R.string.emptyTextError
-                NAME_EXISTS -> R.string.startEditEvent_nameExistsError
-            }
-        }
+class ResourcesStartEditEventErrorStringFormatter(
+    context: Context
+) : EnumResourcesStringFormatter<StartEditEventError>(context, StartEditEventError::class.java) {
+    override fun getResourceId(value: StartEditEventError): Int = when (value) {
+        StartEditEventError.EMPTY_TEXT -> R.string.emptyTextError
+        StartEditEventError.NAME_EXISTS -> R.string.startEditEvent_nameExistsError
     }
 }

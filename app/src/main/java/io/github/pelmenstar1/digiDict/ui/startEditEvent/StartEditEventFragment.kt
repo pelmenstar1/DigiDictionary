@@ -15,12 +15,13 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
-import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.addTextChangedListener
+import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
 import io.github.pelmenstar1.digiDict.common.ui.setText
 import io.github.pelmenstar1.digiDict.databinding.FragmentStartEditEventBinding
@@ -34,7 +35,7 @@ class StartEditEventFragment : Fragment() {
     private var currentEventErrorSnackbar: Snackbar? = null
 
     @Inject
-    lateinit var errorMapper: MessageMapper<StartEditEventError>
+    lateinit var errorStringFormatter: StringFormatter<StartEditEventError>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vm = viewModel
@@ -73,9 +74,7 @@ class StartEditEventFragment : Fragment() {
             }
         }
 
-        ls.launchFlowCollector(vm.nameErrorFlow) {
-            nameInputLayout.error = it?.let(errorMapper::map)
-        }
+        ls.launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, errorStringFormatter)
 
         if (currentEventId >= 0) {
             ls.launchFlowCollector(vm.currentEventStateFlow) {

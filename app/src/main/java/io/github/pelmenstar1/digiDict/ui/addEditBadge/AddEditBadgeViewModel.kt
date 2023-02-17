@@ -39,7 +39,7 @@ class AddEditBadgeViewModel @Inject constructor(
             if (value < 0) {
                 // If we're in addition mode, the name is actually empty, so
                 // the appropriate error should be set
-                _nameErrorFlow.value = AddEditBadgeFragmentMessage.EMPTY_TEXT
+                _nameErrorFlow.value = AddEditBadgeMessage.EMPTY_TEXT
             }
         }
 
@@ -62,7 +62,7 @@ class AddEditBadgeViewModel @Inject constructor(
         }
     }
 
-    private val _nameErrorFlow = MutableStateFlow<AddEditBadgeFragmentMessage?>(null)
+    private val _nameErrorFlow = MutableStateFlow<AddEditBadgeMessage?>(null)
     val nameErrorFlow = _nameErrorFlow.asStateFlow()
 
     val validity = ValidityFlow(validityScheme)
@@ -120,10 +120,10 @@ class AddEditBadgeViewModel @Inject constructor(
 
             while (true) {
                 val name = checkNameChannel.receive()
-                var error: AddEditBadgeFragmentMessage? = null
+                var error: AddEditBadgeMessage? = null
 
                 if (name.isEmpty()) {
-                    error = AddEditBadgeFragmentMessage.EMPTY_TEXT
+                    error = AddEditBadgeMessage.EMPTY_TEXT
                 } else {
                     var checkAllBadges = true
 
@@ -146,7 +146,7 @@ class AddEditBadgeViewModel @Inject constructor(
 
                         // All badge names should be unique.
                         if (allBadgeNames.contains(name)) {
-                            error = AddEditBadgeFragmentMessage.NAME_EXISTS
+                            error = AddEditBadgeMessage.NAME_EXISTS
                         }
                     }
                 }

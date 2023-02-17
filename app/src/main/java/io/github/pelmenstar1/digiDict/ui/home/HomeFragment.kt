@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
-import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
@@ -41,7 +41,7 @@ class HomeFragment : Fragment() {
     private val viewModel by viewModels<HomeViewModel>()
 
     @Inject
-    lateinit var recordSortTypeMessageMapper: MessageMapper<RecordSortType>
+    lateinit var recordSortTypeStringFormatter: StringFormatter<RecordSortType>
 
     @Inject
     lateinit var recordRecordSearchPropertySetFormatter: RecordSearchPropertySetFormatter
@@ -250,7 +250,7 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.run {
             launchFlowCollector(viewModel.sortTypeFlow) { sortType ->
-                optionsBar.setOptionValue(R.id.optionsBar_sort, recordSortTypeMessageMapper.map(sortType))
+                optionsBar.setOptionValue(R.id.optionsBar_sort, recordSortTypeStringFormatter.format(sortType))
             }
 
             launchFlowCollector(viewModel.searchPropertiesFlow) { properties ->

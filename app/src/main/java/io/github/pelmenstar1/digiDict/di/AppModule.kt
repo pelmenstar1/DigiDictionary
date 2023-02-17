@@ -8,7 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.pelmenstar1.digiDict.PreferencesTextBreakAndHyphenationInfoSource
-import io.github.pelmenstar1.digiDict.common.MessageMapper
+import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.LocaleProvider
 import io.github.pelmenstar1.digiDict.common.android.NoOpTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
@@ -24,10 +24,14 @@ import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchCore
 import io.github.pelmenstar1.digiDict.stats.CommonStatsProvider
 import io.github.pelmenstar1.digiDict.stats.DbCommonStatsProvider
-import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
+import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeMessage
+import io.github.pelmenstar1.digiDict.ui.addEditBadge.ResourcesAddEditBadgeMessageStringFormatter
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
+import io.github.pelmenstar1.digiDict.ui.addEditRecord.ResourcesAddEditRecordMessageStringFormatter
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
-import io.github.pelmenstar1.digiDict.ui.misc.ResourcesRecordSortTypeMessageMapper
+import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.ResourcesAddRemoteDictionaryProviderMessageStringFormatter
+import io.github.pelmenstar1.digiDict.ui.misc.ResourcesRecordSortTypeStringFormatter
+import io.github.pelmenstar1.digiDict.ui.startEditEvent.ResourcesStartEditEventErrorStringFormatter
 import io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventError
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
@@ -101,26 +105,26 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun providesAddExpressionMessageMapper(@ApplicationContext context: Context): MessageMapper<AddEditRecordMessage> {
-        return AddEditRecordMessage.defaultMapper(context)
+    fun providesAddExpressionStringFormatter(@ApplicationContext context: Context): StringFormatter<AddEditRecordMessage> {
+        return ResourcesAddEditRecordMessageStringFormatter(context)
     }
 
     @Provides
     @Singleton
-    fun provideAddRemoteDictProviderMessageMapper(@ApplicationContext context: Context): MessageMapper<AddRemoteDictionaryProviderMessage> {
-        return AddRemoteDictionaryProviderMessage.defaultMapper(context)
+    fun provideAddRemoteDictProviderStringFormatter(@ApplicationContext context: Context): StringFormatter<AddRemoteDictionaryProviderMessage> {
+        return ResourcesAddRemoteDictionaryProviderMessageStringFormatter(context)
     }
 
     @Provides
     @Singleton
-    fun provideBadgeSelectorInputMessageMapper(@ApplicationContext context: Context): MessageMapper<AddEditBadgeFragmentMessage> {
-        return AddEditBadgeFragmentMessage.defaultMapper(context)
+    fun provideBadgeSelectorInputStringFormatter(@ApplicationContext context: Context): StringFormatter<AddEditBadgeMessage> {
+        return ResourcesAddEditBadgeMessageStringFormatter(context)
     }
 
     @Provides
     @Singleton
-    fun provideRecordSortTypeMessageMapper(@ApplicationContext context: Context): MessageMapper<RecordSortType> {
-        return ResourcesRecordSortTypeMessageMapper(context)
+    fun provideRecordSortTypeStringFormatter(@ApplicationContext context: Context): StringFormatter<RecordSortType> {
+        return ResourcesRecordSortTypeStringFormatter(context)
     }
 
     @Provides
@@ -130,8 +134,8 @@ class AppModule {
     }
 
     @Provides
-    fun provideStartEditEventErrorMessageMapper(@ApplicationContext context: Context): MessageMapper<StartEditEventError> {
-        return StartEditEventError.resourcesMapper(context)
+    fun provideStartEditEventErrorStringFormatter(@ApplicationContext context: Context): StringFormatter<StartEditEventError> {
+        return ResourcesStartEditEventErrorStringFormatter(context)
     }
 
     @Provides

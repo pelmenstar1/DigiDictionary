@@ -8,7 +8,7 @@ import io.github.pelmenstar1.digiDict.commonTestUtils.waitUntilSuccessOrThrowOnE
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
-import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeFragmentMessage
+import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeMessage
 import io.github.pelmenstar1.digiDict.ui.addEditBadge.AddEditBadgeViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset
@@ -44,7 +44,7 @@ class AddEditBadgeViewModelTests {
             // Checking name is async, so we need to wait some time
             Thread.sleep(200)
 
-            assertEquals(AddEditBadgeFragmentMessage.EMPTY_TEXT, vm.nameErrorFlow.first())
+            assertEquals(AddEditBadgeMessage.EMPTY_TEXT, vm.nameErrorFlow.first())
         }
     }
 
@@ -128,7 +128,7 @@ class AddEditBadgeViewModelTests {
             // Checking name is async, so we need to wait some time
             Thread.sleep(100)
 
-            assertEquals(AddEditBadgeFragmentMessage.NAME_EXISTS, vm.nameErrorFlow.first())
+            assertEquals(AddEditBadgeMessage.NAME_EXISTS, vm.nameErrorFlow.first())
         }
     }
 

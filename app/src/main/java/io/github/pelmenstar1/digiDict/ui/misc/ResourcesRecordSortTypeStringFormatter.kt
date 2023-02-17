@@ -2,14 +2,13 @@ package io.github.pelmenstar1.digiDict.ui.misc
 
 import android.content.Context
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.android.ResourcesMessageMapper
-import io.github.pelmenstar1.digiDict.common.getEnumFieldCount
+import io.github.pelmenstar1.digiDict.common.android.EnumResourcesStringFormatter
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 
-class ResourcesRecordSortTypeMessageMapper(context: Context) : ResourcesMessageMapper<RecordSortType>(
-    context, getEnumFieldCount<RecordSortType>()
-) {
-    override fun mapToStringResource(type: RecordSortType) = when (type) {
+class ResourcesRecordSortTypeStringFormatter(
+    context: Context
+) : EnumResourcesStringFormatter<RecordSortType>(context, RecordSortType::class.java) {
+    override fun getResourceId(value: RecordSortType) = when (value) {
         RecordSortType.NEWEST -> R.string.recordSortType_newest
         RecordSortType.OLDEST -> R.string.recordSortType_oldest
         RecordSortType.GREATEST_SCORE -> R.string.recordSortType_greatestScore
