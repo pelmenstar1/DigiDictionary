@@ -45,9 +45,6 @@ class AppPagingSource(
     private val recordDao = appDatabase.recordDao()
 
     init {
-        // Both startEpochSeconds and endEpochSeconds should be positive, and startEpochSeconds should be
-        // less than or equal to endEpochSeconds. That's the range the logic expects.
-
         val invalidationTracker = appDatabase.invalidationTracker
         invalidationTracker.addObserver(observer)
 
@@ -173,7 +170,7 @@ class AppPagingSource(
     ): List<PageItem> {
         val dataSize = recordData.size
 
-        return if (dataSize > 0) {
+        if (dataSize > 0) {
             val zone = TimeZone.getDefault()
 
             val result = ArrayList<PageItem>((dataSize * 3) / 2)
@@ -198,41 +195,42 @@ class AppPagingSource(
             var secondRecordLocalEpochDay = -1L
 
             if (dataSize > 1) {
-                val secondRecordUtcEpochSeconds = recordData[1].epochSeconds
-                val secondRecordUtcEpochDay = secondRecordUtcEpochSeconds / SECONDS_IN_DAY
+                secondRecordLocalEpochDay = TimeUtils.toZonedEpochDays(recordData[1].epochSeconds, zone)
 
-                secondRecordLocalEpochDay = TimeUtils.toZonedEpochDays(secondRecordUtcEpochSeconds, zone)
-                isFirstRecordBeforeDateMarker = firstRecordUtcEpochDay != secondRecordUtcEpochDay
+                isFirstRecordBeforeDateMarker = secondRecordLocalEpochDay != firstRecordUtcEpochDay
             }
 
             result.add(createRecordPageItem(firstRecord, isFirstRecordBeforeDateMarker))
 
-            var currentRecordLocalEpochDay = secondRecordLocalEpochDay
+            if (dataSize > 1) {
+                var currentRecordLocalEpochDay = secondRecordLocalEpochDay
 
-            for (i in 1 until dataSize) {
-                val record = recordData[i]
-                val epochDay = currentRecordLocalEpochDay
+                for (i in 1 until dataSize) {
+                    val record = recordData[i]
+                    val localEpochDay = currentRecordLocalEpochDay
 
-                if (epochDay != currentSectionLocalEpochDay) {
-                    currentSectionLocalEpochDay = epochDay
+                    if (localEpochDay != currentSectionLocalEpochDay) {
+                        currentSectionLocalEpochDay = localEpochDay
 
-                    result.add(PageItem.DateMarker(epochDay))
+                        result.add(PageItem.DateMarker(localEpochDay))
+                    }
+
+                    var isBeforeDateMarker = false
+
+                    if (i < dataSize - 1) {
+                        currentRecordLocalEpochDay = TimeUtils.toZonedEpochDays(recordData[i + 1].epochSeconds, zone)
+
+                        isBeforeDateMarker = currentSectionLocalEpochDay != currentRecordLocalEpochDay
+                    }
+
+                    result.add(createRecordPageItem(record, isBeforeDateMarker))
                 }
-
-                var isBeforeDateMarker = false
-
-                if (i < dataSize - 1) {
-                    currentRecordLocalEpochDay = TimeUtils.toZonedEpochDays(recordData[i + 1].epochSeconds, zone)
-                    isBeforeDateMarker = currentRecordLocalEpochDay != currentSectionLocalEpochDay
-                }
-
-                result.add(createRecordPageItem(record, isBeforeDateMarker))
             }
 
-            result
-        } else {
-            emptyList()
+            return result
         }
+
+        return emptyList()
     }
 
     private fun createRecordPageItem(record: ConciseRecordWithBadges, isBeforeDateMarker: Boolean): PageItem.Record {
