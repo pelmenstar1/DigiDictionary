@@ -24,18 +24,27 @@ class HomeSearchAdapter(
         onItemClickListener: View.OnClickListener,
         staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
     ) : ConciseRecordWithBadgesViewHolder(context, onItemClickListener, staticInfo) {
+        // Purposely doesn't change expression and meaning. setStyledExpressionAndMeaning() does it instead.
+        // Because on new search request, we must update **all** the styles, regardless whether the item changed its position or not,
+        // as the found ranges might be changed.
+        // So not to create new expression and meaning texts, bind() doesn't do it.
         fun bind(record: ConciseRecordWithBadges, style: HomeSearchItemStyle, hasDivider: Boolean) {
+            container.hasDivider = hasDivider
+            container.tag = record
+
+            setStyledExpressionAndMeaning(record, style)
+
+            container.setScore(record.score)
+            container.setBadges(record.badges)
+        }
+
+        fun setStyledExpressionAndMeaning(record: ConciseRecordWithBadges, style: HomeSearchItemStyle) {
             val context = container.context
 
             val exprText = HomeSearchStyledTextUtil.createExpressionText(record.expression, style)
             val meaningText = HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, style)
 
-            container.hasDivider = hasDivider
-            container.tag = record
-
             container.setExpressionAndMeaning(exprText, meaningText)
-            container.setScore(record.score)
-            container.setBadges(record.badges)
         }
     }
 
@@ -62,6 +71,8 @@ class HomeSearchAdapter(
 
     fun submitResult(result: RecordSearchResult) {
         val currentData = result.currentData
+        val currentDataSize = currentData.size
+
         val previousData = result.previousData
 
         this.currentData = currentData
@@ -69,15 +80,19 @@ class HomeSearchAdapter(
 
         // calculateDifference is a quite expensive method, so it's better not to call when it's possible.
         if (previousData.size == 0) {
-            currentData.size.let {
-                if (it > 0) {
-                    notifyItemRangeInserted(0, it)
-                }
+            if (currentDataSize > 0) {
+                notifyItemRangeInserted(0, currentDataSize)
             }
         } else {
             val diffResult = diffManager.calculateDifference(previousData, currentData)
 
             diffResult.dispatchTo(listUpdateCallback)
+        }
+
+        if (currentDataSize > 0) {
+            // On new search request, found ranges in items might be changed regardless of whether its position is changed or not.
+            // So we should update it.
+            notifyItemRangeChanged(0, currentDataSize, updateStyledExpressionAndMeaning)
         }
     }
 
@@ -112,22 +127,29 @@ class HomeSearchAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val data = currentData
-
         val record = data[position]
         val itemStyle = createItemStyle(record)
 
-        // Don't show divider if the item is the last one
-        holder.bind(record, itemStyle, hasDivider = position < data.size - 1)
+        // Don't show divider if the item is the last one.
+        val hasDivider = position < data.size - 1
+
+        holder.bind(record, itemStyle, hasDivider)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
         if (payloads.isEmpty()) {
             onBindViewHolder(holder, position)
         } else {
-            val payload = payloads[0]
+            when (payloads[0]) {
+                updateBreakAndHyphenationInfoPayload -> {
+                    holder.setTextBreakAndHyphenationInfoCompat(breakAndHyphenationInfo)
+                }
+                updateStyledExpressionAndMeaning -> {
+                    val record = currentData[position]
+                    val itemStyle = createItemStyle(record)
 
-            if (payload === updateBreakAndHyphenationInfoPayload) {
-                holder.setTextBreakAndHyphenationInfoCompat(breakAndHyphenationInfo)
+                    holder.setStyledExpressionAndMeaning(record, itemStyle)
+                }
             }
         }
     }
@@ -142,5 +164,6 @@ class HomeSearchAdapter(
         private val conciseRecordDiffCallback = EntityWitIdFilteredArrayDiffCallback<ConciseRecordWithBadges>()
 
         private val updateBreakAndHyphenationInfoPayload = Any()
+        private val updateStyledExpressionAndMeaning = Any()
     }
 }
