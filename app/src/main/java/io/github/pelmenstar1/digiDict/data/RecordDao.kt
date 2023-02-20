@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.data
 
-import android.database.Cursor
 import androidx.room.*
 import io.github.pelmenstar1.digiDict.common.generateUniqueRandomNumbers
 import io.github.pelmenstar1.digiDict.common.mapToArray
@@ -23,14 +22,8 @@ abstract class RecordDao {
     @Insert
     abstract suspend fun insert(value: Record)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insertReplace(value: Record): Long
-
     @Insert
     abstract suspend fun insertAll(values: Array<out Record>)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertAllReplace(values: Array<out Record>)
 
     @Query(
         """UPDATE records 
@@ -109,27 +102,8 @@ abstract class RecordDao {
         }
     }
 
-    @Query("SELECT expression, meaning, additionalNotes, dateTime, score FROM records")
-    abstract fun getAllRecordsNoIdRaw(): Cursor
-
     @Query("SELECT * FROM records")
     abstract suspend fun getAllRecords(): Array<Record>
-
-    @Query("SELECT * FROM records ORDER BY id ASC")
-    abstract suspend fun getAllRecordsByIdAsc(): Array<Record>
-
-    @Query("SELECT $CONCISE_RECORD_CONTENT FROM records")
-    abstract suspend fun getAllConciseRecords(): Array<ConciseRecord>
-
-    suspend fun getAllConciseRecordsWithBadges(): Array<ConciseRecordWithBadges> {
-        val records = getAllConciseRecords()
-
-        return records.mapToArray {
-            val badges = getRecordBadgesByRecordId(it.id)
-
-            ConciseRecordWithBadges.create(it, badges)
-        }
-    }
 
     @Query("SELECT id FROM records WHERE (dateTime / 86400) = :epochDay ORDER BY dateTime DESC LIMIT 1")
     abstract suspend fun getFirstRecordIdWithEpochDayOrderByEpochDayDesc(epochDay: Long): Int?

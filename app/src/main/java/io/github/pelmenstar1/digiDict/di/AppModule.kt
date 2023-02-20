@@ -9,7 +9,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.pelmenstar1.digiDict.PreferencesTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.StringFormatter
-import io.github.pelmenstar1.digiDict.common.android.LocaleProvider
 import io.github.pelmenstar1.digiDict.common.android.NoOpTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
@@ -40,11 +39,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class AppModule {
-    @Provides
-    fun provideLocaleProvider(@ApplicationContext context: Context): LocaleProvider {
-        return LocaleProvider.fromContext(context)
-    }
-
     @Provides
     @Singleton
     fun provideAppPreferences(@ApplicationContext context: Context): DigiDictAppPreferences {

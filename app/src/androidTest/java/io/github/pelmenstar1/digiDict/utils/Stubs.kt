@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.utils
 
-import android.database.Cursor
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.Flow
@@ -38,15 +37,7 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override fun insertReplace(value: Record): Long {
-        throw NotImplementedError()
-    }
-
     override suspend fun insertAll(values: Array<out Record>) {
-        throw NotImplementedError()
-    }
-
-    override suspend fun insertAllReplace(values: Array<out Record>) {
         throw NotImplementedError()
     }
 
@@ -77,10 +68,6 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override suspend fun getAllRecordsByIdAsc(): Array<Record> {
-        throw NotImplementedError()
-    }
-
     override fun getRecordFlowById(id: Int): Flow<Record?> {
         throw NotImplementedError()
     }
@@ -89,15 +76,7 @@ open class RecordDaoStub : RecordDao() {
         throw NotImplementedError()
     }
 
-    override fun getAllRecordsNoIdRaw(): Cursor {
-        throw NotImplementedError()
-    }
-
     override suspend fun getAllRecords(): Array<Record> {
-        throw NotImplementedError()
-    }
-
-    override suspend fun getAllConciseRecords(): Array<ConciseRecord> {
         throw NotImplementedError()
     }
 

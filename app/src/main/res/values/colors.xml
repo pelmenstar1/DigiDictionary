@@ -3,14 +3,11 @@
     <color name="color_primary">#C51162</color>
     <color name="color_on_primary">#FFFFFF</color>
 
-    <color name="color_secondary">#FF03DAC5</color>
     <color name="color_secondary_variant">#FF018786</color>
     <color name="color_on_secondary">#FF000000</color>
     <color name="color_error">@color/red_700</color>
     <color name="color_surface_variant">#FF49454F</color>
 
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="red_700">#D32F2F</color>
     <color name="green_700">#388E3C</color>
 

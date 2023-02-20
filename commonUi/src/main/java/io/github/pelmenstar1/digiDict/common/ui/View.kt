@@ -7,18 +7,12 @@ import android.widget.TextView
 import androidx.annotation.DimenRes
 import androidx.core.view.setPadding
 import androidx.core.widget.TextViewCompat
-import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputLayout
 import io.github.pelmenstar1.digiDict.common.equalsByChar
 import io.github.pelmenstar1.digiDict.common.textAppearance.MaterialTextAppearanceSelector
-import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 
 fun TextInputLayout.setText(text: CharSequence) {
     editText?.setText(text)
-}
-
-inline fun TextInputLayout.addTextChangedListener(crossinline block: (CharSequence) -> Unit) {
-    editText?.addTextChangedListener { block(it.toStringOrEmpty()) }
 }
 
 fun EditText.setTextIfCharsChanged(newText: CharSequence) {

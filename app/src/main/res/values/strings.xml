@@ -46,7 +46,6 @@
 
     <!-- Manage remote dict. providers fragment -->
     <string name="manageRemoteDictProviders_label">Remote dict. providers</string>
-    <string name="manageRemoteDictProviders_failedToLoadProvidersError">Failed to load remote dictionary providers</string>
     <string name="manageRemoteDictProviders_deleteError">Failed to delete the dictionary provider.</string>
     <string name="manageRemoteDictProviders_deleteMessage">Do you really want to delete the remote dictionary provider?</string>
 
@@ -76,7 +75,6 @@
     <!-- Record related -->
     <string name="expression">Expression</string>
     <string name="meaning">Meaning</string>
-    <string name="origin">Origin</string>
     <string name="additionalNotes">Additional notes</string>
     <string name="score">Score</string>
     <string name="meaningParseError">An error happened:\n%s</string>
@@ -128,7 +126,6 @@
     <string name="addEditBadge_title">Add or edit badge</string>
     <string name="addEditBadge_name">Name</string>
     <string name="addEditBadge_nameExistsError">Badge with such name is already added</string>
-    <string name="addEditBadge_badgeLoadingError">Failed to load badge</string>
 
     <!-- View record fragment -->
     <string name="viewRecord_label">View</string>
@@ -173,13 +170,7 @@
     <string name="settings_deleteAllRecordsDialogMessage">Do you really want to delete all records?\n<b>This operation can\'t be undone.</b></string>
     <string name="settings_deleteAllSuccess">All records were deleted</string>
     <string name="settings_failedToLoadSettings">Failed to load the settings</string>
-    <string name="settings_exportError">Export failed with error</string>
-    <string name="settings_importError">Import failed with error</string>
-    <string name="settings_exportSuccess">Export was successful</string>
-    <string name="settings_importSuccess">Import was successful</string>
-    <string name="settings_invalidFile">Invalid file format</string>
     <string name="settings_generalGroup">General</string>
-    <string name="settings_versionFormat">%1$s (%2$s)</string>
     <string name="settings_backupTitle">Backup</string>
     <string name="settings_openBrowserInApp">Open browser in-app</string>
     <string name="settings_scorePointsPerCorrectAnswer">Score points per right answer</string>
@@ -281,6 +272,5 @@
     <string name="eventInfo_endTime">End time</string>
     <string name="eventInfo_duration">Duration</string>
     <string name="eventInfo_totalRecordsAdded">Total records added</string>
-    <string name="eventInfo_eventNotEnded">not ended</string>
     <string name="eventInfo_showRecords">Show records</string>
 </resources>

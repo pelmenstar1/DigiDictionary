@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict
 
 import android.content.Context
-import android.database.Cursor
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
@@ -111,7 +110,7 @@ class BackupManagerTests {
             badgeDao.insertAll(noIdBadges)
 
             val records = recordDao.getAllRecords()
-            val recordsNoIdSet = getAllRecordsNoIdInSet(recordDao)
+            val recordsNoIdSet = toRecordNotIdSet(records)
 
             val badgesToExport = badgeDao.getAllOrderByIdAsc()
             val recordToBadgeRelations = buildList(records.size * badgesToExport.size) {
@@ -172,7 +171,7 @@ class BackupManagerTests {
             badgeDao.insertAll(noIdBadges)
 
             val records = recordDao.getAllRecords()
-            val recordsNoIdSet = getAllRecordsNoIdInSet(recordDao)
+            val recordsNoIdSet = toRecordNotIdSet(records)
 
             val badgesToExport = badgeDao.getAllOrderByIdAsc()
             val recordToBadgeRelations = buildList(records.size * badgesToExport.size) {
@@ -261,33 +260,16 @@ class BackupManagerTests {
     }
 
     companion object {
-        internal fun getAllRecordsNoIdInSet(dao: RecordDao): Set<RecordNoId> {
-            return dao.getAllRecordsNoIdRaw().use { cursor ->
-                val exprIndex = cursor.getColumnIndex { expression }
-                val meaningIndex = cursor.getColumnIndex { meaning }
-                val notesIndex = cursor.getColumnIndex { additionalNotes }
-                val scoreIndex = cursor.getColumnIndex { score }
-                val epochSecondsIndex = cursor.getColumnIndex { epochSeconds }
-
-                val count = cursor.count
-                val set = HashSet<RecordNoId>(count)
-
-                while (cursor.moveToNext()) {
-                    val expr = cursor.getString(exprIndex)
-                    val meaning = cursor.getString(meaningIndex)
-                    val notes = cursor.getString(notesIndex)
-                    val score = cursor.getInt(scoreIndex)
-                    val epochSeconds = cursor.getLong(epochSecondsIndex)
-
-                    set.add(RecordNoId(expr, meaning, notes, score, epochSeconds))
+        internal fun toRecordNotIdSet(records: Array<out Record>): Set<RecordNoId> {
+            return HashSet<RecordNoId>(records.size).apply {
+                records.forEach {
+                    add(RecordNoId(it.expression, it.meaning, it.additionalNotes, it.score, it.epochSeconds))
                 }
-
-                set
             }
         }
 
-        private inline fun Cursor.getColumnIndex(columnName: RecordTable.() -> String): Int {
-            return getColumnIndex(RecordTable.columnName())
+        internal suspend fun getAllRecordsNoIdInSet(dao: RecordDao): Set<RecordNoId> {
+            return toRecordNotIdSet(dao.getAllRecords())
         }
     }
 }

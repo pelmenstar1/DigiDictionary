@@ -35,8 +35,6 @@
     <dimen name="badge_topMargin">8dp</dimen>
     <dimen name="badge_strokeWidth">1.75dp</dimen>
 
-    <dimen name="badgeInteraction_addButton_size">40dp</dimen>
-    <dimen name="badgeInteraction_addButton_startMargin">8dp</dimen>
     <dimen name="badgeInteraction_addButton_rightPadding">4dp</dimen>
 
     <dimen name="badgeSelectorDialog_listElement_nameStartMargin">7dp</dimen>
@@ -54,7 +52,6 @@
     <dimen name="importFormatSelectorDialog_entryPadding">8dp</dimen>
     <dimen name="importExportConfigProgressIndicatorDialog_warningTopMargin">8dp</dimen>
 
-    <dimen name="stats_chartMarginHorizontal">10dp</dimen>
     <dimen name="stats_chartHeight">300dp</dimen>
 
     <dimen name="manageEvents_itemMainContainerStartTopPadding">10dp</dimen>
