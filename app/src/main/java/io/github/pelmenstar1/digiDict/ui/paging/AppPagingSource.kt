@@ -146,7 +146,7 @@ class AppPagingSource(
         //
         // As computePageResult has a single purpose, no flags are added to control the transformation for now.
         val result = if (sortType == RecordSortType.NEWEST || sortType == RecordSortType.OLDEST) {
-            computePageResult(recordData, sortType)
+            computePageResult(recordData)
         } else {
             recordData.map { createRecordPageItem(it, isBeforeDateMarker = false) }
         }
@@ -164,10 +164,7 @@ class AppPagingSource(
         )
     }
 
-    private suspend fun computePageResult(
-        recordData: Array<out ConciseRecordWithBadges>,
-        sortType: RecordSortType
-    ): List<PageItem> {
+    internal suspend fun computePageResult(recordData: Array<out ConciseRecordWithBadges>): List<PageItem> {
         val dataSize = recordData.size
 
         if (dataSize > 0) {
@@ -197,7 +194,7 @@ class AppPagingSource(
             if (dataSize > 1) {
                 secondRecordLocalEpochDay = TimeUtils.toZonedEpochDays(recordData[1].epochSeconds, zone)
 
-                isFirstRecordBeforeDateMarker = secondRecordLocalEpochDay != firstRecordUtcEpochDay
+                isFirstRecordBeforeDateMarker = secondRecordLocalEpochDay != currentSectionLocalEpochDay
             }
 
             result.add(createRecordPageItem(firstRecord, isFirstRecordBeforeDateMarker))

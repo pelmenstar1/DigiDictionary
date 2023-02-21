@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui.paging
 
 import androidx.recyclerview.widget.DiffUtil
+import io.github.pelmenstar1.digiDict.common.equalsPattern
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.EventInfo
 import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputedValues
@@ -26,6 +27,7 @@ sealed interface PageItem {
 
     /**
      * Represents a record item that holds the [ConciseRecordWithBadges] and some other flags.
+     * [precomputedValues] is used only as supplementary data and doesn't affect [equals], [hashCode], [toString]
      *
      * @param isBeforeDateMarker marks whether this record is before [DateMarker] in a collection or sequence of any kind
      */
@@ -35,19 +37,28 @@ sealed interface PageItem {
         val precomputedValues: RecordTextPrecomputedValues?
     ) : PageItem {
         override fun isTheSameTo(other: PageItem): Boolean {
-            return if (other is Record) {
-                other.record.id == record.id
-            } else {
-                false
-            }
+            return other is Record && other.record.id == record.id
         }
 
         override fun isSameContentWith(other: PageItem): Boolean {
-            return if (other is Record) {
-                other.record == record && other.isBeforeDateMarker == isBeforeDateMarker
-            } else {
-                false
-            }
+            return other is Record && isSameContentWith(other)
+        }
+
+        private fun isSameContentWith(other: Record): Boolean {
+            return other.record == record && other.isBeforeDateMarker == isBeforeDateMarker
+        }
+
+        override fun equals(other: Any?) = equalsPattern(other, ::isSameContentWith)
+
+        override fun hashCode(): Int {
+            var result = record.hashCode()
+            result = result * 31 + (if (isBeforeDateMarker) 1 else 0)
+
+            return result
+        }
+
+        override fun toString(): String {
+            return "PageItem.Record(record=$record, isBeforeDateMarker=$isBeforeDateMarker)"
         }
     }
 
@@ -60,11 +71,17 @@ sealed interface PageItem {
         override fun isTheSameTo(other: PageItem) = isSameContentWith(other)
 
         override fun isSameContentWith(other: PageItem): Boolean {
-            return if (other is DateMarker) {
-                epochDay == other.epochDay
-            } else {
-                false
-            }
+            return other is DateMarker && epochDay == other.epochDay
+        }
+
+        override fun equals(other: Any?) = equalsPattern(other) { epochDay == it.epochDay }
+
+        override fun hashCode(): Int {
+            return (epochDay xor (epochDay ushr 32)).toInt()
+        }
+
+        override fun toString(): String {
+            return "PageItem.DateMarker(epochDay=$epochDay)"
         }
     }
 
@@ -75,19 +92,28 @@ sealed interface PageItem {
      */
     class EventMarker(val isStarted: Boolean, val event: EventInfo) : PageItem {
         override fun isTheSameTo(other: PageItem): Boolean {
-            return if (other is EventMarker) {
-                event.id == other.event.id
-            } else {
-                false
-            }
+            return other is EventMarker && event.id == other.event.id
         }
 
         override fun isSameContentWith(other: PageItem): Boolean {
-            return if (other is EventMarker) {
-                isStarted == other.isStarted && event == other.event
-            } else {
-                false
-            }
+            return other is EventMarker && isSameContentWith(other)
+        }
+
+        private fun isSameContentWith(other: EventMarker): Boolean {
+            return isStarted == other.isStarted && event == other.event
+        }
+
+        override fun equals(other: Any?) = equalsPattern(other, ::isSameContentWith)
+
+        override fun hashCode(): Int {
+            var result = event.hashCode()
+            result = result * 31 + if (isStarted) 1 else 0
+
+            return result
+        }
+
+        override fun toString(): String {
+            return "PageItem.EventMarker(isStarted=$isStarted, event=$event)"
         }
     }
 }

@@ -32,6 +32,13 @@ fun AppDatabase.reset() {
     query("DELETE FROM sqlite_sequence", null)
 }
 
+suspend fun AppDatabase.addRecordWithBadges(value: RecordWithBadges) {
+    val record =
+        Record(value.id, value.expression, value.meaning, value.additionalNotes, value.score, value.epochSeconds)
+
+    addRecordAndBadges(record, value.badges)
+}
+
 suspend fun AppDatabase.addRecordAndBadges(
     record: Record,
     badges: Array<RecordBadgeInfo>

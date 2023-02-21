@@ -42,6 +42,10 @@ abstract class RecordTextPrecomputeController {
     abstract fun compute(record: ConciseRecordWithBadges): RecordTextPrecomputedValues?
 
     companion object {
+        fun noOp(): RecordTextPrecomputeController {
+            return Api21
+        }
+
         /**
          * Creates new [RecordTextPrecomputeController] instance that will precompute text info using given
          * [params].
