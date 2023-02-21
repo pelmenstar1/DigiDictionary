@@ -31,6 +31,8 @@ class StartEditEventViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val currentEventIdFlow = MutableStateFlow<Int?>(null)
+
+    private var isCheckNameJobStarted = false
     private val checkEventNameChannel = Channel<String>(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     private val _nameErrorFlow = MutableStateFlow<StartEditEventError?>(null)
@@ -47,11 +49,9 @@ class StartEditEventViewModel @Inject constructor(
             if (value >= 0) {
                 currentEventIdFlow.value = value
             } else {
-                validity.mutate {
-                    set(nameValidityField, true)
+                if (name.isBlank()) {
+                    _nameErrorFlow.value = StartEditEventError.EMPTY_TEXT
                 }
-
-                _nameErrorFlow.value = StartEditEventError.EMPTY_TEXT
             }
 
             startCheckEventNameJob()
@@ -122,28 +122,32 @@ class StartEditEventViewModel @Inject constructor(
     }
 
     private fun startCheckEventNameJob() {
-        viewModelScope.launch(Dispatchers.Default) {
-            val names = eventDao.getAllNames()
-            val currentName = if (currentEventId >= 0) {
-                currentEventStateFlow.firstSuccess().name
-            } else {
-                null
-            }
+        if (!isCheckNameJobStarted) {
+            isCheckNameJobStarted = true
 
-            while (isActive) {
-                val name = checkEventNameChannel.receive().trim()
-                val error = when {
-                    name.isEmpty() -> StartEditEventError.EMPTY_TEXT
-                    name != currentName && names.contains(name) -> StartEditEventError.NAME_EXISTS
-                    else -> null
+            viewModelScope.launch(Dispatchers.Default) {
+                val names = eventDao.getAllNames()
+                val currentName = if (currentEventId >= 0) {
+                    currentEventStateFlow.firstSuccess().name
+                } else {
+                    null
                 }
 
-                val isValid = error == null
+                while (isActive) {
+                    val name = checkEventNameChannel.receive().trim()
+                    val error = when {
+                        name.isEmpty() -> StartEditEventError.EMPTY_TEXT
+                        name != currentName && names.contains(name) -> StartEditEventError.NAME_EXISTS
+                        else -> null
+                    }
 
-                validity.mutate {
-                    set(nameValidityField, isValid, isComputed = true)
+                    val isValid = error == null
+
+                    validity.mutate {
+                        set(nameValidityField, isValid, isComputed = true)
+                    }
+                    _nameErrorFlow.value = error
                 }
-                _nameErrorFlow.value = error
             }
         }
     }

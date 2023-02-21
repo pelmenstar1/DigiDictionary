@@ -29,8 +29,6 @@ class AddEditRecordViewModel @Inject constructor(
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    val validity = ValidityFlow(validityScheme)
-
     private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
 
     val expressionErrorFlow: StateFlow<AddEditRecordMessage?>
@@ -38,7 +36,11 @@ class AddEditRecordViewModel @Inject constructor(
 
     private val currentRecordIdFlow = MutableStateFlow<Int?>(null)
 
-    // currentRecordId should be set once, when the fragment is created, so it's thread-safe to read it
+    /**
+     * Gets or sets id of a record to edit.
+     *
+     * Setter can be called multiple times but the id should remain the same.
+     */
     var currentRecordId = -1
         set(value) {
             field = value
@@ -47,13 +49,14 @@ class AddEditRecordViewModel @Inject constructor(
                 // After current record is successfully loaded, 'check expression job' will be started anyway.
                 currentRecordIdFlow.value = value
             } else {
-                // Only after we're sure the ViewModel is not in edit-mode (there's no record to edit), we can safely
-                // show the error message about expression being empty.
-                // On the contrary, if there's a record to load, the expression just can't be empty and the error message shouldn't be shown.
-                _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
+                // Only after we're sure that there's no record to load, we can update expression error if expression is
+                // actually empty.
+                if (expression.isBlank()) {
+                    _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
+                }
             }
 
-            startCheckExpressionJob()
+            startCheckExpressionJobIfNeccessary()
         }
 
     private val currentRecordStateManager = DataLoadStateManager<RecordWithBadges>(TAG)
@@ -76,6 +79,8 @@ class AddEditRecordViewModel @Inject constructor(
             }
         }
     }
+
+    private var isCheckExprJobStarted = false
 
     private val checkExpressionChannel = Channel<String>(
         capacity = 1,
@@ -111,6 +116,8 @@ class AddEditRecordViewModel @Inject constructor(
 
     var getMeaning: (() -> ComplexMeaning)? = null
     var getBadges: (() -> Array<RecordBadgeInfo>)? = null
+
+    val validity = ValidityFlow(validityScheme)
 
     val addOrEditAction = viewModelAction(TAG) {
         val expr = expression.trim()
@@ -165,45 +172,49 @@ class AddEditRecordViewModel @Inject constructor(
         savedStateHandle[KEY_EXPRESSION] = value
     }
 
-    // Must not be started if there's current record and it's null at the moment of calling the method
-    private fun startCheckExpressionJob() {
-        viewModelScope.launch(Dispatchers.Default) {
-            val expressions = recordDao.getAllExpressions()
+    // Should be invoked only after currentRecordId is initialized.
+    private fun startCheckExpressionJobIfNeccessary() {
+        if (!isCheckExprJobStarted) {
+            isCheckExprJobStarted = true
 
-            // Sort expressions to make binary search work.
-            //
-            // SQL's ORDER BY can't be used, because apparently it uses different algorithm to order strings
-            // and it isn't compatible with string sorting algorithm in Android JVM.
-            expressions.sort()
+            viewModelScope.launch(Dispatchers.Default) {
+                val expressions = recordDao.getAllExpressions()
 
-            val currentRecordExpression = if (currentRecordId >= 0) {
-                currentRecordStateFlow.firstSuccess().expression
-            } else {
-                null
-            }
+                // Sort expressions to make binary search work.
+                //
+                // SQL's ORDER BY can't be used, because apparently it uses different algorithm to order strings
+                // and it isn't compatible with string sorting algorithm in Android JVM.
+                expressions.sort()
 
-            while (isActive) {
-                val expr = checkExpressionChannel.receive().trimToString()
-
-                val isEmpty = expr.isEmpty()
-                val isMeaningfulExpr = expr.containsLetterOrDigit()
-
-                // If we are is edit mode (currentRecordExpression is not null then),
-                // input expression shouldn't be considered as "existing"
-                // even if it does exist to allow editing meaning, origin or notes and not expression.
-                val isValid = !isEmpty &&
-                        isMeaningfulExpr &&
-                        (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
-
-                validity.mutate {
-                    set(expressionValidityField, isValid, isComputed = true)
+                val currentRecordExpression = if (currentRecordId >= 0) {
+                    currentRecordStateFlow.firstSuccess().expression
+                } else {
+                    null
                 }
 
-                _expressionErrorFlow.value = when {
-                    isValid -> null
-                    isEmpty -> AddEditRecordMessage.EMPTY_TEXT
-                    !isMeaningfulExpr -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT
-                    else -> AddEditRecordMessage.EXISTING_EXPRESSION
+                while (isActive) {
+                    val expr = checkExpressionChannel.receive().trimToString()
+
+                    val isEmpty = expr.isEmpty()
+                    val isMeaningfulExpr = expr.containsLetterOrDigit()
+
+                    // If we are is edit mode (currentRecordExpression is not null then),
+                    // input expression shouldn't be considered as "existing"
+                    // even if it does exist to allow editing meaning, origin or notes and not expression.
+                    val isValid = !isEmpty &&
+                            isMeaningfulExpr &&
+                            (currentRecordExpression == expr || expressions.binarySearch(expr) < 0)
+
+                    validity.mutate {
+                        set(expressionValidityField, isValid, isComputed = true)
+                    }
+
+                    _expressionErrorFlow.value = when {
+                        isValid -> null
+                        isEmpty -> AddEditRecordMessage.EMPTY_TEXT
+                        !isMeaningfulExpr -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT
+                        else -> AddEditRecordMessage.EXISTING_EXPRESSION
+                    }
                 }
             }
         }

@@ -18,9 +18,7 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
-import io.github.pelmenstar1.digiDict.common.ui.setText
-import io.github.pelmenstar1.digiDict.common.ui.setTextIfCharsChanged
+import io.github.pelmenstar1.digiDict.common.ui.*
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
@@ -199,10 +197,12 @@ class AddEditRecordFragment : Fragment() {
                 doNotChangeCreationDateBox.isChecked = !it
             }
 
-            ls.launchFlowCollector(vm.expressionErrorFlow) {
-                addRecordExpressionInputLayout.error = it?.let(messageStringFormatter::format)
-                addRecordSearchExpression.isEnabled = it == null
-            }
+            ls.launchErrorFlowCollector(addRecordExpressionInputLayout, vm.expressionErrorFlow, messageStringFormatter)
+
+            addRecordSearchExpression.setEnabledWhenFieldValid(
+                vm.validity, AddEditRecordViewModel.expressionValidityField,
+                ls
+            )
 
             addRecordAddButton.setEnabledWhenValid(vm.validity, ls)
         }

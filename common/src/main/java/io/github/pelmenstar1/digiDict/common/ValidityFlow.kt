@@ -36,6 +36,7 @@ class ValidityFlow(val scheme: Scheme) {
      * @param fields - ordinals of these fields should be the same as their indices in array
      */
     class Scheme(val fields: Array<out Field>) {
+        // TODO: Convert these to getters
         internal val allValidBits = nBitsSet(fields.size * 2)
 
         // In binary 1431655765 = 0101 0101 0101 0101 0101 0101 0101 0101,
@@ -144,7 +145,7 @@ class ValidityFlow(val scheme: Scheme) {
             return bits == scheme.allValidBits
         }
 
-        internal fun isValid(bits: Int, field: Field): Boolean {
+        fun isValid(bits: Int, field: Field): Boolean {
             return (bits and field.valueMask()) != 0
         }
 
@@ -154,7 +155,7 @@ class ValidityFlow(val scheme: Scheme) {
             return (bits and mask) == mask
         }
 
-        internal fun isComputed(bits: Int, field: Field): Boolean {
+        fun isComputed(bits: Int, field: Field): Boolean {
             return (bits and field.computedFlagMask()) != 0
         }
 

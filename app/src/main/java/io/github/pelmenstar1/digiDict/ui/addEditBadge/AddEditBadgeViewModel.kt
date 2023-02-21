@@ -25,12 +25,14 @@ class AddEditBadgeViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val currentBadgeIdFlow = MutableStateFlow(-1)
+
+    private var isCheckNameJobStarted = false
     private val checkNameChannel = Channel<String>(Channel.CONFLATED)
 
     /**
-     * Gets or sets id of current badge.
-     * If there's no current badge, the id is -1.
-     * The setter should be called exactly one time.
+     * Gets or sets id of badge to edit. If the view model is in addition mode, the value should be `-1`.
+     *
+     * Setter can be called multiple times but the id should remain the same.
      */
     var currentBadgeId: Int = -1
         set(value) {
@@ -39,12 +41,14 @@ class AddEditBadgeViewModel @Inject constructor(
             currentBadgeIdFlow.value = value
 
             if (value < 0) {
-                // If we're in addition mode, the name is actually empty, so
-                // the appropriate error should be set
-                _nameErrorFlow.value = AddEditBadgeMessage.EMPTY_TEXT
+                // Only after we're sure there's no badge to load, we can safely update error
+                // if neccessary.
+                if (name.isBlank()) {
+                    _nameErrorFlow.value = AddEditBadgeMessage.EMPTY_TEXT
+                }
             }
 
-            startCheckNameJob()
+            startCheckNameJobIfNeccessary()
         }
 
     // RecordBadgeInfo is purposely non-null because it has no sense to edit nonexistent badge
@@ -126,47 +130,52 @@ class AddEditBadgeViewModel @Inject constructor(
         checkNameChannel.trySend(name)
     }
 
-    private fun startCheckNameJob() {
-        viewModelScope.launch(Dispatchers.Default) {
-            var allBadgeNames: Array<String>? = null
-            var currentBadge: RecordBadgeInfo? = null
+    // Should be invoked only when currentBadgeId is initialized.
+    private fun startCheckNameJobIfNeccessary() {
+        if (!isCheckNameJobStarted) {
+            isCheckNameJobStarted = true
 
-            while (true) {
-                val name = checkNameChannel.receive().trim()
-                var error: AddEditBadgeMessage? = null
+            viewModelScope.launch(Dispatchers.Default) {
+                var allBadgeNames: Array<String>? = null
+                var currentBadge: RecordBadgeInfo? = null
 
-                if (name.isEmpty()) {
-                    error = AddEditBadgeMessage.EMPTY_TEXT
-                } else {
-                    var checkAllBadges = true
+                while (true) {
+                    val name = checkNameChannel.receive().trim()
+                    var error: AddEditBadgeMessage? = null
 
-                    if (currentBadgeId >= 0) {
-                        if (currentBadge == null) {
-                            currentBadge = currentBadgeStateFlow.firstSuccess()
+                    if (name.isEmpty()) {
+                        error = AddEditBadgeMessage.EMPTY_TEXT
+                    } else {
+                        var checkAllBadges = true
+
+                        if (currentBadgeId >= 0) {
+                            if (currentBadge == null) {
+                                currentBadge = currentBadgeStateFlow.firstSuccess()
+                            }
+
+                            // It's totally valid that current name is equal to name of badge we're editing
+                            // because it doesn't violate the rule that all badge names should be unique.
+                            // So, it's illegal to use the path for other names as allBadgeNames will contain
+                            // current badge name and name will become invalid which isn't right.
+                            checkAllBadges = name != currentBadge.name
                         }
 
-                        // It's totally valid that current name is equal to name of badge we're editing
-                        // because it doesn't violate the rule that all badge names should be unique.
-                        // So, it's illegal to use the path for other names as allBadgeNames will contain
-                        // current badge name and name will become invalid which isn't right.
-                        checkAllBadges = name != currentBadge.name
+                        if (checkAllBadges) {
+                            if (allBadgeNames == null) {
+                                allBadgeNames = badgeDao.getAllNames()
+                            }
+
+                            // All badge names should be unique.
+                            if (allBadgeNames.contains(name)) {
+                                error = AddEditBadgeMessage.NAME_EXISTS
+                            }
+                        }
                     }
 
-                    if (checkAllBadges) {
-                        if (allBadgeNames == null) {
-                            allBadgeNames = badgeDao.getAllNames()
-                        }
-
-                        // All badge names should be unique.
-                        if (allBadgeNames.contains(name)) {
-                            error = AddEditBadgeMessage.NAME_EXISTS
-                        }
+                    _nameErrorFlow.value = error
+                    validity.mutate {
+                        set(nameValidityField, value = error == null)
                     }
-                }
-
-                _nameErrorFlow.value = error
-                validity.mutate {
-                    set(nameValidityField, value = error == null)
                 }
             }
         }
