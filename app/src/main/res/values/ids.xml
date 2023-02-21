@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="itemRemoteDictProvider_name" type="id" />
-    <item name="itemRemoteDictProvider_schema" type="id" />
-
     <item name="optionsBar_sort" type="id" />
     <item name="optionsBar_searchProperty" type="id" />
 </resources>
