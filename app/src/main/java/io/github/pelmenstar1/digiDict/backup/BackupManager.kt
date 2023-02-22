@@ -2,8 +2,6 @@ package io.github.pelmenstar1.digiDict.backup
 
 import android.content.Context
 import android.net.Uri
-import androidx.sqlite.db.SupportSQLiteProgram
-import androidx.sqlite.db.SupportSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteStatement
 import io.github.pelmenstar1.digiDict.RecordExpressionDuplicateException
 import io.github.pelmenstar1.digiDict.backup.exporting.BinaryDataExporter
@@ -228,6 +226,24 @@ object BackupManager {
         SupportSQLiteStatement::bindRecordBadgeToInsertStatement
     )
 
+    private fun createBadgeNameToIdMap(db: AppDatabase): BadgeNameToIdMap {
+        return db.query("SELECT id, name FROM record_badges", null).use { c ->
+            val count = c.count
+            val map = BadgeNameToIdMap(count)
+
+            for (i in 0 until count) {
+                c.moveToPosition(i)
+
+                val id = c.getInt(0)
+                val name = c.getString(1)
+
+                map.add(name, id)
+            }
+
+            map
+        }
+    }
+
     private fun insertRecordBadgesAndSaveSortedIds(
         appDatabase: AppDatabase,
         badges: Array<out RecordBadgeInfo>,
@@ -235,46 +251,31 @@ object BackupManager {
     ): IntArray {
         var insertBadgeStatement: SupportSQLiteStatement? = null
 
-        val getIdByNameQuery = object : SupportSQLiteQuery {
-            private var name = ""
-
-            override fun getSql() = "SELECT id FROM record_badges WHERE name=?"
-
-            override fun bindTo(statement: SupportSQLiteProgram) {
-                statement.bindString(1, name)
-            }
-
-            fun bindName(name: String) {
-                this.name = name
-            }
-
-            override fun getArgCount() = 1
-        }
+        val nameToIdMap = createBadgeNameToIdMap(appDatabase)
 
         try {
             val ids = IntArray(badges.size)
 
             trackLoopProgressWith(progressReporter, badges.size) { i ->
                 val badge = badges[i]
+                var badgeId = nameToIdMap.getIdByName(badge.name)
 
-                getIdByNameQuery.bindName(badge.name)
-                appDatabase.query(getIdByNameQuery).use {
-                    if (it.count > 0) {
-                        it.moveToPosition(0)
-                        ids[i] = it.getInt(0)
-                    } else {
-                        var insertStatement = insertBadgeStatement
+                if (badgeId < 0) {
+                    var insertStatement = insertBadgeStatement
 
-                        if (insertStatement == null) {
-                            insertStatement = appDatabase.compileInsertRecordBadgeStatement()
-                            insertBadgeStatement = insertStatement
-                        }
-
-                        insertStatement.bindRecordBadgeToInsertStatement(badge)
-                        ids[i] = insertStatement.executeInsert().toInt()
+                    if (insertStatement == null) {
+                        insertStatement = appDatabase.compileInsertRecordBadgeStatement()
+                        insertBadgeStatement = insertStatement
                     }
+
+                    insertStatement.bindRecordBadgeToInsertStatement(badge)
+                    badgeId = insertStatement.executeInsert().toInt()
                 }
+
+                ids[i] = badgeId
             }
+
+            Arrays.sort(ids)
 
             return ids
         } finally {
