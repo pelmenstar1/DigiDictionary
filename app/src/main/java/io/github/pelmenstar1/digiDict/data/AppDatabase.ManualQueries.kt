@@ -12,11 +12,27 @@ fun AppDatabase.compileInsertRecordStatement(): SupportSQLiteStatement {
 }
 
 fun SupportSQLiteStatement.bindRecordToInsertStatement(record: Record) {
-    bindString(1, record.expression)
-    bindString(2, record.meaning)
-    bindString(3, record.additionalNotes)
-    bindLong(4, record.score.toLong())
-    bindLong(5, record.epochSeconds)
+    bindRecordToInsertStatement(
+        record.expression,
+        record.meaning,
+        record.additionalNotes,
+        record.score,
+        record.epochSeconds
+    )
+}
+
+fun SupportSQLiteStatement.bindRecordToInsertStatement(
+    expression: String,
+    meaning: String,
+    additionalNotes: String,
+    score: Int,
+    epochSeconds: Long
+) {
+    bindString(1, expression)
+    bindString(2, meaning)
+    bindString(3, additionalNotes)
+    bindLong(4, score.toLong())
+    bindLong(5, epochSeconds)
 }
 
 fun AppDatabase.compileInsertOrReplaceRecordBadgeStatement(): SupportSQLiteStatement {
@@ -28,8 +44,12 @@ fun AppDatabase.compileInsertRecordBadgeStatement(): SupportSQLiteStatement {
 }
 
 fun SupportSQLiteStatement.bindRecordBadgeToInsertStatement(badge: RecordBadgeInfo) {
-    bindString(1, badge.name)
-    bindLong(2, badge.outlineColor.toLong())
+    bindRecordBadgeToInsertStatement(badge.name, badge.outlineColor)
+}
+
+fun SupportSQLiteStatement.bindRecordBadgeToInsertStatement(name: String, outlineColor: Int) {
+    bindString(1, name)
+    bindLong(2, outlineColor.toLong())
 }
 
 fun AppDatabase.compileInsertRecordToBadgeRelation(): SupportSQLiteStatement {

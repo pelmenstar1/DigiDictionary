@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.utils
 
+import android.content.Context
 import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.data.*
 import kotlin.test.fail
@@ -66,4 +67,16 @@ fun Array<out RecordToBadgeRelation>.toPackedArray(): PackedRecordToBadgeRelatio
     }
 
     return result
+}
+
+inline fun AppDatabase.use(block: (AppDatabase) -> Unit) {
+    try {
+        block(this)
+    } finally {
+        close()
+    }
+}
+
+inline fun useInMemoryDb(context: Context, block: (AppDatabase) -> Unit) {
+    AppDatabaseUtils.createTestDatabase(context).use(block)
 }
