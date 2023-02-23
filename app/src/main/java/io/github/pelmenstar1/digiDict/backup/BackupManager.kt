@@ -99,6 +99,7 @@ object BackupManager {
         val importer = importers[format] ?: throw RuntimeException("No importer assigned for given format ($format)")
 
         return trackProgressWith(progressReporter) {
+            // Verifying the data can take some time, so let it be 10% of work.
             importer.import(input, options, progressReporter?.subReporter(completed = 0, target = 90)).also {
                 verifyImportData(it)
             }
@@ -146,25 +147,29 @@ object BackupManager {
             trackProgressWith(progressReporter) {
                 val records = data.records
                 val badges = data.badges
-                val badgeToMultipleRecordEntries = data.badgeToMultipleRecordEntries
 
                 if (options.importBadges && badges.isNotEmpty()) {
                     val replaceBadges = options.replaceBadges
 
+                    // from 0/3 to 1/3 of the total work
                     val recordReporter = progressReporter?.subReporter(completed = 0, target = 33)
+
+                    // 1/3 to 2/3 of the total work
                     val badgeReporter = progressReporter?.subReporter(completed = 33, target = 67)
+
+                    // 2/3 to 3/3 of the total work
                     val recordToBadgeRelationReporter = progressReporter?.subReporter(completed = 67, target = 100)
 
                     val sortedRecordIds = insertRecordsAndSaveSortedIds(appDatabase, records, recordReporter)
                     val sortedBadgeIds = if (replaceBadges) {
-                        insertOrReplaceRecordBadgesAndSaveSortedIds(appDatabase, badges, badgeReporter)
+                        insertOrReplaceRecordBadgesAndCreateIdToOrdinalMap(appDatabase, badges, badgeReporter)
                     } else {
-                        insertRecordBadgesAndSaveSortedIds(appDatabase, badges, badgeReporter)
+                        insertPreserveRecordBadgesAndCreateIdToOrdinalMap(appDatabase, badges, badgeReporter)
                     }
 
                     insertRecordToBadgeRelations(
                         appDatabase,
-                        badgeToMultipleRecordEntries,
+                        data.badgeToMultipleRecordEntries,
                         sortedRecordIds,
                         sortedBadgeIds,
                         recordToBadgeRelationReporter
@@ -181,24 +186,24 @@ object BackupManager {
         }
     }
 
-    private inline fun <T> insertEntitiesAndSaveSortedIds(
+    private inline fun <T> insertEntitiesAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         entities: Array<out T>,
         progressReporter: ProgressReporter?,
         compileStatement: (AppDatabase) -> SupportSQLiteStatement,
         bind: (SupportSQLiteStatement, T) -> Unit
-    ): IntArray {
-        return compileStatement(appDatabase).use {
-            val ids = IntArray(entities.size)
+    ): IdToOrdinalMap {
+        return compileStatement(appDatabase).use { statement ->
+            val map = IdToOrdinalMap(entities.size)
 
-            trackLoopProgressWith(progressReporter, entities) { i, entity ->
-                bind(it, entity)
-                ids[i] = it.executeInsert().toInt()
+            trackLoopProgressWith(progressReporter, entities) { _, entity ->
+                bind(statement, entity)
+
+                val id = statement.executeInsert().toInt()
+                map.add(id)
             }
 
-            Arrays.sort(ids)
-
-            ids
+            map
         }
     }
 
@@ -206,7 +211,7 @@ object BackupManager {
         appDatabase: AppDatabase,
         records: Array<out Record>,
         progressReporter: ProgressReporter?
-    ) = insertEntitiesAndSaveSortedIds(
+    ) = insertEntitiesAndCreateIdToOrdinalMap(
         appDatabase,
         records,
         progressReporter,
@@ -214,11 +219,11 @@ object BackupManager {
         SupportSQLiteStatement::bindRecordToInsertStatement
     )
 
-    private fun insertOrReplaceRecordBadgesAndSaveSortedIds(
+    private fun insertOrReplaceRecordBadgesAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         badges: Array<out RecordBadgeInfo>,
         progressReporter: ProgressReporter?
-    ) = insertEntitiesAndSaveSortedIds(
+    ) = insertEntitiesAndCreateIdToOrdinalMap(
         appDatabase,
         badges,
         progressReporter,
@@ -244,43 +249,38 @@ object BackupManager {
         }
     }
 
-    private fun insertRecordBadgesAndSaveSortedIds(
+    private fun insertPreserveRecordBadgesAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         badges: Array<out RecordBadgeInfo>,
         progressReporter: ProgressReporter?
-    ): IntArray {
-        var insertBadgeStatement: SupportSQLiteStatement? = null
-
-        val nameToIdMap = createBadgeNameToIdMap(appDatabase)
+    ): IdToOrdinalMap {
+        var insertStatement: SupportSQLiteStatement? = null
 
         try {
-            val ids = IntArray(badges.size)
+            val nameToIdMap = createBadgeNameToIdMap(appDatabase)
+            val idToOrdinalMap = IdToOrdinalMap(badges.size)
 
-            trackLoopProgressWith(progressReporter, badges.size) { i ->
-                val badge = badges[i]
+            for ((i, badge) in badges.withIndex()) {
                 var badgeId = nameToIdMap.getIdByName(badge.name)
 
                 if (badgeId < 0) {
-                    var insertStatement = insertBadgeStatement
-
                     if (insertStatement == null) {
                         insertStatement = appDatabase.compileInsertRecordBadgeStatement()
-                        insertBadgeStatement = insertStatement
                     }
 
                     insertStatement.bindRecordBadgeToInsertStatement(badge)
                     badgeId = insertStatement.executeInsert().toInt()
                 }
 
-                ids[i] = badgeId
+                idToOrdinalMap.add(badgeId)
+
+                progressReporter?.onProgress(i + 1, badges.size)
             }
 
-            Arrays.sort(ids)
-
-            return ids
+            return idToOrdinalMap
         } finally {
             try {
-                insertBadgeStatement?.close()
+                insertStatement?.close()
             } catch (e: Exception) {
                 // eat exception
             }
@@ -290,8 +290,8 @@ object BackupManager {
     private fun insertRecordToBadgeRelations(
         appDatabase: AppDatabase,
         entries: Array<out BackupBadgeToMultipleRecordEntry>,
-        sortedRecordIds: IntArray,
-        sortedBadgeIds: IntArray,
+        recordIdToOrdinalMap: IdToOrdinalMap,
+        badgeIdToOrdinalMap: IdToOrdinalMap,
         progressReporter: ProgressReporter?
     ) {
         return appDatabase.compileInsertRecordToBadgeRelation().use { statement ->
@@ -300,9 +300,10 @@ object BackupManager {
 
             trackProgressWith(progressReporter) {
                 for ((badgeOrdinal, recordOrdinals) in entries) {
+                    val badgeId = badgeIdToOrdinalMap.getIdByOrdinal(badgeOrdinal)
+
                     recordOrdinals.forEach { recordOrdinal ->
-                        val recordId = sortedRecordIds[recordOrdinal]
-                        val badgeId = sortedBadgeIds[badgeOrdinal]
+                        val recordId = recordIdToOrdinalMap.getIdByOrdinal(recordOrdinal)
 
                         statement.bindRecordToBadgeInsertStatement(recordId, badgeId)
                         statement.executeInsert()

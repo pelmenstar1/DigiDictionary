@@ -95,6 +95,16 @@ fun IntArray.sum(start: Int = 0, end: Int = size): Int {
     return acc
 }
 
+fun IntArray.indexOf(value: Int, start: Int, end: Int): Int {
+    for (i in start until end) {
+        if (this[i] == value) {
+            return i
+        }
+    }
+
+    return -1
+}
+
 /**
  * Gets value from given array by specified [index]. If the value is null, it's created via [create] lambda and
  * is set to specified [index].
