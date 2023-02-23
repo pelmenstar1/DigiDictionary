@@ -18,7 +18,10 @@ import io.github.pelmenstar1.digiDict.common.*
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.ui.*
+import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
+import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenFieldValid
+import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
+import io.github.pelmenstar1.digiDict.common.ui.setTextIfCharsChanged
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
 import io.github.pelmenstar1.digiDict.databinding.FragmentAddEditRecordBinding
@@ -52,6 +55,7 @@ class AddEditRecordFragment : Fragment() {
         this.binding = binding
 
         vm.currentRecordId = recordId
+        args.initialExpression?.also { vm.expression = it }
 
         popBackStackOnSuccess(vm.addOrEditAction, navController)
         showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
@@ -94,11 +98,6 @@ class AddEditRecordFragment : Fragment() {
         }
 
         initViews(recordId)
-
-        // Set the initial expression (if it exists) only when all the listeners are set on the EditText's
-        args.initialExpression?.let {
-            binding.addRecordExpressionInputLayout.setText(it)
-        }
 
         return binding.root
     }
