@@ -106,7 +106,6 @@ fun AppDatabase.compileCountStatement(
 fun AppDatabase.getAllRecordsOrderByIdAsc(progressReporter: ProgressReporter?): Array<Record> {
     return queryArrayWithProgressReporter(
         "SELECT id, expression, meaning, additionalNotes, score, dateTime FROM records ORDER BY id ASC",
-        null,
         progressReporter
     ) { c ->
         val id = c.getInt(0)
@@ -123,7 +122,6 @@ fun AppDatabase.getAllRecordsOrderByIdAsc(progressReporter: ProgressReporter?): 
 fun AppDatabase.getAllRecordBadgesOrderByIdAsc(progressReporter: ProgressReporter?): Array<RecordBadgeInfo> {
     return queryArrayWithProgressReporter(
         "SELECT id, name, outlineColor FROM record_badges ORDER BY id ASC",
-        null,
         progressReporter
     ) { c ->
         val id = c.getInt(0)
@@ -137,7 +135,6 @@ fun AppDatabase.getAllRecordBadgesOrderByIdAsc(progressReporter: ProgressReporte
 fun AppDatabase.getAllRecordToBadgeRelations(progressReporter: ProgressReporter?): Array<RecordToBadgeRelation> {
     return queryArrayWithProgressReporter(
         "SELECT recordId, badgeId FROM record_to_badge_relations ORDER BY badgeId ASC",
-        null,
         progressReporter
     ) { c ->
         val recordId = c.getInt(0)
@@ -323,7 +320,7 @@ private fun AppDatabase.getConciseRecordsWithBadges(
     allSortedPackedRelations: PackedRecordToBadgeRelationArray,
     progressReporter: ProgressReporter?
 ): Array<ConciseRecordWithBadges> {
-    return queryArrayWithProgressReporter(sql, null, progressReporter) { c ->
+    return queryArrayWithProgressReporter(sql, progressReporter) { c ->
         val id = c.getInt(0)
         val expr = c.getString(1)
         val meaning = c.getString(2)

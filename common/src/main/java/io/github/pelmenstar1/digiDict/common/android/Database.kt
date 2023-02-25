@@ -42,7 +42,6 @@ inline fun ViewModel.onDatabaseTablesUpdated(
 
 inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
     sql: String,
-    bindArgs: Array<Any>?,
     progressReporter: ProgressReporter?,
     convertCursor: (Cursor) -> T
 ): Array<T> {
@@ -52,7 +51,7 @@ inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
     try {
         progressReporter?.start()
 
-        cursor = query(sql, bindArgs)
+        cursor = query(sql, null)
         val count = cursor.count
         val result = unsafeNewArray<T>(count)
 
