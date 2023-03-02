@@ -11,8 +11,7 @@ object MeaningTextHelper {
     class FormatException(message: String, cause: Throwable?) : Exception(message, cause)
 
     private const val TAG = "MeaningTextHelper"
-
-    const val BULLET_LIST_CHARACTER = '•'
+    private const val BULLET_LIST_CHARACTER = '•'
 
     private fun throwIllegalFormat(meaning: String, cause: Exception? = null): Nothing {
         throw FormatException("Meaning has an illegal format ('$meaning')", cause)
@@ -100,16 +99,18 @@ object MeaningTextHelper {
         }
     }
 
-    fun getErrorMessageForFormatException(context: Context, e: Exception): String {
+    fun getErrorMessageForFormatException(context: Context, cause: Exception): String {
+        val message = cause.message ?: ""
+
         return try {
             val format = context.getString(R.string.meaningParseError)
             val locale = context.getLocaleCompat()
 
-            String.format(locale, format, e.message ?: "")
+            String.format(locale, format, message)
         } catch (e: Exception) {
             Log.e(TAG, "failed to get an error message", e)
 
-            "An error happened: ${e.message ?: ""}"
+            "An error happened:\n$message"
         }
     }
 }
