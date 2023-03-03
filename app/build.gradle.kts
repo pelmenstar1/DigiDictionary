@@ -15,7 +15,7 @@ keystoreProperties.load(keystorePropertiesFile.inputStream())
 
 android {
     namespace = "io.github.pelmenstar1.digiDict"
-    compileSdk = 32
+    compileSdk = 33
 
     signingConfigs {
         create("release") {
@@ -39,7 +39,7 @@ android {
     defaultConfig {
         applicationId = "io.github.pelmenstar1.digiDict"
         minSdk = 21
-        targetSdk = 32
+        targetSdk = 33
         versionCode = 2
         versionName = "1.0.1"
 
@@ -61,12 +61,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
 
         freeCompilerArgs = freeCompilerArgs + arrayOf(
             "-opt-in=kotlin.contracts.ExperimentalContracts",

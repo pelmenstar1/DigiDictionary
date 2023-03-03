@@ -28,7 +28,7 @@ class AppPagingSource(
     private val getTimeRangeLambda: (suspend () -> EpochSecondsRange)? = null
 ) : PagingSource<Int, PageItem>() {
     private val observer = object : InvalidationTracker.Observer(TABLES) {
-        override fun onInvalidated(tables: MutableSet<String>) {
+        override fun onInvalidated(tables: Set<String>) {
             invalidate()
         }
     }

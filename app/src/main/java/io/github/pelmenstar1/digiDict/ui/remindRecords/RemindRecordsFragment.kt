@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
+import io.github.pelmenstar1.digiDict.common.android.getParcelableCompat
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.LastElementVerticalSpaceDecoration
 import io.github.pelmenstar1.digiDict.databinding.FragmentRemindRecordsBinding
@@ -65,7 +66,7 @@ class RemindRecordsFragment : Fragment() {
             if (savedInstanceState != null && !isSavedStateApplied) {
                 isSavedStateApplied = true
 
-                savedInstanceState.getParcelable<FixedBitSet>(SAVED_STATE_REVEALED_STATES)?.also { states ->
+                savedInstanceState.getParcelableCompat<FixedBitSet>(SAVED_STATE_REVEALED_STATES)?.also { states ->
                     adapter.revealedStates = states
                 }
             }

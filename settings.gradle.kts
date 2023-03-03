@@ -16,11 +16,11 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             version("kotlinx-coroutines", "1.6.4")
-            version("kotlin", "1.7.0")
+            version("kotlin", "1.8.0")
             version("androidx-lifecycle", "2.5.1")
-            version("androidx-room", "2.4.3")
-            version("androidx-sqlite", "2.2.0")
-            version("androidx-nav", "2.5.1")
+            version("androidx-room", "2.5.0")
+            version("androidx-sqlite", "2.3.0")
+            version("androidx-nav", "2.5.3")
             version("dagger-hilt", "2.43.2")
             version("androidx-paging", "3.1.1")
 
@@ -39,12 +39,12 @@ dependencyResolutionManagement {
 
             library(
                 "kotlinx-serialization-json", "org.jetbrains.kotlinx", "kotlinx-serialization-json"
-            ).version("1.4.0")
+            ).version("1.5.0")
 
             // Android related.
-            library("androidx-core", "androidx.core", "core-ktx").version("1.8.0")
-            library("androidx-appcompat", "androidx.appcompat", "appcompat").version("1.5.0")
-            library("android-material", "com.google.android.material", "material").version("1.6.1")
+            library("androidx-core", "androidx.core", "core-ktx").version("1.9.0")
+            library("androidx-appcompat", "androidx.appcompat", "appcompat").version("1.6.1")
+            library("android-material", "com.google.android.material", "material").version("1.8.0")
             library("androidx-constraintlayout", "androidx.constraintlayout", "constraintlayout").version("2.1.4")
             library("androidx-viewpager", "androidx.viewpager2", "viewpager2").version("1.0.0")
             library("androidx-recyclerview", "androidx.recyclerview", "recyclerview").version("1.2.1")
@@ -90,7 +90,7 @@ dependencyResolutionManagement {
                 listOf("androidx-nav-fragment", "androidx-nav-fragment-ktx", "androidx-nav-ui", "androidx-nav-ui-ktx")
             )
 
-            library("androidx-browser", "androidx.browser", "browser").version("1.4.0")
+            library("androidx-browser", "androidx.browser", "browser").version("1.5.0")
 
             library("dagger-hilt-android", "com.google.dagger", "hilt-android").versionRef("dagger-hilt")
             library("dagger-hilt-compiler", "com.google.dagger", "hilt-compiler").versionRef("dagger-hilt")
@@ -118,8 +118,8 @@ dependencyResolutionManagement {
                 "org.jetbrains.kotlinx",
                 "kotlinx-coroutines-test"
             ).versionRef("kotlinx-coroutines")
-            library("androidx-test-ext", "androidx.test.ext", "junit").version("1.1.3")
-            library("androidx-test-espresso", "androidx.test.espresso", "espresso-core").version("3.4.0")
+            library("androidx-test-ext", "androidx.test.ext", "junit").version("1.1.5")
+            library("androidx-test-espresso", "androidx.test.espresso", "espresso-core").version("3.5.1")
             library("androidx-room-testing", "androidx.room", "room-testing").versionRef("androidx-room")
 
         }

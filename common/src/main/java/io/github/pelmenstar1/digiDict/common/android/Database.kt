@@ -27,7 +27,7 @@ inline fun ViewModel.onDatabaseTablesUpdated(
     crossinline callback: () -> Unit
 ) {
     val observer = object : InvalidationTracker.Observer(tables) {
-        override fun onInvalidated(tables: MutableSet<String>) {
+        override fun onInvalidated(tables: Set<String>) {
             callback()
         }
     }

@@ -34,6 +34,7 @@ class CompatDateTimeFormatter(context: Context, format: String) {
     fun format(epochSeconds: Long): String {
         date.time = epochSeconds * 1000
 
+        // TODO: Investigate using Calendar in dateFormatter24
         return if (Build.VERSION.SDK_INT >= 24) {
             dateFormatter24!!.format(date)
         } else {

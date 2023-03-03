@@ -18,6 +18,7 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
 import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
+import io.github.pelmenstar1.digiDict.common.android.getParcelableCompat
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.R
 
@@ -135,7 +136,7 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
             animator.setValues(PropertyValuesHolder.ofFloat(View.ALPHA, 0f, 1f))
             animator.setTarget(errorView)
             animator.addListener(object : Animator.AnimatorListener {
-                override fun onAnimationStart(animation: Animator?) {
+                override fun onAnimationStart(animation: Animator) {
                 }
 
                 override fun onAnimationEnd(animation: Animator) {
@@ -143,10 +144,10 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
                         if (noOptionsSelectedAnimationTargetIsVisible) View.VISIBLE else View.INVISIBLE
                 }
 
-                override fun onAnimationCancel(animation: Animator?) {
+                override fun onAnimationCancel(animation: Animator) {
                 }
 
-                override fun onAnimationRepeat(animation: Animator?) {
+                override fun onAnimationRepeat(animation: Animator) {
                 }
             })
         } else if (animator.isRunning) {
@@ -249,7 +250,7 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
     }
 
     private fun initFromSavedState(savedInstanceState: Bundle) {
-        savedInstanceState.getParcelable<FixedBitSet>(STATE_SELECTED_STATE_BIT_SET)?.also { bitSet ->
+        savedInstanceState.getParcelableCompat<FixedBitSet>(STATE_SELECTED_STATE_BIT_SET)?.also { bitSet ->
             selectedStateBitSet = bitSet
         }
     }
