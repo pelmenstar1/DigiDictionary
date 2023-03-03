@@ -30,6 +30,7 @@ private class DiffRange {
 
 internal class FilteredArrayDiffManagerDelegateLongImpl<T> : FilteredArrayDiffManagerDelegate<T>() {
     private val diagonals = ArrayList<DiffDiagonal>()
+    private val cachedSnake = FilteredArrayDiffShared.Snake(0, 0, 0, 0, false)
 
     override fun calculateDifference(
         oldArray: FilteredArray<out T>,
@@ -55,18 +56,22 @@ internal class FilteredArrayDiffManagerDelegateLongImpl<T> : FilteredArrayDiffMa
         val forward = forwardArray
         val backward = backwardArray
 
+        val snake = cachedSnake
+
         // We pool the ranges to avoid allocations for each recursive call.
         val rangePool = ArrayList<DiffRange>()
+
         while (stack.isNotEmpty()) {
             val range = stack.removeAt(stack.size - 1)
-            val snake = FilteredArrayDiffShared.midPointFilteredArray(
+            val isValidSnake = FilteredArrayDiffShared.midPointFilteredArray(
                 oldOrigin, newOrigin,
                 cb,
                 range.oldStart, range.oldEnd, range.newStart, range.newEnd,
-                forward, backward
+                forward, backward,
+                snake
             )
 
-            if (snake != null) {
+            if (isValidSnake) {
                 // if it has a diagonal, save it
                 snake.toDiagonal()?.let {
                     diagonals.add(it)

@@ -15,7 +15,10 @@ internal object FilteredArrayDiffShared {
         fun toDiagonal() = toDiagonalInternal(::DiffDiagonal, noneValue = { null })
         fun toPackedDiagonal() = toDiagonalInternal(::PackedDiffDiagonal, PackedDiffDiagonal::NONE)
 
-        private inline fun <T> toDiagonalInternal(createDiagonal: (x: Int, y: Int, size: Int) -> T, noneValue: () -> T): T {
+        private inline fun <T> toDiagonalInternal(
+            createDiagonal: (x: Int, y: Int, size: Int) -> T,
+            noneValue: () -> T
+        ): T {
             val sx = startX
             val sy = startY
             val ex = endX
@@ -67,13 +70,14 @@ internal object FilteredArrayDiffShared {
         oldOrigin: Array<out T>, newOrigin: Array<out T>,
         cb: FilteredArrayDiffItemCallback<T>,
         oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int,
-        forward: CenteredIntArray, backward: CenteredIntArray
-    ): Snake? {
+        forward: CenteredIntArray, backward: CenteredIntArray,
+        outSnake: Snake
+    ): Boolean {
         val oldRangeSize = oldEnd - oldStart
         val newRangeSize = newEnd - newStart
 
         if (oldRangeSize < 1 || newRangeSize < 1) {
-            return null
+            return false
         }
 
         val max = (oldRangeSize + newRangeSize + 1) / 2
@@ -82,20 +86,24 @@ internal object FilteredArrayDiffShared {
         backward[1] = oldEnd
 
         for (d in 0 until max) {
-            forward(
-                oldOrigin, newOrigin, cb, oldStart, oldEnd, newStart, newEnd, forward, backward, d
-            )?.let {
-                return it
+            var success = forward(
+                oldOrigin, newOrigin, cb, oldStart, oldEnd, newStart, newEnd, forward, backward, d, outSnake
+            )
+
+            if (success) {
+                return true
             }
 
-            backward(
-                oldOrigin, newOrigin, cb, oldStart, oldEnd, newStart, newEnd, forward, backward, d
-            )?.let {
-                return it
+            success = backward(
+                oldOrigin, newOrigin, cb, oldStart, oldEnd, newStart, newEnd, forward, backward, d, outSnake
+            )
+
+            if (success) {
+                return true
             }
         }
 
-        return null
+        return false
     }
 
     private fun <T> forward(
@@ -103,8 +111,9 @@ internal object FilteredArrayDiffShared {
         cb: FilteredArrayDiffItemCallback<T>,
         oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int,
         forward: CenteredIntArray, backward: CenteredIntArray,
-        d: Int
-    ): Snake? {
+        d: Int,
+        outSnake: Snake
+    ): Boolean {
         val delta = (oldEnd - oldStart) - (newEnd - newStart)
         val checkForSnake = abs(delta) % 2 == 1
 
@@ -152,14 +161,20 @@ internal object FilteredArrayDiffShared {
                 // if backwards K is calculated and it passed me, found match
                 if (backwardsK >= 1 - d && backwardsK <= d - 1 && backward[backwardsK] <= x) {
                     // match
-                    return Snake(startX, startY, x, y, isReversed = false)
+                    outSnake.startX = startX
+                    outSnake.startY = startY
+                    outSnake.endX = x
+                    outSnake.endY = y
+                    outSnake.isReversed = false
+
+                    return true
                 }
             }
 
             k += 2
         }
 
-        return null
+        return false
     }
 
     private fun <T> backward(
@@ -167,8 +182,9 @@ internal object FilteredArrayDiffShared {
         cb: FilteredArrayDiffItemCallback<T>,
         oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int,
         forward: CenteredIntArray, backward: CenteredIntArray,
-        d: Int
-    ): Snake? {
+        d: Int,
+        outSnake: Snake
+    ): Boolean {
         val delta = (oldEnd - oldStart) - (newEnd - newStart)
         val checkForSnake = abs(delta) % 2 == 0
 
@@ -219,18 +235,24 @@ internal object FilteredArrayDiffShared {
                 // if forwards K is calculated and it passed me, found match
                 if (forwardsK >= -d && forwardsK <= d && forward[forwardsK] >= x) {
                     // assignment are reverse since we are a reverse snake
-                    return Snake(x, y, startX, startY, isReversed = true)
+                    outSnake.startX = x
+                    outSnake.startY = y
+                    outSnake.endX = startX
+                    outSnake.endY = startY
+                    outSnake.isReversed = true
+
+                    return true
                 }
             }
 
             k += 2
         }
 
-        return null
+        return false
     }
 
     @Suppress("UNCHECKED_CAST")
-    inline fun<TValue, TDiag, TDiagList> createDiffResult(
+    inline fun <TValue, TDiag, TDiagList> createDiffResult(
         oldArray: FilteredArray<out TValue>, newArray: FilteredArray<out TValue>,
         itemCallback: FilteredArrayDiffItemCallback<TValue>,
         statuses: IntArray,
@@ -240,8 +262,6 @@ internal object FilteredArrayDiffShared {
         crossinline diagX: TDiag.() -> Int, crossinline diagY: TDiag.() -> Int, crossinline diagSize: TDiag.() -> Int,
         addEdgeDiagonals: () -> Unit,
     ): FilteredArrayDiffResult {
-        Arrays.fill(statuses, 0)
-
         val oldOrigin = oldArray.origin
         val newOrigin = newArray.origin
 
@@ -256,9 +276,7 @@ internal object FilteredArrayDiffShared {
                 val posX = dx + offset
                 val posY = dy + offset
 
-                if (!itemCallback.areContentsTheSame(oldOrigin[posX], newOrigin[posY])) {
-                    statuses[posX] = 1
-                }
+                statuses[posX] = if (itemCallback.areContentsTheSame(oldOrigin[posX], newOrigin[posY])) 0 else 1
             }
         }
 
