@@ -24,27 +24,18 @@ class HomeSearchAdapter(
         onItemClickListener: View.OnClickListener,
         staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
     ) : ConciseRecordWithBadgesViewHolder(context, onItemClickListener, staticInfo) {
-        // Purposely doesn't change expression and meaning. setStyledExpressionAndMeaning() does it instead.
-        // Because on new search request, we must update **all** the styles, regardless whether the item changed its position or not,
-        // as the found ranges might be changed.
-        // So not to create new expression and meaning texts, bind() doesn't do it.
         fun bind(record: ConciseRecordWithBadges, style: HomeSearchItemStyle, hasDivider: Boolean) {
-            container.hasDivider = hasDivider
-            container.tag = record
-
+            bindExceptExpressionAndMeaning(record, hasDivider)
             setStyledExpressionAndMeaning(record, style)
-
-            container.setScore(record.score)
-            container.setBadges(record.badges)
         }
 
         fun setStyledExpressionAndMeaning(record: ConciseRecordWithBadges, style: HomeSearchItemStyle) {
             val context = container.context
 
-            val exprText = HomeSearchStyledTextUtil.createExpressionText(record.expression, style)
-            val meaningText = HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, style)
-
-            container.setExpressionAndMeaning(exprText, meaningText)
+            container.setExpressionAndMeaning(
+                expr = HomeSearchStyledTextUtil.createExpressionText(record.expression, style),
+                createMeaning = { HomeSearchStyledTextUtil.createMeaningText(context, record.meaning, style) }
+            )
         }
     }
 

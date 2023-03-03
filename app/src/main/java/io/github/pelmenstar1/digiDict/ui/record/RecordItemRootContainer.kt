@@ -5,8 +5,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Build
-import android.text.PrecomputedText
-import android.util.Log
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -14,6 +12,7 @@ import androidx.core.view.setPadding
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
+import io.github.pelmenstar1.digiDict.common.ui.trySetPrecomputedText
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
 
@@ -90,13 +89,13 @@ class RecordItemRootContainer constructor(
     }
 
     /**
-     * Sets text for expression and meaning. Meaning is expected to be already formatted.
+     * Sets text for expression and meaning.
      *
      * Precomputed text values are optional and are only used on API level >= 28.
      */
-    fun setExpressionAndMeaning(
+    inline fun setExpressionAndMeaning(
         expr: CharSequence,
-        meaning: CharSequence,
+        createMeaning: () -> CharSequence,
         precomputedValues: RecordTextPrecomputedValues? = null
     ) {
         var isExprSet = false
@@ -112,7 +111,7 @@ class RecordItemRootContainer constructor(
         }
 
         if (!isMeaningSet) {
-            meaningView.text = meaning
+            meaningView.text = createMeaning()
         }
     }
 
@@ -177,18 +176,6 @@ class RecordItemRootContainer constructor(
         }
     }
 
-    @RequiresApi(28)
-    private fun TextView.trySetPrecomputedText(precomputed: PrecomputedText): Boolean {
-        try {
-            text = precomputed
-            return true
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to set precomputed text. Falling back to simple text", e)
-        }
-
-        return false
-    }
-
     private fun TextView.initTextView(textAppearance: TextAppearance) {
         textAppearance.apply(this)
         maxLines = 100
@@ -216,8 +203,6 @@ class RecordItemRootContainer constructor(
     }
 
     companion object {
-        private const val TAG = "RecordItemRootContainer"
-
         private val WRAP_WRAP_LAYOUT_PARAMS = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         private val MATCH_WRAP_LAYOUT_PARAMS = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
 

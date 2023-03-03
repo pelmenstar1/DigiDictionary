@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorRes
-import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.R
@@ -44,8 +43,7 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
         get() {
             var padding = _badgeContainerHorizontalPadding
             if (padding < 0) {
-                padding =
-                    res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding)
+                padding = res.getDimensionPixelOffset(R.dimen.itemRecord_badgeContainerHorizontalPadding)
                 _badgeContainerHorizontalPadding = padding
             }
 
@@ -128,20 +126,21 @@ open class ConciseRecordWithBadgesViewHolder(
         hasDivider: Boolean,
         precomputedValues: RecordTextPrecomputedValues?
     ) {
-        val formattedMeaning = MeaningTextHelper.formatOrErrorText(container.context, record.meaning)
+        bindExceptExpressionAndMeaning(record, hasDivider)
 
-        container.hasDivider = hasDivider
-
-        container.tag = record
-
-        container.setExpressionAndMeaning(record.expression, formattedMeaning, precomputedValues)
-        container.setScore(record.score)
-        container.setBadges(record.badges)
+        container.setExpressionAndMeaning(
+            record.expression,
+            createMeaning = { MeaningTextHelper.formatOrErrorText(container.context, record.meaning) },
+            precomputedValues
+        )
     }
 
-    @RequiresApi(23)
-    fun setTextBreakAndHyphenationInfo(info: TextBreakAndHyphenationInfo) {
-        container.setTextBreakAndHyphenationInfo(info)
+    fun bindExceptExpressionAndMeaning(record: ConciseRecordWithBadges, hasDivider: Boolean) {
+        container.tag = record
+        container.hasDivider = hasDivider
+
+        container.setScore(record.score)
+        container.setBadges(record.badges)
     }
 
     fun setTextBreakAndHyphenationInfoCompat(info: TextBreakAndHyphenationInfo?) {
