@@ -128,7 +128,7 @@ open class ConciseRecordWithBadgesViewHolder(
         hasDivider: Boolean,
         precomputedValues: RecordTextPrecomputedValues?
     ) {
-        val formattedMeaning = MeaningTextHelper.parseToFormattedAndHandleErrors(container.context, record.meaning)
+        val formattedMeaning = MeaningTextHelper.formatOrErrorText(container.context, record.meaning)
 
         container.hasDivider = hasDivider
 

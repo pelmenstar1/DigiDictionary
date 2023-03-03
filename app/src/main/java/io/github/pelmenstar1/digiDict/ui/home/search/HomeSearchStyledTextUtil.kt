@@ -76,7 +76,7 @@ object HomeSearchStyledTextUtil {
                     }
                 }
                 ComplexMeaning.LIST_MARKER -> {
-                    val formattedText = MeaningTextHelper.parseToFormatted(meaning)
+                    val formattedText = MeaningTextHelper.format(meaning)
 
                     // It's possible to have record found and meaning having no found ranges.
                     // For example, when a record is found by expression. So, it's better to use plain text without

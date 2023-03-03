@@ -53,7 +53,7 @@ class QuizItemContainerManager(
             badgeContainer.setBadges(value.badges)
             meaningView.apply {
                 visibility = View.INVISIBLE
-                text = MeaningTextHelper.parseToFormattedAndHandleErrors(context, value.meaning)
+                text = MeaningTextHelper.formatOrErrorText(context, value.meaning)
             }
 
             correctButton.initActionButton(isCorrect = true)

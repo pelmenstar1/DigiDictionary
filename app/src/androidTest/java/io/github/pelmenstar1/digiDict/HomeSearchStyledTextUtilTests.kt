@@ -101,7 +101,7 @@ class HomeSearchStyledTextUtilTests {
             )
 
             validateStyledText(
-                expectedString = MeaningTextHelper.parseToFormatted(meaning),
+                expectedString = MeaningTextHelper.format(meaning),
                 expectedRanges,
                 actualStyledText
             )

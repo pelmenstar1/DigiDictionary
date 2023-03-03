@@ -20,7 +20,7 @@ abstract class RecordTextPrecomputeController {
         override fun compute(record: ConciseRecordWithBadges): RecordTextPrecomputedValues? {
             val params = params ?: return null
 
-            val meaningFormattedText = MeaningTextHelper.parseToFormattedAndHandleErrors(context, record.meaning)
+            val meaningFormattedText = MeaningTextHelper.formatOrErrorText(context, record.meaning)
 
             val exprPrecomputedText = PrecomputedText.create(record.expression, params.expressionParams)
             val meaningPrecomputedText = PrecomputedText.create(meaningFormattedText, params.meaningParams)
