@@ -4,6 +4,8 @@
     <dimen name="addRecord_elementTopMargin">5dp</dimen>
     <dimen name="addRecord_meaningAddButtonSize">48dp</dimen>
 
+    <dimen name="meaningInteraction_inputListEndPadding">40dp</dimen>
+
     <dimen name="home_stateContainerMarginTop">5dp</dimen>
     <dimen name="home_stateContainerMarginBottom">80dp</dimen>
 

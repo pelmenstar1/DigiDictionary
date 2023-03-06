@@ -16,6 +16,7 @@ import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
+import androidx.core.view.updatePaddingRelative
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -142,6 +143,9 @@ class MeaningListInteractionView @JvmOverloads constructor(
     private var endIconContentDescription: String? = null
     private var endIconDrawable: Drawable? = null
 
+    private var inputListEndPadding = -1
+    private var inputEndPadding = -1
+
     private val textLayoutContext: Context
 
     // It should contain only trimmed strings (without leading and trailing whitespaces).
@@ -224,7 +228,13 @@ class MeaningListInteractionView @JvmOverloads constructor(
             addView(
                 TextInputEditText(textLayoutContext).apply {
                     layoutParams = listItemLayoutParams
-                    inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                    inputType = InputType.TYPE_CLASS_TEXT or
+                            InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                            InputType.TYPE_TEXT_FLAG_MULTI_LINE
+
+                    maxLines = 10
+
+                    inputEndPadding = paddingEnd
 
                     addTextChangedListener {
                         if (!ignoreTextInputWatcher) {
@@ -319,6 +329,17 @@ class MeaningListInteractionView @JvmOverloads constructor(
         }
     }
 
+    private fun getOrInitInputListEndPadding(): Int {
+        var padding = inputListEndPadding
+
+        if (padding < 0) {
+            padding = resources.getDimensionPixelOffset(R.dimen.meaningInteraction_inputListEndPadding)
+            inputListEndPadding = padding
+        }
+
+        return padding
+    }
+
     private fun refreshHintsAndEndButtons() {
         val childCount = childCount
 
@@ -327,6 +348,8 @@ class MeaningListInteractionView @JvmOverloads constructor(
             getTextInputLayoutAt(0).also {
                 it.hint = meaningStr
                 it.isEndIconVisible = false
+
+                it.editText?.updatePaddingRelative(end = inputEndPadding)
             }
         } else {
             val context = context
@@ -344,16 +367,14 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 input.hint = String.format(locale, format, i + 1)
                 input.isEndIconVisible = true
 
+                input.editText?.updatePaddingRelative(end = getOrInitInputListEndPadding())
+
                 if (input.endIconDrawable == null) {
                     var endIcon = endIconDrawable
+
                     if (endIcon == null) {
-                        endIcon = requireNotNull(
-                            ResourcesCompat.getDrawable(
-                                res,
-                                R.drawable.ic_remove,
-                                theme
-                            )
-                        )
+                        endIcon = requireNotNull(ResourcesCompat.getDrawable(res, R.drawable.ic_remove, theme))
+
                         endIconDrawable = endIcon
                     } else {
                         endIcon = requireNotNull(endIcon.constantState?.newDrawable())
