@@ -122,7 +122,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 }
             }
 
-            refreshHintsAndEndButtons()
+            onInputCountChanged()
             refreshErrorState()
         }
 
@@ -179,8 +179,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         null,
         com.google.android.material.R.attr.materialButtonOutlinedStyle
     ).apply {
-        val res = resources
-        val size = res.getDimensionPixelSize(R.dimen.addRecord_meaningAddButtonSize)
+        val size = resources.getDimensionPixelSize(R.dimen.addRecord_meaningAddButtonSize)
 
         layoutParams = LayoutParams(size, size).apply {
             gravity = Gravity.CENTER_HORIZONTAL
@@ -215,6 +214,8 @@ class MeaningListInteractionView @JvmOverloads constructor(
             null,
             com.google.android.material.R.attr.textInputOutlinedStyle
         ).apply {
+            val layoutScoped = this
+
             layoutParams = listItemLayoutParams
 
             // When error icon is not null and error is not null, the error icon replaces end icon which is unwanted.
@@ -225,33 +226,24 @@ class MeaningListInteractionView @JvmOverloads constructor(
             // It's due to the fact that no error was set on some inputs. So to fix this, we should set isErrorEnabled to true.
             isErrorEnabled = true
 
-            addView(
-                TextInputEditText(textLayoutContext).apply {
-                    layoutParams = listItemLayoutParams
-                    inputType = InputType.TYPE_CLASS_TEXT or
-                            InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
-                            InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            addView(TextInputEditText(textLayoutContext).apply {
+                layoutParams = listItemLayoutParams
+                inputType = InputType.TYPE_CLASS_TEXT or
+                        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                        InputType.TYPE_TEXT_FLAG_MULTI_LINE
 
-                    maxLines = 10
+                maxLines = 10
 
-                    inputEndPadding = paddingEnd
+                inputEndPadding = paddingEnd
 
-                    addTextChangedListener {
-                        if (!ignoreTextInputWatcher) {
-                            val currentText = it?.trimToString() ?: ""
-
-                            elements[index] = currentText
-
-                            refreshErrorState()
-                        }
-                    }
-                })
+                addInputTextChangedListener(this, layoutScoped)
+            })
         }
 
         addView(layout, index)
-        refreshHintsAndEndButtons()
+        onInputCountChanged()
 
-        // If an user intend to add a new input, then we should request a focus for the input
+        // If a user intend to add a new input, then we should request a focus for the input
         if (isUserInteraction) {
             refreshErrorState()
 
@@ -259,11 +251,26 @@ class MeaningListInteractionView @JvmOverloads constructor(
         }
     }
 
+    private fun addInputTextChangedListener(editText: TextInputEditText, inputLayout: TextInputLayout) {
+        editText.addTextChangedListener {
+            if (!ignoreTextInputWatcher) {
+                val currentText = it.trimToString()
+
+                // As edit text can change its position, we can't use index. Instead, to
+                // find view's actual index, indexOfChild is used.
+                val actualIndex = indexOfChild(inputLayout)
+                elements[actualIndex] = currentText
+
+                refreshErrorState()
+            }
+        }
+    }
+
     private fun removeItem(index: Int) {
         elements = elements.withRemovedElementAt(index)
 
         removeViewAt(index)
-        refreshHintsAndEndButtons()
+        onInputCountChanged()
         refreshErrorState()
 
         // Request focus for the nearest input.
@@ -299,7 +306,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
             val inputLayout = getTextInputLayoutAt(index)
 
             val error = when {
-                element.isBlank() -> ERROR_EMPTY_TEXT
+                element.isEmpty() -> ERROR_EMPTY_TEXT
                 !element.containsLetterOrDigit() -> ERROR_NO_LETTER_OR_DIGIT
                 duplicateBitSet[index] -> ERROR_DUPLICATE
                 else -> ERROR_NONE
@@ -340,7 +347,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         return padding
     }
 
-    private fun refreshHintsAndEndButtons() {
+    private fun onInputCountChanged() {
         val childCount = childCount
 
         // If childCount is 2, then there's only one input.
@@ -362,7 +369,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 R.string.meaningAndOrdinalFormat
             ) { meaningAndOrdinalFormat = it }
 
-            iterateInputsIndexed { input, i ->
+            iterateInputs { input, i ->
                 // Index is 0-based, but user would except it to be 1-based, so +1
                 input.hint = String.format(locale, format, i + 1)
                 input.isEndIconVisible = true
@@ -377,33 +384,35 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
                         endIconDrawable = endIcon
                     } else {
-                        endIcon = requireNotNull(endIcon.constantState?.newDrawable())
+                        endIcon = endIcon.constantState?.newDrawable(res, theme)
                     }
 
                     input.endIconDrawable = endIcon
 
                     // When endIconDrawable is null, it means that endIconContentDescription and end icon on click listener
                     // are null and need to be initialized.
-                    input.endIconContentDescription = getLazyValue(
+                    input.endIconContentDescription = res.getLazyString(
                         endIconContentDescription,
-                        { res.getString(R.string.remove) },
-                        { endIconContentDescription = it }
-                    )
+                        R.string.remove
+                    ) { endIconContentDescription = it }
 
-                    input.setEndIconOnClickListener { removeItem(i) }
+                    input.setEndIconOnClickListener {
+                        // Position of the input can change, so i can be a wrong index.
+                        // Instead, use indexOfChild to determine view's position.
+                        val actualIndex = indexOfChild(input)
+
+                        removeItem(actualIndex)
+                    }
                 }
             }
         }
     }
 
-    private inline fun iterateInputsIndexed(block: (TextInputLayout, index: Int) -> Unit) {
+    private inline fun iterateInputs(block: (TextInputLayout, index: Int) -> Unit) {
         for (i in 0 until (childCount - 1)) {
             block(getTextInputLayoutAt(i), i)
         }
     }
-
-    private inline fun iterateInputs(block: (TextInputLayout) -> Unit) =
-        iterateInputsIndexed { it, _ -> block(it) }
 
     private fun getTextInputLayoutAt(index: Int) = getTypedViewAt<TextInputLayout>(index)
 
@@ -416,9 +425,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
     override fun setEnabled(enabled: Boolean) {
         super.setEnabled(enabled)
 
-        iterateInputs {
-            it.isEnabled = enabled
-        }
+        iterateInputs { input, _ -> input.isEnabled = enabled }
 
         // "Add" button should be invisible when the view is disabled
         getChildAt(childCount - 1).visibility = if (enabled) View.VISIBLE else View.INVISIBLE
@@ -437,7 +444,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 }
             }
 
-            refreshHintsAndEndButtons()
+            onInputCountChanged()
             refreshErrorState()
 
             super.onRestoreInstanceState(state.superState)
@@ -462,11 +469,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         private const val ERROR_NO_LETTER_OR_DIGIT = 3
 
         internal inline fun Resources.getLazyString(cached: String?, id: Int, set: (String) -> Unit): String {
-            return getLazyValue(
-                cached,
-                { getString(id) },
-                set
-            )
+            return getLazyValue(cached, { getString(id) }, set)
         }
 
         /**
@@ -480,7 +483,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 val element = get(i)
 
                 // Don't mark element as duplicate if it's blank, 'empty text' error should better be shown on that element.
-                if (element.isNotBlank()) {
+                if (element.isNotEmpty()) {
                     for (j in indices) {
                         val otherElement = get(j)
 
