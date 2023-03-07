@@ -8,10 +8,7 @@ import io.github.pelmenstar1.digiDict.backup.exporting.BinaryDataExporter
 import io.github.pelmenstar1.digiDict.backup.exporting.DataExporter
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.backup.exporting.JsonDataExporter
-import io.github.pelmenstar1.digiDict.backup.importing.BinaryDataImporter
-import io.github.pelmenstar1.digiDict.backup.importing.DataImporter
-import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
-import io.github.pelmenstar1.digiDict.backup.importing.JsonDataImporter
+import io.github.pelmenstar1.digiDict.backup.importing.*
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
@@ -20,7 +17,6 @@ import io.github.pelmenstar1.digiDict.data.*
 import java.io.*
 import java.util.*
 
-// TODO: Validate whether meaning is valid before inserting to DB.
 object BackupManager {
     private val exporters = EnumMap<BackupFormat, DataExporter>(BackupFormat::class.java).apply {
         put(BackupFormat.DDDB, BinaryDataExporter())
@@ -217,6 +213,10 @@ object BackupManager {
             if (meaning[0] == ComplexMeaning.LIST_MARKER) {
                 meaning = ComplexMeaning.recodeListOldFormatToNew(meaning)
             }
+        }
+
+        if (!ComplexMeaning.isValid(meaning)) {
+            throw ImportException(ImportException.REASON_DATA_VALIDATION, "Invalid meaning format")
         }
 
         statement.bindRecordToInsertStatement(

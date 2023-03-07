@@ -180,6 +180,8 @@ sealed class ComplexMeaning : Parcelable {
 
         /**
          * Returns how much distinct meaning is stored in a raw meaning string.
+         * The method does a little bit of validating the meaning but it may return wrong value in case the meaning is
+         * encoded incorrectly.
          *
          * @throws IllegalArgumentException if rawText is in invalid format.
          */
@@ -317,6 +319,45 @@ sealed class ComplexMeaning : Parcelable {
             }
 
             return index
+        }
+
+        /**
+         * Determines whether raw meaning string is a correctly encoded meaning.
+         */
+        fun isValid(rawText: String): Boolean {
+            val textLength = rawText.length
+
+            if (textLength < 2) {
+                return false
+            }
+
+            return when (rawText[0] /* mark char */) {
+                COMMON_MARKER -> true
+                LIST_MARKER -> {
+                    // Skip mark character
+                    val firstDelimiterIndex = rawText.indexOf('@', 1)
+                    if (firstDelimiterIndex < 0) {
+                        return false
+                    }
+
+                    val count = rawText.parsePositiveInt(1, firstDelimiterIndex)
+                    if (count <= 0) {
+                        return false
+                    }
+
+                    // There's at least one element without any separators
+                    var actualElementCount = 1
+
+                    for (i in firstDelimiterIndex until textLength) {
+                        if (rawText[i] == LIST_NEW_ELEMENT_SEPARATOR) {
+                            actualElementCount++
+                        }
+                    }
+
+                    actualElementCount == count
+                }
+                else -> false
+            }
         }
     }
 }

@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
-import io.github.pelmenstar1.digiDict.common.binarySerialization.checkDataValidity
 import io.github.pelmenstar1.digiDict.common.equalsPattern
 import kotlinx.serialization.Serializable
 
@@ -74,8 +73,6 @@ open class Record(
                     val additionalNotes = consumeStringUtf16()
                     val score = consumeInt()
                     val epochSeconds = consumeLong()
-
-                    checkDataValidity("Epoch seconds can't be negative") { epochSeconds >= 0 }
 
                     Record(
                         id = 0,

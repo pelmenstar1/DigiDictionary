@@ -145,4 +145,30 @@ class ComplexMeaningTests {
         testCase(meaning = "1${listSep}2${listSep}", startIndex = 2, expectedIndex = 3)
         testCase(meaning = "1${listSep}2345", startIndex = 2, expectedIndex = 6)
     }
+
+    @Test
+    fun isValidTest() {
+        fun testCase(meaning: String, expectedResult: Boolean) {
+            val actualResult = ComplexMeaning.isValid(meaning)
+
+            assertEquals(expectedResult, actualResult, "meaning: $meaning")
+        }
+
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+
+        testCase(meaning = "", expectedResult = false)
+        testCase(meaning = "C", expectedResult = false)
+        testCase(meaning = "CMeaning", expectedResult = true)
+        testCase(meaning = "CM", expectedResult = true)
+        testCase(meaning = "L", expectedResult = false)
+        testCase(meaning = "L0@", expectedResult = false)
+        testCase(meaning = "L2@Meaning1", expectedResult = false)
+        testCase(meaning = "L1@Meaning1${listSep}Meaning2", expectedResult = false)
+        testCase(meaning = "L2@Meaning1${listSep}Meaning2\n3", expectedResult = true)
+        testCase(meaning = "L2", expectedResult = false)
+        testCase(meaning = "Lgrngr@", expectedResult = false)
+        testCase(meaning = "L@", expectedResult = false)
+        testCase(meaning = "ajnjgrjgg", expectedResult = false)
+        testCase(meaning = "@", expectedResult = false)
+    }
 }

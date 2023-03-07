@@ -16,6 +16,9 @@ private inline fun <R> wrapExceptions(block: () -> R): R {
         block()
     } catch (e: BinarySerializationException) {
         throw e
+    } catch (e: IllegalArgumentException) {
+        // Basically, IllegalArgumentException states about data being invalid.
+        throw BinarySerializationException(BinarySerializationException.REASON_DATA_VALIDATION, cause = e)
     } catch (e: Exception) {
         throw BinarySerializationException(BinarySerializationException.REASON_INTERNAL, "Internal error", e)
     }
