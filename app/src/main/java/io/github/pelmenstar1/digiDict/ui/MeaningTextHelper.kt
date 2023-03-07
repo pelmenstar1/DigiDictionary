@@ -47,30 +47,18 @@ object MeaningTextHelper {
                     buffer[bufferIndex++] = BULLET_LIST_CHARACTER
                     buffer[bufferIndex++] = ' '
 
-                    var nextDelimiterPos = meaning.indexOf('\n', textIndex)
-                    if (nextDelimiterPos < 0) {
-                        nextDelimiterPos = textLength
-                    } else {
-                        // To add leading new-line to buffer.
-                        nextDelimiterPos++
-                    }
+                    val nextDelimiterPos = ComplexMeaning.indexOfListSeparatorOrLength(meaning, textIndex)
 
                     // Write to buffer at its current position the part of text between previous and next element.
-                    // Example: L2@ABCDABC\nL
-                    //             ^      ^
-                    //           from A  to new-line (inclusive)
                     meaning.toCharArray(buffer, bufferIndex, textIndex, nextDelimiterPos)
+                    bufferIndex += nextDelimiterPos - textIndex
+
+                    if (nextDelimiterPos != textLength) {
+                        buffer[bufferIndex++] = '\n'
+                    }
 
                     // Move bufferIndex forward to the end position of the written part to continue with a next element.
-                    // Example: Meaning= L2@ABCDABC\nL
-                    //          Buffer = '• ABCDABC\n'
-                    //                      ^       ^
-                    //                   previous | new position
-                    //                   position | after a new-line
-                    //                   (where A) \ - - - - - - - -
-                    //                - - - - - - -/
-                    bufferIndex += nextDelimiterPos - textIndex
-                    textIndex = nextDelimiterPos
+                    textIndex = nextDelimiterPos + 1
                 }
 
                 return String(buffer)

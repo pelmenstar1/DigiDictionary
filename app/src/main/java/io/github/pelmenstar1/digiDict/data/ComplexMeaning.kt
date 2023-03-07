@@ -65,12 +65,13 @@ sealed class ComplexMeaning : Parcelable {
     }
 
     /**
-     * A meaning with multiple entries.
+     * A meaning that contains multiple distinct meanings.
+     *
      * Raw text scheme:
      * - Mark character is 'L'
      * - Count of elements is after the mark character
      * - Then as a delimiter '@' character
-     * - Actual elements are after '@' divided by new line character.
+     * - Actual elements are after '@' divided by [ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR] (GS) character.
      */
     class List : ComplexMeaning {
         override val type: MeaningType
@@ -130,6 +131,11 @@ sealed class ComplexMeaning : Parcelable {
         const val COMMON_MARKER = 'C'
         const val LIST_MARKER = 'L'
 
+        const val LIST_OLD_ELEMENT_SEPARATOR = '\n'
+
+        // 0x1D - group separator.
+        const val LIST_NEW_ELEMENT_SEPARATOR = 0x1D.toChar()
+
         internal fun createCommonRawText(text: String): String {
             val buffer = CharArray(text.length + 1)
             buffer[0] = COMMON_MARKER
@@ -162,7 +168,7 @@ sealed class ComplexMeaning : Parcelable {
                     append(element)
 
                     if (index < lastIndex) {
-                        append('\n')
+                        append(LIST_NEW_ELEMENT_SEPARATOR)
                     }
                 }
             }
@@ -172,6 +178,11 @@ sealed class ComplexMeaning : Parcelable {
             throw IllegalArgumentException("Invalid format (rawText=$rawText)")
         }
 
+        /**
+         * Returns how much distinct meaning is stored in a raw meaning string.
+         *
+         * @throws IllegalArgumentException if rawText is in invalid format.
+         */
         fun getMeaningCount(rawText: String): Int {
             if (rawText.isEmpty()) {
                 throwInvalidFormat(rawText)
@@ -198,6 +209,11 @@ sealed class ComplexMeaning : Parcelable {
             }
         }
 
+        /**
+         * Parses raw meaning string to the object-like form that always contains only valid meaning.
+         *
+         * @throws IllegalArgumentException if the [rawText] is in invalid format.
+         */
         fun parse(rawText: String): ComplexMeaning {
             if (rawText.isEmpty()) {
                 throwInvalidFormat(rawText)
@@ -227,10 +243,7 @@ sealed class ComplexMeaning : Parcelable {
                     val elements = unsafeNewArray<String>(count)
 
                     for (i in 0 until count) {
-                        var nextPos = rawText.indexOf('\n', prevPos)
-                        if (nextPos < 0) {
-                            nextPos = rawText.length
-                        }
+                        val nextPos = indexOfListSeparatorOrLength(rawText, prevPos)
 
                         val element = rawText.substring(prevPos, nextPos)
                         elements[i] = element
@@ -244,12 +257,16 @@ sealed class ComplexMeaning : Parcelable {
             }
         }
 
+        /**
+         * Iterates each list element range of given list meaning.
+         *
+         * @param rawText a raw list meaning string to iterate the ranges of
+         * @param block a lambda that processes each range. Start is inclusive, end is exclusive.
+         */
         inline fun iterateListElementRanges(
             rawText: String,
             block: (start: Int, end: Int) -> Unit
         ) {
-            val length = rawText.length
-
             // Skip mark character
             val firstDelimiterIndex = rawText.indexOf('@', 1)
             if (firstDelimiterIndex < 0) {
@@ -265,15 +282,28 @@ sealed class ComplexMeaning : Parcelable {
             var i = firstDelimiterIndex + 1
 
             repeat(count) {
-                var nextDelimiterPos = rawText.indexOf('\n', i)
-                if (nextDelimiterPos < 0) {
-                    nextDelimiterPos = length
-                }
+                val nextDelimiterPos = indexOfListSeparatorOrLength(rawText, i)
 
                 block(i, nextDelimiterPos)
 
                 i = nextDelimiterPos + 1
             }
+        }
+
+        /**
+         * Converts a list meaning encoded in old format (with \n as element separator) to a new list meaning format.
+         */
+        fun recodeListOldFormatToNew(meaning: String): String {
+            return meaning.replace(LIST_OLD_ELEMENT_SEPARATOR, LIST_NEW_ELEMENT_SEPARATOR)
+        }
+
+        fun indexOfListSeparatorOrLength(str: String, startIndex: Int): Int {
+            var index = str.indexOf(LIST_NEW_ELEMENT_SEPARATOR, startIndex)
+            if (index < 0) {
+                index = str.length
+            }
+
+            return index
         }
     }
 }

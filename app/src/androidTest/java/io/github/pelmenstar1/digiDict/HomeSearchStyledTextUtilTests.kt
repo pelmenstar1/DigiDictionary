@@ -6,6 +6,7 @@ import androidx.core.text.getSpans
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.common.mapToArray
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchItemStyle
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchStyledTextUtil
@@ -138,13 +139,13 @@ class HomeSearchStyledTextUtilTests {
         )
 
         testCase(
-            meaning = "L2@ABCD\nFFF",
+            meaning = "L2@ABCD${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}FFF",
             foundSections = arrayOf(IntRangeSection(1 until 3), IntRangeSection(0 until 2)),
             expectedRanges = arrayOf(3 until 5, 9 until 11)
         )
 
         testCase(
-            meaning = "L2@ABCD\nFFF",
+            meaning = "L2@ABCD${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}FFF",
             foundSections = emptyArray(),
             expectedRanges = emptyArray()
         )
