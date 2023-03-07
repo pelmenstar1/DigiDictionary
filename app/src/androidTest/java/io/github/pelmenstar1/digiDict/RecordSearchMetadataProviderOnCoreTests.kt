@@ -149,6 +149,8 @@ class RecordSearchMetadataProviderOnCoreTests {
             assertContentEquals(expectedSections, actualSections)
         }
 
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+
         testCase(
             meaning = "CABC AB BB",
             query = "AB",
@@ -204,7 +206,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L3@ABC\nABC\nAB",
+            meaning = "L3@ABC${listSep}ABC${listSep}AB",
             query = "AB",
             expectedSections = arrayOf(
                 IntRangeSection(0 until 2),
@@ -214,7 +216,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L2@B LL\nA",
+            meaning = "L2@B LL${listSep}A",
             query = "LL",
             expectedSections = arrayOf(
                 IntRangeSection(2 until 4),
@@ -223,7 +225,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L2@B\nget",
+            meaning = "L2@B${listSep}get",
             query = "get",
             expectedSections = arrayOf(
                 IntRangeSection(),
@@ -232,7 +234,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L2@aaa\nabc def  xyz",
+            meaning = "L2@aaa${listSep}abc def  xyz",
             query = "def xyz",
             expectedSections = arrayOf(
                 IntRangeSection(),
@@ -241,7 +243,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L2@aaa\nabc def  xyz",
+            meaning = "L2@aaa${listSep}abc def  xyz",
             query = "def xy",
             expectedSections = arrayOf(
                 IntRangeSection(),
@@ -250,7 +252,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L2@aaa\nabc def  xyz def   xyz",
+            meaning = "L2@aaa${listSep}abc def  xyz def   xyz",
             query = "def xyz",
             expectedSections = arrayOf(
                 IntRangeSection(),
@@ -276,7 +278,8 @@ class RecordSearchMetadataProviderOnCoreTests {
 
         val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore, query = "AB", options)
 
-        val data = provider.calculateFoundRanges(createRecord(expr = "AB", meaning = "L3@AB\nBC\nCD"))
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+        val data = provider.calculateFoundRanges(createRecord(expr = "AB", meaning = "L3@AB${listSep}BC${listSep}CD"))
 
         assertEquals(1, data[0]) // first is expr ranges length, should be one, as there's one range.
         assertEquals(0, data[1]) // the start of the expr range

@@ -136,6 +136,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
     private val emptyTextError: String
     private var duplicateError: String? = null
     private var noLetterOrDigitError: String? = null
+    private var illegalCharactersError: String? = null
 
     private var meaningAndOrdinalFormat: String? = null
     private val meaningStr: String
@@ -308,6 +309,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
             val error = when {
                 element.isEmpty() -> ERROR_EMPTY_TEXT
                 !element.containsLetterOrDigit() -> ERROR_NO_LETTER_OR_DIGIT
+                element.contains(ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR) -> ERROR_ILLEGAL_CHARACTERS
                 duplicateBitSet[index] -> ERROR_DUPLICATE
                 else -> ERROR_NONE
             }
@@ -332,6 +334,10 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 noLetterOrDigitError,
                 R.string.addEditRecord_meaningNoLetterOrDigit,
             ) { noLetterOrDigitError = it }
+            ERROR_ILLEGAL_CHARACTERS -> res.getLazyString(
+                illegalCharactersError,
+                R.string.addEditRecord_meaningIllegalCharactersError
+            ) { illegalCharactersError = it }
             else -> null
         }
     }
@@ -467,6 +473,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         private const val ERROR_EMPTY_TEXT = 1
         private const val ERROR_DUPLICATE = 2
         private const val ERROR_NO_LETTER_OR_DIGIT = 3
+        private const val ERROR_ILLEGAL_CHARACTERS = 4
 
         internal inline fun Resources.getLazyString(cached: String?, id: Int, set: (String) -> Unit): String {
             return getLazyValue(cached, { getString(id) }, set)

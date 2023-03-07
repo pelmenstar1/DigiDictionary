@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
@@ -217,14 +218,14 @@ class RecordDeepSearchCoreTests {
 
         testCase(
             expr = "Expression",
-            meaning = "L2@Mean\nKind",
+            meaning = "L2@Mean${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}Kind",
             query = "mEa",
             expectedResult = true
         )
 
         testCase(
             expr = "Expression",
-            meaning = "L2@Mean\nKind",
+            meaning = "L2@Mean${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}Kind",
             query = "kin",
             expectedResult = true
         )
@@ -254,7 +255,7 @@ class RecordDeepSearchCoreTests {
 
         testCase(
             expr = "give",
-            meaning = "L2@A\nB",
+            meaning = "L2@A${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}B",
             query = "A",
             expectedResult = false
         )
@@ -284,7 +285,7 @@ class RecordDeepSearchCoreTests {
 
         testCase(
             expr = "A",
-            meaning = "L2@C\nB",
+            meaning = "L2@C${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}B",
             query = "A",
             expectedResult = false
         )
