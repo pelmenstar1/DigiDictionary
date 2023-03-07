@@ -18,7 +18,7 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
         EventInfo::class
     ],
     exportSchema = true,
-    version = 10,
+    version = 11,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -98,6 +98,13 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
+    object Migration_10_11 : Migration(10, 11) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // L% to replace new lines only in list meanings.
+            database.execSQL("UPDATE records SET meaning=replace(meaning, '${ComplexMeaning.LIST_OLD_ELEMENT_SEPARATOR}', '${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}') WHERE meaning LIKE 'L%'")
+        }
+    }
+
     abstract fun recordDao(): RecordDao
     abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
@@ -160,7 +167,7 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun Builder<AppDatabase>.configureAndBuild(): AppDatabase =
-            this.addMigrations(Migration_2_3, Migration_3_4, Migration_4_5, Migration_5_6)
+            this.addMigrations(Migration_2_3, Migration_3_4, Migration_4_5, Migration_5_6, Migration_10_11)
                 .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         db.insertRemoteDictProviders_5(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)
