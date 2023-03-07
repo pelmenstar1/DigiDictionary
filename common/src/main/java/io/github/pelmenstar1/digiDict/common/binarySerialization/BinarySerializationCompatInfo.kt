@@ -28,22 +28,3 @@ class BinarySerializationCompatInfo(val bits: Long) {
         fun empty() = EMPTY
     }
 }
-
-class BinarySerializationCompatInfoBuilder {
-    private var bits = 0L
-
-    /**
-     * Sets the bit at given [index].
-     */
-    fun set(index: Int) {
-        require(index in 0 until 64) { "Index is out of bounds" }
-
-        bits = bits or (1L shl index)
-    }
-
-    fun create() = BinarySerializationCompatInfo(bits)
-}
-
-inline fun BinarySerializationCompatInfo(block: BinarySerializationCompatInfoBuilder.() -> Unit): BinarySerializationCompatInfo {
-    return BinarySerializationCompatInfoBuilder().also(block).create()
-}

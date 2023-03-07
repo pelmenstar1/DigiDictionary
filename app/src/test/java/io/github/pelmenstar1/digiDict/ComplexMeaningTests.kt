@@ -74,4 +74,75 @@ class ComplexMeaningTests {
         testCase("L1@", expectedRanges = arrayOf(3 to 3))
         testCase("L2@1${listSep}", expectedRanges = arrayOf(3 to 4, 5 to 5))
     }
+
+    @Test
+    fun getMeaningCountTest() {
+        fun testCase(meaning: String, expectedCount: Int) {
+            val actualCount = ComplexMeaning.getMeaningCount(meaning)
+
+            assertEquals(expectedCount, actualCount, "meaning: $meaning")
+        }
+
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+
+        testCase(meaning = "CMeaning", expectedCount = 1)
+        testCase(meaning = "L2@Meaning1${listSep}Meaning2", expectedCount = 2)
+        testCase(meaning = "L3@Meaning1${listSep}Meaning2${listSep}Meaning3", expectedCount = 3)
+    }
+
+    @Test
+    fun recodeListOldFormatToNewTest() {
+        fun testCase(input: String, expectedMeaning: String) {
+            val actualMeaning = ComplexMeaning.recodeListOldFormatToNew(input)
+
+            assertEquals(expectedMeaning, actualMeaning, "input: $input")
+        }
+
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+
+        testCase(
+            input = "L2@Meaning1\nMeaning2",
+            expectedMeaning = "L2@Meaning1${listSep}Meaning2"
+        )
+        testCase(
+            input = "L3@Meaning1\nMeaning2\nMeaning3",
+            expectedMeaning = "L3@Meaning1${listSep}Meaning2${listSep}Meaning3"
+        )
+    }
+
+    @Test
+    fun recodeListNewFormatToOldTest() {
+        fun testCase(input: String, expectedMeaning: String) {
+            val actualMeaning = ComplexMeaning.recodeListNewFormatToOld(input)
+
+            assertEquals(expectedMeaning, actualMeaning, "input: $input")
+        }
+
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+
+        testCase(
+            input = "L2@Meaning1${listSep}Meaning2",
+            expectedMeaning = "L2@Meaning1\nMeaning2"
+        )
+        testCase(
+            input = "L3@Meaning1${listSep}Meaning2${listSep}Meaning3",
+            expectedMeaning = "L3@Meaning1\nMeaning2\nMeaning3"
+        )
+    }
+
+    @Test
+    fun indexOfListSeparatorOrLengthTest() {
+        fun testCase(meaning: String, startIndex: Int, expectedIndex: Int) {
+            val actualIndex = ComplexMeaning.indexOfListSeparatorOrLength(meaning, startIndex)
+
+            assertEquals(expectedIndex, actualIndex, "meaning: $meaning startIndex: $startIndex")
+        }
+
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+
+        testCase(meaning = "123${listSep}4", startIndex = 0, expectedIndex = 3)
+        testCase(meaning = "1234", startIndex = 0, expectedIndex = 4)
+        testCase(meaning = "1${listSep}2${listSep}", startIndex = 2, expectedIndex = 3)
+        testCase(meaning = "1${listSep}2345", startIndex = 2, expectedIndex = 6)
+    }
 }

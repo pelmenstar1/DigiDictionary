@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.backup.BackupCompatInfo
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.backup.BackupManager
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
@@ -44,9 +45,15 @@ class BackupManagerTests {
         }
     }
 
-    private fun File.export(db: AppDatabase, options: ExportOptions, format: BackupFormat, version: Int) {
+    private fun File.export(
+        db: AppDatabase,
+        options: ExportOptions,
+        format: BackupFormat,
+        version: Int,
+        compatInfo: BackupCompatInfo = BackupManager.latestCompatInfo
+    ) {
         outputStream().use {
-            BackupManager.export(it, BackupManager.createBackupData(db, options), format, version)
+            BackupManager.export(it, BackupManager.createBackupData(db, options, compatInfo), format, version)
         }
     }
 
@@ -61,13 +68,14 @@ class BackupManagerTests {
     private fun roundtripOnlyRecordsTestHelper(
         format: BackupFormat,
         size: Int,
-        exportVersion: Int
+        exportVersion: Int,
+        compatInfo: BackupCompatInfo = BackupManager.latestCompatInfo
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
         val records = insertAndGetRecords(db, size)
 
-        file.export(db, ExportOptions(exportBadges = false), format, exportVersion)
+        file.export(db, ExportOptions(exportBadges = false), format, exportVersion, compatInfo)
 
         db.clearAllTables()
         file.importAndDeploy(db, ImportOptions(importBadges = false, replaceBadges = false), format)
@@ -81,7 +89,8 @@ class BackupManagerTests {
         format: BackupFormat,
         recordCount: Int,
         badgeCount: Int,
-        exportVersion: Int
+        exportVersion: Int,
+        compatInfo: BackupCompatInfo = BackupManager.latestCompatInfo
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -92,7 +101,7 @@ class BackupManagerTests {
         insertBadges(db, badgeCount)
         insertBadgeRelations(db)
 
-        file.export(db, ExportOptions(exportBadges = true), format, exportVersion)
+        file.export(db, ExportOptions(exportBadges = true), format, exportVersion, compatInfo)
 
         db.clearAllTables()
 
@@ -159,6 +168,45 @@ class BackupManagerTests {
             for (recordCount in recordCounts) {
                 roundtripOnlyRecordsTestHelper(BackupFormat.JSON, recordCount, version)
             }
+        }
+    }
+
+    @Test
+    fun roundtripOnlyRecords_fromOldMeaningFormatToNew_dddb() {
+        val compatInfo = BackupCompatInfo(newMeaningFormat = false)
+
+        for (version in dddbVersions) {
+            roundtripOnlyRecordsTestHelper(BackupFormat.DDDB, size = 16, version, compatInfo)
+        }
+    }
+
+    // The logic of inserting records a little bit different when badges are available.
+    @Test
+    fun roundtripWithBadges_fromOldMeaningFormatToNew_dddb() = runTest {
+        val compatInfo = BackupCompatInfo(newMeaningFormat = false)
+
+        for (version in dddbVersions) {
+            roundtripWithBadgesPreserve(BackupFormat.DDDB, recordCount = 16, badgeCount = 2, version, compatInfo)
+        }
+    }
+
+    // Also test with JSON format to check whether compatibility info is processed correctly.
+    @Test
+    fun roundtripOnlyRecords_fromOldMeaningFormatToNew_json() {
+        val compatInfo = BackupCompatInfo(newMeaningFormat = false)
+
+        for (version in jsonVersions) {
+            roundtripOnlyRecordsTestHelper(BackupFormat.JSON, size = 16, version, compatInfo)
+        }
+    }
+
+    // The logic of inserting records a little bit different when badges are available.
+    @Test
+    fun roundtripWithBadges_fromOldMeaningFormatToNew_json() = runTest {
+        val compatInfo = BackupCompatInfo(newMeaningFormat = false)
+
+        for (version in jsonVersions) {
+            roundtripWithBadgesPreserve(BackupFormat.JSON, recordCount = 16, badgeCount = 2, version, compatInfo)
         }
     }
 
@@ -314,7 +362,12 @@ class BackupManagerTests {
 
             for (i in 0 until size) {
                 val expr = "Expression$i"
-                val meaning = "CMeaning$i"
+                val meaning = if (i % 2 == 0) {
+                    "CMeaning$i"
+                } else {
+                    "L2@Meaning_1_${i}${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}Meaning_2_${i}"
+                }
+
                 val additionalNotes = "Notes$i"
                 val epochSeconds = i * 1000L
 

@@ -13,12 +13,14 @@ import io.github.pelmenstar1.digiDict.backup.importing.DataImporter
 import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
 import io.github.pelmenstar1.digiDict.backup.importing.JsonDataImporter
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.*
 import java.io.*
 import java.util.*
 
+// TODO: Validate whether meaning is valid before inserting to DB.
 object BackupManager {
     private val exporters = EnumMap<BackupFormat, DataExporter>(BackupFormat::class.java).apply {
         put(BackupFormat.DDDB, BinaryDataExporter())
@@ -30,12 +32,15 @@ object BackupManager {
         put(BackupFormat.JSON, JsonDataImporter())
     }
 
+    val latestCompatInfo = BackupCompatInfo(newMeaningFormat = true)
+
     fun createBackupData(
         appDatabase: AppDatabase,
         options: ExportOptions,
+        compatInfo: BackupCompatInfo = latestCompatInfo,
         progressReporter: ProgressReporter? = null
     ): BackupData {
-        val records: Array<Record>
+        var records: Array<Record>
         val badges: Array<RecordBadgeInfo>
         val badgeToMultipleRecordEntries: Array<BackupBadgeToMultipleRecordEntry>
 
@@ -63,7 +68,17 @@ object BackupManager {
                 badgeToMultipleRecordEntries = emptyArray()
             }
 
-            BackupData(records, badges, badgeToMultipleRecordEntries)
+            // Currently, non-latest compat info is used only in the tests,
+            // so the implementation doesn't have to be efficient.
+            if (!compatInfo.newMeaningFormat) {
+                records = records.mapToArray {
+                    val recodedMeaning = ComplexMeaning.recodeListNewFormatToOld(it.meaning)
+
+                    Record(it.id, it.expression, recodedMeaning, it.additionalNotes, it.score, it.epochSeconds)
+                }
+            }
+
+            BackupData(records, badges, badgeToMultipleRecordEntries, compatInfo)
         }
     }
 
@@ -149,6 +164,7 @@ object BackupManager {
             trackProgressWith(progressReporter) {
                 val records = data.records
                 val badges = data.badges
+                val compatInfo = data.compatInfo
 
                 if (options.importBadges && badges.isNotEmpty()) {
                     val replaceBadges = options.replaceBadges
@@ -162,7 +178,8 @@ object BackupManager {
                     // 2/3 to 3/3 of the total work
                     val recordToBadgeRelationReporter = progressReporter?.subReporter(completed = 67, target = 100)
 
-                    val sortedRecordIds = insertRecordsAndSaveSortedIds(appDatabase, records, recordReporter)
+                    val sortedRecordIds =
+                        insertRecordsAndCreateIdToOrdinalMap(appDatabase, records, compatInfo, recordReporter)
                     val sortedBadgeIds = if (replaceBadges) {
                         insertOrReplaceRecordBadgesAndCreateIdToOrdinalMap(appDatabase, badges, badgeReporter)
                     } else {
@@ -177,15 +194,38 @@ object BackupManager {
                         recordToBadgeRelationReporter
                     )
                 } else {
-                    appDatabase.compileInsertRecordStatement().use {
+                    appDatabase.compileInsertRecordStatement().use { statement ->
                         trackLoopProgressWith(progressReporter, records) { _, record ->
-                            it.bindRecordToInsertStatement(record)
-                            it.executeInsert()
+                            bindRecordToInsertStatementWithRecoding(statement, record, compatInfo)
+                            statement.executeInsert()
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun bindRecordToInsertStatementWithRecoding(
+        statement: SupportSQLiteStatement,
+        record: Record,
+        compatInfo: BackupCompatInfo
+    ) {
+        var meaning = record.meaning
+
+        if (!compatInfo.newMeaningFormat) {
+            // Recode only list meanings.
+            if (meaning[0] == ComplexMeaning.LIST_MARKER) {
+                meaning = ComplexMeaning.recodeListOldFormatToNew(meaning)
+            }
+        }
+
+        statement.bindRecordToInsertStatement(
+            record.expression,
+            meaning,
+            record.additionalNotes,
+            record.score,
+            record.epochSeconds
+        )
     }
 
     private inline fun <T> insertEntitiesAndCreateIdToOrdinalMap(
@@ -209,16 +249,17 @@ object BackupManager {
         }
     }
 
-    private fun insertRecordsAndSaveSortedIds(
+    private fun insertRecordsAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         records: Array<out Record>,
+        compatInfo: BackupCompatInfo,
         progressReporter: ProgressReporter?
     ) = insertEntitiesAndCreateIdToOrdinalMap(
         appDatabase,
         records,
         progressReporter,
         AppDatabase::compileInsertRecordStatement,
-        SupportSQLiteStatement::bindRecordToInsertStatement
+        bind = { statement, record -> bindRecordToInsertStatementWithRecoding(statement, record, compatInfo) }
     )
 
     private fun insertOrReplaceRecordBadgesAndCreateIdToOrdinalMap(

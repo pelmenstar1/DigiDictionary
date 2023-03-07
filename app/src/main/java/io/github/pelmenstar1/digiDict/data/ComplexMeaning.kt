@@ -291,12 +291,25 @@ sealed class ComplexMeaning : Parcelable {
         }
 
         /**
-         * Converts a list meaning encoded in old format (with \n as element separator) to a new list meaning format.
+         * Converts a list meaning encoded in old format (with \n as element separator) to the new list meaning format.
          */
         fun recodeListOldFormatToNew(meaning: String): String {
             return meaning.replace(LIST_OLD_ELEMENT_SEPARATOR, LIST_NEW_ELEMENT_SEPARATOR)
         }
 
+        /**
+         * Converts a list meaning encoded in new format to the old meaning format.
+         *
+         * [meaning] should not contain any \n as a part of the list elements.
+         */
+        fun recodeListNewFormatToOld(meaning: String): String {
+            return meaning.replace(LIST_NEW_ELEMENT_SEPARATOR, LIST_OLD_ELEMENT_SEPARATOR)
+        }
+
+        /**
+         * Finds an index of [ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR] in the given string starting from [startIndex].
+         * If the index is not found, returns length of the string.
+         */
         fun indexOfListSeparatorOrLength(str: String, startIndex: Int): Int {
             var index = str.indexOf(LIST_NEW_ELEMENT_SEPARATOR, startIndex)
             if (index < 0) {
