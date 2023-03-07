@@ -73,7 +73,7 @@ class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
         val SERIALIZER_RESOLVER = BinarySerializerResolver<RecordBadgeInfo> {
             register<RecordBadgeInfo>(
                 version = 1,
-                write = { value: RecordBadgeInfo ->
+                write = { value, _ ->
                     emit(value.name)
                     emit(value.outlineColor)
                 },

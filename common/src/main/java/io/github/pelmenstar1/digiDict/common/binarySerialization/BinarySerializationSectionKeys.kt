@@ -1,5 +1,7 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
+import io.github.pelmenstar1.digiDict.common.getLazyValue
+
 class BinarySerializationSectionKey<TKeys : BinarySerializationSectionKeys<TKeys>, TValue : Any>(
     val ordinal: Int,
     val name: String
@@ -13,21 +15,22 @@ interface BinarySerializationSectionKeys<TSelf : BinarySerializationSectionKeys<
 
 abstract class SimpleBinarySerializationSectionKeys<TSelf : SimpleBinarySerializationSectionKeys<TSelf>> :
     BinarySerializationSectionKeys<TSelf> {
-    private val all: Array<out BinarySerializationSectionKey<TSelf, out Any>>
+    private var allHolder: Array<out BinarySerializationSectionKey<TSelf, out Any>>? = null
 
     final override val size: Int
-        get() = all.size
+        get() = getAllHolderValue().size
 
-    init {
-        @Suppress("LeakingThis")
-        all = getAll()
+    final override fun get(ordinal: Int): BinarySerializationSectionKey<TSelf, out Any> {
+        return getAllHolderValue()[ordinal]
     }
 
-    final override fun get(ordinal: Int) = all[ordinal]
+    protected abstract fun getAll(): Array<out BinarySerializationSectionKey<TSelf, out Any>>
 
     protected fun <TValue : Any> key(ordinal: Int, name: String): BinarySerializationSectionKey<TSelf, TValue> {
         return BinarySerializationSectionKey(ordinal, name)
     }
 
-    protected abstract fun getAll(): Array<out BinarySerializationSectionKey<TSelf, out Any>>
+    private fun getAllHolderValue(): Array<out BinarySerializationSectionKey<TSelf, out Any>> {
+        return getLazyValue(allHolder, ::getAll) { allHolder = it }
+    }
 }

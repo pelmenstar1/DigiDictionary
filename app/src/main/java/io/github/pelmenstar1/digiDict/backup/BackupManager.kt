@@ -71,11 +71,12 @@ object BackupManager {
         output: OutputStream,
         data: BackupData,
         format: BackupFormat,
+        version: Int,
         progressReporter: ProgressReporter? = null
     ) {
         val exporter = exporters[format] ?: throw RuntimeException("No exporter assigned for given format ($format)")
 
-        exporter.export(output, data, progressReporter)
+        exporter.export(output, data, version, progressReporter)
     }
 
     fun export(
@@ -83,10 +84,11 @@ object BackupManager {
         uri: Uri,
         data: BackupData,
         format: BackupFormat,
+        version: Int,
         progressReporter: ProgressReporter? = null
     ) {
         uri.useAsFile(context, mode = "w") {
-            export(FileOutputStream(it), data, format, progressReporter)
+            export(FileOutputStream(it), data, format, version, progressReporter)
         }
     }
 

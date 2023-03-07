@@ -5,8 +5,8 @@ import android.util.SparseArray
 interface BinarySerializer<T : Any> {
     fun newArrayOfNulls(size: Int): Array<T?>
 
-    fun writeTo(writer: PrimitiveValueWriter, value: T)
-    fun readFrom(reader: PrimitiveValueReader): T
+    fun writeTo(writer: PrimitiveValueWriter, value: T, compatInfo: BinarySerializationCompatInfo)
+    fun readFrom(reader: PrimitiveValueReader, compatInfo: BinarySerializationCompatInfo): T
 }
 
 interface BinarySerializerResolver<T : Any> {
@@ -48,18 +48,20 @@ value class SparseArrayBinarySerializerResolverBuilder<T : Any>(
      */
     inline fun <reified TR : T> register(
         version: Int,
-        crossinline write: PrimitiveValueWriter.(T) -> Unit,
-        crossinline read: PrimitiveValueReader.() -> T
+        crossinline write: PrimitiveValueWriter.(T, BinarySerializationCompatInfo) -> Unit,
+        crossinline read: PrimitiveValueReader.(compatInfo: BinarySerializationCompatInfo) -> T
     ) {
         val serializer = object : BinarySerializer<T> {
             @Suppress("UNCHECKED_CAST")
             override fun newArrayOfNulls(size: Int) = arrayOfNulls<TR>(size) as Array<T?>
 
-            override fun writeTo(writer: PrimitiveValueWriter, value: T) {
-                writer.write(value)
+            override fun writeTo(writer: PrimitiveValueWriter, value: T, compatInfo: BinarySerializationCompatInfo) {
+                writer.write(value, compatInfo)
             }
 
-            override fun readFrom(reader: PrimitiveValueReader) = reader.read()
+            override fun readFrom(reader: PrimitiveValueReader, compatInfo: BinarySerializationCompatInfo): T {
+                return reader.read(compatInfo)
+            }
         }
 
         register(version, serializer)

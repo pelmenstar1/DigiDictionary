@@ -24,6 +24,9 @@ class BackupManagerTests {
     private val recordCounts = intArrayOf(1, 4, 16, 128, 1024)
     private val badgeCounts = intArrayOf(1, 2, 4, 8)
 
+    private val dddbVersions = intArrayOf(0, 1)
+    private val jsonVersions = intArrayOf(0, 1)
+
     private fun backupFile(format: BackupFormat): File {
         return context.getFileStreamPath("test.${format.extension}").also {
             // Truncate the file.
@@ -41,9 +44,9 @@ class BackupManagerTests {
         }
     }
 
-    private fun File.export(db: AppDatabase, options: ExportOptions, format: BackupFormat) {
+    private fun File.export(db: AppDatabase, options: ExportOptions, format: BackupFormat, version: Int) {
         outputStream().use {
-            BackupManager.export(it, BackupManager.createBackupData(db, options), format)
+            BackupManager.export(it, BackupManager.createBackupData(db, options), format, version)
         }
     }
 
@@ -55,12 +58,16 @@ class BackupManagerTests {
         BackupManager.deployImportData(data, options, db)
     }
 
-    private fun roundtripOnlyRecordsTestHelper(format: BackupFormat, size: Int) = useInMemoryDb(context) { db ->
+    private fun roundtripOnlyRecordsTestHelper(
+        format: BackupFormat,
+        size: Int,
+        exportVersion: Int
+    ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
         val records = insertAndGetRecords(db, size)
 
-        file.export(db, ExportOptions(exportBadges = false), format)
+        file.export(db, ExportOptions(exportBadges = false), format, exportVersion)
 
         db.clearAllTables()
         file.importAndDeploy(db, ImportOptions(importBadges = false, replaceBadges = false), format)
@@ -73,7 +80,8 @@ class BackupManagerTests {
     private suspend fun roundtripWithBadgesPreserve(
         format: BackupFormat,
         recordCount: Int,
-        badgeCount: Int
+        badgeCount: Int,
+        exportVersion: Int
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -84,7 +92,7 @@ class BackupManagerTests {
         insertBadges(db, badgeCount)
         insertBadgeRelations(db)
 
-        file.export(db, ExportOptions(exportBadges = true), format)
+        file.export(db, ExportOptions(exportBadges = true), format, exportVersion)
 
         db.clearAllTables()
 
@@ -107,7 +115,8 @@ class BackupManagerTests {
     private suspend fun roundtripWithBadgesReplace(
         format: BackupFormat,
         recordCount: Int,
-        badgeCount: Int
+        badgeCount: Int,
+        exportVersion: Int
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -119,7 +128,7 @@ class BackupManagerTests {
         val badgesToExport = badgeDao.getAllOrderByIdAsc()
         insertBadgeRelations(db, badgesToExport)
 
-        file.export(db, ExportOptions(exportBadges = true), format)
+        file.export(db, ExportOptions(exportBadges = true), format, exportVersion)
 
         db.clearAllTables()
         insertBadges(db, badgeCount, colorAddition = 1)
@@ -137,50 +146,62 @@ class BackupManagerTests {
 
     @Test
     fun roundtripOnlyRecords_dddb() {
-        for (recordCount in recordCounts) {
-            roundtripOnlyRecordsTestHelper(BackupFormat.DDDB, recordCount)
+        for (version in dddbVersions) {
+            for (recordCount in recordCounts) {
+                roundtripOnlyRecordsTestHelper(BackupFormat.DDDB, recordCount, version)
+            }
         }
     }
 
     @Test
     fun roundtripOnlyRecords_json() {
-        for (recordCount in recordCounts) {
-            roundtripOnlyRecordsTestHelper(BackupFormat.JSON, recordCount)
+        for (version in jsonVersions) {
+            for (recordCount in recordCounts) {
+                roundtripOnlyRecordsTestHelper(BackupFormat.JSON, recordCount, version)
+            }
         }
     }
 
     @Test
     fun roundtripWithBadges_dddb_preserve() = runTest {
-        for (recordCount in recordCounts) {
-            for (badgeCount in badgeCounts) {
-                roundtripWithBadgesPreserve(BackupFormat.DDDB, recordCount, badgeCount)
+        for (version in dddbVersions) {
+            for (recordCount in recordCounts) {
+                for (badgeCount in badgeCounts) {
+                    roundtripWithBadgesPreserve(BackupFormat.DDDB, recordCount, badgeCount, version)
+                }
             }
         }
     }
 
     @Test
     fun roundtripWithBadges_json_preserve() = runTest {
-        for (recordCount in recordCounts) {
-            for (badgeCount in badgeCounts) {
-                roundtripWithBadgesPreserve(BackupFormat.JSON, recordCount, badgeCount)
+        for (version in jsonVersions) {
+            for (recordCount in recordCounts) {
+                for (badgeCount in badgeCounts) {
+                    roundtripWithBadgesPreserve(BackupFormat.JSON, recordCount, badgeCount, version)
+                }
             }
         }
     }
 
     @Test
     fun roundtripWithBadges_dddb_replace() = runTest {
-        for (recordCount in recordCounts) {
-            for (badgeCount in badgeCounts) {
-                roundtripWithBadgesReplace(BackupFormat.DDDB, recordCount, badgeCount)
+        for (version in dddbVersions) {
+            for (recordCount in recordCounts) {
+                for (badgeCount in badgeCounts) {
+                    roundtripWithBadgesReplace(BackupFormat.DDDB, recordCount, badgeCount, version)
+                }
             }
         }
     }
 
     @Test
     fun roundtripWithBadges_json_replace() = runTest {
-        for (recordCount in recordCounts) {
-            for (badgeCount in badgeCounts) {
-                roundtripWithBadgesReplace(BackupFormat.JSON, recordCount, badgeCount)
+        for (version in jsonVersions) {
+            for (recordCount in recordCounts) {
+                for (badgeCount in badgeCounts) {
+                    roundtripWithBadgesReplace(BackupFormat.JSON, recordCount, badgeCount, version)
+                }
             }
         }
     }

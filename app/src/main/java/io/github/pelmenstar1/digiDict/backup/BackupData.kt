@@ -15,23 +15,26 @@ import kotlinx.serialization.Serializable
 data class BackupData(
     val records: Array<out Record>,
     val badges: Array<out RecordBadgeInfo>,
-    val badgeToMultipleRecordEntries: Array<out BackupBadgeToMultipleRecordEntry>
+    val badgeToMultipleRecordEntries: Array<out BackupBadgeToMultipleRecordEntry>,
+    val compatInfo: BackupCompatInfo = BackupCompatInfo.empty()
 ) {
     override fun equals(other: Any?) = equalsPattern(other) { o ->
         records.contentEquals(o.records) &&
                 badges.contentEquals(o.badges) &&
                 badgeToMultipleRecordEntries.contentEquals(o.badgeToMultipleRecordEntries)
+        compatInfo == o.compatInfo
     }
 
     override fun hashCode(): Int {
         var result = records.contentHashCode()
         result = result * 31 + badges.contentHashCode()
         result = result * 31 + badgeToMultipleRecordEntries.contentHashCode()
+        result = result * 31 + compatInfo.hashCode()
 
         return result
     }
 
     override fun toString(): String {
-        return "BackupData(records=${records.contentToString()}, badges=${badges.contentToString()}, recordToBadgeRelations=${badgeToMultipleRecordEntries.contentToString()})"
+        return "BackupData(records=${records.contentToString()}, badges=${badges.contentToString()}, recordToBadgeRelations=${badgeToMultipleRecordEntries.contentToString()}, compatInfo=$compatInfo)"
     }
 }

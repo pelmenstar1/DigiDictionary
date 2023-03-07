@@ -230,13 +230,14 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     fun <T : Any> emit(
         values: Array<out T>,
         serializer: BinarySerializer<in T>,
+        compatInfo: BinarySerializationCompatInfo,
         progressReporter: ProgressReporter? = null
     ) {
         val size = values.size
         emit(size)
 
         trackLoopProgressWith(progressReporter, size) { i ->
-            serializer.writeTo(this, values[i])
+            serializer.writeTo(this, values[i], compatInfo)
         }
     }
 

@@ -61,7 +61,7 @@ open class Record(
         val SERIALIZER_RESOLVER = BinarySerializerResolver<Record> {
             register<Record>(
                 version = 1,
-                write = { value ->
+                write = { value, _ ->
                     emit(value.expression)
                     emit(value.meaning)
                     emit(value.additionalNotes)

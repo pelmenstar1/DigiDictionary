@@ -23,12 +23,13 @@ private inline fun <R> wrapExceptions(block: () -> R): R {
 
 fun <TKeys : BinarySerializationSectionKeys<TKeys>> OutputStream.writeSerializationObjectData(
     data: BinarySerializationObjectData<TKeys>,
+    version: Int,
     progressReporter: ProgressReporter? = null,
     bufferSize: Int
 ) {
     wrapExceptions {
         val writer = PrimitiveValueWriter(this, bufferSize)
-        val encoder = BinarySerializationEncoder<TKeys>()
+        val encoder = BinarySerializationEncoder.createVersioned<TKeys>(version)
 
         trackProgressWith(progressReporter) {
             encoder.encode(data, writer, progressReporter)
