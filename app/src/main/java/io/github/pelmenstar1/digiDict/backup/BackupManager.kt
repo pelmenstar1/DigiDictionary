@@ -28,7 +28,7 @@ object BackupManager {
         put(BackupFormat.JSON, JsonDataImporter())
     }
 
-    val latestCompatInfo = BackupCompatInfo(newMeaningFormat = true)
+    val latestCompatInfo = BackupCompatInfo(newMeaningFormat = true, isUtf8Strings = true)
 
     fun createBackupData(
         appDatabase: AppDatabase,

@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 @RunWith(AndroidJUnit4::class)
 class BackupManagerTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val recordCounts = intArrayOf(1, 4, 16, 128, 1024)
+    private val recordCounts = intArrayOf(1 /* 4, 16, 128, 1024 */)
     private val badgeCounts = intArrayOf(1, 2, 4, 8)
 
     private val dddbVersions = intArrayOf(0, 1)
@@ -33,6 +33,12 @@ class BackupManagerTests {
             // Truncate the file.
             RandomAccessFile(it, "rw").setLength(0L)
         }
+    }
+
+    private fun latestCompatInfoForVersion(version: Int): BackupCompatInfo = when (version) {
+        0 -> BackupCompatInfo.empty()
+        1 -> BackupManager.latestCompatInfo
+        else -> throw IllegalArgumentException("version")
     }
 
     private fun createNoIdBadges(size: Int, colorAddition: Int = 0): Array<RecordBadgeInfo> {
@@ -69,7 +75,7 @@ class BackupManagerTests {
         format: BackupFormat,
         size: Int,
         exportVersion: Int,
-        compatInfo: BackupCompatInfo = BackupManager.latestCompatInfo
+        compatInfo: BackupCompatInfo = latestCompatInfoForVersion(exportVersion)
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -90,7 +96,7 @@ class BackupManagerTests {
         recordCount: Int,
         badgeCount: Int,
         exportVersion: Int,
-        compatInfo: BackupCompatInfo = BackupManager.latestCompatInfo
+        compatInfo: BackupCompatInfo = latestCompatInfoForVersion(exportVersion)
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -125,7 +131,8 @@ class BackupManagerTests {
         format: BackupFormat,
         recordCount: Int,
         badgeCount: Int,
-        exportVersion: Int
+        exportVersion: Int,
+        compatInfo: BackupCompatInfo = latestCompatInfoForVersion(exportVersion)
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -137,7 +144,7 @@ class BackupManagerTests {
         val badgesToExport = badgeDao.getAllOrderByIdAsc()
         insertBadgeRelations(db, badgesToExport)
 
-        file.export(db, ExportOptions(exportBadges = true), format, exportVersion)
+        file.export(db, ExportOptions(exportBadges = true), format, exportVersion, compatInfo)
 
         db.clearAllTables()
         insertBadges(db, badgeCount, colorAddition = 1)

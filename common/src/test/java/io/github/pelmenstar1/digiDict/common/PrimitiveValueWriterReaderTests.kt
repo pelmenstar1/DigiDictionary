@@ -51,7 +51,7 @@ class PrimitiveValueWriterReaderTests {
                         is ShortOperation -> emit(op.value)
                         is IntOperation -> emit(op.value)
                         is LongOperation -> emit(op.value)
-                        is StringOperation -> if (op.isUtf8) emitUtf8(op.value) else emitUtf16(op.value)
+                        is StringOperation -> emitString(op.value, op.isUtf8)
                         is IntArrayOperation -> emitArrayAndLength(op.value)
                     }
                 }
@@ -66,7 +66,7 @@ class PrimitiveValueWriterReaderTests {
                         is ShortOperation -> consumeShort()
                         is IntOperation -> consumeInt()
                         is LongOperation -> consumeLong()
-                        is StringOperation -> if (op.isUtf8) consumeStringUtf8() else consumeStringUtf16()
+                        is StringOperation -> consumeString(op.isUtf8)
                         is IntArrayOperation -> consumeIntArrayAndLength()
                     }
                 }

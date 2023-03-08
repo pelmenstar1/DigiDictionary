@@ -161,6 +161,14 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         }
     }
 
+    fun emitString(value: String, isUtf8: Boolean) {
+        if (isUtf8) {
+            emitUtf8(value)
+        } else {
+            emitUtf16(value)
+        }
+    }
+
     fun emit(ints: IntArray, start: Int, end: Int) {
         emitPrimitiveArray(ints, start, end, IntArray::get, ::emit)
     }

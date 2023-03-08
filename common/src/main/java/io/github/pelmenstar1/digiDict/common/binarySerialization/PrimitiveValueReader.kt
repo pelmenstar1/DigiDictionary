@@ -178,6 +178,8 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         return String(cb, 0, charLength)
     }
 
+    fun consumeString(isUtf8: Boolean): String = if (isUtf8) consumeStringUtf8() else consumeStringUtf16()
+
     fun consumeIntArray(dest: IntArray, start: Int, end: Int) {
         for (i in start until end) {
             dest[i] = consumeInt()
