@@ -24,18 +24,12 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
     // If there was no call to inputStream.read and buffer is effectively zeroed, it's -1 (default value).
     private var actualBufferLength = -1
 
-    // A cached reference to the char array which is used in consumeStringUtf8/16() to write a char data to it and create a string using this array.
-    // The size of the array is only extended when a string with bigger length than the array's one is requested.
-    // Outside the consumeStringUtf8/16() method, the array's content should be considered as garbage.
+    // A char array that is used as a temporary storage of chars to create a string from.
     private var charBuffer: CharArray? = null
 
+    // A byte array that is used as a temporary storage of bytes to create a string from when it's impossible to use
+    // byteBuffer.
     private var byteBufferForStrings: ByteArray? = null
-
-    fun consumeByte(): Byte {
-        invalidateBufferIfNecessary(minLength = 1)
-
-        return byteBuffer[consumedByteLength++]
-    }
 
     fun consumeShort(): Short {
         return consumeNumberPrimitiveInLong(byteCount = 2).toShort()
@@ -103,48 +97,62 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
         if (utf8ByteLength < remBytesInBuf) {
             result = String(buf, consumedBytes, utf8ByteLength, Charsets.UTF_8)
+
             consumedBytes += utf8ByteLength
         } else {
+            // If it's impossible to use the usual buffer, create an additional one with appropriate size,
+            // and try to read utf8ByteLength into it.
+
             var bufForStrings = byteBufferForStrings
             if (bufForStrings == null || utf8ByteLength > bufForStrings.size) {
                 bufForStrings = ByteArray(utf8ByteLength)
                 byteBufferForStrings = bufForStrings
             }
 
+            val input = inputStream
+
+            // Copy previously buffered data to the bufForStrings
             System.arraycopy(buf, consumedBytes, bufForStrings, 0, remBytesInBuf)
             var remBytesToRead = utf8ByteLength - remBytesInBuf
             var offset = remBytesInBuf
 
+            // Don't read into the buf and then copy bytes to bufForStrings - read immediately into the bufForStrings.
+            // buf content won't be used outside anyway while remBytesToRead >= bufSize.
             while (remBytesToRead >= bufSize) {
-                inputStream.readExact(bufForStrings, offset, length = bufSize)
+                input.readExact(bufForStrings, offset, bufSize)
 
                 offset += bufSize
                 remBytesToRead -= bufSize
             }
 
             if (remBytesToRead > 0) {
-                actualBufLength = inputStream.readAtLeast(
+                // Here we need to read into the buf and then copy data to bufForStrings because
+                // we don't use the whole content of the buf here and it might be used outside.
+                actualBufLength = input.readAtLeast(
                     buf,
                     offset = 0,
                     minLength = remBytesToRead,
                     maxLength = bufSize
                 )
 
+                // Copy from the start of buf to the tail of bufForStrings.
                 System.arraycopy(buf, 0, bufForStrings, offset, remBytesToRead)
-
-                consumedBytes = remBytesToRead
             } else {
-                consumedBytes = 0
-
                 // Buffer must be invalidated on the next read.
                 actualBufLength = -1
             }
 
+            // We "consumed" those bytes that we haven't read.
+            consumedBytes = remBytesToRead
+
             result = String(bufForStrings, 0, utf8ByteLength, Charsets.UTF_8)
+
+            // actualBufLength might be changed.
+            actualBufferLength = actualBufLength
         }
 
+        // Sync with the field.
         consumedByteLength = consumedBytes
-        actualBufferLength = actualBufLength
 
         return result
     }
