@@ -13,12 +13,9 @@ import kotlin.math.min
  * Because of its stream nature, there's no going back and the cursor can't be moved forward or backward.
  *
  * The reader is already optimized for buffer reading, thus a reasonable buffer size should be specified in constructor.
- * There are several limitations imposed on buffer size:
- * - It should be greater than or equals to 8.
- * - It should be even.
  */
 class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int) {
-    private val byteBufferArray = ByteArray(bufferSize)
+    private val byteBuffer = ByteArray(bufferSize)
 
     // Stores the amount of bytes that was consumed (read) in byteBuffer. The value should be even.
     private var consumedByteLength = 0
@@ -27,61 +24,25 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
     // If there was no call to inputStream.read and buffer is effectively zeroed, it's -1 (default value).
     private var actualBufferLength = -1
 
-    // A cached reference to the char array which is used in consumeStringUtf16() to write a char data to it and create a string using this array.
+    // A cached reference to the char array which is used in consumeStringUtf8/16() to write a char data to it and create a string using this array.
     // The size of the array is only extended when a string with bigger length than the array's one is requested.
-    // Outside the consumeStringUtf16() method, the array's content should be considered as garbage.
+    // Outside the consumeStringUtf8/16() method, the array's content should be considered as garbage.
     private var charBuffer: CharArray? = null
 
-    private var byteBuffer: ByteBuffer? = null
-    private var byteBufferAsCharHolder: CharBuffer? = null
-    private var byteBufferAsIntHolder: IntBuffer? = null
+    private var byteBufferForStrings: ByteArray? = null
 
-    init {
-        when {
-            bufferSize < 8 -> throw IllegalArgumentException("bufferSize should be greater than or equals to 8")
-            bufferSize % 2 != 0 -> throw IllegalArgumentException("bufferSize should be even")
-        }
-    }
+    fun consumeByte(): Byte {
+        invalidateBufferIfNecessary(minLength = 1)
 
-    private fun getByteBuffer(): ByteBuffer {
-        return getLazyValue(
-            byteBuffer,
-            {
-                ByteBuffer.wrap(byteBufferArray).apply {
-                    order(ByteOrder.LITTLE_ENDIAN)
-                }
-            },
-            { byteBuffer = it }
-        )
-    }
-
-    private fun getByteBufferAsChar(): CharBuffer {
-        return getLazyValue(
-            byteBufferAsCharHolder,
-            { getByteBuffer().asCharBuffer() },
-            { byteBufferAsCharHolder = it }
-        )
-    }
-
-    private fun getByteBufferAsInt(): IntBuffer {
-        return getLazyValue(
-            byteBufferAsIntHolder,
-            { getByteBuffer().asIntBuffer() },
-            { byteBufferAsIntHolder = it }
-        )
+        return byteBuffer[consumedByteLength++]
     }
 
     fun consumeShort(): Short {
-        // Short (2 bytes) consumption is special because as consumedByteLength should be even and buffer size is greater than or equals to 8,
-        // there can't be cross-buffer read. The logic can be simpler comparing to general consumePrimitive.
-        invalidateBufferIfNecessary(minLength = 2)
+        return consumeNumberPrimitiveInLong(byteCount = 2).toShort()
+    }
 
-        val consumedBytes = consumedByteLength
-
-        val result = byteBufferArray.readShort(consumedBytes)
-        consumedByteLength = consumedBytes + 2
-
-        return result
+    private fun consumeShortAsUnsignedInt(): Int {
+        return consumeShort().toInt() and 0xFFFF
     }
 
     fun consumeInt() = consumeNumberPrimitiveInLong(byteCount = 4).toInt()
@@ -91,7 +52,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         // Locals should be assigned after buffer invalidation.
         invalidateBufferIfNecessary(minLength = byteCount)
 
-        val bb = byteBufferArray
+        val bb = byteBuffer
         val bufSize = bb.size
         val input = inputStream
         var actualBufLength = actualBufferLength
@@ -124,8 +85,72 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         return result
     }
 
+    fun consumeStringUtf8(): String {
+        val utf8ByteLength = consumeShortAsUnsignedInt()
+
+        // It saves a couple of allocations.
+        if (utf8ByteLength == 0) {
+            return ""
+        }
+
+        val buf = byteBuffer
+        val bufSize = buf.size
+        var actualBufLength = actualBufferLength
+        var consumedBytes = consumedByteLength
+        val remBytesInBuf = actualBufLength - consumedBytes
+
+        val result: String
+
+        if (utf8ByteLength < remBytesInBuf) {
+            result = String(buf, consumedBytes, utf8ByteLength, Charsets.UTF_8)
+            consumedBytes += utf8ByteLength
+        } else {
+            var bufForStrings = byteBufferForStrings
+            if (bufForStrings == null || utf8ByteLength > bufForStrings.size) {
+                bufForStrings = ByteArray(utf8ByteLength)
+                byteBufferForStrings = bufForStrings
+            }
+
+            System.arraycopy(buf, consumedBytes, bufForStrings, 0, remBytesInBuf)
+            var remBytesToRead = utf8ByteLength - remBytesInBuf
+            var offset = remBytesInBuf
+
+            while (remBytesToRead >= bufSize) {
+                inputStream.readExact(bufForStrings, offset, length = bufSize)
+
+                offset += bufSize
+                remBytesToRead -= bufSize
+            }
+
+            if (remBytesToRead > 0) {
+                actualBufLength = inputStream.readAtLeast(
+                    buf,
+                    offset = 0,
+                    minLength = remBytesToRead,
+                    maxLength = bufSize
+                )
+
+                System.arraycopy(buf, 0, bufForStrings, offset, remBytesToRead)
+
+                consumedBytes = remBytesToRead
+            } else {
+                consumedBytes = 0
+
+                // Buffer must be invalidated on the next read.
+                actualBufLength = -1
+            }
+
+            result = String(bufForStrings, 0, utf8ByteLength, Charsets.UTF_8)
+        }
+
+        consumedByteLength = consumedBytes
+        actualBufferLength = actualBufLength
+
+        return result
+    }
+
     fun consumeStringUtf16(): String {
-        val charLength = consumeShort().toInt() and 0xFFFF
+        val charLength = consumeShortAsUnsignedInt()
 
         // It saves a couple of allocations.
         if (charLength == 0) {
@@ -138,32 +163,17 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
             charBuffer = cb
         }
 
-        consumeCharArray(cb, 0, charLength)
+        for (i in 0 until charLength) {
+            cb[i] = consumeShort().toInt().toChar()
+        }
+
         return String(cb, 0, charLength)
     }
 
-    fun consumeCharArray(dest: CharArray, start: Int, end: Int) {
-        // Consumption of char array is always "aligned" as consumedByteLength is always even.
-        consumePrimitiveArrayAligned(dest, start, end, elementSize = 2, getByteBufferAsChar(), CharBuffer::get)
-    }
-
     fun consumeIntArray(dest: IntArray, start: Int, end: Int) {
-        consumePrimitiveArray(
-            dest,
-            start,
-            end,
-            elementSize = 4,
-            this::consumeIntArrayAligned,
-            this::consumeIntArrayNonAligned
-        )
-    }
-
-    private fun consumeIntArrayAligned(dest: IntArray, start: Int, end: Int) {
-        consumePrimitiveArrayAligned(dest, start, end, elementSize = 4, getByteBufferAsInt(), IntBuffer::get)
-    }
-
-    private fun consumeIntArrayNonAligned(dest: IntArray, start: Int, end: Int) {
-        consumePrimitiveArrayNonAligned(dest, start, end, IntArray::set, this::consumeInt)
+        for (i in start until end) {
+            dest[i] = consumeInt()
+        }
     }
 
     fun consumeIntArray(length: Int): IntArray {
@@ -174,115 +184,6 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
         val length = consumeInt()
 
         return consumeIntArray(length)
-    }
-
-    private inline fun <TArray> consumePrimitiveArray(
-        dest: TArray,
-        start: Int,
-        end: Int,
-        elementSize: Int,
-        consumeAligned: (TArray, Int, Int) -> Unit,
-        consumeNonAligned: (TArray, Int, Int) -> Unit,
-    ) {
-        if (consumedByteLength % elementSize == 0) {
-            consumeAligned(dest, start, end)
-        } else {
-            consumeNonAligned(dest, start, end)
-        }
-    }
-
-    /**
-     * A builder for creating a function that consumes a primitive array
-     * when [consumedByteLength] is not a multiple of count of bytes required to store [TValue].
-     *
-     * The performance of the implementation can be improved by using [IntBuffer]
-     * and another things used in [consumePrimitiveArrayAligned] but the effort is probably not worth it.
-     */
-    private inline fun <TValue, TArray> consumePrimitiveArrayNonAligned(
-        dest: TArray,
-        start: Int,
-        end: Int,
-        setValue: TArray.(Int, TValue) -> Unit,
-        consumePrimitive: () -> TValue
-    ) {
-        for (i in start until end) {
-            dest.setValue(i, consumePrimitive())
-        }
-    }
-
-    /**
-     * A builder for creating a function that consumes a primitive array when [consumedByteLength] is a multiple of [elementSize].
-     * If [consumedByteLength] is not a multiple of [elementSize], the result will be wrong.
-     */
-    private inline fun <TArray : Any, TBuffer : Buffer> consumePrimitiveArrayAligned(
-        dest: TArray,
-        start: Int,
-        end: Int,
-        elementSize: Int,
-        elementBuffer: TBuffer,
-        getArray: TBuffer.(TArray, start: Int, length: Int) -> Unit
-    ) {
-        val length = end - start
-        val byteLength = length * elementSize
-
-        // Locals should be assigned after buffer invalidation.
-        invalidateBufferIfNecessary(minLength = byteLength)
-
-        val bb = byteBufferArray
-        val bufSize = bb.size
-        val bufSizeAsElement = bufSize / elementSize
-        val alignedBufSize = bufSizeAsElement * elementSize
-
-        val input = inputStream
-        var actualBufLength = actualBufferLength
-        var consumedBytes = consumedByteLength
-        var elemPos = start
-
-        val remCachedBytes = actualBufLength - consumedBytes
-
-        val prefixByteLength = min(byteLength, remCachedBytes)
-        val prefixElementLength = prefixByteLength / elementSize
-
-        elementBuffer.position(consumedBytes / elementSize)
-        elementBuffer.getArray(dest, start, prefixElementLength)
-        elemPos += prefixElementLength
-        consumedBytes += prefixByteLength
-
-        // If we can't read a full content of a string from existing buffer, we should read from InputStream to fulfill char buffer.
-        if (elemPos != end) {
-            var remElements: Int
-            while (true) {
-                remElements = end - elemPos
-
-                // Bail out if we can't read a full byte buffer.
-                if (remElements < bufSizeAsElement) {
-                    break
-                }
-
-                input.readExact(bb, 0, alignedBufSize)
-
-                elementBuffer.position(0)
-                elementBuffer.getArray(dest, elemPos, bufSizeAsElement)
-
-                elemPos += bufSizeAsElement
-            }
-
-            // Read from InputStream if some chars are still remaining.
-            if (remElements > 0) {
-                val remElementsAsByte = remElements * elementSize
-                actualBufLength = input.readAtLeast(bb, 0, minLength = remElementsAsByte, maxLength = bufSize)
-
-                elementBuffer.position(0)
-                elementBuffer.getArray(dest, elemPos, remElements)
-
-                consumedBytes = remElementsAsByte
-            } else {
-                consumedBytes = 0
-            }
-        }
-
-        consumedByteLength = consumedBytes
-        actualBufferLength = actualBufLength
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -302,7 +203,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
     }
 
     private fun invalidateBufferIfNecessary(minLength: Int) {
-        val bb = byteBufferArray
+        val bb = byteBuffer
         val bufSize = bb.size
 
         // The buffer should be invalidated when either no data was written to it or all the bytes in the buffer is consumed.
