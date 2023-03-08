@@ -8,6 +8,7 @@ import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.backup.BackupManager
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
+import io.github.pelmenstar1.digiDict.common.debugLog
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
@@ -22,7 +23,7 @@ import kotlin.test.assertEquals
 @RunWith(AndroidJUnit4::class)
 class BackupManagerTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val recordCounts = intArrayOf(1 /* 4, 16, 128, 1024 */)
+    private val recordCounts = intArrayOf(1, 4, 16, 128, 1024)
     private val badgeCounts = intArrayOf(1, 2, 4, 8)
 
     private val dddbVersions = intArrayOf(0, 1)
@@ -89,6 +90,10 @@ class BackupManagerTests {
         val importedRecordsInDb = getAllRecordsNoIdInSet(db)
 
         assertEquals(records, importedRecordsInDb)
+
+        debugLog(TAG) {
+            info("(only records) format=${format.name} version=$exportVersion compatInfo=${compatInfo} records length = $size file length = ${file.length()} bytes")
+        }
     }
 
     private suspend fun roundtripWithBadgesPreserve(
@@ -125,6 +130,10 @@ class BackupManagerTests {
         assertContentEqualsNoId(noIdNewBadges, importedBadges)
 
         validateBadgeRelations(db, importedBadges)
+
+        debugLog(TAG) {
+            info("(records with badges) format=${format.name} version = $exportVersion compatInfo=${compatInfo} records length = $recordCount badges length = $badgeCount file length = ${file.length()} bytes")
+        }
     }
 
     private suspend fun roundtripWithBadgesReplace(
@@ -424,5 +433,9 @@ class BackupManagerTests {
                 }
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "BackupManagerTests"
     }
 }
