@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import io.github.pelmenstar1.digiDict.backup.BackupCompatInfo
 import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
 import io.github.pelmenstar1.digiDict.common.equalsPattern
 import kotlinx.serialization.Serializable
@@ -60,17 +61,21 @@ open class Record(
         val SERIALIZER_RESOLVER = BinarySerializerResolver<Record> {
             register<Record>(
                 version = 1,
-                write = { value, _ ->
-                    emit(value.expression)
-                    emit(value.meaning)
-                    emit(value.additionalNotes)
+                write = { value, compatInfo ->
+                    val isUtf8 = compatInfo[BackupCompatInfo.IS_UTF8_STRINGS_INDEX]
+
+                    emitString(value.expression, isUtf8)
+                    emitString(value.meaning, isUtf8)
+                    emitString(value.additionalNotes, isUtf8)
                     emit(value.score)
                     emit(value.epochSeconds)
                 },
-                read = {
-                    val expression = consumeStringUtf16()
-                    val meaning = consumeStringUtf16()
-                    val additionalNotes = consumeStringUtf16()
+                read = { compatInfo ->
+                    val isUtf8 = compatInfo[BackupCompatInfo.IS_UTF8_STRINGS_INDEX]
+
+                    val expression = consumeString(isUtf8)
+                    val meaning = consumeString(isUtf8)
+                    val additionalNotes = consumeString(isUtf8)
                     val score = consumeInt()
                     val epochSeconds = consumeLong()
 

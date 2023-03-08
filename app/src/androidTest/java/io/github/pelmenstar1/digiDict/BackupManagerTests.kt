@@ -8,6 +8,7 @@ import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.backup.BackupManager
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
+import io.github.pelmenstar1.digiDict.common.debugLog
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
@@ -33,6 +34,12 @@ class BackupManagerTests {
             // Truncate the file.
             RandomAccessFile(it, "rw").setLength(0L)
         }
+    }
+
+    private fun latestCompatInfoForVersion(version: Int): BackupCompatInfo = when (version) {
+        0 -> BackupCompatInfo.empty()
+        1 -> BackupManager.latestCompatInfo
+        else -> throw IllegalArgumentException("version")
     }
 
     private fun createNoIdBadges(size: Int, colorAddition: Int = 0): Array<RecordBadgeInfo> {
@@ -69,7 +76,7 @@ class BackupManagerTests {
         format: BackupFormat,
         size: Int,
         exportVersion: Int,
-        compatInfo: BackupCompatInfo = BackupManager.latestCompatInfo
+        compatInfo: BackupCompatInfo = latestCompatInfoForVersion(exportVersion)
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -83,6 +90,10 @@ class BackupManagerTests {
         val importedRecordsInDb = getAllRecordsNoIdInSet(db)
 
         assertEquals(records, importedRecordsInDb)
+
+        debugLog(TAG) {
+            info("(only records) format=${format.name} version=$exportVersion compatInfo=${compatInfo} records length = $size file length = ${file.length()} bytes")
+        }
     }
 
     private suspend fun roundtripWithBadgesPreserve(
@@ -90,7 +101,7 @@ class BackupManagerTests {
         recordCount: Int,
         badgeCount: Int,
         exportVersion: Int,
-        compatInfo: BackupCompatInfo = BackupManager.latestCompatInfo
+        compatInfo: BackupCompatInfo = latestCompatInfoForVersion(exportVersion)
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -119,13 +130,18 @@ class BackupManagerTests {
         assertContentEqualsNoId(noIdNewBadges, importedBadges)
 
         validateBadgeRelations(db, importedBadges)
+
+        debugLog(TAG) {
+            info("(records with badges) format=${format.name} version = $exportVersion compatInfo=${compatInfo} records length = $recordCount badges length = $badgeCount file length = ${file.length()} bytes")
+        }
     }
 
     private suspend fun roundtripWithBadgesReplace(
         format: BackupFormat,
         recordCount: Int,
         badgeCount: Int,
-        exportVersion: Int
+        exportVersion: Int,
+        compatInfo: BackupCompatInfo = latestCompatInfoForVersion(exportVersion)
     ) = useInMemoryDb(context) { db ->
         val file = backupFile(format)
 
@@ -137,7 +153,7 @@ class BackupManagerTests {
         val badgesToExport = badgeDao.getAllOrderByIdAsc()
         insertBadgeRelations(db, badgesToExport)
 
-        file.export(db, ExportOptions(exportBadges = true), format, exportVersion)
+        file.export(db, ExportOptions(exportBadges = true), format, exportVersion, compatInfo)
 
         db.clearAllTables()
         insertBadges(db, badgeCount, colorAddition = 1)
@@ -417,5 +433,9 @@ class BackupManagerTests {
                 }
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "BackupManagerTests"
     }
 }
