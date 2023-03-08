@@ -23,12 +23,12 @@ class JsonDataExporter : DataExporter {
 
             when (version) {
                 0 -> {
-                    wrappedData = data
-                    serializer = BackupData.serializer() as KSerializer<Any>
-                }
-                1 -> {
                     wrappedData = JsonBackupData0(data.records, data.badges, data.badgeToMultipleRecordEntries)
                     serializer = JsonBackupData0.serializer() as KSerializer<Any>
+                }
+                1 -> {
+                    wrappedData = data
+                    serializer = BackupData.serializer() as KSerializer<Any>
                 }
                 else -> throw IllegalArgumentException("Invalid version ($version)")
             }
