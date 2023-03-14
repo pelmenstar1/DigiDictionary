@@ -15,10 +15,11 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
         RemoteDictionaryProviderStats::class,
         RecordBadgeInfo::class,
         RecordToBadgeRelation::class,
-        EventInfo::class
+        EventInfo::class,
+        WordQueueEntry::class
     ],
     exportSchema = true,
-    version = 11,
+    version = 12,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -111,6 +112,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recordBadgeDao(): RecordBadgeDao
     abstract fun recordToBadgeRelationDao(): RecordToBadgeRelationDao
     abstract fun eventDao(): EventDao
+    abstract fun wordQueueDao(): WordQueueDao
 
     companion object {
         private var singleton: AppDatabase? = null
