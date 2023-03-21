@@ -220,4 +220,12 @@
             android:id="@+id/action_eventInfoRecordsFragment_viewRecordFragment"
             app:destination="@id/viewRecordFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/wordQueueFragment"
+        android:name="io.github.pelmenstar1.digiDict.ui.wordQueue.WordQueueFragment">
+        <action
+            android:id="@+id/action_wordQueueFragment_to_addEditRecordFragment"
+            app:destination="@id/addEditRecordFragment" />
+    </fragment>
 </navigation>

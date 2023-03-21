@@ -274,4 +274,10 @@
     <string name="eventInfo_duration">Duration</string>
     <string name="eventInfo_totalRecordsAdded">Total records added</string>
     <string name="eventInfo_showRecords">Show records</string>
+
+    <!-- Word queue -->
+    <string name="wordQueue_title">Queue</string>
+    <string name="wordQueue_addMeaning">Add a meaning</string>
+    <string name="wordQueue_removeFromQueue">Remove from the queue</string>
+    <string name="wordQueue_failedToRemoveFromQueue">Failed to remove the entry from the queue</string>
 </resources>

@@ -86,6 +86,11 @@ class AppModule {
     }
 
     @Provides
+    fun provideWordQueueDao(appDatabase: AppDatabase): WordQueueDao {
+        return appDatabase.wordQueueDao()
+    }
+
+    @Provides
     fun provideCommonStatsProvider(
         appDatabase: AppDatabase
     ): CommonStatsProvider {

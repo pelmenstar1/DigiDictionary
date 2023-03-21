@@ -65,4 +65,9 @@
     <dimen name="manageEvents_itemDividerStrokeWidth">1dp</dimen>
 
     <dimen name="eventInfo_propertyViewMarginTop">10dp</dimen>
+
+    <dimen name="wordQueueCard_radius">10dp</dimen>
+    <dimen name="wordQueueCard_wordViewStartMargin">10dp</dimen>
+    <dimen name="wordQueueCard_horizontalMargin">10dp</dimen>
+    <dimen name="wordQueueCard_bottomMargin">7dp</dimen>
 </resources>
