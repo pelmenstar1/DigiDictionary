@@ -32,6 +32,8 @@ import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.ResourcesAddRemot
 import io.github.pelmenstar1.digiDict.ui.misc.ResourcesRecordSortTypeStringFormatter
 import io.github.pelmenstar1.digiDict.ui.startEditEvent.ResourcesStartEditEventErrorStringFormatter
 import io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventError
+import io.github.pelmenstar1.digiDict.ui.wordQueue.addWordDialog.AddWordToQueueDialogError
+import io.github.pelmenstar1.digiDict.ui.wordQueue.addWordDialog.ResourcesAddWordToQueueDialogErrorStringFormatter
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import javax.inject.Singleton
@@ -135,6 +137,11 @@ class AppModule {
     @Provides
     fun provideStartEditEventErrorStringFormatter(@ApplicationContext context: Context): StringFormatter<StartEditEventError> {
         return ResourcesStartEditEventErrorStringFormatter(context)
+    }
+
+    @Provides
+    fun provideAddWordToQueueDialogErrorStringFormatter(@ApplicationContext context: Context): StringFormatter<AddWordToQueueDialogError> {
+        return ResourcesAddWordToQueueDialogErrorStringFormatter(context)
     }
 
     @Provides

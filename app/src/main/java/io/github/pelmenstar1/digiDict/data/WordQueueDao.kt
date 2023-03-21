@@ -10,6 +10,9 @@ interface WordQueueDao {
     @Query("SELECT * FROM word_queue")
     fun getAllFlow(): Flow<Array<WordQueueEntry>>
 
+    @Query("SELECT word FROM word_queue")
+    suspend fun getAllWords(): Array<String>
+
     @Insert
     suspend fun insert(entry: WordQueueEntry)
 

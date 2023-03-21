@@ -107,6 +107,19 @@ class DataLoadStateManager<T>(val logTag: String) {
     }
 }
 
+/**
+ * Returns the value of the first success state emitted by the flow.
+ */
 suspend fun <T> Flow<DataLoadState<T>>.firstSuccess(): T {
-    return filterIsInstance<DataLoadState.Success<T>>().first().value
+    return (first { it is DataLoadState.Success<T> } as DataLoadState.Success<T>).value
+}
+
+/**
+ * Returns the value of most recent state emitted by the flow if it's of type [DataLoadState.Success].
+ * Otherwise returns `null`.
+ */
+fun <T> SharedFlow<DataLoadState<T>>.tryGetSuccess(): T? {
+    val state = replayCache.getOrNull(0)
+
+    return (state as? DataLoadState.Success<T>?)?.value
 }

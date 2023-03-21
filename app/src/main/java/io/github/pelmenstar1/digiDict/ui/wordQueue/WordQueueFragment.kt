@@ -12,8 +12,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.tryGetSuccess
 import io.github.pelmenstar1.digiDict.data.WordQueueEntry
 import io.github.pelmenstar1.digiDict.databinding.FragmentWordQueueBinding
+import io.github.pelmenstar1.digiDict.ui.wordQueue.addWordDialog.AddWordToQueueDialogFragment
 
 @AndroidEntryPoint
 class WordQueueFragment : Fragment() {
@@ -23,7 +25,9 @@ class WordQueueFragment : Fragment() {
         val vm = viewModel
 
         val binding = FragmentWordQueueBinding.inflate(inflater, container, false)
+
         val stateContainer = binding.root
+        val addButton = binding.wordQueueAddButton
         val recyclerView = binding.wordQueueRecyclerView
 
         showSnackbarEventHandlerOnError(
@@ -40,16 +44,31 @@ class WordQueueFragment : Fragment() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(context)
 
+        addButton.setOnClickListener { showAddToQueueDialog() }
+
         stateContainer.setupLoadStateFlow(lifecycleScope, vm) {
+            /*
             adapter.submitItems(
                 arrayOf(
                     WordQueueEntry(id = 0, word = "Word 1"),
                     WordQueueEntry(id = 1, word = "Word 2")
                 )
             )
+
+             */
+
+            adapter.submitItems(it)
         }
 
         return stateContainer
+    }
+
+    private fun showAddToQueueDialog() {
+        val dialog = AddWordToQueueDialogFragment().apply {
+            cachedEntries = viewModel.dataStateFlow.tryGetSuccess()
+        }
+
+        dialog.show(childFragmentManager, null)
     }
 
     private fun navigateToAddEditRecord(entry: WordQueueEntry) {

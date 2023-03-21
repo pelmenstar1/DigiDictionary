@@ -280,4 +280,8 @@
     <string name="wordQueue_addMeaning">Add a meaning</string>
     <string name="wordQueue_removeFromQueue">Remove from the queue</string>
     <string name="wordQueue_failedToRemoveFromQueue">Failed to remove the entry from the queue</string>
+
+    <string name="addWordToQueue_wordEditTextHint">Word</string>
+    <string name="addWordToQueue_failedToAdd">Failed to add the entry to the queue</string>
+    <string name="addWordToQueue_wordExistsError">The queue already has such word</string>
 </resources>
