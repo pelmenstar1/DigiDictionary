@@ -1,6 +1,8 @@
 package io.github.pelmenstar1.digiDict.ui.wordQueue
 
 import android.content.Context
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View.OnClickListener
@@ -12,6 +14,7 @@ import androidx.cardview.widget.CardView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
+import io.github.pelmenstar1.digiDict.common.android.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
 import io.github.pelmenstar1.digiDict.data.WordQueueEntry
 
@@ -29,6 +32,9 @@ class WordQueueCard(
         val res = context.resources
 
         radius = res.getDimension(R.dimen.wordQueueCard_radius)
+
+        // Drawable! to Drawable cast is safe as card's background can't be null.
+        background = wrapBackgroundWithSelectable(context, background)
 
         addView(LinearLayout(context).apply {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
@@ -56,10 +62,12 @@ class WordQueueCard(
                     null,
                     com.google.android.material.R.attr.materialIconButtonStyle
                 ).apply {
-                    layoutParams =
-                        LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
-                            gravity = Gravity.CENTER_HORIZONTAL
-                        }
+                    layoutParams = LinearLayout.LayoutParams(
+                        LayoutParams.WRAP_CONTENT,
+                        LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        gravity = Gravity.CENTER_HORIZONTAL
+                    }
 
                     setIconResource(R.drawable.ic_close)
                     setIconTintResource(R.color.color_on_primary)
@@ -86,5 +94,17 @@ class WordQueueCard(
 
     private fun createViewOnClickListener(listener: (WordQueueEntry) -> Unit) = OnClickListener {
         listener(entry!!)
+    }
+
+    companion object {
+        private fun wrapBackgroundWithSelectable(context: Context, currentBackground: Drawable): Drawable {
+            val selectableDrawable = context.getSelectableItemBackground()
+
+            return if (selectableDrawable != null) {
+                LayerDrawable(arrayOf(currentBackground, selectableDrawable))
+            } else {
+                currentBackground
+            }
+        }
     }
 }
