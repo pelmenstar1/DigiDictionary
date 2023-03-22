@@ -223,7 +223,8 @@
 
     <fragment
         android:id="@+id/wordQueueFragment"
-        android:name="io.github.pelmenstar1.digiDict.ui.wordQueue.WordQueueFragment">
+        android:name="io.github.pelmenstar1.digiDict.ui.wordQueue.WordQueueFragment"
+        android:label="@string/wordQueue_title">
         <action
             android:id="@+id/action_wordQueueFragment_to_addEditRecordFragment"
             app:destination="@id/addEditRecordFragment" />

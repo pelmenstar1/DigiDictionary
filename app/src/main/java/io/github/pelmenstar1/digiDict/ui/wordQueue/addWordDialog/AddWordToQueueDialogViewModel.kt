@@ -6,8 +6,11 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.ValidityFlow
 import io.github.pelmenstar1.digiDict.common.android.viewModelAction
+import io.github.pelmenstar1.digiDict.common.containsLetterOrDigit
+import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.data.WordQueueDao
 import io.github.pelmenstar1.digiDict.data.WordQueueEntry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AddWordToQueueDialogViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val queueDao: WordQueueDao
+    private val queueDao: WordQueueDao,
+    private val recordDao: RecordDao
 ) : ViewModel() {
     private var isCheckWordJobStarted = false
 
@@ -53,7 +57,7 @@ class AddWordToQueueDialogViewModel @Inject constructor(
         if (!isCheckWordJobStarted) {
             isCheckWordJobStarted = true
 
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.Default) {
                 // Either allWords or allWordEntries should be non-null
                 var allWords: Array<String>? = null
                 val allWordEntries = cachedWordEntries
@@ -62,16 +66,24 @@ class AddWordToQueueDialogViewModel @Inject constructor(
                     allWords = queueDao.getAllWords()
                 }
 
+                val recordsExpressions = recordDao.getAllExpressions().also {
+                    // Sort to make binary search work.
+                    it.sort()
+                }
+
                 wordFlow.collect { word ->
-                    val error = if (word.isBlank()) {
-                        AddWordToQueueDialogError.EMPTY_TEXT
-                    } else {
-                        val trimmedWord = word.trim()
+                    val trimmedWord = word.trim()
 
-                        val containsWord =
-                            allWords?.contains(trimmedWord) ?: allWordEntries!!.any { it.word == trimmedWord }
+                    val error = when {
+                        word.isEmpty() -> AddWordToQueueDialogError.EMPTY_TEXT
+                        !word.containsLetterOrDigit() -> AddWordToQueueDialogError.WORD_NO_LETTER_OR_DIGIT
 
-                        if (containsWord) AddWordToQueueDialogError.WORD_EXISTS else null
+                        // If allWords is non-null, checks whether the array contains trimmedWord
+                        // Otherwise, checks whether allWordEntries contains trimmedWord.
+                        allWords?.contains(trimmedWord) ?: allWordEntries!!.any { it.word == trimmedWord } ->
+                            AddWordToQueueDialogError.WORD_EXISTS
+                        recordsExpressions.binarySearch(trimmedWord) >= 0 -> AddWordToQueueDialogError.RECORD_EXPRESSION_EXISTS
+                        else -> null
                     }
 
                     validity.mutate {

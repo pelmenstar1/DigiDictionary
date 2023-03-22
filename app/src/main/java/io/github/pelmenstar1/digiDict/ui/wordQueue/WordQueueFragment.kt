@@ -47,16 +47,6 @@ class WordQueueFragment : Fragment() {
         addButton.setOnClickListener { showAddToQueueDialog() }
 
         stateContainer.setupLoadStateFlow(lifecycleScope, vm) {
-            /*
-            adapter.submitItems(
-                arrayOf(
-                    WordQueueEntry(id = 0, word = "Word 1"),
-                    WordQueueEntry(id = 1, word = "Word 2")
-                )
-            )
-
-             */
-
             adapter.submitItems(it)
         }
 

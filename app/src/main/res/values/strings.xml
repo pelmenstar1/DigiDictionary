@@ -284,4 +284,6 @@
     <string name="addWordToQueue_wordEditTextHint">Word</string>
     <string name="addWordToQueue_failedToAdd">Failed to add the entry to the queue</string>
     <string name="addWordToQueue_wordExistsError">The queue already has such word</string>
+    <string name="addWordToQueue_recordExprExistsError">There\'s already a record with such expression</string>
+    <string name="addWordToQueue_noLetterOrDigitError">Word should contain at least one letter or digit.</string>
 </resources>

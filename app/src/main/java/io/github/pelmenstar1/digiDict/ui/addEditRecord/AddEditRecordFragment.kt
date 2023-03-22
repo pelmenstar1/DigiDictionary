@@ -46,8 +46,6 @@ class AddEditRecordFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val navController = findNavController()
-
         val vm = viewModel
         val recordId = args.recordId
 
@@ -57,7 +55,7 @@ class AddEditRecordFragment : Fragment() {
         vm.currentRecordId = recordId
         args.initialExpression?.also { vm.expression = it }
 
-        popBackStackOnSuccess(vm.addOrEditAction, navController)
+        popBackStackOnSuccess(vm.addOrEditAction, findNavController())
         showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
 
         // If there's no 'current record', currentRecordStateFlow shouldn't be collect at all

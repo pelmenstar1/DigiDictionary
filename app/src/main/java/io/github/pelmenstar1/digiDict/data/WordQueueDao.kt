@@ -18,4 +18,7 @@ interface WordQueueDao {
 
     @Query("DELETE FROM word_queue WHERE id=:id")
     suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM word_queue WHERE word=:word")
+    suspend fun deleteByWord(word: String)
 }

@@ -25,6 +25,7 @@ import javax.inject.Inject
 class AddEditRecordViewModel @Inject constructor(
     private val recordDao: RecordDao,
     private val recordToBadgeRelationDao: RecordToBadgeRelationDao,
+    private val wordQueueDao: WordQueueDao,
     private val listAppWidgetUpdater: AppWidgetUpdater,
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
     private val savedStateHandle: SavedStateHandle
@@ -150,6 +151,10 @@ class AddEditRecordViewModel @Inject constructor(
                     currentEpochSeconds
                 )
             )
+
+            // Try to remove the entry from the word queue on addition because
+            // only in that cas there might be an entry with word=expr.
+            wordQueueDao.deleteByWord(expr)
 
             recordId = recordDao.getRecordIdByExpression(expr)!!
         }

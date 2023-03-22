@@ -12,17 +12,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WordQueueViewModel @Inject constructor(
-    private val dao: WordQueueDao
+    private val queueDao: WordQueueDao
 ) : SingleDataLoadStateViewModel<Array<WordQueueEntry>>(TAG) {
     override val canRefreshAfterSuccess: Boolean
         get() = true
 
     val removeFromQueueAction = viewModelAction(TAG) { id: Int ->
-        dao.deleteById(id)
+        queueDao.deleteById(id)
     }
 
     override fun DataLoadStateManager.FlowBuilder<Array<WordQueueEntry>>.buildDataFlow(): Flow<DataLoadState<Array<WordQueueEntry>>> {
-        return fromFlow(dao.getAllFlow())
+        return fromFlow(queueDao.getAllFlow())
     }
 
     fun removeFromQueue(id: Int) {
