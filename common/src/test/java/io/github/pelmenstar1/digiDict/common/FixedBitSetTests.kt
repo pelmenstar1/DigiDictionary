@@ -7,6 +7,12 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class FixedBitSetTests {
+    private fun createBitSet(size: Int, setBits: IntArray): FixedBitSet {
+        return FixedBitSet(size).also { bs ->
+            setBits.forEach(bs::set)
+        }
+    }
+
     @Test
     fun getSetTest() {
         fun testCase(size: Int, setBits: IntArray) {
@@ -73,9 +79,7 @@ class FixedBitSetTests {
     @Test
     fun isAllBitsSetTest() {
         fun testCase(size: Int, setBits: IntArray, expectedValue: Boolean) {
-            val bitSet = FixedBitSet(size)
-
-            setBits.forEach { bitSet.set(it) }
+            val bitSet = createBitSet(size, setBits)
 
             assertEquals(expectedValue, bitSet.isAllBitsSet())
         }
@@ -92,5 +96,19 @@ class FixedBitSetTests {
         testCase(size = 128, setBits = (0..127).toIntArray(), expectedValue = true)
         testCase(size = 129, setBits = (0..127).toIntArray(), expectedValue = false)
         testCase(size = 130, setBits = (0..129).toIntArray(), expectedValue = true)
+    }
+
+    @Test
+    fun countSetBitsTest() {
+        fun testCase(size: Int, setBits: IntArray) {
+            val bitSet = createBitSet(size, setBits)
+            val actualCountOfSetBits = bitSet.countSetBits()
+
+            assertEquals(setBits.size, actualCountOfSetBits)
+        }
+
+        testCase(size = 10, setBits = intArrayOf())
+        testCase(size = 5, setBits = intArrayOf(1, 2, 4))
+        testCase(size = 128, setBits = intArrayOf(0, 50, 80, 100, 123))
     }
 }
