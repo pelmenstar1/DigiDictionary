@@ -4,14 +4,6 @@ import android.content.Context
 import android.os.Build
 import java.util.*
 
-fun interface LocaleProvider {
-    fun get(): Locale
-
-    companion object {
-        fun fromContext(context: Context) = LocaleProvider { context.getLocaleCompat() }
-    }
-}
-
 @Suppress("DEPRECATION")
 fun Context.getLocaleCompat(): Locale {
     val config = resources.configuration

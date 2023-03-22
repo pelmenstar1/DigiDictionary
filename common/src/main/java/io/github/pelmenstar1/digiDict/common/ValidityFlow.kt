@@ -20,14 +20,17 @@ class ValidityFlow(val scheme: Scheme) {
      * @param ordinal - the ordinal of the field, should be in range [0; 16)
      */
     class Field(val ordinal: Int) {
+        val valueMask: Int
+            get() = 1 shl (ordinal * 2 + 1)
+
+        val computedFlagMask: Int
+            get() = 1 shl (ordinal * 2)
+
         init {
             if (ordinal < 0 || ordinal > 15) {
                 throw IllegalArgumentException("ordinal can't be negative or greater than 15")
             }
         }
-
-        fun valueMask() = 1 shl (ordinal * 2 + 1)
-        fun computedFlagMask() = 1 shl (ordinal * 2)
     }
 
     /**
@@ -36,12 +39,13 @@ class ValidityFlow(val scheme: Scheme) {
      * @param fields - ordinals of these fields should be the same as their indices in array
      */
     class Scheme(val fields: Array<out Field>) {
-        internal val allValidBits = nBitsSet(fields.size * 2)
+        internal val allValidBits: Int
+            get() = nBitsSet(fields.size * 2)
 
-        // In binary 1431655765 = 0101 0101 0101 0101 0101 0101 0101 0101,
-        // so each bit that denotes whether the field is computed is set
-        // Then we AND it with allValidBits in order to get the value for the fields we have.
-        internal val allComputedBits = 1431655765 and allValidBits
+        internal val allComputedBits: Int
+            // Each bit of the const, that denotes whether the field is computed, is set
+            // Then we AND it with allValidBits in order to get the value for the fields we have.
+            get() = 0b01010101_01010101_01010101_01010101 and allValidBits
     }
 
     /**
@@ -81,8 +85,8 @@ class ValidityFlow(val scheme: Scheme) {
          */
         fun set(field: Field, value: Boolean, isComputed: Boolean = true) {
             bits = bits
-                .withBit(field.valueMask(), value)
-                .withBit(field.computedFlagMask(), isComputed)
+                .withBit(field.valueMask, value)
+                .withBit(field.computedFlagMask, isComputed)
         }
     }
 
@@ -107,7 +111,7 @@ class ValidityFlow(val scheme: Scheme) {
     /**
      * Gets whether given [field] is valid.
      */
-    operator fun get(field: Field) = flow.value and field.valueMask() != 0
+    operator fun get(field: Field) = isValid(flow.value, field)
 
     /**
      * Mutates validity of the flow.
@@ -144,8 +148,8 @@ class ValidityFlow(val scheme: Scheme) {
             return bits == scheme.allValidBits
         }
 
-        internal fun isValid(bits: Int, field: Field): Boolean {
-            return (bits and field.valueMask()) != 0
+        fun isValid(bits: Int, field: Field): Boolean {
+            return (bits and field.valueMask) != 0
         }
 
         fun isAllComputed(bits: Int, scheme: Scheme): Boolean {
@@ -154,8 +158,8 @@ class ValidityFlow(val scheme: Scheme) {
             return (bits and mask) == mask
         }
 
-        internal fun isComputed(bits: Int, field: Field): Boolean {
-            return (bits and field.computedFlagMask()) != 0
+        fun isComputed(bits: Int, field: Field): Boolean {
+            return (bits and field.computedFlagMask) != 0
         }
 
         // Just to support varargs to make the code more readable

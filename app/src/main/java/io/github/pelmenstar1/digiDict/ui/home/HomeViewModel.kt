@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -12,10 +13,13 @@ import io.github.pelmenstar1.digiDict.common.android.onDatabaseTablesUpdated
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
+import io.github.pelmenstar1.digiDict.data.getAllSortedPackedRecordToBadgeRelations
 import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
+import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -23,38 +27,44 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val appDatabase: AppDatabase,
-    searchCore: RecordSearchCore
+    searchCore: RecordSearchCore,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val _sortTypeFlow = MutableStateFlow(HomeSortType.NEWEST)
-    val sortTypeFlow: StateFlow<HomeSortType>
-        get() = _sortTypeFlow
+    val sortTypeFlow = savedStateHandle.getStateFlow(KEY_SORT_TYPE, RecordSortType.NEWEST)
+    val searchPropertiesFlow = savedStateHandle.getStateFlow(KEY_SEARCH_PROPERTIES, RecordSearchPropertySet.all())
 
-    private val _searchPropertiesFlow = MutableStateFlow<Array<out RecordSearchProperty>>(RecordSearchProperty.values())
-
-    val searchPropertiesFlow: StateFlow<Array<out RecordSearchProperty>>
-        get() = _searchPropertiesFlow
-
-    var searchProperties: Array<out RecordSearchProperty>
-        get() = _searchPropertiesFlow.value
+    var searchProperties: RecordSearchPropertySet
+        get() = searchPropertiesFlow.value
         set(value) {
-            _searchPropertiesFlow.value = value
+            savedStateHandle[KEY_SEARCH_PROPERTIES] = value
         }
 
-    var sortType: HomeSortType
-        get() = _sortTypeFlow.value
+    var sortType: RecordSortType
+        get() = sortTypeFlow.value
         set(value) {
-            _sortTypeFlow.value = value
+            savedStateHandle[KEY_SORT_TYPE] = value
         }
+
+    /**
+     * Gets or sets [RecordTextPrecomputeController] of the view-model.
+     *
+     * By the time of collecting [items] flow, the [recordTextPrecomputeController] value should be non-null.
+     */
+    var recordTextPrecomputeController: RecordTextPrecomputeController? = null
 
     val items = Pager(
-        config = PagingConfig(pageSize = 20),
+        config = PagingConfig(pageSize = 20, enablePlaceholders = false),
         pagingSourceFactory = {
-            HomePagingSource(appDatabase, sortType)
+            AppPagingSource(
+                appDatabase,
+                sortType,
+                recordTextPrecomputeController!!
+            )
         }
     ).flow.cachedIn(viewModelScope)
 
     private val searchManager = RecordSearchManager(searchCore)
-    private val searchOptionsFlow = _searchPropertiesFlow.map {
+    private val searchOptionsFlow = searchPropertiesFlow.map {
         RecordSearchOptions(it)
     }
 
@@ -74,14 +84,16 @@ class HomeViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .map {
                     trackProgressWith(searchProgressReporter) {
-                        appDatabase.getAllConciseRecordsWithBadges(searchProgressReporter)
+                        val relations = appDatabase.getAllSortedPackedRecordToBadgeRelations()
+
+                        appDatabase.getAllConciseRecordsWithBadges(relations, searchProgressReporter)
                     }
                 }.onEach {
                     searchManager.currentRecords = it
                 }
 
             combine(
-                GlobalSearchQueryProvider.queryFlow, _sortTypeFlow, searchOptionsFlow, recordFlow
+                GlobalSearchQueryProvider.queryFlow, sortTypeFlow, searchOptionsFlow, recordFlow
             ) { query, sortType, options, _ ->
                 searchManager.onSearchRequest(query, sortType, options)
             }.flowOn(Dispatchers.Default)
@@ -103,5 +115,8 @@ class HomeViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "HomeViewModel"
+
+        private const val KEY_SORT_TYPE = "io.github.pelmenstar1.digiDict.HomeViewModel.sortType"
+        private const val KEY_SEARCH_PROPERTIES = "io.github.pelmenstar1.digiDict.HomeViewModel.searchProperties"
     }
 }

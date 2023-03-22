@@ -72,6 +72,18 @@ class IntList(capacity: Int = 0) {
         }
     }
 
+    fun indexOf(element: Int): Int {
+        val elements = elements
+
+        for (i in 0 until _size) {
+            if (elements[i] == element) {
+                return i
+            }
+        }
+
+        return -1
+    }
+
     /**
      * Adds specified [element] to the end of the list.
      */

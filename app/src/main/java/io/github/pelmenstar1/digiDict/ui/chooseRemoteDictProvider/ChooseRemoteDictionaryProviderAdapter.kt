@@ -5,32 +5,56 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.IdRes
-import androidx.annotation.StyleRes
-import androidx.core.widget.TextViewCompat
+import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.textAppearance.MaterialTextAppearanceSelector
-import io.github.pelmenstar1.digiDict.common.ui.setPaddingRes
+import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
+import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 
 class ChooseRemoteDictionaryProviderAdapter(
     private val onProviderChosen: (RemoteDictionaryProviderInfo) -> Unit
 ) : RecyclerView.Adapter<ChooseRemoteDictionaryProviderAdapter.ViewHolder>() {
-    inner class ViewHolder(private val container: ViewGroup) : RecyclerView.ViewHolder(container) {
-        private val nameView = container.findViewById<TextView>(R.id.itemRemoteDictProvider_name)
-        private val schemaView = container.findViewById<TextView>(R.id.itemRemoteDictProvider_schema)
+    private class StaticInfo(context: Context) {
+        val itemPadding: Int
+        val schemaLayoutParams: LinearLayout.LayoutParams
+
+        val nameTextAppearance = TextAppearance(context) { BodyLarge }
+        val schemaTextAppearance = TextAppearance(context) { BodySmall }
+
+        init {
+            with(context.resources) {
+                itemPadding = getDimensionPixelOffset(R.dimen.itemRemoteDictProvider_padding)
+
+                schemaLayoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = getDimensionPixelOffset(R.dimen.itemRemoteDictProvider_schemaTopMargin)
+                }
+            }
+        }
+    }
+
+    class ViewHolder(
+        private val container: ViewGroup,
+        private val query: String,
+        itemOnClickListener: View.OnClickListener
+    ) : RecyclerView.ViewHolder(container) {
+        private val nameView = container.getTypedViewAt<TextView>(NAME_VIEW_INDEX)
+        private val schemaView = container.getTypedViewAt<TextView>(SCHEMA_VIEW_INDEX)
 
         init {
             container.setOnClickListener(itemOnClickListener)
         }
 
         fun bind(provider: RemoteDictionaryProviderInfo) {
+            container.tag = provider
+
             nameView.text = provider.name
             schemaView.text = provider.resolvedUrl(query)
-
-            container.tag = provider
         }
     }
 
@@ -39,6 +63,8 @@ class ChooseRemoteDictionaryProviderAdapter(
     }
 
     private var items = emptyArray<RemoteDictionaryProviderInfo>()
+
+    private var staticInfo: StaticInfo? = null
 
     /**
      * Should be set before submitItems()
@@ -50,24 +76,30 @@ class ChooseRemoteDictionaryProviderAdapter(
      */
     fun submitItems(newItems: Array<RemoteDictionaryProviderInfo>) {
         if (items.isNotEmpty()) {
-            throw IllegalStateException("items is not empty on submitItems()")
+            throw IllegalStateException("submitItems() has been already called")
         }
 
         items = newItems
         notifyItemRangeInserted(0, newItems.size)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val container = createItemContainer(parent.context)
+    override fun getItemCount() = items.size
 
-        return ViewHolder(container)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val si = getLazyValue(
+            staticInfo,
+            { StaticInfo(parent.context) },
+            { staticInfo = it }
+        )
+
+        val container = createItemContainer(parent.context, si)
+
+        return ViewHolder(container, query, itemOnClickListener)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(items[position])
     }
-
-    override fun getItemCount() = items.size
 
     companion object {
         private val itemLayoutParams = LinearLayout.LayoutParams(
@@ -80,41 +112,33 @@ class ChooseRemoteDictionaryProviderAdapter(
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        internal fun createItemContainer(context: Context): ViewGroup {
-            val res = context.resources
+        private const val NAME_VIEW_INDEX = 0
+        private const val SCHEMA_VIEW_INDEX = 1
 
+        private fun createItemContainer(context: Context, staticInfo: StaticInfo): ViewGroup {
             return LinearLayout(context).apply {
                 layoutParams = itemLayoutParams
                 orientation = LinearLayout.VERTICAL
-                setPaddingRes(R.dimen.itemRemoteDictProvider_padding)
+
+                setPadding(staticInfo.itemPadding)
 
                 addView(MaterialTextView(context).apply {
                     layoutParams = nameLayoutParams
 
-                    initTextView(R.id.itemRemoteDictProvider_name) { BodyLarge }
+                    initTextView(staticInfo.nameTextAppearance)
                 })
 
                 addView(MaterialTextView(context).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        topMargin = res.getDimensionPixelOffset(R.dimen.itemRemoteDictProvider_schemaTopMargin)
-                    }
+                    layoutParams = staticInfo.schemaLayoutParams
 
-                    initTextView(R.id.itemRemoteDictProvider_schema) { BodySmall }
+                    initTextView(staticInfo.schemaTextAppearance)
                 })
             }
         }
 
-        private inline fun TextView.initTextView(@IdRes id: Int, block: MaterialTextAppearanceSelector.() -> Int) {
-            initTextView(id, MaterialTextAppearanceSelector.block())
-        }
-
-        private fun TextView.initTextView(@IdRes id: Int, @StyleRes textAppearance: Int) {
-            this.id = id
+        private fun TextView.initTextView(textAppearance: TextAppearance) {
             setTextIsSelectable(false)
-            TextViewCompat.setTextAppearance(this, textAppearance)
+            textAppearance.apply(this)
         }
     }
 }

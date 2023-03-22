@@ -1,5 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -21,9 +22,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddRemoteDictionaryProviderViewModel @Inject constructor(
-    private val remoteDictProviderDao: RemoteDictionaryProviderDao
+    private val remoteDictProviderDao: RemoteDictionaryProviderDao,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private data class Message(val type: Int, val value: String)
+
+    private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
+    private val isCheckValueJobStarted = AtomicBoolean()
 
     private val _nameErrorFlow =
         MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
@@ -33,19 +38,21 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     private val _isInputsEnabled = MutableStateFlow(true)
 
+    val nameErrorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>
+        get() = _nameErrorFlow
+
+    val schemaErrorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>
+        get() = _schemaErrorFlow
+
+    val isInputEnabledFlow: StateFlow<Boolean>
+        get() = _isInputsEnabled
+
     val validityFlow = ValidityFlow(validityScheme)
-
-    private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
-    private val isCheckValueJobStarted = AtomicBoolean()
-
-    val nameErrorFlow = _nameErrorFlow.asStateFlow()
-    val schemaErrorFlow = _schemaErrorFlow.asStateFlow()
-    val isInputEnabledFlow = _isInputsEnabled.asStateFlow()
 
     val addAction = viewModelAction(TAG) {
         val newProvider = RemoteDictionaryProviderInfo(
-            name = name,
-            schema = schema,
+            name = name.trim(),
+            schema = schema.trim(),
             urlEncodingRules = RemoteDictionaryProviderInfo.UrlEncodingRules(spaceReplacement)
         )
 
@@ -54,28 +61,49 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     val validityCheckErrorFlow = MutableSharedFlow<Throwable?>(replay = 1)
 
+    val nameFlow = savedStateHandle.getStateFlow(KEY_NAME, "")
+    val schemaFlow = savedStateHandle.getStateFlow(KEY_SCHEMA, "")
+    val spaceReplacementFlow = savedStateHandle.getStateFlow(
+        KEY_SPACE_REPLACEMENT,
+        RemoteDictionaryProviderInfo.UrlEncodingRules.DEFAULT_SPACE_REPLACEMENT
+    )
+
     /**
-     * Name of the provider, the string is expected to be without leading and trailing whitespaces
+     * Name of the provider.
      */
-    var name: String = ""
+    var name: String
+        get() = nameFlow.value
         set(value) {
-            field = value
-            scheduleCheckValue(TYPE_NAME, value)
+            if (nameFlow.value != value) {
+                savedStateHandle[KEY_NAME] = value
+                scheduleCheckValue(TYPE_NAME, value)
+            }
         }
 
     /**
-     * Schema of the provider, the string is expected to be without leading and trailing whitespaces
+     * Schema of the provider.
      */
-    var schema: String = ""
+    var schema: String
+        get() = schemaFlow.value
         set(value) {
-            field = value
-            scheduleCheckValue(TYPE_SCHEMA, value)
+            if (schemaFlow.value != value) {
+                savedStateHandle[KEY_SCHEMA] = value
+                scheduleCheckValue(TYPE_SCHEMA, value)
+            }
         }
 
-    var spaceReplacement: Char = RemoteDictionaryProviderInfo.UrlEncodingRules.DEFAULT_SPACE_REPLACEMENT
+    var spaceReplacement: Char
+        get() = spaceReplacementFlow.value
+        set(value) {
+            savedStateHandle[KEY_SPACE_REPLACEMENT] = value
+        }
 
     init {
         startCheckValueJob()
+    }
+
+    fun add() {
+        addAction.runWhenValid(validityFlow)
     }
 
     fun restartValidityCheck() {
@@ -101,10 +129,6 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
         // trySend() will always succeed as the channel is unlimited.
         checkValueChannel.trySend(Message(type, value))
-    }
-
-    fun add() {
-        addAction.runWhenValid(validityFlow)
     }
 
     private fun startCheckValueJobIfNecessary() {
@@ -147,7 +171,9 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
             _isInputsEnabled.value = true
 
             while (isActive) {
-                val (type, value) = checkValueChannel.receive()
+                val message = checkValueChannel.receive()
+                val type = message.type
+                val value = message.value.trim()
 
                 val errorFlow = when (type) {
                     TYPE_NAME -> _nameErrorFlow
@@ -189,6 +215,11 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "AddRDP_VM"
+
+        private const val KEY_NAME = "io.github.pelmenstar1.digiDict.AddRemoteDictionaryProviderVM.name"
+        private const val KEY_SCHEMA = "io.github.pelmenstar1.digiDict.AddRemoteDictionaryProviderVM.schema"
+        private const val KEY_SPACE_REPLACEMENT =
+            "io.github.pelmenstar1.digiDict.AddRemoteDictionaryProviderVM.spaceReplacement"
 
         private const val TYPE_NAME = 0
         private const val TYPE_SCHEMA = 1

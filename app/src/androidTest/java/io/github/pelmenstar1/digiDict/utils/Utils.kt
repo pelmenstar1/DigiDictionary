@@ -1,10 +1,15 @@
 package io.github.pelmenstar1.digiDict.utils
 
+import android.content.Context
 import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.data.*
 import kotlin.test.fail
 
-fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<T>, actual: Array<T>) {
+fun <T : EntityWithPrimaryKeyId> assertContentEqualsNoId(expected: Array<out T>, actual: Array<out T>) {
+    assertContentEqualsNoId(expected, actual) { other -> equalsNoId(other) }
+}
+
+fun <T> assertContentEqualsNoId(expected: Array<out T>, actual: Array<out T>, equalsNoId: T.(other: T) -> Boolean) {
     val expectedSize = expected.size
     val actualSize = actual.size
 
@@ -28,6 +33,13 @@ fun AppDatabase.reset() {
     query("DELETE FROM sqlite_sequence", null)
 }
 
+suspend fun AppDatabase.addRecordWithBadges(value: RecordWithBadges) {
+    val record =
+        Record(value.id, value.expression, value.meaning, value.additionalNotes, value.score, value.epochSeconds)
+
+    addRecordAndBadges(record, value.badges)
+}
+
 suspend fun AppDatabase.addRecordAndBadges(
     record: Record,
     badges: Array<RecordBadgeInfo>
@@ -45,4 +57,26 @@ suspend fun AppDatabase.addRecordAndBadges(
     )
 
     return recordWithBadges
+}
+
+fun Array<out RecordToBadgeRelation>.toPackedArray(): PackedRecordToBadgeRelationArray {
+    val result = PackedRecordToBadgeRelationArray(size)
+
+    forEachIndexed { index, value ->
+        result[index] = PackedRecordToBadgeRelation(value.recordId, value.badgeId)
+    }
+
+    return result
+}
+
+inline fun AppDatabase.use(block: (AppDatabase) -> Unit) {
+    try {
+        block(this)
+    } finally {
+        close()
+    }
+}
+
+inline fun useInMemoryDb(context: Context, block: (AppDatabase) -> Unit) {
+    AppDatabaseUtils.createTestDatabase(context).use(block)
 }

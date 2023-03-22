@@ -3,13 +3,11 @@
     <color name="color_primary">#C51162</color>
     <color name="color_on_primary">#FFFFFF</color>
 
-    <color name="color_secondary">#FF03DAC5</color>
     <color name="color_secondary_variant">#FF018786</color>
     <color name="color_on_secondary">#FF000000</color>
     <color name="color_error">@color/red_700</color>
+    <color name="color_surface_variant">#FF49454F</color>
 
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="red_700">#D32F2F</color>
     <color name="green_700">#388E3C</color>
 
@@ -62,8 +60,9 @@
     <color name="stats_chart_max_color">#E53935</color>
     <color name="stats_chart_avg_color">#FFB300</color>
 
-    <color name="home_date_marker_background_color">#80BAB7B7</color>
+    <color name="home_date_marker_background_color">@color/color_surface_variant</color>
 
-    <color name="request_list_dialog_button_background">#3E3E3E</color>
-    <color name="request_list_dialog_button_icon_tint">#616060</color>
+    <color name="manage_event_item_container_animation_start">#C51162</color>
+    <color name="manage_event_item_container_animation_end">#810B40</color>
+    <color name="manage_event_divider_color">#66A8A7A7</color>
 </resources>

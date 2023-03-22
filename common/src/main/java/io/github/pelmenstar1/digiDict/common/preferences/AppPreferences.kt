@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.common.preferences
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -19,6 +20,16 @@ abstract class AppPreferences<TEntries : AppPreferences.Entries, TSnapshot : App
     abstract fun getSnapshotFlow(): Flow<TSnapshot>
     abstract suspend fun <TValue : Any> set(entry: Entry<TValue, TEntries>, value: TValue)
 
+    fun getSnapshotFlow(observedEntries: Array<out Entry<*, TEntries>>): Flow<TSnapshot> {
+        return getSnapshotFlow().distinctUntilChanged { old, new ->
+            isEntriesChanged(old, new, observedEntries)
+        }
+    }
+
+    inline fun getSnapshotFlow(observedEntries: TEntries.() -> Array<out Entry<*, TEntries>>): Flow<TSnapshot> {
+        return getSnapshotFlow(observedEntries(entries))
+    }
+
     open suspend fun <TValue : Any> get(entry: Entry<TValue, TEntries>): TValue {
         val snapshot = getSnapshotFlow().first()
 
@@ -27,6 +38,22 @@ abstract class AppPreferences<TEntries : AppPreferences.Entries, TSnapshot : App
 
     open fun <TValue : Any> getFlow(entry: Entry<TValue, TEntries>): Flow<TValue> {
         return getSnapshotFlow().map { it[entry] }
+    }
+
+    private fun isEntriesChanged(
+        thisSnapshot: TSnapshot,
+        otherSnapshot: TSnapshot,
+        entries: Array<out Entry<*, TEntries>>
+    ): Boolean {
+        for (i in entries.indices) {
+            val entry = entries[i]
+
+            if (thisSnapshot[entry] != otherSnapshot[entry]) {
+                return true
+            }
+        }
+
+        return false
     }
 }
 

@@ -1,8 +1,11 @@
 package io.github.pelmenstar1.digiDict.search
 
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.FilteredArray
+import io.github.pelmenstar1.digiDict.common.sort
+import io.github.pelmenstar1.digiDict.common.toFilteredArray
+import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.data.HomeSortType
+import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getComparatorForConciseRecordWithBadges
 
 class RecordSearchManager(private val core: RecordSearchCore) {
@@ -21,7 +24,7 @@ class RecordSearchManager(private val core: RecordSearchCore) {
             _currentRecords = value
         }
 
-    fun onSearchRequest(query: String, sortType: HomeSortType, options: RecordSearchOptions): RecordSearchResult {
+    fun onSearchRequest(query: String, sortType: RecordSortType, options: RecordSearchOptions): RecordSearchResult {
         val currentRecords = currentRecords
         var prevSavedRecords = _previousSavedRecords
 
@@ -37,14 +40,12 @@ class RecordSearchManager(private val core: RecordSearchCore) {
             System.arraycopy(it, 0, prevSavedRecords, 0, prevRecordsSize)
         }
 
-        val isMeaningfulQuery = query.containsLetterOrDigit()
-        var preparedQuery: String? = null
+        val normalizedQuery = core.normalizeQuery(query)
+        val isMeaningfulQuery = normalizedQuery.isNotEmpty()
 
         val currentFilteredArray = if (isMeaningfulQuery) {
-            preparedQuery = core.prepareQuery(query)
-
             currentRecords.toFilteredArray { record ->
-                core.filterPredicate(record, preparedQuery, options)
+                core.filterPredicate(record, normalizedQuery, options)
             }.also {
                 it.sort(sortType.getComparatorForConciseRecordWithBadges())
             }
@@ -56,7 +57,7 @@ class RecordSearchManager(private val core: RecordSearchCore) {
         _currentRecordsSize = currentFilteredArray.size
         _previousRecords = currentRecords
 
-        val metadataProvider = RecordSearchMetadataProviderOnCore(core, preparedQuery ?: query, options)
+        val metadataProvider = RecordSearchMetadataProviderOnCore(core, normalizedQuery, options)
 
         return RecordSearchResult(query, isMeaningfulQuery, currentFilteredArray, prevFilteredArray, metadataProvider)
     }

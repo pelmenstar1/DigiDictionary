@@ -6,10 +6,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.common.equalsPattern
-import io.github.pelmenstar1.digiDict.data.AppDatabase
-import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
-import io.github.pelmenstar1.digiDict.data.Record
-import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.data.*
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
 import org.junit.Rule
 import org.junit.Test
@@ -42,10 +39,10 @@ class AppDatabaseMigrationTests {
         val expectedRecords: Array<Record>
 
         db.use {
-            it.insertRecord("Expression1", "CMeaning1", "Notes1", score = 1)
-            it.insertRecord("Expression2", "CMeaning2", "Notes2", score = 2)
-            it.insertRecord("Expression3", "CMeaning3", "Notes3", score = 3)
-            it.insertRecord("Expression4", "CMeaning4", "Notes4", score = 4)
+            it.insertRecord("Expression1", "CMeaning1", "Notes1", score = 1, epochSeconds = 10)
+            it.insertRecord("Expression2", "CMeaning2", "Notes2", score = 2, epochSeconds = 20)
+            it.insertRecord("Expression3", "CMeaning3", "Notes3", score = 3, epochSeconds = 30)
+            it.insertRecord("Expression4", "CMeaning4", "Notes4", score = 4, epochSeconds = 40)
 
             expectedRecords = it.getAllRecords()
         }
@@ -59,7 +56,7 @@ class AppDatabaseMigrationTests {
         // If the index is actually added, it should throw.
 
         assertFails {
-            db.insertRecord("Expression1", "CMeaning1", "Notes1", score = 5)
+            db.insertRecord("Expression1", "CMeaning1", "Notes1", score = 5, epochSeconds = 50)
         }
     }
 
@@ -69,7 +66,7 @@ class AppDatabaseMigrationTests {
         var db = helper.createDatabase(TEST_DB_NAME, 3)
 
         db.use {
-            it.insertRecord("Expr1", "CMeaning1", "Notes1", score = 1)
+            it.insertRecord("Expr1", "CMeaning1", "Notes1", score = 1, epochSeconds = 10)
         }
 
         db = helper.runMigrationsAndValidate(TEST_DB_NAME, 4, false, AppDatabase.Migration_3_4)
@@ -88,7 +85,7 @@ class AppDatabaseMigrationTests {
         var db = helper.createDatabase(TEST_DB_NAME, 4)
 
         db.use {
-            it.insertRecord("Expr1", "CMeaning1", "Notes1", score = 1)
+            it.insertRecord("Expr1", "CMeaning1", "Notes1", score = 1, epochSeconds = 10)
         }
 
         db = helper.runMigrationsAndValidate(TEST_DB_NAME, 5, false, AppDatabase.Migration_4_5)
@@ -98,6 +95,41 @@ class AppDatabaseMigrationTests {
 
         // Insert RDP stats to check whether the table exists.
         db.insertRdpStats(0, 1)
+    }
+
+    // Migration 10 -> 11 should recode meanings from old format to the new one.
+    @Test
+    fun migration_10_11() {
+        var db = helper.createDatabase(TEST_DB_NAME, 10)
+
+        db.use {
+            it.insertRecord("Expr1", "CMeaning1\n2", "Notes\n1", score = 1, epochSeconds = 10)
+            it.insertRecord("Expr2", "L2@Meaning1\nMeaning2", "Notes\n2", score = 2, epochSeconds = 20)
+        }
+
+        db = helper.runMigrationsAndValidate(TEST_DB_NAME, 11, false, AppDatabase.Migration_10_11)
+
+        val actualRecords = db.getAllRecords()
+        val expectedRecords = arrayOf(
+            Record(
+                id = 1,
+                expression = "Expr1",
+                meaning = "CMeaning1\n2",
+                additionalNotes = "Notes\n1",
+                score = 1,
+                epochSeconds = 10
+            ),
+            Record(
+                id = 2,
+                expression = "Expr2",
+                meaning = "L2@Meaning1${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}Meaning2",
+                additionalNotes = "Notes\n2",
+                score = 2,
+                epochSeconds = 20
+            )
+        )
+
+        assertContentEquals(expectedRecords, actualRecords)
     }
 
     companion object {
@@ -117,9 +149,13 @@ class AppDatabaseMigrationTests {
         // DAO's can't be used because they expect the newest schema.
         // That's why everything is done manually without beloved code generation.
 
-        private fun SupportSQLiteDatabase.insertRecord(expr: String, rawMeaning: String, notes: String, score: Int) {
-            val epochSeconds = System.currentTimeMillis()
-
+        private fun SupportSQLiteDatabase.insertRecord(
+            expr: String,
+            rawMeaning: String,
+            notes: String,
+            score: Int,
+            epochSeconds: Long
+        ) {
             execSQL(
                 "INSERT INTO records (`expression`, `meaning`, `additionalNotes`, `score`, `dateTime`) VALUES (?, ?, ?, ?, ?)",
                 arrayOf(expr, rawMeaning, notes, score, epochSeconds)

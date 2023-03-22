@@ -6,6 +6,7 @@ import androidx.core.text.getSpans
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.common.mapToArray
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchItemStyle
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchStyledTextUtil
@@ -18,14 +19,38 @@ import kotlin.test.assertIs
 
 @RunWith(AndroidJUnit4::class)
 class HomeSearchStyledTextUtilTests {
+    private fun validateStyledText(
+        expectedString: String,
+        expectedRanges: Array<IntRange>,
+        actualStyledText: CharSequence
+    ) {
+        val actualString = actualStyledText.toString()
+        assertEquals(expectedString, actualString)
+
+        if (expectedRanges.isEmpty()) {
+            assertIs<String>(actualStyledText)
+        } else {
+            assertIs<Spanned>(actualStyledText)
+
+            val actualRanges = actualStyledText.getSpans<StyleSpan>().mapToArray { span ->
+                val start = actualStyledText.getSpanStart(span)
+                val end = actualStyledText.getSpanEnd(span)
+
+                start until end
+            }
+
+            assertContentEquals(expectedRanges, actualRanges)
+        }
+    }
+
     @Test
     fun createExpressionTextTest() {
-        fun testCase(expr: String, foundRanges: Array<IntRange>) {
-            val foundRangesIntArray = IntArray(foundRanges.size * 2 + 1).also { buffer ->
-                buffer[0] = foundRanges.size
+        fun testCase(expr: String, expectedRanges: Array<IntRange>) {
+            val foundRangesIntArray = IntArray(expectedRanges.size * 2 + 1).also { buffer ->
+                buffer[0] = expectedRanges.size
                 var index = 1
 
-                for (range in foundRanges) {
+                for (range in expectedRanges) {
                     buffer[index++] = range.first
 
                     // end should be exclusive where-as IntRange's end is inclusive
@@ -36,31 +61,18 @@ class HomeSearchStyledTextUtilTests {
             val style = HomeSearchItemStyle(foundRangesIntArray)
             val actualStyledText = HomeSearchStyledTextUtil.createExpressionText(expr, style)
 
-            if (foundRanges.isEmpty()) {
-                assertIs<String>(actualStyledText)
-            } else {
-                assertIs<Spanned>(actualStyledText)
-
-                val actualString = actualStyledText.toString()
-                assertEquals(expr, actualString)
-
-                val actualRangesRaw = actualStyledText.getSpans<StyleSpan>()
-                val actualRanges = actualRangesRaw.mapToArray { tag ->
-                    val start = actualStyledText.getSpanStart(tag)
-                    val end = actualStyledText.getSpanEnd(tag)
-
-                    start until end
-                }
-
-                assertContentEquals(foundRanges, actualRanges)
-            }
+            validateStyledText(
+                expectedString = expr,
+                expectedRanges,
+                actualStyledText
+            )
         }
 
-        testCase(expr = "abc", foundRanges = emptyArray())
-        testCase(expr = "abc", foundRanges = arrayOf(0 until 1))
-        testCase(expr = "abc", foundRanges = arrayOf(0 until 3))
-        testCase(expr = "a", foundRanges = arrayOf(0 until 1))
-        testCase(expr = "abc", foundRanges = arrayOf(0 until 1, 2 until 3))
+        testCase(expr = "abc", expectedRanges = emptyArray())
+        testCase(expr = "abc", expectedRanges = arrayOf(0 until 1))
+        testCase(expr = "abc", expectedRanges = arrayOf(0 until 3))
+        testCase(expr = "a", expectedRanges = arrayOf(0 until 1))
+        testCase(expr = "abc", expectedRanges = arrayOf(0 until 1, 2 until 3))
     }
 
     @Test
@@ -84,32 +96,21 @@ class HomeSearchStyledTextUtilTests {
             }
 
             val style = HomeSearchItemStyle(foundRangesIntArray)
-            val actualStyledText = HomeSearchStyledTextUtil.createMeaningText(context, meaning, style)
-            if (foundSections.isEmpty()) {
-                assertIs<String>(actualStyledText)
-            } else {
-                assertIs<Spanned>(actualStyledText)
+            val actualStyledText = HomeSearchStyledTextUtil.createMeaningText(
+                context, meaning, style,
+                forceThrow = true
+            )
 
-                val actualString = actualStyledText.toString()
-                val expectedString = MeaningTextHelper.parseToFormatted(meaning)
-                assertEquals(expectedString, actualString)
-
-                val actualRangesRaw = actualStyledText.getSpans<StyleSpan>()
-
-                val actualRanges = actualRangesRaw.mapToArray { tag ->
-                    val start = actualStyledText.getSpanStart(tag)
-                    val end = actualStyledText.getSpanEnd(tag)
-
-                    start until end
-                }
-
-                assertContentEquals(expectedRanges, actualRanges)
-            }
+            validateStyledText(
+                expectedString = MeaningTextHelper.format(meaning),
+                expectedRanges,
+                actualStyledText
+            )
         }
 
         testCase(
             meaning = "CABC",
-            foundSections = emptyArray(),
+            foundSections = arrayOf(IntRangeSection()),
             expectedRanges = emptyArray()
         )
 
@@ -138,17 +139,15 @@ class HomeSearchStyledTextUtilTests {
         )
 
         testCase(
-            meaning = "L2@ABCD\nFFF",
+            meaning = "L2@ABCD${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}FFF",
             foundSections = arrayOf(IntRangeSection(1 until 3), IntRangeSection(0 until 2)),
             expectedRanges = arrayOf(3 until 5, 9 until 11)
         )
 
         testCase(
-            meaning = "L2@ABCD\nFFF",
+            meaning = "L2@ABCD${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}FFF",
             foundSections = emptyArray(),
             expectedRanges = emptyArray()
         )
-
-
     }
 }

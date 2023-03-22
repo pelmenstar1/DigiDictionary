@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.ui
 
 import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.ValidityFlow
@@ -33,7 +34,7 @@ class AddRemoteDictionaryProviderViewModelTests {
     private fun createViewModel(
         dao: RemoteDictionaryProviderDao = db.remoteDictionaryProviderDao()
     ): AddRemoteDictionaryProviderViewModel {
-        return AddRemoteDictionaryProviderViewModel(dao)
+        return AddRemoteDictionaryProviderViewModel(dao, SavedStateHandle())
     }
 
     private fun createProvider(name: String, schema: String): RemoteDictionaryProviderInfo {

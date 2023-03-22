@@ -3,6 +3,7 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.android.NoOpTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.commonTestUtils.use
@@ -37,7 +38,12 @@ class QuizViewModelTests {
         appPreferences: DigiDictAppPreferences = ReadonlyDigiDictAppPreferences(DEFAULT_SNAPSHOT),
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider
     ): QuizViewModel {
-        return QuizViewModel(recordDao, appPreferences, currentEpochSecondsProvider)
+        return QuizViewModel(
+            recordDao,
+            appPreferences,
+            currentEpochSecondsProvider,
+            NoOpTextBreakAndHyphenationInfoSource
+        )
     }
 
     private fun createRecord(expression: String): Record {
@@ -98,7 +104,9 @@ class QuizViewModelTests {
                 useCustomTabs = useCustomTabs.defaultValue,
                 remindItemsSize = remindItemsSize.defaultValue,
                 remindShowMeaning = remindShowMeaning.defaultValue,
-                widgetListMaxSize = widgetListMaxSize.defaultValue
+                widgetListMaxSize = widgetListMaxSize.defaultValue,
+                recordTextBreakStrategy = recordTextBreakStrategy.defaultValue,
+                recordTextHyphenationFrequency = recordTextHyphenationFrequency.defaultValue
             )
         }
 

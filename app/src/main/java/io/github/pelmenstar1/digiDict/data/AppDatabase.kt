@@ -14,10 +14,12 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
         RemoteDictionaryProviderInfo::class,
         RemoteDictionaryProviderStats::class,
         RecordBadgeInfo::class,
-        RecordToBadgeRelation::class
+        RecordToBadgeRelation::class,
+        EventInfo::class,
+        WordQueueEntry::class
     ],
     exportSchema = true,
-    version = 9,
+    version = 12,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -38,6 +40,16 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
             from = 8,
             to = 9,
             spec = AppDatabase.Migration_8_9::class
+        ),
+        AutoMigration(
+            from = 9,
+            to = 10,
+            spec = AppDatabase.Migration_9_10::class
+        ),
+        AutoMigration(
+            from = 11,
+            to = 12,
+            spec = AppDatabase.Migration_11_12::class
         )
     ]
 )
@@ -52,6 +64,10 @@ abstract class AppDatabase : RoomDatabase() {
     class Migration_7_8 : AutoMigrationSpec
 
     class Migration_8_9 : AutoMigrationSpec
+
+    class Migration_9_10 : AutoMigrationSpec
+
+    class Migration_11_12 : AutoMigrationSpec
 
     object Migration_2_3 : Migration(2, 3) {
         override fun migrate(database: SupportSQLiteDatabase) {
@@ -90,11 +106,20 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
+    object Migration_10_11 : Migration(10, 11) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // L% to replace new lines only in list meanings.
+            database.execSQL("UPDATE records SET meaning=replace(meaning, '${ComplexMeaning.LIST_OLD_ELEMENT_SEPARATOR}', '${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}') WHERE meaning LIKE 'L%'")
+        }
+    }
+
     abstract fun recordDao(): RecordDao
     abstract fun remoteDictionaryProviderDao(): RemoteDictionaryProviderDao
     abstract fun remoteDictionaryProviderStatsDao(): RemoteDictionaryProviderStatsDao
     abstract fun recordBadgeDao(): RecordBadgeDao
     abstract fun recordToBadgeRelationDao(): RecordToBadgeRelationDao
+    abstract fun eventDao(): EventDao
+    abstract fun wordQueueDao(): WordQueueDao
 
     companion object {
         private var singleton: AppDatabase? = null
@@ -151,7 +176,7 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun Builder<AppDatabase>.configureAndBuild(): AppDatabase =
-            this.addMigrations(Migration_2_3, Migration_3_4, Migration_4_5, Migration_5_6)
+            this.addMigrations(Migration_2_3, Migration_3_4, Migration_4_5, Migration_5_6, Migration_10_11)
                 .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         db.insertRemoteDictProviders_5(RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS)

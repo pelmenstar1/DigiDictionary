@@ -4,15 +4,16 @@ import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
-@Suppress("UNCHECKED_CAST")
 class BinarySerializationObjectData<TKeys : BinarySerializationSectionKeys<TKeys>>(
     val staticInfo: BinarySerializationStaticInfo<TKeys>,
+    val compatInfo: BinarySerializationCompatInfo,
     val sections: Array<out Array<out Any>>
 ) {
     init {
         require(staticInfo.keys.size == sections.size)
     }
 
+    @Suppress("UNCHECKED_CAST")
     operator fun <TValue : Any> get(key: BinarySerializationSectionKey<TKeys, TValue>): Array<out TValue> {
         return sections[key.ordinal] as Array<out TValue>
     }
@@ -37,6 +38,7 @@ value class BinarySerializationObjectDataBuilder<TKeys : BinarySerializationSect
 
 inline fun <TKeys : BinarySerializationSectionKeys<TKeys>> BinarySerializationObjectData(
     staticInfo: BinarySerializationStaticInfo<TKeys>,
+    compatInfo: BinarySerializationCompatInfo,
     block: BinarySerializationObjectDataBuilder<TKeys>.() -> Unit
 ): BinarySerializationObjectData<TKeys> {
     contract {
@@ -46,5 +48,5 @@ inline fun <TKeys : BinarySerializationSectionKeys<TKeys>> BinarySerializationOb
     val sections = unsafeNewArray<Array<out Any>>(staticInfo.keys.size)
     BinarySerializationObjectDataBuilder<TKeys>(sections).block()
 
-    return BinarySerializationObjectData(staticInfo, sections)
+    return BinarySerializationObjectData(staticInfo, compatInfo, sections)
 }

@@ -239,4 +239,28 @@ class TextTests {
         testCase(number = 2147483646, expected = 10)
         testCase(number = Int.MAX_VALUE, expected = 10)
     }
+
+    @Test
+    fun toStringOrEmptyTest() {
+        assertEquals("", (null as Any?).toStringOrEmpty())
+        assertEquals("1", 1.toStringOrEmpty())
+    }
+
+    @Test
+    fun equalsByCharTest() {
+        fun testCase(firstString: String?, secondString: String, expected: Boolean) {
+            val actual = firstString.equalsByChar(secondString)
+
+            assertEquals(expected, actual)
+        }
+
+        testCase("123", "123", true)
+        testCase("", "123", false)
+        testCase("", "", true)
+        testCase(null, "123", false)
+        testCase("1", "1", true)
+        testCase("123", "124", false)
+        testCase("123", "321", false)
+        testCase("1", "123", false)
+    }
 }

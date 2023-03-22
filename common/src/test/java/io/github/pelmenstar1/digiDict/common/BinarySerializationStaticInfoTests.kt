@@ -16,10 +16,10 @@ class BinarySerializationStaticInfoTests {
     private val emptySerializer = object : BinarySerializer<Any> {
         override fun newArrayOfNulls(size: Int) = arrayOfNulls<Any>(size)
 
-        override fun writeTo(writer: PrimitiveValueWriter, value: Any) {
+        override fun writeTo(writer: PrimitiveValueWriter, value: Any, compatInfo: BinarySerializationCompatInfo) {
         }
 
-        override fun readFrom(reader: PrimitiveValueReader) = Any()
+        override fun readFrom(reader: PrimitiveValueReader, compatInfo: BinarySerializationCompatInfo) = Any()
     }
 
 

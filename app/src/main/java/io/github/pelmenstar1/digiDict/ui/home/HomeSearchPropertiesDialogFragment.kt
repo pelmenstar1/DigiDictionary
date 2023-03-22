@@ -1,9 +1,9 @@
 package io.github.pelmenstar1.digiDict.ui.home
 
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.mapToIntArray
-import io.github.pelmenstar1.digiDict.common.ui.MultiSelectionDialogFragment
+import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.MultiSelectionDialogFragment
 import io.github.pelmenstar1.digiDict.search.RecordSearchProperty
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
 
 class HomeSearchPropertiesDialogFragment : MultiSelectionDialogFragment<RecordSearchProperty>() {
     override val choicesRes: Int
@@ -19,9 +19,9 @@ class HomeSearchPropertiesDialogFragment : MultiSelectionDialogFragment<RecordSe
     override fun createValueArray(size: Int) = arrayOfNulls<RecordSearchProperty>(size)
 
     companion object {
-        fun create(selectedProperties: Array<out RecordSearchProperty>): HomeSearchPropertiesDialogFragment {
+        fun create(selectedProperties: RecordSearchPropertySet): HomeSearchPropertiesDialogFragment {
             return HomeSearchPropertiesDialogFragment().also { dialog ->
-                val selectedIndices = selectedProperties.mapToIntArray { it.ordinal }
+                val selectedIndices = selectedProperties.toOrdinalArray()
 
                 dialog.arguments = createArguments(selectedIndices)
             }

@@ -16,7 +16,7 @@ import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
  */
 object HomeSearchStyledTextUtil {
     private const val TAG = "HomeSearchStyledTxtUtil"
-    const val FOUND_RANGE_STYLE = Typeface.BOLD
+    private const val FOUND_RANGE_STYLE = Typeface.BOLD
 
     /**
      * Returns a styled string (if neccessary) for expression [text] of a record.
@@ -33,18 +33,28 @@ object HomeSearchStyledTextUtil {
             return text
         }
 
-        return SpannableString(text).also { builder ->
-            setFoundRangesSpans(builder, foundRanges, dataIndex = 1, textOffset = 0, rangeCount)
+        return SpannableString(text).also {
+            setFoundRangesSpans(it, foundRanges, dataIndex = 1, textOffset = 0, rangeCount)
         }
     }
 
     /**
-     * Returns a styled string (if neccessary) for [meaning] of a record.
-     * The format of a meaning should be as described in [ComplexMeaning].
+     * Creates a styled string (if neccessary) for [meaning] of a record.
      *
-     * If the [meaning] has no special style, the method returns [String], otherwise [Spannable].
+     * @param context a [Context] instance that is used to retrieve error string from resources if neccessary
+     * @param meaning a meaning to create styled text for. The format should be as described in [ComplexMeaning]
+     * @param style information about style of the meaning
+     * @param forceThrow determines whether to throw an exception when one happens or return a string with error.
+     * Basically used only for tests.
+     *
+     * @return a [String] instance if there's no special style to be applied, or [Spannable].
      */
-    fun createMeaningText(context: Context, meaning: String, style: HomeSearchItemStyle): CharSequence {
+    fun createMeaningText(
+        context: Context,
+        meaning: String,
+        style: HomeSearchItemStyle,
+        forceThrow: Boolean = false
+    ): CharSequence {
         try {
             val foundRanges = style.foundRanges
             val startIndex = foundRanges[0] /* length of expression ranges */ * 2 + 1
@@ -61,74 +71,69 @@ object HomeSearchStyledTextUtil {
                         return subMeaning
                     }
 
-                    return SpannableString(subMeaning).also { builder ->
-                        setFoundRangesSpans(
-                            builder,
-                            foundRanges,
-                            dataIndex = startIndex + 1,
-                            textOffset = 0,
-                            rangeCount
-                        )
+                    return SpannableString(subMeaning).also {
+                        setFoundRangesSpans(it, foundRanges, dataIndex = startIndex + 1, textOffset = 0, rangeCount)
                     }
                 }
                 ComplexMeaning.LIST_MARKER -> {
-                    // It's faster to check whether data has any ranges than
-                    // to create styled text through SpannableStringBuilder, that is really slow.
+                    val formattedText = MeaningTextHelper.format(meaning)
+
+                    // It's possible to have record found and meaning having no found ranges.
+                    // For example, when a record is found by expression. So, it's better to use plain text without
+                    // additional complications.
                     if (meaningDataHasNoRanges(foundRanges, startIndex)) {
-                        return MeaningTextHelper.parseToFormattedAndHandleErrors(context, meaning)
+                        return formattedText
                     }
 
-                    val builder = SpannableStringBuilder()
-                    var isFirstElement = true
+                    val styledText = SpannableString(formattedText)
 
                     var dataIndex = startIndex
 
+                    // Stores position in the formattedText where actual content of current
+                    // meaning section starts.
+                    //
+                    // First two chars of the 'list' meaning is '• ', then the content starts.
+                    var formattedTextIndex = 2
+
                     ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
-                        val prefix = if (isFirstElement) {
-                            "${MeaningTextHelper.BULLET_LIST_CHARACTER} "
-                        } else {
-                            "\n${MeaningTextHelper.BULLET_LIST_CHARACTER} "
-                        }
-
-                        isFirstElement = false
-
-                        builder.append(prefix)
-
-                        val meaningPartStart = builder.length
-                        builder.append(meaning, start, end)
-
                         val rangeCount = foundRanges[dataIndex]
                         setFoundRangesSpans(
-                            builder,
+                            styledText,
                             foundRanges,
                             dataIndex + 1,
-                            textOffset = meaningPartStart,
+                            textOffset = formattedTextIndex,
                             rangeCount
                         )
+
                         dataIndex += rangeCount * 2 + 1
+
+                        // After each meaning section 3 chars are inserted '\n• '.
+                        // (end - start) gets length of the section
+                        formattedTextIndex += (end - start) + 3
                     }
 
-                    return builder
+                    return styledText
                 }
                 else -> ComplexMeaning.throwInvalidFormat(meaning)
             }
         } catch (e: Exception) {
             Log.e(TAG, "while parsing meaning", e)
 
+            if (forceThrow) {
+                throw e
+            }
+
             return MeaningTextHelper.getErrorMessageForFormatException(context, e)
         }
     }
 
     private fun meaningDataHasNoRanges(data: IntArray, startIndex: Int): Boolean {
-        var index = startIndex
-
-        while (index < data.size) {
-            val rangeCount = data[index]
-            if (rangeCount > 0) {
+        // If data, starting from startIndex, has at least one non-zero element, it means
+        // that element is the length of the meaning's found ranges and then, the meaning has found ranges.
+        for (i in startIndex until data.size) {
+            if (data[i] != 0) {
                 return false
             }
-
-            index++
         }
 
         return true

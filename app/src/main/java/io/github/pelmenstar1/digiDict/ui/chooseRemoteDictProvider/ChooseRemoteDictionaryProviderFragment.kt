@@ -25,9 +25,7 @@ import io.github.pelmenstar1.digiDict.common.debugLog
 import io.github.pelmenstar1.digiDict.common.mapOffset
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.databinding.FragmentChooseRemoteDictProviderBinding
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class ChooseRemoteDictionaryProviderFragment : Fragment() {
@@ -35,7 +33,6 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
     internal val viewModel by viewModels<ChooseRemoteDictionaryProviderViewModel>()
 
     // Before the actual value is loaded, suppose the feature is disabled.
-    @Volatile
     private var useCustomTabs = false
 
     private var isBrowserLaunched = false
@@ -95,6 +92,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val query = args.query
         val context = requireContext()
+        val ls = lifecycleScope
 
         val binding = FragmentChooseRemoteDictProviderBinding.inflate(inflater, container, false)
         val adapter = ChooseRemoteDictionaryProviderAdapter(
@@ -109,40 +107,36 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-        lifecycleScope.run {
-            launch(Dispatchers.IO) {
-                val providers = try {
-                    viewModel.getAllProviders()
-                } catch (e: Exception) {
-                    Log.e(TAG, "", e)
-                    showLoadProvidersError()
+        ls.launch {
+            val providers = try {
+                viewModel.getAllProviders()
+            } catch (e: Exception) {
+                Log.e(TAG, "getAllProvider() failed", e)
+                showLoadProvidersError()
 
-                    RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS
-                }
-
-                withContext(Dispatchers.Main) {
-                    binding.chooseRemoteDictProviderLoadingIndicator.visibility = View.GONE
-
-                    adapter.submitItems(providers)
-                }
+                // Use default providers instead.
+                RemoteDictionaryProviderInfo.PREDEFINED_PROVIDERS
             }
 
-            launch(Dispatchers.Default) {
-                try {
-                    val isCustomTabsEnabled = viewModel.useCustomTabs().also {
-                        useCustomTabs = it
-                    }
+            // We've loaded everything, hide the loading indicator
+            binding.chooseRemoteDictProviderLoadingIndicator.visibility = View.GONE
 
-                    if (isCustomTabsEnabled) {
-                        withContext(Dispatchers.Main) {
-                            bindCustomTabsClient()
-                        }
-                    }
-                } catch (e: Exception) {
-                    // If there's an error while loading useCustomTabs() value,
-                    // Custom Tabs won't be enabled. The user still will be able to view the page.
-                    Log.e(TAG, "during useCustomTabs() loading", e)
+            adapter.submitItems(providers)
+        }
+
+        ls.launch {
+            try {
+                val isCustomTabsEnabled = viewModel.useCustomTabs().also {
+                    useCustomTabs = it
                 }
+
+                if (isCustomTabsEnabled) {
+                    bindCustomTabsClient()
+                }
+            } catch (e: Exception) {
+                // If there's an error while loading useCustomTabs() value,
+                // Custom Tabs won't be enabled. The user still will be able to view the page.
+                Log.e(TAG, "during useCustomTabs() loading", e)
             }
         }
 
@@ -162,6 +156,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
+        // TODO: Allow to customize whether to go back to the previous fragment after a user found meaning or not.
         if (isBrowserLaunched) {
             findNavController().popBackStack()
         }
@@ -202,17 +197,15 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
         val isLaunched = try {
             if (useCustomTabs) {
                 val intent = CustomTabsIntent.Builder()
-                    .apply {
-                        customTabsSession?.let { setSession(it) }
-                    }
+                    .apply { customTabsSession?.also(::setSession) }
                     .build()
 
                 intent.launchUrl(context, url)
+
+                true
             } else {
                 startInDefaultView(context, url)
             }
-
-            true
         } catch (e: Exception) {
             Log.e(TAG, "During launch. Falling back to default view", e)
 
@@ -222,6 +215,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
         isBrowserLaunched = isLaunched
 
         if (isLaunched) {
+            // Update the stats.
             viewModel.onRemoteDictionaryProviderUsed(provider)
         }
     }

@@ -178,6 +178,27 @@ inline fun Long.iterateSetBitsRaw(block: (bitIndex: Int) -> Unit) {
     }
 }
 
+inline fun Int.iterateSetBits(block: (bitIndex: Int) -> Unit) {
+    // Original source: https://lemire.me/blog/2018/02/21/iterating-over-set-bits-quickly/
+    var bits = this
+
+    while (bits != 0) {
+        val t = bits and (-bits)
+        val bitIndex = t.countLeadingZeroBits()
+        block(31 - bitIndex)
+
+        bits = bits xor t
+    }
+}
+
+fun Int.isLastBit(position: Int): Boolean {
+    if (position == 31) {
+        return true
+    }
+
+    return (this shr (position + 1)) == 0
+}
+
 inline fun LongArray.iterateSetBits(block: (bitIndex: Int) -> Unit) {
     for (i in indices) {
         val element = this[i]

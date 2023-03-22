@@ -5,6 +5,7 @@ import androidx.annotation.StringRes
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.getEnumFieldCount
 import io.github.pelmenstar1.digiDict.search.RecordSearchProperty
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
 import java.util.concurrent.atomic.AtomicReferenceArray
 
 /**
@@ -44,7 +45,7 @@ class ResourcesRecordSearchPropertySetFormatter(private val res: Resources) : Re
         return getFromCacheOrQuery(value.ordinal + 1) { getResId(value) }
     }
 
-    override fun format(values: Array<out RecordSearchProperty>): String {
+    override fun format(values: RecordSearchPropertySet): String {
         val hasExpression = values.contains(RecordSearchProperty.EXPRESSION)
         val hasMeaning = values.contains(RecordSearchProperty.MEANING)
 

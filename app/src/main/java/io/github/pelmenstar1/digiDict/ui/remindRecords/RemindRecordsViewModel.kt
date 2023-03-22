@@ -2,6 +2,7 @@ package io.github.pelmenstar1.digiDict.ui.remindRecords
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
+import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordDao
@@ -13,7 +14,8 @@ import kotlin.random.Random
 @HiltViewModel
 class RemindRecordsViewModel @Inject constructor(
     private val recordDao: RecordDao,
-    appPreferences: DigiDictAppPreferences
+    appPreferences: DigiDictAppPreferences,
+    val breakAndHyphenationInfoSource: TextBreakAndHyphenationInfoSource
 ) : SingleDataLoadStateViewModel<Array<ConciseRecordWithBadges>>(TAG) {
     override val canRefreshAfterSuccess: Boolean
         get() = true

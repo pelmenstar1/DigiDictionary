@@ -3,7 +3,6 @@ package io.github.pelmenstar1.digiDict
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.common.debugLog
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_HOUR
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
@@ -319,15 +318,16 @@ class DbCommonStatsProviderTests {
 
             val currentEpochSeconds = System.currentTimeMillis() / 1000
             val currentYear = TimeUtils.getYearFromEpochDay(currentEpochSeconds / SECONDS_IN_DAY)
+
+            // Compute stats for the last seconds of this year
+            val epochSecondsForCompute = TimeUtils.yearToEpochDay(currentYear + 1) * SECONDS_IN_DAY - 1
+
             val emitter = MonthDataEmitter(currentYear)
             val records = emitter.also(block).getRecords()
 
             dao.insertAll(records)
-            debugLog("DbCommonStatsProviderTests") {
-                info(records.map { it.epochSeconds }.joinToString())
-            }
 
-            val actualAdditionStats = commonStatsProvider.compute(currentEpochSeconds).additionStats
+            val actualAdditionStats = commonStatsProvider.compute(epochSecondsForCompute).additionStats
             val expectedMonthEntries = emitter.expectedMonthStatsEntries
 
             for (i in 0 until 12) {

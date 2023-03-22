@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.ui
 
 import androidx.recyclerview.widget.DiffUtil
-import io.github.pelmenstar1.digiDict.common.FilteredArray
 import io.github.pelmenstar1.digiDict.common.FilteredArrayDiffItemCallback
 import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
 

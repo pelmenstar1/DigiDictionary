@@ -21,3 +21,15 @@ fun View.setEnabledWhenValid(flow: ValidityFlow, scope: CoroutineScope) {
         }
     }
 }
+
+fun View.setEnabledWhenFieldValid(flow: ValidityFlow, field: ValidityFlow.Field, scope: CoroutineScope) {
+    scope.launch {
+        flow.collect { bits ->
+            // Don't change whether the view is enabled if the result is not computed yet
+            // to avoid view blinking. Anyway, in some time, validity must change to be computed
+            if (ValidityFlow.isComputed(bits, field)) {
+                isEnabled = ValidityFlow.isValid(bits, field)
+            }
+        }
+    }
+}

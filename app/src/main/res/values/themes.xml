@@ -5,6 +5,7 @@
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryContainer">@color/color_primary</item>
         <item name="colorOnPrimary">@color/color_on_primary</item>
+        <item name="colorSurfaceVariant">@color/color_surface_variant</item>
 
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/color_primary</item>

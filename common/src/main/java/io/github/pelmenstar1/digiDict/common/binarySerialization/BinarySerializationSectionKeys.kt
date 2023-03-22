@@ -13,11 +13,9 @@ interface BinarySerializationSectionKeys<TSelf : BinarySerializationSectionKeys<
     operator fun get(ordinal: Int): BinarySerializationSectionKey<TSelf, out Any>
 }
 
-private typealias SectionKeyArray<TKeys> = Array<out BinarySerializationSectionKey<TKeys, out Any>>
-
 abstract class SimpleBinarySerializationSectionKeys<TSelf : SimpleBinarySerializationSectionKeys<TSelf>> :
     BinarySerializationSectionKeys<TSelf> {
-    private var allHolder: SectionKeyArray<TSelf>? = null
+    private var allHolder: Array<out BinarySerializationSectionKey<TSelf, out Any>>? = null
 
     final override val size: Int
         get() = getAllHolderValue().size
@@ -26,13 +24,13 @@ abstract class SimpleBinarySerializationSectionKeys<TSelf : SimpleBinarySerializ
         return getAllHolderValue()[ordinal]
     }
 
+    protected abstract fun getAll(): Array<out BinarySerializationSectionKey<TSelf, out Any>>
+
     protected fun <TValue : Any> key(ordinal: Int, name: String): BinarySerializationSectionKey<TSelf, TValue> {
         return BinarySerializationSectionKey(ordinal, name)
     }
 
-    private fun getAllHolderValue(): SectionKeyArray<TSelf> {
-        return getLazyValue(allHolder, { getAll() }, { allHolder = it })
+    private fun getAllHolderValue(): Array<out BinarySerializationSectionKey<TSelf, out Any>> {
+        return getLazyValue(allHolder, ::getAll) { allHolder = it }
     }
-
-    protected abstract fun getAll(): SectionKeyArray<TSelf>
 }

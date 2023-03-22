@@ -30,7 +30,7 @@ data class BackupBadgeToMultipleRecordEntry(val badgeOrdinal: Int, val recordOrd
         val SERIALIZER_RESOLVER = BinarySerializerResolver<BackupBadgeToMultipleRecordEntry> {
             register<BackupBadgeToMultipleRecordEntry>(
                 version = 1,
-                write = { (badgeId, recordIds) ->
+                write = { (badgeId, recordIds), _ ->
                     emit(badgeId)
                     emitArrayAndLength(recordIds)
                 },

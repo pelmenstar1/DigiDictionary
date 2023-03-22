@@ -1,9 +1,12 @@
 package io.github.pelmenstar1.digiDict
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
 import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
+import io.github.pelmenstar1.digiDict.search.RecordSearchProperty
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -13,7 +16,8 @@ class RecordDeepSearchCoreTests {
     @Test
     fun filterPredicateOnTextRangeTest() {
         fun testCase(text: String, query: String, expected: Boolean, start: Int = 0, end: Int = text.length) {
-            val actual = RecordDeepSearchCore.filterPredicateOnTextRange(text, start, end, query)
+            val queryFlags = RecordDeepSearchCore.computeQueryFlags(query)
+            val actual = RecordDeepSearchCore.filterPredicateOnTextRange(text, start, end, query, queryFlags)
 
             assertEquals(expected, actual, "text: '$text', query: '$query'")
         }
@@ -109,20 +113,54 @@ class RecordDeepSearchCoreTests {
             query = "ll",
             expected = true
         )
+
+        testCase(
+            text = "ABCD",
+            query = "bcd",
+            expected = true
+        )
+
+        testCase(
+            text = "ABCD CD",
+            query = "ABC",
+            start = 5,
+            expected = false
+        )
+
+        // False is expected as the query length is less than current RecordDeepSearchCore.IN_WORD_SEARCH_MIN_LENGTH
+        testCase(
+            text = "ABCD",
+            query = "bc",
+            expected = false
+        )
+
+        testCase(
+            text = "abcd cdef",
+            query = "def",
+            expected = true
+        )
+
+        testCase(
+            text = "ABC ADE",
+            query = "C DE",
+            expected = false
+        )
     }
 
     private fun createSearchOptions(searchForExpression: Boolean, searchForMeaning: Boolean): RecordSearchOptions {
-        var flags = 0
+        val props = ArrayList<RecordSearchProperty>()
 
         if (searchForExpression) {
-            flags = RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION
+            props.add(RecordSearchProperty.EXPRESSION)
         }
 
         if (searchForMeaning) {
-            flags = flags or RecordSearchOptions.FLAG_SEARCH_FOR_MEANING
+            props.add(RecordSearchProperty.MEANING)
         }
 
-        return RecordSearchOptions(flags)
+        val propsSet = RecordSearchPropertySet(props.toTypedArray())
+
+        return RecordSearchOptions(propsSet)
     }
 
     private fun createRecord(expr: String, meaning: String): ConciseRecordWithBadges {
@@ -180,14 +218,14 @@ class RecordDeepSearchCoreTests {
 
         testCase(
             expr = "Expression",
-            meaning = "L2@Mean\nKind",
+            meaning = "L2@Mean${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}Kind",
             query = "mEa",
             expectedResult = true
         )
 
         testCase(
             expr = "Expression",
-            meaning = "L2@Mean\nKind",
+            meaning = "L2@Mean${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}Kind",
             query = "kin",
             expectedResult = true
         )
@@ -217,7 +255,7 @@ class RecordDeepSearchCoreTests {
 
         testCase(
             expr = "give",
-            meaning = "L2@A\nB",
+            meaning = "L2@A${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}B",
             query = "A",
             expectedResult = false
         )
@@ -247,7 +285,7 @@ class RecordDeepSearchCoreTests {
 
         testCase(
             expr = "A",
-            meaning = "L2@C\nB",
+            meaning = "L2@C${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}B",
             query = "A",
             expectedResult = false
         )
@@ -256,7 +294,7 @@ class RecordDeepSearchCoreTests {
     @Test
     fun prepareQueryTest() {
         fun testCase(input: String, expected: String) {
-            val actual = RecordDeepSearchCore.prepareQuery(input)
+            val actual = RecordDeepSearchCore.normalizeQuery(input)
 
             assertEquals(expected, actual)
         }
@@ -271,5 +309,20 @@ class RecordDeepSearchCoreTests {
         testCase(input = ".....;.. Some ???;;..--- ordinal   ... sentence", expected = "Some ordinal sentence")
         testCase(input = "", expected = "")
         testCase(input = ";A;", expected = "A")
+        testCase(input = "  A ", expected = "A")
+        testCase(input = "  ABC ABC ABC    ", expected = "ABC ABC ABC")
+    }
+
+    @Test
+    fun computeQueryFlagsTest() {
+        fun testCase(query: String, expectedFlags: Int) {
+            val actualFlags = RecordDeepSearchCore.computeQueryFlags(RecordDeepSearchCore.normalizeQuery(query))
+
+            assertEquals(expectedFlags, actualFlags)
+        }
+
+        testCase(query = "a", expectedFlags = RecordDeepSearchCore.QUERY_FLAG_SINGLE_WORD)
+        testCase(query = "abc", expectedFlags = RecordDeepSearchCore.QUERY_FLAG_SINGLE_WORD)
+        testCase(query = "abc de", expectedFlags = 0)
     }
 }

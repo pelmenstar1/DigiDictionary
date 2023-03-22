@@ -1,75 +1,43 @@
 package io.github.pelmenstar1.digiDict
 
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertFails
 
 class MeaningTextHelperTests {
-    @Test
-    fun parseToFormattedTest_common() {
-        fun testCase(meaning: String, expected: String) {
-            val actual = MeaningTextHelper.parseToFormatted(meaning)
+    private fun formatTestHelper(meaning: String, expected: String) {
+        val actual = MeaningTextHelper.format(meaning)
 
-            assertEquals(expected, actual)
-        }
-
-        testCase(
-            meaning = "C123",
-            expected = "123"
-        )
-
-        testCase(
-            meaning = "C1",
-            expected = "1"
-        )
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun parseToFormattedTest_list() {
-        fun testCase(meaning: String, expected: String) {
-            val actual = MeaningTextHelper.parseToFormatted(meaning)
+    fun formatCommonTest() {
+        formatTestHelper(meaning = "C123", expected = "123")
+        formatTestHelper(meaning = "C1", expected = "1")
+    }
 
-            assertEquals(expected, actual)
-        }
+    @Test
+    fun formatListTest() {
+        val delimiter = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
 
-        testCase(
-            meaning = "L1@M",
-            expected = "• M"
-        )
-
-        testCase(
-            meaning = "L1@MMM",
-            expected = "• MMM"
-        )
-
-        testCase(
-            meaning = "L2@MMM\nN",
-            expected = "• MMM\n• N"
-        )
-
-        testCase(
-            meaning = "L4@AA\nB\nCCC\nD",
-            expected = "• AA\n• B\n• CCC\n• D"
-        )
-
-        testCase(
-            meaning = "L2@Meaning 1\nMeaning 2",
-            expected = "• Meaning 1\n• Meaning 2"
-        )
-
-        testCase(
-            meaning = "L2@A lot of words\nMore words",
+        formatTestHelper(meaning = "L1@M", expected = "• M")
+        formatTestHelper(meaning = "L1@MMM", expected = "• MMM")
+        formatTestHelper(meaning = "L2@MMM${delimiter}N", expected = "• MMM\n• N")
+        formatTestHelper(meaning = "L4@AA${delimiter}B${delimiter}CCC${delimiter}D", expected = "• AA\n• B\n• CCC\n• D")
+        formatTestHelper(meaning = "L2@Meaning 1${delimiter}Meaning 2", expected = "• Meaning 1\n• Meaning 2")
+        formatTestHelper(
+            meaning = "L2@A lot of words${delimiter}More words",
             expected = "• A lot of words\n• More words"
         )
     }
 
     @Test
-    fun parseToFormattedThrowsFormatException() {
+    fun formatThrowsExceptionTest() {
         fun testCase(input: String) {
-            assertFailsWith<MeaningTextHelper.FormatException> {
-                MeaningTextHelper.parseToFormatted(input)
-            }
+            assertFails { MeaningTextHelper.format(input) }
         }
 
         testCase("")

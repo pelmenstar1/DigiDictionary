@@ -7,7 +7,7 @@ import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
  * Implementation of [RecordSearchMetadataProvider] based on [RecordSearchCore].
  *
  * @param core currently used search core
- * @param query a query of the current search request. It must be "prepared"
+ * @param query a query of the current search request. It must be normalized.
  * @param options an [RecordSearchOptions] instance with which the request was processed
  */
 class RecordSearchMetadataProviderOnCore(

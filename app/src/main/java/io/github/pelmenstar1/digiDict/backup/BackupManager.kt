@@ -2,19 +2,15 @@ package io.github.pelmenstar1.digiDict.backup
 
 import android.content.Context
 import android.net.Uri
-import androidx.sqlite.db.SupportSQLiteProgram
-import androidx.sqlite.db.SupportSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteStatement
 import io.github.pelmenstar1.digiDict.RecordExpressionDuplicateException
 import io.github.pelmenstar1.digiDict.backup.exporting.BinaryDataExporter
 import io.github.pelmenstar1.digiDict.backup.exporting.DataExporter
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.backup.exporting.JsonDataExporter
-import io.github.pelmenstar1.digiDict.backup.importing.BinaryDataImporter
-import io.github.pelmenstar1.digiDict.backup.importing.DataImporter
-import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
-import io.github.pelmenstar1.digiDict.backup.importing.JsonDataImporter
+import io.github.pelmenstar1.digiDict.backup.importing.*
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
 import io.github.pelmenstar1.digiDict.data.*
@@ -32,12 +28,15 @@ object BackupManager {
         put(BackupFormat.JSON, JsonDataImporter())
     }
 
+    val latestCompatInfo = BackupCompatInfo(newMeaningFormat = true, isUtf8Strings = true)
+
     fun createBackupData(
         appDatabase: AppDatabase,
         options: ExportOptions,
+        compatInfo: BackupCompatInfo = latestCompatInfo,
         progressReporter: ProgressReporter? = null
     ): BackupData {
-        val records: Array<Record>
+        var records: Array<Record>
         val badges: Array<RecordBadgeInfo>
         val badgeToMultipleRecordEntries: Array<BackupBadgeToMultipleRecordEntry>
 
@@ -65,7 +64,17 @@ object BackupManager {
                 badgeToMultipleRecordEntries = emptyArray()
             }
 
-            BackupData(records, badges, badgeToMultipleRecordEntries)
+            // Currently, non-latest compat info is used only in the tests,
+            // so the implementation doesn't have to be efficient.
+            if (!compatInfo.newMeaningFormat) {
+                records = records.mapToArray {
+                    val recodedMeaning = ComplexMeaning.recodeListNewFormatToOld(it.meaning)
+
+                    Record(it.id, it.expression, recodedMeaning, it.additionalNotes, it.score, it.epochSeconds)
+                }
+            }
+
+            BackupData(records, badges, badgeToMultipleRecordEntries, compatInfo)
         }
     }
 
@@ -73,11 +82,12 @@ object BackupManager {
         output: OutputStream,
         data: BackupData,
         format: BackupFormat,
+        version: Int,
         progressReporter: ProgressReporter? = null
     ) {
         val exporter = exporters[format] ?: throw RuntimeException("No exporter assigned for given format ($format)")
 
-        exporter.export(output, data, progressReporter)
+        exporter.export(output, data, version, progressReporter)
     }
 
     fun export(
@@ -85,10 +95,11 @@ object BackupManager {
         uri: Uri,
         data: BackupData,
         format: BackupFormat,
+        version: Int,
         progressReporter: ProgressReporter? = null
     ) {
         uri.useAsFile(context, mode = "w") {
-            export(FileOutputStream(it), data, format, progressReporter)
+            export(FileOutputStream(it), data, format, version, progressReporter)
         }
     }
 
@@ -101,6 +112,7 @@ object BackupManager {
         val importer = importers[format] ?: throw RuntimeException("No importer assigned for given format ($format)")
 
         return trackProgressWith(progressReporter) {
+            // Verifying the data can take some time, so let it be 10% of work.
             importer.import(input, options, progressReporter?.subReporter(completed = 0, target = 90)).also {
                 verifyImportData(it)
             }
@@ -148,34 +160,40 @@ object BackupManager {
             trackProgressWith(progressReporter) {
                 val records = data.records
                 val badges = data.badges
-                val badgeToMultipleRecordEntries = data.badgeToMultipleRecordEntries
+                val compatInfo = data.compatInfo
 
                 if (options.importBadges && badges.isNotEmpty()) {
                     val replaceBadges = options.replaceBadges
 
+                    // from 0/3 to 1/3 of the total work
                     val recordReporter = progressReporter?.subReporter(completed = 0, target = 33)
+
+                    // 1/3 to 2/3 of the total work
                     val badgeReporter = progressReporter?.subReporter(completed = 33, target = 67)
+
+                    // 2/3 to 3/3 of the total work
                     val recordToBadgeRelationReporter = progressReporter?.subReporter(completed = 67, target = 100)
 
-                    val sortedRecordIds = insertRecordsAndSaveSortedIds(appDatabase, records, recordReporter)
+                    val sortedRecordIds =
+                        insertRecordsAndCreateIdToOrdinalMap(appDatabase, records, compatInfo, recordReporter)
                     val sortedBadgeIds = if (replaceBadges) {
-                        insertOrReplaceRecordBadgesAndSaveSortedIds(appDatabase, badges, badgeReporter)
+                        insertOrReplaceRecordBadgesAndCreateIdToOrdinalMap(appDatabase, badges, badgeReporter)
                     } else {
-                        insertRecordBadgesAndSaveSortedIds(appDatabase, badges, badgeReporter)
+                        insertPreserveRecordBadgesAndCreateIdToOrdinalMap(appDatabase, badges, badgeReporter)
                     }
 
                     insertRecordToBadgeRelations(
                         appDatabase,
-                        badgeToMultipleRecordEntries,
+                        data.badgeToMultipleRecordEntries,
                         sortedRecordIds,
                         sortedBadgeIds,
                         recordToBadgeRelationReporter
                     )
                 } else {
-                    appDatabase.compileInsertRecordStatement().use {
+                    appDatabase.compileInsertRecordStatement().use { statement ->
                         trackLoopProgressWith(progressReporter, records) { _, record ->
-                            it.bindRecordToInsertStatement(record)
-                            it.executeInsert()
+                            bindRecordToInsertStatementWithRecoding(statement, record, compatInfo)
+                            statement.executeInsert()
                         }
                     }
                 }
@@ -183,44 +201,72 @@ object BackupManager {
         }
     }
 
-    private inline fun <T> insertEntitiesAndSaveSortedIds(
+    private fun bindRecordToInsertStatementWithRecoding(
+        statement: SupportSQLiteStatement,
+        record: Record,
+        compatInfo: BackupCompatInfo
+    ) {
+        var meaning = record.meaning
+
+        if (!compatInfo.newMeaningFormat) {
+            // Recode only list meanings.
+            if (meaning[0] == ComplexMeaning.LIST_MARKER) {
+                meaning = ComplexMeaning.recodeListOldFormatToNew(meaning)
+            }
+        }
+
+        if (!ComplexMeaning.isValid(meaning)) {
+            throw ImportException(ImportException.REASON_DATA_VALIDATION, "Invalid meaning format")
+        }
+
+        statement.bindRecordToInsertStatement(
+            record.expression,
+            meaning,
+            record.additionalNotes,
+            record.score,
+            record.epochSeconds
+        )
+    }
+
+    private inline fun <T> insertEntitiesAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         entities: Array<out T>,
         progressReporter: ProgressReporter?,
         compileStatement: (AppDatabase) -> SupportSQLiteStatement,
         bind: (SupportSQLiteStatement, T) -> Unit
-    ): IntArray {
-        return compileStatement(appDatabase).use {
-            val ids = IntArray(entities.size)
+    ): IdToOrdinalMap {
+        return compileStatement(appDatabase).use { statement ->
+            val map = IdToOrdinalMap(entities.size)
 
-            trackLoopProgressWith(progressReporter, entities) { i, entity ->
-                bind(it, entity)
-                ids[i] = it.executeInsert().toInt()
+            trackLoopProgressWith(progressReporter, entities) { _, entity ->
+                bind(statement, entity)
+
+                val id = statement.executeInsert().toInt()
+                map.add(id)
             }
 
-            Arrays.sort(ids)
-
-            ids
+            map
         }
     }
 
-    private fun insertRecordsAndSaveSortedIds(
+    private fun insertRecordsAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         records: Array<out Record>,
+        compatInfo: BackupCompatInfo,
         progressReporter: ProgressReporter?
-    ) = insertEntitiesAndSaveSortedIds(
+    ) = insertEntitiesAndCreateIdToOrdinalMap(
         appDatabase,
         records,
         progressReporter,
         AppDatabase::compileInsertRecordStatement,
-        SupportSQLiteStatement::bindRecordToInsertStatement
+        bind = { statement, record -> bindRecordToInsertStatementWithRecoding(statement, record, compatInfo) }
     )
 
-    private fun insertOrReplaceRecordBadgesAndSaveSortedIds(
+    private fun insertOrReplaceRecordBadgesAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         badges: Array<out RecordBadgeInfo>,
         progressReporter: ProgressReporter?
-    ) = insertEntitiesAndSaveSortedIds(
+    ) = insertEntitiesAndCreateIdToOrdinalMap(
         appDatabase,
         badges,
         progressReporter,
@@ -228,58 +274,56 @@ object BackupManager {
         SupportSQLiteStatement::bindRecordBadgeToInsertStatement
     )
 
-    private fun insertRecordBadgesAndSaveSortedIds(
+    private fun createBadgeNameToIdMap(db: AppDatabase): BadgeNameToIdMap {
+        return db.query("SELECT id, name FROM record_badges", null).use { c ->
+            val count = c.count
+            val map = BadgeNameToIdMap(count)
+
+            for (i in 0 until count) {
+                c.moveToPosition(i)
+
+                val id = c.getInt(0)
+                val name = c.getString(1)
+
+                map.add(name, id)
+            }
+
+            map
+        }
+    }
+
+    private fun insertPreserveRecordBadgesAndCreateIdToOrdinalMap(
         appDatabase: AppDatabase,
         badges: Array<out RecordBadgeInfo>,
         progressReporter: ProgressReporter?
-    ): IntArray {
-        var insertBadgeStatement: SupportSQLiteStatement? = null
-
-        val getIdByNameQuery = object : SupportSQLiteQuery {
-            private var name = ""
-
-            override fun getSql() = "SELECT id FROM record_badges WHERE name=?"
-
-            override fun bindTo(statement: SupportSQLiteProgram) {
-                statement.bindString(1, name)
-            }
-
-            fun bindName(name: String) {
-                this.name = name
-            }
-
-            override fun getArgCount() = 1
-        }
+    ): IdToOrdinalMap {
+        var insertStatement: SupportSQLiteStatement? = null
 
         try {
-            val ids = IntArray(badges.size)
+            val nameToIdMap = createBadgeNameToIdMap(appDatabase)
+            val idToOrdinalMap = IdToOrdinalMap(badges.size)
 
-            trackLoopProgressWith(progressReporter, badges.size) { i ->
-                val badge = badges[i]
+            for ((i, badge) in badges.withIndex()) {
+                var badgeId = nameToIdMap.getIdByName(badge.name)
 
-                getIdByNameQuery.bindName(badge.name)
-                appDatabase.query(getIdByNameQuery).use {
-                    if (it.count > 0) {
-                        it.moveToPosition(0)
-                        ids[i] = it.getInt(0)
-                    } else {
-                        var insertStatement = insertBadgeStatement
-
-                        if (insertStatement == null) {
-                            insertStatement = appDatabase.compileInsertRecordBadgeStatement()
-                            insertBadgeStatement = insertStatement
-                        }
-
-                        insertStatement.bindRecordBadgeToInsertStatement(badge)
-                        ids[i] = insertStatement.executeInsert().toInt()
+                if (badgeId < 0) {
+                    if (insertStatement == null) {
+                        insertStatement = appDatabase.compileInsertRecordBadgeStatement()
                     }
+
+                    insertStatement.bindRecordBadgeToInsertStatement(badge)
+                    badgeId = insertStatement.executeInsert().toInt()
                 }
+
+                idToOrdinalMap.add(badgeId)
+
+                progressReporter?.onProgress(i + 1, badges.size)
             }
 
-            return ids
+            return idToOrdinalMap
         } finally {
             try {
-                insertBadgeStatement?.close()
+                insertStatement?.close()
             } catch (e: Exception) {
                 // eat exception
             }
@@ -289,8 +333,8 @@ object BackupManager {
     private fun insertRecordToBadgeRelations(
         appDatabase: AppDatabase,
         entries: Array<out BackupBadgeToMultipleRecordEntry>,
-        sortedRecordIds: IntArray,
-        sortedBadgeIds: IntArray,
+        recordIdToOrdinalMap: IdToOrdinalMap,
+        badgeIdToOrdinalMap: IdToOrdinalMap,
         progressReporter: ProgressReporter?
     ) {
         return appDatabase.compileInsertRecordToBadgeRelation().use { statement ->
@@ -299,12 +343,12 @@ object BackupManager {
 
             trackProgressWith(progressReporter) {
                 for ((badgeOrdinal, recordOrdinals) in entries) {
-                    recordOrdinals.forEach { recordOrdinal ->
-                        val recordId = sortedRecordIds[recordOrdinal]
-                        val badgeId = sortedBadgeIds[badgeOrdinal]
+                    val badgeId = badgeIdToOrdinalMap.getIdByOrdinal(badgeOrdinal)
 
-                        statement.bindLong(1, recordId.toLong())
-                        statement.bindLong(2, badgeId.toLong())
+                    recordOrdinals.forEach { recordOrdinal ->
+                        val recordId = recordIdToOrdinalMap.getIdByOrdinal(recordOrdinal)
+
+                        statement.bindRecordToBadgeInsertStatement(recordId, badgeId)
                         statement.executeInsert()
 
                         seqIndex++

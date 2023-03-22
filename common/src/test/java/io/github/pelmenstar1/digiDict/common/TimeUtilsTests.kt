@@ -1,8 +1,10 @@
 package io.github.pelmenstar1.digiDict.common
 
+import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import org.junit.Test
 import java.time.LocalDate
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFalse
@@ -85,6 +87,20 @@ class TimeUtilsTests {
         assertFails {
             TimeUtils.yearToEpochDay(year = -1)
         }
+    }
+
+    @Test
+    fun toZonedEpochDays() {
+        val offsetInSeconds = 3
+
+        // This value is handpicked to check whether the offset is actually added
+        // If it is, the epoch days will be 2, otherwise it'll be 1, which is wrong.
+        val inputEpochSeconds = 2 * SECONDS_IN_DAY - offsetInSeconds + 1
+
+        val zone = SimpleTimeZone(offsetInSeconds * 1000, "Zone")
+        val actualResult = TimeUtils.toZonedEpochDays(inputEpochSeconds, zone)
+
+        assertEquals(2, actualResult)
     }
 
     companion object {

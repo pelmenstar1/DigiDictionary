@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.navigation.NavController
@@ -73,23 +74,23 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 GlobalSearchQueryProvider.isActive = false
             }
         }
-    }
 
-    override fun onBackPressed() {
-        if (navController.currentDestination?.id == R.id.homeFragment) {
-            // For user screen where all the records are shown and screen where the user can search,
-            // are two conceptually different screens but logically in the code they are both in HomeFragment.
-            // So, when back button is pressed during the search, search is expected to become inactive.
-            // Make that happen.
-            if (GlobalSearchQueryProvider.isActive) {
-                GlobalSearchQueryProvider.isActive = false
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (navController.currentDestination?.id == R.id.homeFragment) {
+                    // For user screen where all the records are shown and screen where the user can search,
+                    // are two conceptually different screens but logically in the code they are both in HomeFragment.
+                    // So, when back button is pressed during the search, search is expected to become inactive.
+                    // Make that happen.
+                    if (GlobalSearchQueryProvider.isActive) {
+                        GlobalSearchQueryProvider.isActive = false
 
-                findSearchItem()?.collapseActionView()
-                return
+                        findSearchItem()?.collapseActionView()
+                        return
+                    }
+                }
             }
-        }
-
-        super.onBackPressed()
+        })
     }
 
     override fun onStop() {
@@ -121,7 +122,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
             item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
-                override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                override fun onMenuItemActionExpand(item: MenuItem): Boolean {
                     GlobalSearchQueryProvider.isActive = true
 
                     actionView.requestFocusFromTouch()
@@ -134,7 +135,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     return true
                 }
 
-                override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
                     GlobalSearchQueryProvider.isActive = false
 
                     // In the next time the active view is expanded, text should be empty.

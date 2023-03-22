@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<io.github.pelmenstar1.digiDict.common.ui.DataLoadStateContainer xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/eventInfo_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/eventInfo_nameView"
+            style="@style/TextAppearance.Material3.HeadlineSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            tools:text="Event name" />
+
+        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+            android:id="@+id/eventInfo_startTimeView"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/eventInfo_propertyViewMarginTop"
+            app:prefix="@string/eventInfo_startTime" />
+
+        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+            android:id="@+id/eventInfo_endTimeView"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/eventInfo_propertyViewMarginTop"
+            app:prefix="@string/eventInfo_endTime" />
+
+        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+            android:id="@+id/eventInfo_durationView"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/eventInfo_propertyViewMarginTop"
+            app:prefix="@string/eventInfo_duration" />
+
+        <io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
+            android:id="@+id/eventInfo_totalRecordsAddedView"
+            style="@style/TextAppearance.Material3.BodyLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/eventInfo_propertyViewMarginTop"
+            app:prefix="@string/eventInfo_totalRecordsAdded" />
+
+        <Button
+            android:id="@+id/eventInfo_showRecordsButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:text="@string/eventInfo_showRecords" />
+
+    </LinearLayout>
+
+</io.github.pelmenstar1.digiDict.common.ui.DataLoadStateContainer>

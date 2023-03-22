@@ -5,6 +5,7 @@ import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import io.github.pelmenstar1.digiDict.backup.BackupCompatInfo
 import io.github.pelmenstar1.digiDict.common.android.readStringOrThrow
 import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
 import io.github.pelmenstar1.digiDict.common.equalsPattern
@@ -62,6 +63,9 @@ class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
 
     companion object {
         @JvmField
+        val EMPTY_ARRAY = emptyArray<RecordBadgeInfo>()
+
+        @JvmField
         val CREATOR = object : Parcelable.Creator<RecordBadgeInfo> {
             override fun createFromParcel(parcel: Parcel) = RecordBadgeInfo(parcel)
             override fun newArray(size: Int) = arrayOfNulls<RecordBadgeInfo>(size)
@@ -70,12 +74,12 @@ class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
         val SERIALIZER_RESOLVER = BinarySerializerResolver<RecordBadgeInfo> {
             register<RecordBadgeInfo>(
                 version = 1,
-                write = { value: RecordBadgeInfo ->
-                    emit(value.name)
+                write = { value, compatInfo ->
+                    emitString(value.name, compatInfo[BackupCompatInfo.IS_UTF8_STRINGS_INDEX])
                     emit(value.outlineColor)
                 },
-                read = {
-                    val name = consumeStringUtf16()
+                read = { compatInfo ->
+                    val name = consumeString(compatInfo[BackupCompatInfo.IS_UTF8_STRINGS_INDEX])
                     val color = consumeInt()
 
                     RecordBadgeInfo(0, name, color)

@@ -82,7 +82,7 @@ class ColorPaletteView @JvmOverloads constructor(
     private val selectionAnimator: PrimitiveAnimator
 
     private var _selectedIndex = -1
-    private var colors = EmptyArray.INT
+    private val colors = IntList()
 
     val selectedIndex: Int
         get() = _selectedIndex
@@ -184,7 +184,7 @@ class ColorPaletteView @JvmOverloads constructor(
      * It's not checked, but all colors in the palette are expected to be unique.
      */
     fun addColors(values: IntArray) {
-        colors = colors.withAddedElements(values)
+        colors.addRange(values)
 
         requestLayout()
         invalidate()
@@ -196,11 +196,12 @@ class ColorPaletteView @JvmOverloads constructor(
      */
     fun selectColorOrLast(@ColorInt color: Int, animate: Boolean = true) {
         val index = colors.indexOf(color)
+        val colorsLength = colors.size
 
         if (index >= 0) {
             selectColorAt(index, animate)
-        } else if (colors.isNotEmpty()) {
-            selectColorAt(colors.size - 1, animate)
+        } else if (colorsLength > 0) {
+            selectColorAt(colorsLength - 1, animate)
         }
     }
 
@@ -385,7 +386,7 @@ class ColorPaletteView @JvmOverloads constructor(
 
         var columnIndex = 0
 
-        for (i in colors.indices) {
+        for (i in 0 until colors.size) {
             val color = colors[i]
 
             if (columnIndex >= cellsInRow) {
@@ -477,7 +478,7 @@ class ColorPaletteView @JvmOverloads constructor(
         if (state is SavedState) {
             val selIndex = state.selectedIndex
 
-            if (selIndex in colors.indices) {
+            if (selIndex in 0 until colors.size) {
                 // The change should be animated because logically nothing is changed, we're just restoring previous state
                 selectColorAt(selIndex, animate = false)
             }

@@ -112,6 +112,8 @@ internal class PackedDiffRangeStack {
 
 internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffManagerDelegate<T>() {
     private val diagonals = PackedDiffDiagonalList()
+    private val cachedStack = PackedDiffRangeStack()
+    private val cachedSnake = FilteredArrayDiffShared.Snake(0, 0, 0, 0, false)
 
     override fun calculateDifference(
         oldArray: FilteredArray<out T>,
@@ -129,7 +131,10 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
 
         // instead of a recursive implementation, we keep our own stack to avoid potential stack
         // overflow exceptions
-        val stack = PackedDiffRangeStack()
+        val stack = cachedStack
+
+        // Behave as if the stack is empty and save the buffer
+        stack.size = 0
         stack.push(PackedDiffRange(0, oldSize, 0, newSize))
 
         initForwardBackwardArrays(max = (oldSize + newSize + 1) / 2)
@@ -137,17 +142,20 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
         val forward = forwardArray
         val backward = backwardArray
 
+        val snake = cachedSnake
+
         while (stack.size > 0) {
             val range = stack.pop()
 
-            val snake = FilteredArrayDiffShared.midPointFilteredArray(
+            val isSnakeValid = FilteredArrayDiffShared.midPointFilteredArray(
                 oldOrigin, newOrigin,
                 cb,
                 range.oldStart, range.oldEnd, range.newStart, range.newEnd,
-                forward, backward
+                forward, backward,
+                snake
             )
 
-            if (snake != null) {
+            if (isSnakeValid) {
                 // if it has a diagonal, save it
                 snake.toPackedDiagonal().let {
                     if (it != PackedDiffDiagonal.NONE) {

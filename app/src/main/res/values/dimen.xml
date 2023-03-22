@@ -4,6 +4,8 @@
     <dimen name="addRecord_elementTopMargin">5dp</dimen>
     <dimen name="addRecord_meaningAddButtonSize">48dp</dimen>
 
+    <dimen name="meaningInteraction_inputListEndPadding">40dp</dimen>
+
     <dimen name="home_stateContainerMarginTop">5dp</dimen>
     <dimen name="home_stateContainerMarginBottom">80dp</dimen>
 
@@ -11,15 +13,15 @@
     <dimen name="home_dateMarker_horizontalPadding">6dp</dimen>
     <dimen name="home_dateMarker_verticalMargin">10dp</dimen>
 
-    <dimen name="home_optionsBarButton_startPadding">10dp</dimen>
-    <dimen name="home_optionsBarButton_endPadding">5dp</dimen>
-    <dimen name="home_optionsBarButton_verticalPadding">4dp</dimen>
-    <dimen name="home_optionsBarButton_endMargin">6dp</dimen>
+    <dimen name="home_eventMarker_textSize">12sp</dimen>
+    <dimen name="home_eventMarker_outlineStrokeWidth">2dp</dimen>
+    <dimen name="home_eventMarker_textHorizontalMargin">7dp</dimen>
+    <dimen name="home_eventMarker_textVerticalMargin">2dp</dimen>
 
     <dimen name="itemRecord_padding">5dp</dimen>
     <dimen name="itemRecord_expressionMarginStart">5dp</dimen>
     <dimen name="itemRecord_badgeContainerHorizontalPadding">5dp</dimen>
-    <dimen name="itemRecord_dividerHeight">1dp</dimen>
+    <dimen name="itemRecord_dividerHeight">.5dp</dimen>
 
     <dimen name="remindRecords_lastItemBottomPadding">60dp</dimen>
 
@@ -35,8 +37,6 @@
     <dimen name="badge_topMargin">8dp</dimen>
     <dimen name="badge_strokeWidth">1.75dp</dimen>
 
-    <dimen name="badgeInteraction_addButton_size">40dp</dimen>
-    <dimen name="badgeInteraction_addButton_startMargin">8dp</dimen>
     <dimen name="badgeInteraction_addButton_rightPadding">4dp</dimen>
 
     <dimen name="badgeSelectorDialog_listElement_nameStartMargin">7dp</dimen>
@@ -54,6 +54,20 @@
     <dimen name="importFormatSelectorDialog_entryPadding">8dp</dimen>
     <dimen name="importExportConfigProgressIndicatorDialog_warningTopMargin">8dp</dimen>
 
-    <dimen name="stats_chartMarginHorizontal">10dp</dimen>
     <dimen name="stats_chartHeight">300dp</dimen>
+
+    <dimen name="manageEvents_itemMainContainerStartTopPadding">10dp</dimen>
+    <dimen name="manageEvents_itemPaddingBottom">5dp</dimen>
+    <dimen name="manageEvents_itemMenuIconSize">36dp</dimen>
+    <dimen name="manageEvents_itemStopButtonMarginTop">5dp</dimen>
+    <dimen name="manageEvents_itemOutlineStrokeWidth">3dp</dimen>
+    <dimen name="manageEvents_itemOutlineRoundRadius">8dp</dimen>
+    <dimen name="manageEvents_itemDividerStrokeWidth">1dp</dimen>
+
+    <dimen name="eventInfo_propertyViewMarginTop">10dp</dimen>
+
+    <dimen name="wordQueueCard_radius">10dp</dimen>
+    <dimen name="wordQueueCard_wordViewStartMargin">10dp</dimen>
+    <dimen name="wordQueueCard_horizontalMargin">10dp</dimen>
+    <dimen name="wordQueueCard_bottomMargin">7dp</dimen>
 </resources>

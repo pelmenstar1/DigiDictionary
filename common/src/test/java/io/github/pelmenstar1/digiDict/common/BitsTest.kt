@@ -156,4 +156,19 @@ class BitsTest {
         testCase(515)
     }
 
+    @Test
+    fun isLastBitSetTest() {
+        fun testCase(value: Int, position: Int, expected: Boolean) {
+            val actual = value.isLastBit(position)
+
+            assertEquals(expected, actual, "value: $value; position: $position")
+        }
+
+        testCase(value = 0, position = 0, expected = true)
+        testCase(value = 1, position = 0, expected = true)
+        testCase(value = 0b10000000, position = 7, expected = true)
+        testCase(value = 0b10000001, position = 0, expected = false)
+        testCase(value = 0x80000000.toInt(), position = 31, expected = true)
+        testCase(value = 0x80000002.toInt(), position = 1, expected = false)
+    }
 }

@@ -3,9 +3,7 @@ package io.github.pelmenstar1.digiDict
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
-import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProviderOnCore
-import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
+import io.github.pelmenstar1.digiDict.search.*
 import io.github.pelmenstar1.digiDict.utils.IntRangeSection
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,11 +82,43 @@ class RecordSearchMetadataProviderOnCoreTests {
             query = "h",
             expectedRanges = arrayOf(0 until 1)
         )
+
+        testCase(
+            text = "abcd",
+            query = "bcd",
+            expectedRanges = arrayOf(1 until 4)
+        )
+
+        testCase(
+            text = "abcd efghe",
+            query = "ghe",
+            expectedRanges = arrayOf(7 until 10)
+        )
+
+        // There should be no ranges as the query length is less than current RecordDeepSearchCore.IN_WORD_SEARCH_MIN_LENGTH
+        testCase(
+            text = "abcd",
+            query = "bc",
+            expectedRanges = emptyArray()
+        )
+
+        testCase(
+            text = "abc def   xyz",
+            query = "def xyz",
+            expectedRanges = arrayOf(4 until 13)
+        )
+
+        testCase(
+            text = "abc def   xyz",
+            query = "def xy",
+            expectedRanges = arrayOf(4 until 12)
+        )
     }
 
     @Test
     fun calculateFoundRangesInExpressionWhenFlagDisabledTest() {
-        val options = RecordSearchOptions(RecordSearchOptions.FLAG_SEARCH_FOR_MEANING)
+        val props = RecordSearchPropertySet(arrayOf(RecordSearchProperty.MEANING))
+        val options = RecordSearchOptions(props)
         val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore, query = "AB", options)
 
         val data = provider.calculateFoundRanges(createRecord(expr = "ABC", meaning = "C1"))
@@ -118,6 +148,8 @@ class RecordSearchMetadataProviderOnCoreTests {
 
             assertContentEquals(expectedSections, actualSections)
         }
+
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
 
         testCase(
             meaning = "CABC AB BB",
@@ -174,7 +206,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L3@ABC\nABC\nAB",
+            meaning = "L3@ABC${listSep}ABC${listSep}AB",
             query = "AB",
             expectedSections = arrayOf(
                 IntRangeSection(0 until 2),
@@ -184,7 +216,7 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L2@B LL\nA",
+            meaning = "L2@B LL${listSep}A",
             query = "LL",
             expectedSections = arrayOf(
                 IntRangeSection(2 until 4),
@@ -193,18 +225,46 @@ class RecordSearchMetadataProviderOnCoreTests {
         )
 
         testCase(
-            meaning = "L2@B\nget",
+            meaning = "L2@B${listSep}get",
             query = "get",
             expectedSections = arrayOf(
                 IntRangeSection(),
                 IntRangeSection(0 until 3)
             )
         )
+
+        testCase(
+            meaning = "L2@aaa${listSep}abc def  xyz",
+            query = "def xyz",
+            expectedSections = arrayOf(
+                IntRangeSection(),
+                IntRangeSection(4 until 12)
+            )
+        )
+
+        testCase(
+            meaning = "L2@aaa${listSep}abc def  xyz",
+            query = "def xy",
+            expectedSections = arrayOf(
+                IntRangeSection(),
+                IntRangeSection(4 until 11)
+            )
+        )
+
+        testCase(
+            meaning = "L2@aaa${listSep}abc def  xyz def   xyz",
+            query = "def xyz",
+            expectedSections = arrayOf(
+                IntRangeSection(),
+                IntRangeSection(4 until 12, 13 until 22)
+            )
+        )
     }
 
     @Test
     fun calculateFoundRangesInCommonMeaningWhenFlagDisabledTest() {
-        val options = RecordSearchOptions(RecordSearchOptions.FLAG_SEARCH_FOR_MEANING)
+        val props = RecordSearchPropertySet(arrayOf(RecordSearchProperty.MEANING))
+        val options = RecordSearchOptions(props)
         val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore, query = "AB", options)
 
         val data = provider.calculateFoundRanges(createRecord(expr = "123", meaning = "CABC"))
@@ -213,10 +273,13 @@ class RecordSearchMetadataProviderOnCoreTests {
 
     @Test
     fun calculateFoundRangesInListMeaningWhenFlagDisabledTest() {
-        val options = RecordSearchOptions(RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION)
+        val props = RecordSearchPropertySet(arrayOf(RecordSearchProperty.EXPRESSION))
+        val options = RecordSearchOptions(props)
+
         val provider = RecordSearchMetadataProviderOnCore(RecordDeepSearchCore, query = "AB", options)
 
-        val data = provider.calculateFoundRanges(createRecord(expr = "AB", meaning = "L3@AB\nBC\nCD"))
+        val listSep = ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR
+        val data = provider.calculateFoundRanges(createRecord(expr = "AB", meaning = "L3@AB${listSep}BC${listSep}CD"))
 
         assertEquals(1, data[0]) // first is expr ranges length, should be one, as there's one range.
         assertEquals(0, data[1]) // the start of the expr range
@@ -227,8 +290,6 @@ class RecordSearchMetadataProviderOnCoreTests {
     }
 
     companion object {
-        private val defaultSearchOptions = RecordSearchOptions(
-            RecordSearchOptions.FLAG_SEARCH_FOR_EXPRESSION or RecordSearchOptions.FLAG_SEARCH_FOR_MEANING
-        )
+        private val defaultSearchOptions = RecordSearchOptions(RecordSearchPropertySet.all())
     }
 }
