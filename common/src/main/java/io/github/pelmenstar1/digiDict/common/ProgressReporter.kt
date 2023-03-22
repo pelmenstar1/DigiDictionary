@@ -40,10 +40,11 @@ class ProgressReporter {
     }
 
     fun onProgress(current: Int, total: Int) {
-        val newProgress = _completed + (_diff * current) / total
-        if (newProgress !in 0..100) {
-            throw IllegalArgumentException("Illegal current and total: current=$current, total=$total")
+        if ((current or total) < 0 || current > total) {
+            throw IllegalArgumentException("current=$current, total=$total")
         }
+
+        val newProgress = _completed + (_diff * current) / total
 
         _progressFlow.value = newProgress
     }
@@ -67,7 +68,7 @@ class ProgressReporter {
     fun subReporter(completed: Int, target: Int): ProgressReporter {
         when {
             completed !in 0..100 -> throw IllegalArgumentException("completed is out of range")
-            target < 0 || target > 100 -> throw IllegalArgumentException("target is out of range")
+            target !in 0..100 -> throw IllegalArgumentException("target is out of range")
             completed > target -> throw IllegalArgumentException("completed > target")
         }
 
