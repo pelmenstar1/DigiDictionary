@@ -13,6 +13,7 @@
         android:icon="@drawable/ic_more"
         android:title=""
         app:showAsAction="ifRoom">
+
         <menu>
             <item
                 android:id="@+id/statsFragment"
@@ -30,6 +31,10 @@
             <item
                 android:id="@+id/manageEventsFragment"
                 android:title="@string/events" />
+
+            <item
+                android:id="@+id/wordQueueFragment"
+                android:title="@string/wordQueue_title" />
 
             <item
                 android:id="@+id/settingsFragment"

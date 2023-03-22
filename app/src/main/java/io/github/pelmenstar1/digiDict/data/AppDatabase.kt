@@ -15,10 +15,11 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
         RemoteDictionaryProviderStats::class,
         RecordBadgeInfo::class,
         RecordToBadgeRelation::class,
-        EventInfo::class
+        EventInfo::class,
+        WordQueueEntry::class
     ],
     exportSchema = true,
-    version = 11,
+    version = 12,
     autoMigrations = [
         AutoMigration(
             from = 1,
@@ -44,6 +45,11 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
             from = 9,
             to = 10,
             spec = AppDatabase.Migration_9_10::class
+        ),
+        AutoMigration(
+            from = 11,
+            to = 12,
+            spec = AppDatabase.Migration_11_12::class
         )
     ]
 )
@@ -60,6 +66,8 @@ abstract class AppDatabase : RoomDatabase() {
     class Migration_8_9 : AutoMigrationSpec
 
     class Migration_9_10 : AutoMigrationSpec
+
+    class Migration_11_12 : AutoMigrationSpec
 
     object Migration_2_3 : Migration(2, 3) {
         override fun migrate(database: SupportSQLiteDatabase) {
@@ -111,6 +119,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recordBadgeDao(): RecordBadgeDao
     abstract fun recordToBadgeRelationDao(): RecordToBadgeRelationDao
     abstract fun eventDao(): EventDao
+    abstract fun wordQueueDao(): WordQueueDao
 
     companion object {
         private var singleton: AppDatabase? = null
