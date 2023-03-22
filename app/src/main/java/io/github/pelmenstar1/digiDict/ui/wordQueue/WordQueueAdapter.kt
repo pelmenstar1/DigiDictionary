@@ -26,6 +26,15 @@ class WordQueueAdapter(
         result.dispatchUpdatesTo(this)
     }
 
+    fun submitEmpty() {
+        val size = items.size
+
+        if (size > 0) {
+            items = emptyArray()
+            notifyItemRangeRemoved(0, size)
+        }
+    }
+
     override fun getItemCount(): Int = items.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

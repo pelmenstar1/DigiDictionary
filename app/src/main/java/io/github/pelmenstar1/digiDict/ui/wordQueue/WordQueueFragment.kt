@@ -29,6 +29,7 @@ class WordQueueFragment : Fragment() {
         val stateContainer = binding.root
         val addButton = binding.wordQueueAddButton
         val recyclerView = binding.wordQueueRecyclerView
+        val emptyTextView = binding.wordQueueEmptyTextView
 
         showSnackbarEventHandlerOnError(
             vm.removeFromQueueAction,
@@ -47,7 +48,13 @@ class WordQueueFragment : Fragment() {
         addButton.setOnClickListener { showAddToQueueDialog() }
 
         stateContainer.setupLoadStateFlow(lifecycleScope, vm) {
-            adapter.submitItems(it)
+            if (it.isEmpty()) {
+                emptyTextView.visibility = View.VISIBLE
+                adapter.submitEmpty()
+            } else {
+                emptyTextView.visibility = View.GONE
+                adapter.submitItems(it)
+            }
         }
 
         return stateContainer
