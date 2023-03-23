@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application android:theme="@style/Theme.MaterialComponents">
+    <application android:theme="@style/Theme.Material3.Dark">
         <activity
             android:name="io.github.pelmenstar1.digiDict.common.PrimitiveAnimatorTests$TestActivity"
             android:exported="true">
