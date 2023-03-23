@@ -21,4 +21,10 @@
         <item quantity="one">%s week</item>
         <item quantity="other">%s weeks</item>
     </plurals>
+
+    <!-- These values are only used in tests -->
+    <!-- TODO: Move test resource to appropriate files in test resources folder -->
+    <string name="test_res_1">Test res 1</string>
+    <string name="test_res_2">Test res 2</string>
+    <string name="test_res_3">Test res 3</string>
 </resources>
