@@ -53,6 +53,13 @@ inline fun <reified T : Any> RoomDatabase.queryArrayWithProgressReporter(
 
         cursor = query(sql, null)
         val count = cursor.count
+
+        if (count == 0) {
+            progressReporter?.end()
+
+            return emptyArray()
+        }
+
         val result = unsafeNewArray<T>(count)
 
         for (i in 0 until count) {

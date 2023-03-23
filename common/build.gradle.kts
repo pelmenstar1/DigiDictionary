@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
 }
 
 android {
@@ -46,6 +47,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.room.runtime)
+    kaptAndroidTest(libs.androidx.room.compiler)
 
     implementation(libs.bundles.kotlinx.coroutines)
     implementation(libs.bundles.androidx.nav)
