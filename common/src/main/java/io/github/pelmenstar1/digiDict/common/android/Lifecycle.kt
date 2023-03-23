@@ -7,6 +7,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 
@@ -14,7 +15,7 @@ import io.github.pelmenstar1.digiDict.common.launchFlowCollector
  * Shows snackbar which will be dismissed when [Lifecycle.Event.ON_DESTROY] event happens in specified [lifecycle].
  * Useful in fragments.
  */
-fun Snackbar.showLifecycleAwareSnackbar(lifecycle: Lifecycle) {
+fun <B : BaseTransientBottomBar<B>> BaseTransientBottomBar<B>.showLifecycleAwareSnackbar(lifecycle: Lifecycle) {
     show()
 
     val snackbar = this
