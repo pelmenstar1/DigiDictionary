@@ -35,16 +35,16 @@ private fun Context.getColorFromAttribute(@AttrRes attrId: Int, @ColorInt defaul
 }
 
 @ColorInt
-fun Context.getPrimaryColor(): Int {
-    return getColorFromAttribute(com.google.android.material.R.attr.colorPrimary, Color.TRANSPARENT)
+fun Context.getPrimaryColor(@ColorInt defaultColor: Int = Color.TRANSPARENT): Int {
+    return getColorFromAttribute(com.google.android.material.R.attr.colorPrimary, defaultColor)
 }
 
 @ColorInt
-fun Context.getDefaultTextColor(): Int {
-    return getColorFromAttribute(android.R.attr.textColor, Color.BLACK)
+fun Context.getDefaultTextColor(@ColorInt defaultColor: Int = Color.BLACK): Int {
+    return getColorFromAttribute(android.R.attr.textColor, defaultColor)
 }
 
 @ColorInt
-fun Context.getColorSurfaceVariant(): Int {
-    return getColorFromAttribute(com.google.android.material.R.attr.colorSurfaceVariant, Color.BLACK)
+fun Context.getColorSurfaceVariant(@ColorInt defaultColor: Int = Color.TRANSPARENT): Int {
+    return getColorFromAttribute(com.google.android.material.R.attr.colorSurfaceVariant, defaultColor)
 }

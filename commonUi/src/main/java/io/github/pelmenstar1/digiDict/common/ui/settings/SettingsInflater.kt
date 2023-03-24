@@ -1,10 +1,10 @@
 package io.github.pelmenstar1.digiDict.common.ui.settings
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +16,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
-import io.github.pelmenstar1.digiDict.common.android.TransparentDrawable
+import io.github.pelmenstar1.digiDict.common.android.getColorSurfaceVariant
 import io.github.pelmenstar1.digiDict.common.android.getSelectableItemBackground
 import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
@@ -121,20 +121,9 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
     }
 
     private fun getTitleBackground(context: Context): Drawable {
-        val theme = context.theme
+        val colorSurfaceVariant = context.getColorSurfaceVariant(defaultColor = Color.TRANSPARENT)
 
-        val typedValue = TypedValue()
-        val resolved = theme.resolveAttribute(
-            com.google.android.material.R.attr.colorSurfaceVariant,
-            typedValue,
-            true
-        )
-
-        return if (resolved) {
-            ColorDrawable(typedValue.data)
-        } else {
-            TransparentDrawable
-        }
+        return ColorDrawable(colorSurfaceVariant)
     }
 
     private fun createTitleViewInfo(textAppearance: TextAppearance): TitleViewInfo {
