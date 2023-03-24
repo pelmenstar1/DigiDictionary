@@ -85,13 +85,6 @@ class IntList(capacity: Int = 0) {
     }
 
     /**
-     * Returns whether the list contains specified [element].
-     */
-    fun contains(element: Int): Boolean {
-        return elements.contains(element, 0, _size)
-    }
-
-    /**
      * Adds specified [element] to the end of the list.
      */
     fun add(element: Int) {

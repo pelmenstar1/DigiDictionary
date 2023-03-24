@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+
+    <style name="ResourcesTestTheme" parent="Theme.Material3.Dark">
+        <item name="colorPrimary">#111111</item>
+        <item name="android:textColor">#ff0000</item>
+        <item name="colorSurfaceVariant">#00ff00</item>
+    </style>
+</resources>

@@ -1,7 +1,12 @@
 package io.github.pelmenstar1.digiDict.common
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 
 class ValidityFlowTests {
     private class ValidityFieldEnabledComputed(
@@ -18,6 +23,10 @@ class ValidityFlowTests {
                 }
             }
         }
+    }
+
+    private fun createFields(fieldCount: Int): Array<ValidityFlow.Field> {
+        return Array(fieldCount) { ValidityFlow.Field(ordinal = it) }
     }
 
     @Test
@@ -222,5 +231,243 @@ class ValidityFlowTests {
             ),
             expected = true
         )
+    }
+
+    @Test
+    fun waitForAllComputedAndReturnIsAllValidTest() {
+        fun testCase(
+            fieldCount: Int,
+            init: ValidityFlow.Mutator.(Array<ValidityFlow.Field>) -> Unit,
+            mutation: ValidityFlow.Mutator.(Array<ValidityFlow.Field>) -> Unit,
+            expectedIsValid: Boolean
+        ) = runBlocking {
+            val fields = createFields(fieldCount)
+            val flow = ValidityFlow(ValidityFlow.Scheme(fields))
+
+            flow.mutate { init(fields) }
+
+            launch(Dispatchers.Default) {
+                delay(100)
+                flow.mutate { mutation(fields) }
+            }
+
+            val isValid = flow.waitForAllComputedAndReturnIsAllValid()
+            assertEquals(expectedIsValid, isValid)
+        }
+
+        testCase(
+            fieldCount = 2,
+            init = { (field1, field2) ->
+                set(field1, value = true)
+                set(field2, value = false, isComputed = false)
+            },
+            mutation = { (_, field2) ->
+                set(field2, value = true)
+            },
+            expectedIsValid = true
+        )
+
+        testCase(
+            fieldCount = 2,
+            init = { (field1, field2) ->
+                set(field1, value = false, isComputed = false)
+                set(field2, value = true, isComputed = false)
+            },
+            mutation = { (field1, field2) ->
+                set(field1, value = true)
+                set(field2, value = true)
+            },
+            expectedIsValid = true
+        )
+
+        testCase(
+            fieldCount = 2,
+            init = { (field1, field2) ->
+                set(field1, value = false, isComputed = false)
+                set(field2, value = true, isComputed = false)
+            },
+            mutation = { (field1, field2) ->
+                set(field1, value = true)
+                set(field2, value = false)
+            },
+            expectedIsValid = false
+        )
+
+        testCase(
+            fieldCount = 2,
+            init = { (field1, field2) ->
+                set(field1, value = false, isComputed = false)
+                set(field2, value = true, isComputed = true)
+            },
+            mutation = { (field1, field2) ->
+                set(field1, value = false)
+                set(field2, value = false)
+            },
+            expectedIsValid = false
+        )
+
+        testCase(
+            fieldCount = 1,
+            init = { (field1) ->
+                set(field1, value = false, isComputed = false)
+            },
+            mutation = { (field1) ->
+                set(field1, value = true)
+            },
+            expectedIsValid = true
+        )
+
+        testCase(
+            fieldCount = 1,
+            init = { (field1) ->
+                set(field1, value = false, isComputed = false)
+            },
+            mutation = { (field1) ->
+                set(field1, value = false)
+            },
+            expectedIsValid = false
+        )
+
+        testCase(
+            fieldCount = 1,
+            init = { (field1) ->
+                set(field1, value = true)
+            },
+            mutation = {},
+            expectedIsValid = true
+        )
+    }
+
+    @Test
+    fun waitForComputedAndReturnIsValidTest() {
+        fun testCase(
+            fieldCount: Int,
+            checkFieldIndex: Int,
+            init: ValidityFlow.Mutator.(Array<ValidityFlow.Field>) -> Unit,
+            mutation: ValidityFlow.Mutator.(Array<ValidityFlow.Field>) -> Unit,
+            expectedIsValid: Boolean
+        ) = runBlocking {
+            val fields = createFields(fieldCount)
+            val flow = ValidityFlow(ValidityFlow.Scheme(fields))
+
+            flow.mutate { init(fields) }
+
+            launch(Dispatchers.Default) {
+                delay(100)
+                flow.mutate { mutation(fields) }
+            }
+
+            val isValid = flow.waitForComputedAndReturnIsValid(fields[checkFieldIndex])
+            assertEquals(expectedIsValid, isValid)
+        }
+
+        testCase(
+            fieldCount = 2,
+            checkFieldIndex = 1,
+            init = { (field1, field2) ->
+                set(field1, value = true)
+                set(field2, value = false, isComputed = false)
+            },
+            mutation = { (_, field2) ->
+                set(field2, value = true, isComputed = true)
+            },
+            expectedIsValid = true
+        )
+
+        testCase(
+            fieldCount = 2,
+            checkFieldIndex = 1,
+            init = { (field1, field2) ->
+                set(field1, value = true)
+                set(field2, value = false, isComputed = false)
+            },
+            mutation = { (_, field2) ->
+                set(field2, value = false, isComputed = true)
+            },
+            expectedIsValid = false
+        )
+
+        testCase(
+            fieldCount = 2,
+            checkFieldIndex = 1,
+            init = { (field1, field2) ->
+                set(field1, value = false, isComputed = false)
+                set(field2, value = false, isComputed = false)
+            },
+            mutation = { (_, field2) ->
+                set(field2, value = true, isComputed = true)
+            },
+            expectedIsValid = true
+        )
+
+        testCase(
+            fieldCount = 2,
+            checkFieldIndex = 0,
+            init = { (field1, field2) ->
+                set(field1, value = false, isComputed = false)
+                set(field2, value = true, isComputed = true)
+            },
+            mutation = { (field1) ->
+                set(field1, value = true, isComputed = true)
+            },
+            expectedIsValid = true
+        )
+
+        testCase(
+            fieldCount = 1,
+            checkFieldIndex = 0,
+            init = { (field1) ->
+                set(field1, value = false, isComputed = false)
+            },
+            mutation = { (field1) ->
+                set(field1, value = true, isComputed = true)
+            },
+            expectedIsValid = true
+        )
+
+        testCase(
+            fieldCount = 1,
+            checkFieldIndex = 0,
+            init = { (field1) ->
+                set(field1, value = false, isComputed = false)
+            },
+            mutation = { (field1) ->
+                set(field1, value = false, isComputed = true)
+            },
+            expectedIsValid = false
+        )
+    }
+
+    @Test
+    fun fieldConstructorThrowsWhenOrdinalOutOfBoundsTest() {
+        assertFails {
+            ValidityFlow.Field(ordinal = -1)
+        }
+
+        assertFails {
+            ValidityFlow.Field(ordinal = 16)
+        }
+    }
+
+    @Test
+    fun getTest() {
+        fun testCase(fieldCount: Int, fieldIndex: Int, value: Boolean) {
+            val fields = createFields(fieldCount)
+            val flow = ValidityFlow(ValidityFlow.Scheme(fields))
+
+            flow.mutate {
+                set(fields[fieldIndex], value)
+            }
+
+            val actualValue = flow[fields[fieldIndex]]
+            assertEquals(value, actualValue)
+        }
+
+        testCase(fieldCount = 2, fieldIndex = 0, value = true)
+        testCase(fieldCount = 2, fieldIndex = 1, value = true)
+        testCase(fieldCount = 2, fieldIndex = 0, value = false)
+        testCase(fieldCount = 2, fieldIndex = 1, value = false)
+        testCase(fieldCount = 1, fieldIndex = 0, value = true)
+        testCase(fieldCount = 1, fieldIndex = 0, value = false)
     }
 }

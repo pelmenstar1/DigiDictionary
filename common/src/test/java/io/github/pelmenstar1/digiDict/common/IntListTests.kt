@@ -212,4 +212,103 @@ class IntListTests {
             expectedResult = intArrayOf(1, 2, 3, 4)
         )
     }
+
+    @Test
+    fun getTest() {
+        fun testCase(elements: IntArray, index: Int, expectedElement: Int) {
+            val list = IntList()
+            list.elements = elements
+            list.size = elements.size
+
+            val actualElement = list[index]
+            assertEquals(expectedElement, actualElement)
+        }
+
+        testCase(elements = intArrayOf(1), index = 0, expectedElement = 1)
+        testCase(elements = intArrayOf(1, 2), index = 1, expectedElement = 2)
+        testCase(elements = intArrayOf(1, 2, 3), index = 2, expectedElement = 3)
+    }
+
+    @Test
+    fun getThrowsWhenIndexOutOfBounds() {
+        fun testCase(elements: IntArray, size: Int, index: Int) {
+            val list = IntList()
+            list.elements = elements
+            list.size = size
+
+            assertFails {
+                list[index]
+            }
+        }
+
+        testCase(elements = intArrayOf(), size = 0, index = 1)
+        testCase(elements = intArrayOf(1, 2, 3, 0), size = 2, index = 3)
+        testCase(elements = intArrayOf(1, 2, 3, 0), size = 2, index = 2)
+        testCase(elements = intArrayOf(1, 2, 3), size = 2, index = -1)
+    }
+
+    @Test
+    fun setTest() {
+        fun testCase(elements: IntArray, index: Int, element: Int) {
+            val list = IntList()
+            list.elements = elements
+            list.size = elements.size
+
+            list[index] = element
+            val actualElement = list[index]
+
+            assertEquals(element, actualElement)
+        }
+
+        testCase(elements = intArrayOf(1), index = 0, element = 2)
+        testCase(elements = intArrayOf(1, 2, 3), index = 1, element = 5)
+    }
+
+    @Test
+    fun setThrowsWhenIndexOutOfBounds() {
+        fun testCase(elements: IntArray, size: Int, index: Int) {
+            val list = IntList()
+            list.elements = elements
+            list.size = size
+
+            assertFails {
+                list[index] = 0
+            }
+        }
+
+        testCase(elements = intArrayOf(), size = 0, index = 1)
+        testCase(elements = intArrayOf(1, 2, 3, 0), size = 2, index = 3)
+        testCase(elements = intArrayOf(1, 2, 3, 0), size = 2, index = 2)
+        testCase(elements = intArrayOf(1, 2, 3), size = 2, index = -1)
+    }
+
+    @Test
+    fun ensureCapacityThrowsWhenValueIsNegative() {
+        assertFails {
+            IntList().ensureCapacity(-1)
+        }
+    }
+
+    @Test
+    fun sizeThrowsWhenValueIsNegative() {
+        assertFails {
+            IntList().size = -1
+        }
+    }
+
+    @Test
+    fun sizeThrowsWhenValueIsGreaterThanCapacity() {
+        assertFails {
+            IntList().size = 100
+        }
+    }
+
+    @Test
+    fun sizeTest() {
+        val list = IntList()
+        list.elements = intArrayOf(1, 2, 3)
+        list.size = 3
+
+        assertEquals(3, list.size)
+    }
 }

@@ -21,7 +21,6 @@ class FixedBitSetParcelTests {
             testCase(bitSet)
         }
 
-        testCase(FixedBitSet.EMPTY)
         testCase(size = 1, setBits = intArrayOf())
         testCase(size = 32, setBits = (0..31).toIntArray())
         testCase(size = 64, setBits = (0..63).toIntArray())

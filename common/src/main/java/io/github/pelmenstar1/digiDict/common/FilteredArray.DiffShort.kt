@@ -49,6 +49,10 @@ internal value class PackedDiffDiagonal(@JvmField val bits: Long) {
     val size: Int
         get() = bits.toInt() and 0xFFFF
 
+    override fun toString(): String {
+        return "PackedDiffDiagonal(x=$x, y=$y, size=$size)"
+    }
+
     companion object {
         internal const val X_SHIFT = 32
         internal const val Y_SHIFT = 16

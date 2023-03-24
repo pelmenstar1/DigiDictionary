@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.common
 
 import org.junit.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class FilteredArrayDiffPackedTests {
@@ -50,6 +51,84 @@ class FilteredArrayDiffPackedTests {
         assertEquals(0xFFFF, none.x)
         assertEquals(0xFFFF, none.y)
         assertEquals(0xFFFF, none.size)
+    }
+
+    private fun Array<PackedDiffDiagonal>.toPackedArray(): LongArray {
+        return LongArray(size) { i ->
+            val element = this[i]
+
+            PackedDiffDiagonal(element.x, element.y, element.size).bits
+        }
+    }
+
+    private fun packedDiffDiagonalArrayToTyped(packedArray: LongArray): Array<PackedDiffDiagonal> {
+        return Array(packedArray.size) { i ->
+            val value = PackedDiffDiagonal(packedArray[i])
+
+            PackedDiffDiagonal(value.x, value.y, value.size)
+        }
+    }
+
+    @Test
+    fun packedDiffDiagonalList_sortTest() {
+        fun testCase(elements: Array<PackedDiffDiagonal>, size: Int, expectedElements: Array<PackedDiffDiagonal>) {
+            val list = PackedDiffDiagonalList()
+            list.elements = elements.toPackedArray()
+            list.size = size
+
+            list.sort()
+
+            val actualElements = packedDiffDiagonalArrayToTyped(list.elements)
+            assertContentEquals(expectedElements, actualElements)
+        }
+
+        testCase(
+            elements = arrayOf(
+                PackedDiffDiagonal(x = 1, y = 5, size = 10),
+                PackedDiffDiagonal(x = 2, y = 5, size = 10)
+            ),
+            size = 2,
+            expectedElements = arrayOf(
+                PackedDiffDiagonal(x = 1, y = 5, size = 10),
+                PackedDiffDiagonal(x = 2, y = 5, size = 10)
+            )
+        )
+
+        testCase(
+            elements = arrayOf(
+                PackedDiffDiagonal(x = 2, y = 5, size = 10),
+                PackedDiffDiagonal(x = 1, y = 5, size = 10)
+            ),
+            size = 2,
+            expectedElements = arrayOf(
+                PackedDiffDiagonal(x = 1, y = 5, size = 10),
+                PackedDiffDiagonal(x = 2, y = 5, size = 10)
+            )
+        )
+
+        testCase(
+            elements = arrayOf(
+                PackedDiffDiagonal(x = 2, y = 5, size = 10),
+                PackedDiffDiagonal(x = 1, y = 5, size = 10),
+                PackedDiffDiagonal(x = 3, y = 5, size = 10),
+                PackedDiffDiagonal(x = 0, y = 5, size = 10)
+            ),
+            size = 4,
+            expectedElements = arrayOf(
+                PackedDiffDiagonal(x = 0, y = 5, size = 10),
+                PackedDiffDiagonal(x = 1, y = 5, size = 10),
+                PackedDiffDiagonal(x = 2, y = 5, size = 10),
+                PackedDiffDiagonal(x = 3, y = 5, size = 10)
+            )
+        )
+
+        testCase(
+            elements = arrayOf(PackedDiffDiagonal(x = 2, y = 5, size = 10)),
+            size = 1,
+            expectedElements = arrayOf(
+                PackedDiffDiagonal(x = 2, y = 5, size = 10)
+            )
+        )
     }
 
     companion object {

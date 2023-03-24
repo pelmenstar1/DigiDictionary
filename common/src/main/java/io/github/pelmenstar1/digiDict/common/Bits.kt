@@ -140,8 +140,6 @@ class FixedBitSet : Parcelable {
         private const val WORD_SIZE = 6
         private const val WORD_BITS_COUNT = 64
 
-        val EMPTY = FixedBitSet(EmptyArray.LONG, 0)
-
         @JvmField
         val CREATOR = object : Parcelable.Creator<FixedBitSet> {
             override fun createFromParcel(source: Parcel) = FixedBitSet(source)
@@ -210,14 +208,4 @@ inline fun LongArray.iterateSetBits(block: (bitIndex: Int) -> Unit) {
             block(baseIndex - bitIndex)
         }
     }
-}
-
-fun Short.writeTo(dest: ByteArray, offset: Int) {
-    dest[offset] = this.toByte()
-    dest[offset + 1] = (this.toInt() shr 8).toByte()
-}
-
-fun ByteArray.readShort(offset: Int): Short {
-    return ((this[offset].toInt() and 0xFF) or
-            (this[offset + 1].toInt() and 0xFF shl 8)).toShort()
 }
