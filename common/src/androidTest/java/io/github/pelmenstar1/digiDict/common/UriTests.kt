@@ -20,6 +20,7 @@ class UriTests {
 
         testCase(input = "file:///a.", expected = null)
         testCase(input = "file:///a", expected = null)
+        testCase(input = "https://google.com", expected = null)
         testCase(input = "file:///abc.ext", expected = "ext")
         testCase(input = "file:///a.e", expected = "e")
         testCase(input = "file:///a.ext (1)", expected = "ext")
