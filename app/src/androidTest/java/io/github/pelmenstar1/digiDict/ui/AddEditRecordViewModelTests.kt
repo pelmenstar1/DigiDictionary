@@ -32,12 +32,14 @@ class AddEditRecordViewModelTests {
     private fun createViewModel(
         recordDao: RecordDao = db.recordDao(),
         recordToBadgeRelationDao: RecordToBadgeRelationDao = db.recordToBadgeRelationDao(),
+        wordQueueDao: WordQueueDao = db.wordQueueDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
     ): AddEditRecordViewModel {
         return AddEditRecordViewModel(
             recordDao,
             recordToBadgeRelationDao,
+            wordQueueDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
             SavedStateHandle()
@@ -47,6 +49,7 @@ class AddEditRecordViewModelTests {
     private inline fun useViewModel(
         recordDao: RecordDao = db.recordDao(),
         recordToBadgeRelationDao: RecordToBadgeRelationDao = db.recordToBadgeRelationDao(),
+        wordQueueDao: WordQueueDao = db.wordQueueDao(),
         appWidgetUpdater: AppWidgetUpdater = AppWidgetUpdaterStub,
         currentEpochSecondsProvider: CurrentEpochSecondsProvider = SystemEpochSecondsProvider,
         block: (AddEditRecordViewModel) -> Unit
@@ -54,6 +57,7 @@ class AddEditRecordViewModelTests {
         createViewModel(
             recordDao,
             recordToBadgeRelationDao,
+            wordQueueDao,
             appWidgetUpdater,
             currentEpochSecondsProvider,
         ).use(block)

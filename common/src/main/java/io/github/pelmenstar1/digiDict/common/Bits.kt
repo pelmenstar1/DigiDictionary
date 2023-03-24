@@ -140,6 +140,8 @@ class FixedBitSet : Parcelable {
         private const val WORD_SIZE = 6
         private const val WORD_BITS_COUNT = 64
 
+        val EMPTY = FixedBitSet(EmptyArray.LONG, 0)
+
         @JvmField
         val CREATOR = object : Parcelable.Creator<FixedBitSet> {
             override fun createFromParcel(source: Parcel) = FixedBitSet(source)

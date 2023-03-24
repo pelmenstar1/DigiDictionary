@@ -94,7 +94,7 @@ class DataLoadStateManager<T>(val logTag: String) {
     fun buildFlow(
         scope: CoroutineScope,
         provider: FlowBuilder<T>.() -> DataLoadStateFlow<T>
-    ): Flow<DataLoadState<T>> {
+    ): SharedFlow<DataLoadState<T>> {
         val builder = FlowBuilder(this)
 
         return retryFlow.flatMapLatest {

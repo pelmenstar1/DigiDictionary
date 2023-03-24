@@ -102,8 +102,6 @@ class QuizViewModelTests {
                 scorePointsPerCorrectAnswer = scorePointsPerCorrectAnswer.defaultValue,
                 scorePointsPerWrongAnswer = scorePointsPerWrongAnswer.defaultValue,
                 useCustomTabs = useCustomTabs.defaultValue,
-                remindItemsSize = remindItemsSize.defaultValue,
-                remindShowMeaning = remindShowMeaning.defaultValue,
                 widgetListMaxSize = widgetListMaxSize.defaultValue,
                 recordTextBreakStrategy = recordTextBreakStrategy.defaultValue,
                 recordTextHyphenationFrequency = recordTextHyphenationFrequency.defaultValue
