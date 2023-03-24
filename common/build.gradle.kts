@@ -23,6 +23,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableAndroidTestCoverage = true
+            enableUnitTestCoverage = true
+        }
+
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -42,6 +47,12 @@ android {
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.FlowPreview"
         )
+    }
+
+    testOptions {
+        testCoverage {
+            jacocoVersion = "0.8.7"
+        }
     }
 }
 
@@ -68,4 +79,31 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso)
+}
+
+tasks.register<JacocoReport>("jacocoMergeCoverageReports") {
+    dependsOn("createDebugUnitTestCoverageReport", "createDebugAndroidTestCoverageReport")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val fileFilter =
+        listOf("**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*", "**/*Test*.*", "android/**/*.*")
+    val kotlinTree = fileTree(mapOf("dir" to "${buildDir}/tmp/kotlin-classes/debug", "excludes" to fileFilter))
+    val mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.from(files(mainSrc))
+    classDirectories.from(files(kotlinTree))
+    executionData.from(
+        fileTree(
+            mapOf(
+                "dir" to "$buildDir", "includes" to listOf(
+                    "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                    "outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec",
+                )
+            )
+        )
+    )
 }
