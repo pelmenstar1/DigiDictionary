@@ -24,9 +24,6 @@
         <action
             android:id="@+id/action_home_to_viewRecord"
             app:destination="@id/viewRecordFragment" />
-        <action
-            android:id="@+id/action_home_to_remindRecords"
-            app:destination="@id/remindRecordsFragment" />
     </fragment>
 
     <fragment
@@ -140,11 +137,6 @@
             app:argType="string"
             app:nullable="false" />
     </fragment>
-
-    <fragment
-        android:id="@+id/remindRecordsFragment"
-        android:name="io.github.pelmenstar1.digiDict.ui.remindRecords.RemindRecordsFragment"
-        android:label="@string/remindRecords_labelInFragment" />
 
     <fragment
         android:id="@+id/manageRecordBadgesFragment"

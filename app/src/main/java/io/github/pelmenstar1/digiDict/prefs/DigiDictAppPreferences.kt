@@ -15,8 +15,6 @@ abstract class DigiDictAppPreferences :
         val scorePointsPerCorrectAnswer = entry(defaultValue = 1)
         val scorePointsPerWrongAnswer = entry(defaultValue = 2)
         val useCustomTabs = entry(defaultValue = true)
-        val remindItemsSize = entry(defaultValue = 15)
-        val remindShowMeaning = entry(defaultValue = false)
         val widgetListMaxSize = entry(defaultValue = 20)
 
         @get:RequiresApi(23)
@@ -41,8 +39,6 @@ abstract class DigiDictAppPreferences :
         val scorePointsPerCorrectAnswer: Int,
         val scorePointsPerWrongAnswer: Int,
         val useCustomTabs: Boolean,
-        val remindItemsSize: Int,
-        val remindShowMeaning: Boolean,
         val widgetListMaxSize: Int,
 
         @RequiresApi(23)
@@ -64,8 +60,6 @@ abstract class DigiDictAppPreferences :
                 entry === Entries.scorePointsPerCorrectAnswer -> scorePointsPerCorrectAnswer
                 entry === Entries.scorePointsPerWrongAnswer -> scorePointsPerWrongAnswer
                 entry === Entries.useCustomTabs -> useCustomTabs
-                entry === Entries.remindItemsSize -> remindItemsSize
-                entry === Entries.remindShowMeaning -> remindShowMeaning
                 entry === Entries.widgetListMaxSize -> widgetListMaxSize
                 else -> throw IllegalStateException("Invalid preference entry")
             } as TValue

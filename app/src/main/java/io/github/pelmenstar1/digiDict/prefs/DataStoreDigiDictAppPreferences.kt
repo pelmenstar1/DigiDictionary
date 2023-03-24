@@ -45,8 +45,6 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         val scorePointsPerCorrectAnswer = getNonEnumValue { scorePointsPerCorrectAnswer }
         val scorePointsPerWrongAnswer = getNonEnumValue { scorePointsPerWrongAnswer }
         val useCustomTabs = getNonEnumValue { useCustomTabs }
-        val remindItemsSize = getNonEnumValue { remindItemsSize }
-        val remindShowMeaning = getNonEnumValue { remindShowMeaning }
         val widgetListMaxSize = getNonEnumValue { widgetListMaxSize }
 
         var recordBreakStrategy = BreakStrategy.UNSPECIFIED
@@ -64,8 +62,6 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
             scorePointsPerCorrectAnswer,
             scorePointsPerWrongAnswer,
             useCustomTabs,
-            remindItemsSize,
-            remindShowMeaning,
             widgetListMaxSize,
             recordBreakStrategy,
             recordHyphenationFrequency
@@ -78,8 +74,6 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
             this === Entries.scorePointsPerCorrectAnswer -> SCORE_POINTS_PER_CORRECT_ANSWER_KEY
             this === Entries.scorePointsPerWrongAnswer -> SCORE_POINTS_PER_WRONG_ANSWER_KEY
             this === Entries.useCustomTabs -> USE_CUSTOM_TABS_KEY
-            this === Entries.remindItemsSize -> REMIND_ITEMS_SIZE_KEY
-            this === Entries.remindShowMeaning -> REMIND_SHOW_MEANING_KEY
             this === Entries.widgetListMaxSize -> WIDGET_LIST_MAX_SIZE_KEY
             else -> throwIllegalPreferenceKey()
         } as Preferences.Key<TValue>
@@ -146,8 +140,6 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         private val SCORE_POINTS_PER_CORRECT_ANSWER_KEY = intPreferencesKey("scorePointsPerCorrectAnswer")
         private val SCORE_POINTS_PER_WRONG_ANSWER_KEY = intPreferencesKey("scorePointsPerWrongAnswer")
         private val USE_CUSTOM_TABS_KEY = booleanPreferencesKey("useCustomTabs")
-        private val REMIND_ITEMS_SIZE_KEY = intPreferencesKey("remindItemsSize")
-        private val REMIND_SHOW_MEANING_KEY = booleanPreferencesKey("remindShowMeaning")
         private val WIDGET_LIST_MAX_SIZE_KEY = intPreferencesKey("widgetListMaxSize")
         private val RECORD_TEXT_BREAK_STRATEGY = intPreferencesKey("recordTextBreakStrategy")
         private val RECORD_TEXT_HYPHENATION_FREQUENCY = intPreferencesKey("recordTextHyphenationFrequency")

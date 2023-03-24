@@ -89,29 +89,24 @@ class RecordSearchPropertySet : Set<RecordSearchProperty>, Parcelable {
         }
 
         override fun next(): RecordSearchProperty {
-            val b = bits
-            val elements = ALL_ELEMENTS
-
-            for (i in elements.indices) {
-                val mask = 1 shl i
-
-                if ((b and mask) != 0) {
-                    bits = b and mask.inv()
-
-                    return elements[i]
-                }
+            var b = bits
+            if (b == 0) {
+                throw IllegalStateException("No elements left")
             }
 
-            throw IllegalStateException("No elements left")
+            val leastBit = b and (-b)
+            val pos = 31 - leastBit.countLeadingZeroBits()
+
+            b = b xor leastBit
+            bits = b
+
+            return ALL_ELEMENTS[pos]
         }
     }
 
     companion object {
         private val ALL_ELEMENTS = RecordSearchProperty.values()
-
-        private const val ALL_ELEMENTS_BITS = 0x3
-
-        private val ALL = RecordSearchPropertySet(ALL_ELEMENTS_BITS)
+        private val ALL = RecordSearchPropertySet(bits = 0x3)
 
         fun all(): RecordSearchPropertySet = ALL
 

@@ -23,8 +23,6 @@
     <dimen name="itemRecord_badgeContainerHorizontalPadding">5dp</dimen>
     <dimen name="itemRecord_dividerHeight">.5dp</dimen>
 
-    <dimen name="remindRecords_lastItemBottomPadding">60dp</dimen>
-
     <dimen name="itemQuizRecord_actionButtonHeight">50dp</dimen>
     <dimen name="itemRemoteDictProvider_schemaTopMargin">8dp</dimen>
     <dimen name="itemRemoteDictProvider_padding">8dp</dimen>

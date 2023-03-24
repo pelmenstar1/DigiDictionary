@@ -230,28 +230,6 @@ class SettingsFragment : Fragment() {
                 )
             }
 
-            group(R.string.remindRecords_label) {
-                item(
-                    nameRes = R.string.settings_remindMaxItems,
-                    iconRes = R.drawable.ic_list_numbered,
-                    preferenceEntry = { remindItemsSize },
-                ) {
-                    rangeSpinner(
-                        start = 10,
-                        endInclusive = 30,
-                        step = 5
-                    )
-                }
-
-                item(
-                    nameRes = R.string.settings_remindShowMeaning,
-                    iconRes = R.drawable.ic_remind_show_meaning,
-                    preferenceEntry = { remindShowMeaning }
-                ) {
-                    switch()
-                }
-            }
-
             group(R.string.settings_widgetTitle) {
                 item(
                     nameRes = R.string.settings_widgetListMaxSize,

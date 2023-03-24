@@ -67,11 +67,6 @@
     <string name="home_eventStartedFormat">Event \'%s\' started</string>
     <string name="home_eventEndedFormat">Event \'%s\' ended</string>
 
-    <!-- Remind records fragment -->
-    <string name="remindRecords_labelInFragment">Remind</string>
-    <string name="remindRecords_label">Remind me!</string>
-    <string name="remindRecords_repeatContentDescription">Repeat</string>
-
     <!-- Record related -->
     <string name="expression">Expression</string>
     <string name="meaning">Meaning</string>
@@ -176,8 +171,6 @@
     <string name="settings_openBrowserInApp">Open browser in-app</string>
     <string name="settings_scorePointsPerCorrectAnswer">Score points per right answer</string>
     <string name="settings_scorePointsPerWrongAnswer">Score points per wrong answer</string>
-    <string name="settings_remindMaxItems">Max items</string>
-    <string name="settings_remindShowMeaning">Show meaning</string>
     <string name="settings_widgetListMaxSize">List size</string>
     <string name="settings_widgetTitle">Widget</string>
     <string name="settings_linkToManageRemoteDictProviders">Manage remote. dict providers</string>
