@@ -122,6 +122,7 @@ dependencyResolutionManagement {
             library("androidx-test-espresso", "androidx.test.espresso", "espresso-core").version("3.5.1")
             library("androidx-room-testing", "androidx.room", "room-testing").versionRef("androidx-room")
 
+            library("androidx-fragment-testing", "androidx.fragment", "fragment-testing").version("1.5.6")
         }
     }
 }

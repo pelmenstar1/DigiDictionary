@@ -12,6 +12,12 @@ abstract class MaterialDialogFragment : DialogFragment() {
 
     override fun getView() = dialogView
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        showsDialog = true
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return MaterialAlertDialogBuilder(requireContext(), theme).apply {
             dialogView = createDialogView(layoutInflater, savedInstanceState)

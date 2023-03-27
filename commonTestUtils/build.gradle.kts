@@ -39,9 +39,11 @@ android {
 dependencies {
     implementation(project(":common"))
     implementation(libs.androidx.core)
+    implementation(libs.android.material)
     implementation(libs.bundles.kotlinx.coroutines)
     implementation(libs.bundles.androidx.lifecycle)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.fragment.testing)
 
     implementation(libs.junit)
     implementation(libs.androidx.test.ext)

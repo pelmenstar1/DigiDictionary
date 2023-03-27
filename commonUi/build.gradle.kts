@@ -15,6 +15,10 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
+    testOptions {
+        animationsDisabled = true
+    }
+
     lint {
         // In most situations showLifecycleAwareSnackbar is called to show snackbar, but lint doesn't understand
         // that showLifecycleAwareSnackbar calls show() internally and shows this warning everywhere.
@@ -60,4 +64,5 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso)
+    androidTestImplementation(libs.androidx.fragment.testing)
 }

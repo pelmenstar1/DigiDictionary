@@ -4,4 +4,12 @@
 
     <string name="multiSelectionDialog_apply">Apply</string>
     <string name="multiSelectionDialog_noOptionSelectedError">At least one option must be selected</string>
+
+    <!-- Entries below are expected to be used only in tests -->
+    <string name="test_singleSelectionDialogFragment_title">Title</string>
+    <string-array name="test_singleSelectionDialogFragment_choices">
+        <item>Choice 1</item>
+        <item>Choice 2</item>
+        <item>Choice 3</item>
+    </string-array>
 </resources>
