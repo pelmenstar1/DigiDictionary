@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application android:theme="@style/Theme.Material3.Dark">
+        <activity
+            android:name="io.github.pelmenstar1.digiDict.common.ui.OptionsBarTests$TestActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
