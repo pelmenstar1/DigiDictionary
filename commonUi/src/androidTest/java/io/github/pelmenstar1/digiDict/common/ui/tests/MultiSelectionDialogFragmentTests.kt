@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.tests
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.testing.FragmentScenario
@@ -12,6 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.checkbox.MaterialCheckBox
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.MultiSelectionDialogFragment
+import io.github.pelmenstar1.digiDict.common.ui.tests.R
 import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.runner.RunWith

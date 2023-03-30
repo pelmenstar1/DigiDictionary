@@ -1,8 +1,9 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.tests
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.ui.PrefixTextView
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals

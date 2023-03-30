@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.tests
 
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragmentInContainer
@@ -10,6 +10,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.radiobutton.MaterialRadioButton
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
+import io.github.pelmenstar1.digiDict.common.ui.tests.R
 import io.github.pelmenstar1.digiDict.commonTestUtils.assertFragmentNotAttached
 import org.hamcrest.Matchers.*
 import org.junit.Test

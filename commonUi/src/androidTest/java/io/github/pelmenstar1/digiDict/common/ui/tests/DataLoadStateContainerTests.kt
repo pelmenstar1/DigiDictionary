@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.tests
 
 import android.os.Bundle
 import android.view.View
@@ -18,6 +18,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
 import io.github.pelmenstar1.digiDict.common.firstSuccess
+import io.github.pelmenstar1.digiDict.common.ui.DataLoadStateContainer
+import io.github.pelmenstar1.digiDict.common.ui.ErrorContainer
+import io.github.pelmenstar1.digiDict.common.ui.R
+import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateHolder
 import io.github.pelmenstar1.digiDict.commonTestUtils.assertSameIf
 import io.github.pelmenstar1.digiDict.commonTestUtils.firstViewOfType
 import kotlinx.coroutines.CoroutineScope

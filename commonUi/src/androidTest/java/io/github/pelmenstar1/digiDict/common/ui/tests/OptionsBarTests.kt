@@ -1,4 +1,4 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.tests
 
 import android.os.Bundle
 import android.view.ViewGroup
@@ -13,6 +13,8 @@ import androidx.test.espresso.assertion.ViewAssertions.*
 import androidx.test.espresso.matcher.RootMatchers.*
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.pelmenstar1.digiDict.common.ui.OptionsBar
+import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals

@@ -5,6 +5,7 @@ plugins {
 
 android {
     namespace = "io.github.pelmenstar1.digiDict.common.ui"
+    testNamespace = "io.github.pelmenstar1.digiDict.common.ui.tests"
     compileSdk = 33
 
     defaultConfig {
