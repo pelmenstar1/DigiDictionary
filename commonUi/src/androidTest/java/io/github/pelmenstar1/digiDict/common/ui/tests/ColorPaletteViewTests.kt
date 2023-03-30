@@ -1,8 +1,6 @@
 package io.github.pelmenstar1.digiDict.common.ui.tests
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
@@ -11,10 +9,10 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.common.ui.ColorPaletteView
+import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -61,18 +59,9 @@ class ColorPaletteViewTests {
         view.dispatchTouchEvent(event)
     }
 
-    private fun launchActivity(): ActivityScenario<TestActivity> {
-        val cName = ComponentName(
-            ApplicationProvider.getApplicationContext(),
-            TestActivity::class.java
-        )
-
-        return ActivityScenario.launch(Intent.makeMainActivity(cName))
-    }
-
     @Test
     fun onColorSelectedTest() {
-        val scenario = launchActivity()
+        val scenario = launchActivity<TestActivity>()
         var lastSelectedColor = Color.TRANSPARENT
 
         val colors = IntArray(42) { i ->

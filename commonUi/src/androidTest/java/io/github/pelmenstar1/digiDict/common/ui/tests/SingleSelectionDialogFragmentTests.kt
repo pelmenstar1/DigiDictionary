@@ -6,6 +6,7 @@ import androidx.test.espresso.Espresso.*
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.*
+import androidx.test.espresso.matcher.RootMatchers.*
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.radiobutton.MaterialRadioButton
@@ -41,14 +42,18 @@ class SingleSelectionDialogFragmentTests {
             .check(matches(isDisplayed()))
     }
 
+    private fun onViewWithText(text: String): ViewInteraction {
+        return onView(withText(text)).inRoot(isDialog())
+    }
+
     @Test
     fun layoutTest() {
         launchDialog(selectedIndex = 1)
 
-        onView(withText("Title")).check(matches(isDisplayed()))
-        onView(withText("Choice 1")).checkRadioButtonAndDisplayed()
-        onView(withText("Choice 2")).checkRadioButtonAndDisplayed().check(matches(isChecked()))
-        onView(withText("Choice 3")).checkRadioButtonAndDisplayed()
+        onViewWithText("Title").check(matches(isDisplayed()))
+        onViewWithText("Choice 1").checkRadioButtonAndDisplayed()
+        onViewWithText("Choice 2").checkRadioButtonAndDisplayed().check(matches(isChecked()))
+        onViewWithText("Choice 3").checkRadioButtonAndDisplayed()
     }
 
     @Test
@@ -60,7 +65,7 @@ class SingleSelectionDialogFragmentTests {
             it.onValueSelected = { value -> selectedValue = value }
         }
 
-        onView(withText("Choice 3")).perform(click())
+        onViewWithText("Choice 3").perform(click())
         assertEquals("2", selectedValue)
 
         assertFragmentNotAttached(scenario)

@@ -9,11 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.ViewModel
-import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar.SnackbarLayout
 import io.github.pelmenstar1.digiDict.common.android.*
+import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -94,11 +94,13 @@ class LifecycleKtTests {
         val faultAction = viewModelAction("TAG") { throw Exception() }
     }
 
+    private inline fun onTestActivity(crossinline block: (TestActivity) -> Unit) {
+        launchActivity<TestActivity>().onActivity { block(it) }
+    }
+
     @Test
     fun showLifecycleAwareSnackbarTest() {
-        val scenario = ActivityScenario.launch(TestActivity::class.java)
-
-        scenario.onActivity { activity ->
+        onTestActivity { activity ->
             val snackbar = SimpleSnackbar.make(activity.container)
             val lifecycleRegistry = LifecycleRegistry(activity)
             lifecycleRegistry.currentState = Lifecycle.State.CREATED
@@ -108,7 +110,6 @@ class LifecycleKtTests {
 
             assertTrue(snackbar.isDismissCalled, "dismiss() wasn't called")
             assertEquals(0, lifecycleRegistry.observerCount, "lifecycle observer is not removed")
-
         }
     }
 
@@ -121,9 +122,7 @@ class LifecycleKtTests {
             return
         }
 
-        val scenario = ActivityScenario.launch(TestActivity::class.java)
-
-        scenario.onActivity { activity ->
+        onTestActivity { activity ->
             val vm = TestViewModel()
             val action = vm.getAction()
 

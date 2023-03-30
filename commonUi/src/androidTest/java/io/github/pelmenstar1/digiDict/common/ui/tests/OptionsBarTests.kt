@@ -6,7 +6,6 @@ import android.widget.Button
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.iterator
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.*
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.*
@@ -15,6 +14,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.ui.OptionsBar
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
+import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -44,9 +44,7 @@ class OptionsBarTests {
     private val preset1 = OptionsBar.Preset(option1, option2)
     private val preset2 = OptionsBar.Preset(option1, option2, option3)
 
-    private fun launchActivity(): ActivityScenario<TestActivity> {
-        return ActivityScenario.launch(TestActivity::class.java)
-    }
+    private fun launchTestActivity() = launchActivity<TestActivity>()
 
     private fun validateButtonTexts(optionsBar: OptionsBar, texts: Array<String>) {
         val container = optionsBar.getTypedViewAt<ViewGroup>(0)
@@ -60,7 +58,7 @@ class OptionsBarTests {
 
     @Test
     fun contentTest() {
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         scenario.onActivity {
             it.optionsBar.apply {
                 setPreset(preset2)
@@ -76,7 +74,7 @@ class OptionsBarTests {
 
     @Test
     fun setPresetSavesPreviousValuesTest() {
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         scenario.onActivity {
             it.optionsBar.apply {
                 setPreset(preset2)
@@ -98,7 +96,7 @@ class OptionsBarTests {
     fun buttonClickTest() {
         var isOnClickListenerCalled = false
 
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         scenario.onActivity {
             it.optionsBar.apply {
                 setPreset(preset1)

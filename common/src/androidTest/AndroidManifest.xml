@@ -4,22 +4,10 @@
     <application android:theme="@style/Theme.Material3.Dark">
         <activity
             android:name="io.github.pelmenstar1.digiDict.common.PrimitiveAnimatorTests$TestActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="true" />
 
         <activity
             android:name="io.github.pelmenstar1.digiDict.common.LifecycleKtTests$TestActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="true" />
     </application>
 </manifest>

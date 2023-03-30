@@ -24,6 +24,7 @@ import io.github.pelmenstar1.digiDict.common.ui.R
 import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateHolder
 import io.github.pelmenstar1.digiDict.commonTestUtils.assertSameIf
 import io.github.pelmenstar1.digiDict.commonTestUtils.firstViewOfType
+import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -112,7 +113,7 @@ class DataLoadStateContainerTests {
         }
     }
 
-    private fun launchActivity() = ActivityScenario.launch(TestActivity::class.java)
+    private fun launchTestActivity() = launchActivity<TestActivity>()
 
     private fun onProgressBar() = onView(instanceOf(ProgressBar::class.java))
 
@@ -191,7 +192,7 @@ class DataLoadStateContainerTests {
     }
 
     private fun successTestHelper(canRefreshAfterSuccess: Boolean) {
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         val impl = createImpl(canRefreshAfterSuccess)
         val lastSuccessHolder = captureLastSuccessValue(scenario, impl)
 
@@ -215,7 +216,7 @@ class DataLoadStateContainerTests {
 
     @Test
     fun errorTest() {
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         val impl = CanRefreshAfterSuccessImpl()
 
         val lastSuccessHolder = captureLastSuccessValue(scenario, impl)
@@ -245,7 +246,7 @@ class DataLoadStateContainerTests {
     }
 
     private fun errorAfterSuccessTestHelper(canRefreshAfterSuccess: Boolean) {
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         val impl = createImpl(canRefreshAfterSuccess)
 
         val lastSuccessHolder = captureLastSuccessValue(scenario, impl)
@@ -273,7 +274,7 @@ class DataLoadStateContainerTests {
 
     // Test this combination: loading -> success -> error -> loading
     private fun loadingSuccessErrorLoadingTestHelper(canRefreshAfterSuccess: Boolean) {
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         val impl = createImpl(canRefreshAfterSuccess)
 
         val lastSuccessHolder = captureLastSuccessValue(scenario, impl)
@@ -322,7 +323,7 @@ class DataLoadStateContainerTests {
 
     // Test this combination: loading -> error -> loading -> success -> loading -> error
     private fun loadingErrorLoadingSuccessLoadingErrorTestHelper(canRefreshAfterSuccess: Boolean) {
-        val scenario = launchActivity()
+        val scenario = launchTestActivity()
         val impl = createImpl(canRefreshAfterSuccess)
 
         val lastSuccessHolder = captureLastSuccessValue(scenario, impl)
