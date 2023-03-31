@@ -59,7 +59,9 @@ class ColorPaletteView @JvmOverloads constructor(
 
     @JvmField
     internal val cellAreaTopMargin: Float
-    private val cellAreaBottomMargin: Float
+
+    @JvmField
+    internal val cellAreaBottomMargin: Float
 
     @JvmField
     internal val cellAreaHorizontalMargin: Float
@@ -170,7 +172,6 @@ class ColorPaletteView @JvmOverloads constructor(
         attrs?.let {
             val a = context.obtainStyledAttributes(it, R.styleable.ColorPaletteView, defStyleAttr, defStyleRes)
 
-
             try {
                 if (a.hasValue(R.styleable.ColorPaletteView_colors)) {
                     a.getResourceId(R.styleable.ColorPaletteView_colors, 0).also { colorsRes ->
@@ -224,7 +225,7 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     fun selectColorAt(index: Int, animate: Boolean = true) {
-        if (index < 0 || index > colors.size) {
+        if (index < 0 || index >= colors.size) {
             throw IllegalArgumentException("Unable to select a cell at index $index (color count = ${colors.size})")
         }
 
@@ -472,7 +473,6 @@ class ColorPaletteView @JvmOverloads constructor(
         c.drawText(title, startMargin + hPadding, th, titlePaint)
     }
 
-    // TODO: Add tests for checking whether saving and restoring state behaves correctly
     override fun onSaveInstanceState(): Parcelable {
         return SavedState(super.onSaveInstanceState()).also {
             it.selectedIndex = _selectedIndex
