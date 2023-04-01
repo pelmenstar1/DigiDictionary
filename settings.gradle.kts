@@ -90,6 +90,7 @@ dependencyResolutionManagement {
                 listOf("androidx-nav-fragment", "androidx-nav-fragment-ktx", "androidx-nav-ui", "androidx-nav-ui-ktx")
             )
 
+            library("androidx-fragment", "androidx.fragment", "fragment").version("1.5.6")
             library("androidx-browser", "androidx.browser", "browser").version("1.5.0")
 
             library("dagger-hilt-android", "com.google.dagger", "hilt-android").versionRef("dagger-hilt")

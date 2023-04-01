@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -16,11 +15,11 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.firstSuccess
 import io.github.pelmenstar1.digiDict.common.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
+import io.github.pelmenstar1.digiDict.common.ui.settings.SettingsController
 import io.github.pelmenstar1.digiDict.common.ui.settings.SettingsInflater
 import io.github.pelmenstar1.digiDict.common.ui.settings.settingsDescriptor
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
@@ -29,7 +28,6 @@ import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 import io.github.pelmenstar1.digiDict.widgets.ListAppWidget
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
@@ -52,6 +50,7 @@ class SettingsFragment : Fragment() {
         val settingsController = settingsInflater.inflate(descriptor, contentContainer).apply {
             onValueChangedHandler = viewModel::changePreferenceValue
             navController = findNavController()
+            childFragmentManager = this@SettingsFragment.childFragmentManager
 
             bindActionHandler(ACTION_DELETE_ALL_RECORDS) {
                 requestDeleteAllRecords()
@@ -59,18 +58,16 @@ class SettingsFragment : Fragment() {
 
             // On lower API levels, there are no break strategy and hyphenation items
             if (Build.VERSION.SDK_INT >= 23) {
-                bindTextFormatter(ITEM_BREAK_STRATEGY, ResourcesBreakStrategyStringFormatter(context))
-                bindTextFormatter(ITEM_HYPHENATION_FREQUENCY, ResourcesHyphenationStringFormatter(context))
+                bindTextFormatter({ recordTextBreakStrategy }, ResourcesBreakStrategyStringFormatter(context))
+                bindTextFormatter({ recordTextHyphenationFrequency }, ResourcesHyphenationStringFormatter(context))
 
-                bindContentItemClickListener(ITEM_BREAK_STRATEGY) { showBreakStrategyDialog() }
-                bindContentItemClickListener(ITEM_HYPHENATION_FREQUENCY) { showHyphenationDialog() }
+                registerChangeValueDialogAndBindAction { recordTextBreakStrategy }
+                registerChangeValueDialogAndBindAction { recordTextHyphenationFrequency }
             }
-        }
 
-        // On lower API levels these dialog can't be shown.
-        if (Build.VERSION.SDK_INT >= 23) {
-            initBreakStrategyDialogIfShown()
-            initHyphenationDialogIfShown()
+            registerChangeValueDialogAndBindAction { scorePointsPerCorrectAnswer }
+            registerChangeValueDialogAndBindAction { scorePointsPerWrongAnswer }
+            registerChangeValueDialogAndBindAction { widgetListMaxSize }
         }
 
         showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
@@ -94,7 +91,7 @@ class SettingsFragment : Fragment() {
             }
 
             binding.settingsContainer.setupLoadStateFlow(ls, vm) { snapshot ->
-                settingsInflater.applySnapshot(settingsController, snapshot, contentContainer)
+                settingsController.applySnapshot(snapshot)
             }
         }
 
@@ -110,173 +107,155 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun <TValue : Any> initChangePreferenceValueDialog(
-        dialog: SingleSelectionDialogFragment<TValue>,
-        entry: AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>
+    private inline fun <TValue : Any> SettingsController<DigiDictAppPreferences.Entries>.registerChangeValueDialogAndBindAction(
+        entry: DigiDictPrefsGetEntry<TValue>
     ) {
-        dialog.onValueSelected = { value ->
-            viewModel.changePreferenceValue(entry, value)
-        }
+        registerChangeValueDialogAndBindAction(DigiDictAppPreferences.Entries.entry())
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun <TValue : Any> initChangePreferenceValueDialogIfShown(
-        tag: String,
+    private fun <TValue : Any> SettingsController<DigiDictAppPreferences.Entries>.registerChangeValueDialogAndBindAction(
         entry: AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>
     ) {
-        childFragmentManager.findFragmentByTag(tag)?.also {
-            initChangePreferenceValueDialog(it as SingleSelectionDialogFragment<TValue>, entry)
-        }
-    }
-
-    private inline fun <TValue : Any> showPreferenceEntryDialogAsync(
-        tag: String,
-        crossinline getEntry: DigiDictAppPreferences.Entries.() -> AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>,
-        crossinline createDialog: (TValue) -> SingleSelectionDialogFragment<TValue>
-    ) {
-        lifecycleScope.launch {
-            val snapshot = viewModel.dataStateFlow.firstSuccess()
-            val entry = DigiDictAppPreferences.Entries.getEntry()
-            val value = snapshot[entry]
-
-            createDialog(value).also {
-                initChangePreferenceValueDialog(it, entry)
-
-                it.show(childFragmentManager, tag)
+        registerDialogForEntry<TValue, SingleSelectionDialogFragment<TValue>>(entry) { dialog, _ ->
+            dialog.onValueSelected = { changedValue ->
+                viewModel.changePreferenceValue(entry, changedValue)
             }
         }
-    }
 
-    @RequiresApi(23)
-    private fun initBreakStrategyDialogIfShown() {
-        initChangePreferenceValueDialogIfShown(
-            TAG_BREAK_STRATEGY_DIALOG,
-            DigiDictAppPreferences.Entries.recordTextBreakStrategy
-        )
-    }
-
-    @RequiresApi(23)
-    private fun initHyphenationDialogIfShown() {
-        initChangePreferenceValueDialogIfShown(
-            TAG_HYPHENATION_DIALOG,
-            DigiDictAppPreferences.Entries.recordTextHyphenationFrequency
-        )
-    }
-
-    @RequiresApi(23)
-    private fun showBreakStrategyDialog() {
-        showPreferenceEntryDialogAsync(
-            TAG_BREAK_STRATEGY_DIALOG,
-            { recordTextBreakStrategy },
-            BreakStrategyDialogFragment::create
-        )
-    }
-
-    @RequiresApi(23)
-    private fun showHyphenationDialog() {
-        showPreferenceEntryDialogAsync(
-            TAG_HYPHENATION_DIALOG,
-            { recordTextHyphenationFrequency },
-            HyphenationDialogFragment::create
-        )
+        bindContentItemClickAction(entry) { showDialog() }
     }
 
     companion object {
         private const val ACTION_DELETE_ALL_RECORDS = 0
-        private const val ITEM_BREAK_STRATEGY = 1
-        private const val ITEM_HYPHENATION_FREQUENCY = 2
-
-        private const val TAG_BREAK_STRATEGY_DIALOG = "BreakStrategyDialog"
-        private const val TAG_HYPHENATION_DIALOG = "HyphenationDialog"
 
         private val descriptor = settingsDescriptor {
-            group(R.string.settings_generalGroup) {
-                linkItem(
-                    nameRes = R.string.settings_linkToManageRecordBadges,
-                    directions = SettingsFragmentDirections.actionSettingsToManageRecordBadges()
-                )
-            }
-
-            group(R.string.quiz) {
-                item(
-                    nameRes = R.string.settings_scorePointsPerCorrectAnswer,
-                    iconRes = R.drawable.ic_points_per_correct_answer,
-                    preferenceEntry = { scorePointsPerCorrectAnswer }
-                ) {
-                    rangeSpinner(start = 1, endInclusive = 10)
-                }
-
-                item(
-                    nameRes = R.string.settings_scorePointsPerWrongAnswer,
-                    iconRes = R.drawable.ic_points_per_wrong_answer,
-                    preferenceEntry = { scorePointsPerWrongAnswer }
-                ) {
-                    rangeSpinner(start = 1, endInclusive = 10)
-                }
-            }
-
-            group(R.string.remoteDictProviderShort) {
-                item(
-                    nameRes = R.string.settings_openBrowserInApp,
-                    iconRes = R.drawable.ic_open_browser_in_app,
-                    preferenceEntry = { useCustomTabs }
-                ) {
-                    switch()
-                }
-
-                linkItem(
-                    nameRes = R.string.settings_linkToManageRemoteDictProviders,
-                    directions = SettingsFragmentDirections.actionSettingsToManageRemoteDictionaryProviders()
-                )
-            }
-
-            group(R.string.settings_widgetTitle) {
-                item(
-                    nameRes = R.string.settings_widgetListMaxSize,
-                    iconRes = R.drawable.ic_widget_list_max_size,
-                    preferenceEntry = { widgetListMaxSize }
-                ) {
-                    rangeSpinner(
-                        start = 10,
-                        endInclusive = 40,
-                        step = 5
+            groups {
+                group(R.string.settings_generalGroup) {
+                    linkItem(
+                        nameRes = R.string.settings_linkToManageRecordBadges,
+                        directions = SettingsFragmentDirections.actionSettingsToManageRecordBadges()
                     )
                 }
-            }
 
-            group(R.string.settings_backupTitle) {
-                linkItem(
-                    R.string.settings_export,
-                    directions = SettingsFragmentDirections.actionSettingsToExportConfiguration()
-                )
-                linkItem(
-                    R.string.settings_import,
-                    directions = SettingsFragmentDirections.actionSettingsToImportConfiguration()
-                )
-            }
-
-            group(R.string.settings_miscGroup) {
-                actionItem(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
-
-                if (Build.VERSION.SDK_INT >= 23) {
+                group(R.string.quiz) {
                     item(
-                        id = ITEM_BREAK_STRATEGY,
-                        nameRes = R.string.settings_breakStrategy,
-                        preferenceEntry = { recordTextBreakStrategy },
-                        clickable = true
+                        nameRes = R.string.settings_scorePointsPerCorrectAnswer,
+                        iconRes = R.drawable.ic_points_per_correct_answer,
+                        preferenceEntry = { scorePointsPerCorrectAnswer },
+                        clickable = true,
                     ) {
                         text()
                     }
 
                     item(
-                        id = ITEM_HYPHENATION_FREQUENCY,
-                        nameRes = R.string.settings_hyphenation,
-                        preferenceEntry = { recordTextHyphenationFrequency },
+                        nameRes = R.string.settings_scorePointsPerWrongAnswer,
+                        iconRes = R.drawable.ic_points_per_wrong_answer,
+                        preferenceEntry = { scorePointsPerWrongAnswer },
+                        clickable = true,
+                    ) {
+                        text()
+                    }
+                }
+
+                group(R.string.remoteDictProviderShort) {
+                    item(
+                        nameRes = R.string.settings_openBrowserInApp,
+                        iconRes = R.drawable.ic_open_browser_in_app,
+                        preferenceEntry = { useCustomTabs }
+                    ) {
+                        switch()
+                    }
+
+                    linkItem(
+                        nameRes = R.string.settings_linkToManageRemoteDictProviders,
+                        directions = SettingsFragmentDirections.actionSettingsToManageRemoteDictionaryProviders()
+                    )
+                }
+
+                group(R.string.settings_widgetTitle) {
+                    item(
+                        nameRes = R.string.settings_widgetListMaxSize,
+                        iconRes = R.drawable.ic_widget_list_max_size,
+                        preferenceEntry = { widgetListMaxSize },
                         clickable = true
                     ) {
                         text()
                     }
                 }
+
+                group(R.string.settings_backupTitle) {
+                    linkItem(
+                        R.string.settings_export,
+                        directions = SettingsFragmentDirections.actionSettingsToExportConfiguration()
+                    )
+                    linkItem(
+                        R.string.settings_import,
+                        directions = SettingsFragmentDirections.actionSettingsToImportConfiguration()
+                    )
+                }
+
+                group(R.string.settings_miscGroup) {
+                    actionItem(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
+
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        item(
+                            nameRes = R.string.settings_breakStrategy,
+                            preferenceEntry = { recordTextBreakStrategy },
+                            clickable = true
+                        ) {
+                            text()
+                        }
+
+                        item(
+                            nameRes = R.string.settings_hyphenation,
+                            preferenceEntry = { recordTextHyphenationFrequency },
+                            clickable = true
+                        ) {
+                            text()
+                        }
+                    }
+                }
+            }
+
+            dialogs {
+                if (Build.VERSION.SDK_INT >= 23) {
+                    // TODO: Generate a tag automatically
+                    dialog<_, BreakStrategyDialogFragment>(
+                        tag = "BreakStrategyDialog",
+                        entry = { recordTextBreakStrategy },
+                        createArgs = { BreakStrategyDialogFragment.createArguments(it) }
+                    )
+                    dialog<_, HyphenationDialogFragment>(
+                        tag = "HyphenationFrequencyDialog",
+                        entry = { recordTextHyphenationFrequency },
+                        createArgs = { HyphenationDialogFragment.createArguments(it) }
+                    )
+                }
+
+                numberDialog(
+                    tag = "SingleSelectionIntDialogFragment_scorePointsPerCorrectAnswer",
+                    entry = { scorePointsPerCorrectAnswer },
+                    titleRes = R.string.settings_selectValueDialogTitle,
+                    start = 1,
+                    endInclusive = 10
+                )
+
+                numberDialog(
+                    tag = "SingleSelectionIntDialogFragment_scorePointsPerWrongAnswer",
+                    entry = { scorePointsPerWrongAnswer },
+                    titleRes = R.string.settings_selectValueDialogTitle,
+                    start = 1,
+                    endInclusive = 10
+                )
+
+                numberDialog(
+                    tag = "SingleSelectionIntDialogFragment_widgetListMaxSize",
+                    entry = { widgetListMaxSize },
+                    titleRes = R.string.settings_selectValueDialogTitle,
+                    start = 10,
+                    endInclusive = 40,
+                    step = 5
+                )
             }
         }
     }

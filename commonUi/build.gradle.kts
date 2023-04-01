@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.android.material)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.fragment)
 
     testImplementation(libs.bundles.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)

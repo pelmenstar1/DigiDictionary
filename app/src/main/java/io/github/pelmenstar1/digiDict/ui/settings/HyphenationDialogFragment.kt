@@ -1,12 +1,14 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
+import android.os.Bundle
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.android.HyphenationFrequency
+import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.ChoicesProvider
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
 
 class HyphenationDialogFragment : SingleSelectionDialogFragment<HyphenationFrequency>() {
-    override val choicesRes: Int
-        get() = R.array.settings_hyphenation_dialogChoices
+    override val choices: ChoicesProvider
+        get() = stringArrayResource(R.array.settings_hyphenation_dialogChoices)
 
     override val choicesInfoRes: Int
         get() = R.array.settings_hyphenation_dialogChoicesInfo
@@ -18,9 +20,13 @@ class HyphenationDialogFragment : SingleSelectionDialogFragment<HyphenationFrequ
     override fun getValueByIndex(index: Int): HyphenationFrequency = HyphenationFrequency.fromOrdinal(index + 1)
 
     companion object {
+        fun createArguments(selectedValue: HyphenationFrequency): Bundle {
+            return createArguments(selectedValue.ordinal - 1)
+        }
+
         fun create(selectedValue: HyphenationFrequency): HyphenationDialogFragment {
             return HyphenationDialogFragment().apply {
-                arguments = createArguments(selectedValue.ordinal - 1)
+                arguments = createArguments(selectedValue)
             }
         }
     }

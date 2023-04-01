@@ -8,41 +8,25 @@ import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.annotation.ArrayRes
-import androidx.annotation.StringRes
 import com.google.android.material.radiobutton.MaterialRadioButton
 import com.google.android.material.textview.MaterialTextView
-import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.R
 
 /**
  * Represents a base class for dialog fragments that provides a list of choices and only a single item can be selected.
  */
-abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() {
+abstract class SingleSelectionDialogFragment<TValue> : AbstractSelectionDialogFragment() {
     /**
      * Gets or sets a lambda that is called when value is selected.
      */
     var onValueSelected: ((TValue) -> Unit)? = null
 
     /**
-     * Gets an array resource that stores a string array of possible choices.
-     *
-     * If [choicesInfoRes] is not 0, the size of this array should be the same as an array of [choicesInfoRes].
-     */
-    @get:ArrayRes
-    protected abstract val choicesRes: Int
-
-    /**
-     * Gets a string resource that stores a title of the dialog
-     */
-    @get:StringRes
-    protected abstract val titleRes: Int
-
-    /**
      * Gets an array resource that stores a string array that contains an additional information for each corresponding choice.
      *
      * It can return 0 as a mark that such info should not be shown and doesn't exist.
-     * If resource id is not 0, the size of the array should be the same as an array of [choicesRes].
+     * If resource id is not 0, the size of the array should be the same as array retrieved from [choices].
      */
     @get:ArrayRes
     protected open val choicesInfoRes: Int
@@ -81,8 +65,8 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
         var infoTextAppearance: TextAppearance? = null
         var infoLayoutParams: LinearLayout.LayoutParams? = null
 
-        val choices = res.getStringArray(choicesRes)
-        val selectedIndex = extractSelectedIndex(choices.size)
+        val choicesArray = choices.get()
+        val selectedIndex = extractSelectedIndex(choicesArray.size)
 
         var choicesInfoArray: Array<String>? = null
         val choicesInfoRes = choicesInfoRes
@@ -99,7 +83,7 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
                 bottomMargin = res.getDimensionPixelOffset(R.dimen.selectionDialog_infoBottomMargin)
             }
 
-            if (choicesInfoArray.size != choices.size) {
+            if (choicesInfoArray.size != choicesArray.size) {
                 throw IllegalStateException("Size of array of choicesInfoRes is expected to be the same as size of array of choicesRes")
             }
         }
@@ -109,7 +93,7 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        for ((index, choice) in choices.withIndex()) {
+        for ((index, choice) in choicesArray.withIndex()) {
             root.addView(MaterialRadioButton(context).apply {
                 layoutParams = lp
                 setPadding(textHorizontalPadding, textVerticalPadding, textHorizontalPadding, textVerticalPadding)
@@ -154,19 +138,19 @@ abstract class SingleSelectionDialogFragment<TValue> : MaterialDialogFragment() 
     }
 
     /**
-     * Returns [TValue] instance that corresponds to specified [index] in array of [choicesRes].
+     * Returns [TValue] instance that corresponds to specified [index] in array retrieved [choices].
      */
     protected abstract fun getValueByIndex(index: Int): TValue
 
     companion object {
-        private const val ARGS_SELECTED_INDEX =
+        const val ARGS_SELECTED_INDEX =
             "io.github.pelmenstar1.digiDict.SingleSelectionDialogFragment.selectedIndex"
 
         /**
          * Creates a [Bundle] of arguments to be used in the dialog fragment.
          *
          * @param selectedIndex an index of value that should be selected when the fragment is created.
-         * Should be non-negative and less than length of [choicesRes] array. Although the upper bound is not checked
+         * Should be non-negative and less than length of the array retrieved from [choices]. Although the upper bound is not checked
          * in this method, an [IllegalStateException] will be thrown when fragment is created.
          */
         fun createArguments(selectedIndex: Int): Bundle {

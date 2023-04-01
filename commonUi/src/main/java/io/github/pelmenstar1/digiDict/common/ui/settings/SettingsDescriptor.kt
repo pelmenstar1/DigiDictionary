@@ -1,7 +1,9 @@
 package io.github.pelmenstar1.digiDict.common.ui.settings
 
+import android.os.Bundle
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.fragment.app.DialogFragment
 import androidx.navigation.NavDirections
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 
@@ -9,17 +11,12 @@ import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
  * Describes semantics of the settings. The main element of the descriptor is a group.
  * The group contains items from the same area.
  */
-class SettingsDescriptor(val groups: List<ItemGroup>) {
+class SettingsDescriptor<TEntries : AppPreferences.Entries>(
+    val groups: List<ItemGroup>,
+    val dialogs: List<Dialog<*, *, TEntries>>
+) {
     object ItemContentBuilder {
         fun switch(): ItemContent<Boolean> = SwitchItemContent
-
-        fun rangeSpinner(
-            start: Int,
-            endInclusive: Int,
-            step: Int = 1,
-        ): ItemContent<Int> {
-            return RangeSpinnerItemContent(start, endInclusive, step)
-        }
 
         fun <T : Any> text(): ItemContent<T> = TextContent()
     }
@@ -31,18 +28,11 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
 
     object SwitchItemContent : ItemContent<Boolean>
 
-    class RangeSpinnerItemContent(
-        val start: Int,
-        val endInclusive: Int,
-        val step: Int,
-    ) : ItemContent<Int>
-
     class TextContent<T : Any> : ItemContent<T>
 
     sealed interface Item
 
     class ContentItem<TValue : Any, TEntries : AppPreferences.Entries>(
-        val id: Int,
         @StringRes val nameRes: Int,
         @DrawableRes val iconRes: Int?,
         val preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
@@ -64,26 +54,23 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
 
     class ItemGroup(@StringRes val titleRes: Int, val items: List<Item>) {
         @JvmInline
-        value class ItemListBuilder(private val items: MutableList<Item>) {
+        value class ItemListBuilder<TEntries : AppPreferences.Entries>(private val items: MutableList<Item>) {
             /**
              * Adds content item to a group.
              *
-             * @param id id of this item. When item has no id, the id should be [SettingsDescriptor.ITEM_ID_UNSPECIFIED]
-             * The id should be unique among all content items.
              * @param nameRes a string resource id of name of this item
              * @param iconRes a drawable resource id of icon of this item
              * @param preferenceEntry an entry, in preferences, that this item represents
              * @param content content of this item
              */
-            fun <TValue : Any, TEntries : AppPreferences.Entries> item(
-                id: Int = ITEM_ID_UNSPECIFIED,
+            fun <TValue : Any> item(
                 @StringRes nameRes: Int,
                 @DrawableRes iconRes: Int? = null,
                 preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
                 clickable: Boolean = false,
                 content: ItemContent<TValue>,
             ) {
-                items.add(ContentItem(id, nameRes, iconRes, preferenceEntry, clickable, content))
+                items.add(ContentItem(nameRes, iconRes, preferenceEntry, clickable, content))
             }
 
             /**
@@ -119,27 +106,64 @@ class SettingsDescriptor(val groups: List<ItemGroup>) {
     }
 
     @JvmInline
-    value class GroupListBuilder(private val groups: MutableList<ItemGroup>) {
+    value class GroupListBuilder<TEntries : AppPreferences.Entries>(private val groups: MutableList<ItemGroup>) {
         fun group(group: ItemGroup) {
             groups.add(group)
         }
 
-        inline fun group(@StringRes titleRes: Int, itemsBlock: ItemGroup.ItemListBuilder.() -> Unit) {
+        inline fun group(@StringRes titleRes: Int, itemsBlock: ItemGroup.ItemListBuilder<TEntries>.() -> Unit) {
             val items = ArrayList<Item>()
-            ItemGroup.ItemListBuilder(items).also(itemsBlock)
+            ItemGroup.ItemListBuilder<TEntries>(items).also(itemsBlock)
 
             group(ItemGroup(titleRes, items))
         }
     }
 
-    companion object {
-        const val ITEM_ID_UNSPECIFIED = -1
+    data class Dialog<TValue : Any, TDialog : DialogFragment, TEntries : AppPreferences.Entries>(
+        val dialogClass: Class<TDialog>,
+        val tag: String,
+        val entry: AppPreferences.Entry<TValue, TEntries>,
+        val createArgs: ((selectedValue: TValue) -> Bundle)? = null
+    )
+
+    @JvmInline
+    value class DialogListBuilder<TEntries : AppPreferences.Entries>(private val dialogs: MutableList<Dialog<*, *, TEntries>>) {
+        inline fun <TValue : Any, reified TDialog : DialogFragment> dialog(
+            tag: String,
+            entry: AppPreferences.Entry<TValue, TEntries>,
+            noinline createArgs: ((selectedValue: TValue) -> Bundle)? = null
+        ) = dialog(TDialog::class.java, tag, entry, createArgs)
+
+        fun <TValue : Any> dialog(
+            dialogClass: Class<out DialogFragment>,
+            tag: String,
+            entry: AppPreferences.Entry<TValue, TEntries>,
+            createArgs: ((selectedValue: TValue) -> Bundle)? = null
+        ) {
+            dialogs.add(Dialog(dialogClass, tag, entry, createArgs))
+        }
     }
 }
 
-inline fun settingsDescriptor(groupsBuilder: SettingsDescriptor.GroupListBuilder.() -> Unit): SettingsDescriptor {
-    val groups = ArrayList<SettingsDescriptor.ItemGroup>()
-    SettingsDescriptor.GroupListBuilder(groups).also(groupsBuilder)
+class SettingsDescriptorBuilder<TEntries : AppPreferences.Entries> {
+    private val groupsList = ArrayList<SettingsDescriptor.ItemGroup>()
+    private val dialogsList = ArrayList<SettingsDescriptor.Dialog<*, *, TEntries>>()
 
-    return SettingsDescriptor(groups)
+    fun groups(block: SettingsDescriptor.GroupListBuilder<TEntries>.() -> Unit) {
+        block(SettingsDescriptor.GroupListBuilder(groupsList))
+    }
+
+    fun dialogs(block: SettingsDescriptor.DialogListBuilder<TEntries>.() -> Unit) {
+        block(SettingsDescriptor.DialogListBuilder(dialogsList))
+    }
+
+    fun create(): SettingsDescriptor<TEntries> {
+        return SettingsDescriptor(groupsList, dialogsList)
+    }
+}
+
+inline fun <TEntries : AppPreferences.Entries> settingsDescriptor(
+    block: SettingsDescriptorBuilder<TEntries>.() -> Unit
+): SettingsDescriptor<TEntries> {
+    return SettingsDescriptorBuilder<TEntries>().also(block).create()
 }

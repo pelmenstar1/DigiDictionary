@@ -11,6 +11,7 @@ import androidx.test.espresso.matcher.RootMatchers.*
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.checkbox.MaterialCheckBox
+import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.ChoicesProvider
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.MultiSelectionDialogFragment
 import io.github.pelmenstar1.digiDict.common.ui.tests.R
 import org.hamcrest.Matchers.*
@@ -25,8 +26,8 @@ class MultiSelectionDialogFragmentTests {
     }
 
     open class Impl : MultiSelectionDialogFragment<String>() {
-        override val choicesRes: Int
-            get() = R.array.test_singleSelectionDialogFragment_choices
+        override val choices: ChoicesProvider
+            get() = stringArrayResource(R.array.test_singleSelectionDialogFragment_choices)
 
         override val titleRes: Int
             get() = R.string.test_singleSelectionDialogFragment_title
