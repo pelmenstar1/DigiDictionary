@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="test_singleSelectionDialogFragment_title">Title</string>
+    <string-array name="test_singleSelectionDialogFragment_choices">
+        <item>Choice 1</item>
+        <item>Choice 2</item>
+        <item>Choice 3</item>
+    </string-array>
+
+    <string name="test_optionsBar_prefix1">Prefix1</string>
+    <string name="test_optionsBar_prefix2">Prefix2</string>
+    <string name="test_optionsBar_prefix3">Prefix3</string>
+
+    <string name="test_colorPalette_title">Palette title</string>
+</resources>

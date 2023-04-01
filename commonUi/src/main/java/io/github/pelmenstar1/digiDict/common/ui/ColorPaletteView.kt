@@ -50,15 +50,24 @@ class ColorPaletteView @JvmOverloads constructor(
         }
     }
 
-    private val cellSize: Float
-    private val cellSpacing: Float
+    @JvmField
+    internal val cellSize: Float
+
+    @JvmField
+    internal val cellSpacing: Float
     private val cellStrokeWidth: Float
 
-    private val cellAreaTopMargin: Float
-    private val cellAreaBottomMargin: Float
-    private val cellAreaHorizontalMargin: Float
+    @JvmField
+    internal val cellAreaTopMargin: Float
 
-    private var cellsInRow = 0
+    @JvmField
+    internal val cellAreaBottomMargin: Float
+
+    @JvmField
+    internal val cellAreaHorizontalMargin: Float
+
+    @JvmField
+    internal var cellsInRow = 0
     private var cellRowStart = 0f
 
     private val cellFillPaint: Paint
@@ -82,7 +91,9 @@ class ColorPaletteView @JvmOverloads constructor(
     private val selectionAnimator: PrimitiveAnimator
 
     private var _selectedIndex = -1
-    private val colors = IntList()
+
+    @JvmField
+    internal val colors = IntList()
 
     val selectedIndex: Int
         get() = _selectedIndex
@@ -214,7 +225,7 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     fun selectColorAt(index: Int, animate: Boolean = true) {
-        if (index < 0 || index > colors.size) {
+        if (index < 0 || index >= colors.size) {
             throw IllegalArgumentException("Unable to select a cell at index $index (color count = ${colors.size})")
         }
 
@@ -240,11 +251,7 @@ class ColorPaletteView @JvmOverloads constructor(
     }
 
     private fun onSelectionAnimationTick(fraction: Float) {
-        val alpha = (fraction * 255f + 0.5f).toInt()
-
-        //cellStrokePaint.alpha = alpha
-        //selectionAnimPrevCellStrokePaint.alpha = 255 - alpha
-        cellStrokeAlpha = alpha
+        cellStrokeAlpha = (fraction * 255f + 0.5f).toInt()
 
         invalidate()
     }
@@ -335,10 +342,9 @@ class ColorPaletteView @JvmOverloads constructor(
         val cellSizeWithSpacing = cellSize + cellSpacing
 
         val cellsInRow = (cellAreaWidth / cellSizeWithSpacing).toInt()
-        val colorsCount = colors.size
 
-        // Ceiling division (colorsCount / cellInRow)
-        val rows = (colorsCount + cellsInRow - 1) / cellsInRow
+        // Ceiling division (colors.size / cellInRow)
+        val rows = (colors.size + cellsInRow - 1) / cellsInRow
 
         val height = (rows * cellSizeWithSpacing + cellAreaTopMargin + cellAreaBottomMargin).toInt()
 
@@ -467,7 +473,6 @@ class ColorPaletteView @JvmOverloads constructor(
         c.drawText(title, startMargin + hPadding, th, titlePaint)
     }
 
-    // TODO: Add tests for checking whether saving and restoring state behaves correctly
     override fun onSaveInstanceState(): Parcelable {
         return SavedState(super.onSaveInstanceState()).also {
             it.selectedIndex = _selectedIndex

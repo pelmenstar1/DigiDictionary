@@ -4,9 +4,9 @@ import android.app.Activity
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.View
-import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.android.PrimitiveAnimator
+import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -28,11 +28,7 @@ class PrimitiveAnimatorTests {
     }
 
     private inline fun testHelper(crossinline block: () -> Unit) {
-        ActivityScenario.launch(TestActivity::class.java).use { scenerio ->
-            scenerio.onActivity {
-                block()
-            }
-        }
+        launchActivity<TestActivity>().onActivity { block() }
     }
 
     private fun firstFractionShouldBeTestHelper(isForward: Boolean, expectedValue: Float) {

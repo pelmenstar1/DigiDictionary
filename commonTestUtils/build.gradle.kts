@@ -39,9 +39,12 @@ android {
 dependencies {
     implementation(project(":common"))
     implementation(libs.androidx.core)
+    implementation(libs.android.material)
     implementation(libs.bundles.kotlinx.coroutines)
     implementation(libs.bundles.androidx.lifecycle)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.fragment.testing)
+    implementation(libs.androidx.test.espresso)
 
     implementation(libs.junit)
     implementation(libs.androidx.test.ext)
@@ -50,5 +53,4 @@ dependencies {
     androidTestImplementation(libs.bundles.kotlin.test)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext)
-    androidTestImplementation(libs.androidx.test.espresso)
 }

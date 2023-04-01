@@ -5,6 +5,7 @@ plugins {
 
 android {
     namespace = "io.github.pelmenstar1.digiDict.common.ui"
+    testNamespace = "io.github.pelmenstar1.digiDict.common.ui.tests"
     compileSdk = 33
 
     defaultConfig {
@@ -13,6 +14,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+    }
+
+    testOptions {
+        animationsDisabled = true
     }
 
     lint {
@@ -60,4 +65,5 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext)
     androidTestImplementation(libs.androidx.test.espresso)
+    androidTestImplementation(libs.androidx.fragment.testing)
 }

@@ -22,7 +22,9 @@ interface ProgressIndicatorDialogInterface {
 
 abstract class AbstractProgressIndicatorDialog : DialogFragment(), ProgressIndicatorDialogInterface {
     private var currentProgress = -1
-    private var progressBar: ProgressBar? = null
+
+    @JvmField
+    internal var progressBar: ProgressBar? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         if (currentProgress < 0) {

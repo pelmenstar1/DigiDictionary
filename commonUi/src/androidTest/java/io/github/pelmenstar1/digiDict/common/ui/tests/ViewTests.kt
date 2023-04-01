@@ -1,10 +1,12 @@
-package io.github.pelmenstar1.digiDict.common.ui
+package io.github.pelmenstar1.digiDict.common.ui.tests
 
 import android.view.View
 import android.widget.LinearLayout
 import androidx.core.view.get
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.pelmenstar1.digiDict.common.ui.adjustViewCount
+import io.github.pelmenstar1.digiDict.common.ui.adjustViewCountWithoutLast
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
