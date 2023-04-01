@@ -49,6 +49,7 @@ abstract class ProgressIndicatorDialogManagerBase {
 
         var dialog: ProgressIndicatorDialogInterface? = currentDialog
 
+        // TODO: Simplify the logic
         progressCollectionJob = scope.launch {
             pFlow.cancelAfter { it == 100 || it == ProgressReporter.ERROR }.collect { progress ->
                 when (progress) {
