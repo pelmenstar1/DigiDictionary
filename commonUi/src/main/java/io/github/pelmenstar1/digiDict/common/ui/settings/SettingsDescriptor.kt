@@ -139,6 +139,7 @@ class SettingsDescriptor<TEntries : AppPreferences.Entries>(
 
         /**
          * Adds information about dialog associated with specified [entry].
+         * If the dialog is specified to [entry], the item, associated with [entry], will show the dialog on click.
          *
          * @param dialogClass class of the dialog
          * @param tag a tag of the dialog. It should be unique among all fragments in child fragment manager of host fragment.

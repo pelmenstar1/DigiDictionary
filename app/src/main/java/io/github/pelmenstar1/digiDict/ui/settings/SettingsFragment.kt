@@ -61,13 +61,13 @@ class SettingsFragment : Fragment() {
                 bindTextFormatter({ recordTextBreakStrategy }, ResourcesBreakStrategyStringFormatter(context))
                 bindTextFormatter({ recordTextHyphenationFrequency }, ResourcesHyphenationStringFormatter(context))
 
-                registerChangeValueDialogAndBindAction { recordTextBreakStrategy }
-                registerChangeValueDialogAndBindAction { recordTextHyphenationFrequency }
+                registerChangeValueDialog { recordTextBreakStrategy }
+                registerChangeValueDialog { recordTextHyphenationFrequency }
             }
 
-            registerChangeValueDialogAndBindAction { scorePointsPerCorrectAnswer }
-            registerChangeValueDialogAndBindAction { scorePointsPerWrongAnswer }
-            registerChangeValueDialogAndBindAction { widgetListMaxSize }
+            registerChangeValueDialog { scorePointsPerCorrectAnswer }
+            registerChangeValueDialog { scorePointsPerWrongAnswer }
+            registerChangeValueDialog { widgetListMaxSize }
         }
 
         showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
@@ -107,13 +107,13 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private inline fun <TValue : Any> SettingsController<DigiDictAppPreferences.Entries>.registerChangeValueDialogAndBindAction(
+    private inline fun <TValue : Any> SettingsController<DigiDictAppPreferences.Entries>.registerChangeValueDialog(
         entry: DigiDictPrefsGetEntry<TValue>
     ) {
-        registerChangeValueDialogAndBindAction(DigiDictAppPreferences.Entries.entry())
+        registerChangeValueDialog(DigiDictAppPreferences.Entries.entry())
     }
 
-    private fun <TValue : Any> SettingsController<DigiDictAppPreferences.Entries>.registerChangeValueDialogAndBindAction(
+    private fun <TValue : Any> SettingsController<DigiDictAppPreferences.Entries>.registerChangeValueDialog(
         entry: AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>
     ) {
         registerDialogForEntry<TValue, SingleSelectionDialogFragment<TValue>>(entry) { dialog, _ ->
@@ -121,8 +121,6 @@ class SettingsFragment : Fragment() {
                 viewModel.changePreferenceValue(entry, changedValue)
             }
         }
-
-        bindContentItemClickAction(entry) { showDialog() }
     }
 
     companion object {

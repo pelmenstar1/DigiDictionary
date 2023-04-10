@@ -25,8 +25,6 @@ class SettingsController<TEntries : AppPreferences.Entries>(
     )
 
     private val actionHandlers = SparseArray<() -> Unit>()
-    private val contentItemClickActions =
-        ArrayMap<AppPreferences.Entry<*, TEntries>, SettingsContentItemClickAction<*, TEntries>>()
     private val textFormatters = ArrayMap<AppPreferences.Entry<*, TEntries>, StringFormatter<Any>>()
     private val dialogInfos = ArrayList<DialogInfo<TEntries, *, *>>()
 
@@ -48,6 +46,13 @@ class SettingsController<TEntries : AppPreferences.Entries>(
 
     private fun generateTag(dialogClass: Class<out DialogFragment>, entry: AppPreferences.Entry<*, TEntries>): String {
         return "${dialogClass.simpleName}_${entry.name}"
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <TValue : Any, TDialog : DialogFragment> findDialogInfoByEntry(
+        entry: AppPreferences.Entry<TValue, TEntries>
+    ): DialogInfo<TEntries, TValue, TDialog>? {
+        return dialogInfos.find { it.entry == entry } as DialogInfo<TEntries, TValue, TDialog>?
     }
 
     /**
@@ -79,18 +84,12 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         )
     }
 
-    /**
-     * Shows the dialog associated with specified [entry]. Expects that any snapshot was applied and [childFragmentManager] is not null.
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <TValue : Any> showDialogForEntry(entry: AppPreferences.Entry<TValue, TEntries>) {
+    private fun <TValue : Any, TDialog : DialogFragment> showDialogForEntry(info: DialogInfo<TEntries, TValue, TDialog>) {
         val fm = requireChildFragmentManager()
-        val info = dialogInfos.find { it.entry == entry } as DialogInfo<TEntries, TValue, DialogFragment>?
-            ?: throw IllegalStateException("No dialog registered for specified entry")
 
-        val entryValue = requireSnapshot()[entry]
+        val entryValue = requireSnapshot()[info.entry]
 
-        val fragment = info.dialogClass.newInstance() as DialogFragment
+        val fragment = info.dialogClass.newInstance()
         fragment.arguments = info.createArgs?.invoke(entryValue)
         info.initializer.init(fragment, entryValue)
 
@@ -139,26 +138,6 @@ class SettingsController<TEntries : AppPreferences.Entries>(
     }
 
     /**
-     * Sets a [SettingsContentItemClickAction] for item associated with given [entry].
-     */
-    fun <TValue : Any> bindContentItemClickAction(
-        entry: AppPreferences.Entry<TValue, TEntries>,
-        action: SettingsContentItemClickAction<TValue, TEntries>
-    ) {
-        contentItemClickActions[entry] = action
-    }
-
-    /**
-     * Sets a [SettingsContentItemClickAction] for item associated with given [entry].
-     */
-    inline fun <TValue : Any> bindContentItemClickAction(
-        entry: AppPreferences.Entry<TValue, TEntries>,
-        action: SettingsContentItemClickActions.() -> SettingsContentItemClickAction<TValue, TEntries>
-    ) {
-        bindContentItemClickAction(entry, SettingsContentItemClickActions.action())
-    }
-
-    /**
      * Sets a custom text formatter for item, with text content and associated with given [entry].
      */
     @Suppress("UNCHECKED_CAST")
@@ -191,9 +170,7 @@ class SettingsController<TEntries : AppPreferences.Entries>(
      */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> performContentItemClickListener(entry: AppPreferences.Entry<TValue, TEntries>) {
-        val handler = contentItemClickActions[entry] as SettingsContentItemClickAction<TValue, TEntries>?
-
-        handler?.perform(entry, this)
+        findDialogInfoByEntry<TValue, DialogFragment>(entry)?.also { showDialogForEntry(it) }
     }
 
     /**
@@ -208,7 +185,6 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         if (formatter == null) {
             val valueClass = entry.valueClass
 
-            // Integer is a known type and simple to format
             if (valueClass == Int::class.javaObjectType) {
                 return IntegerStringFormatter as StringFormatter<TValue>
             }
