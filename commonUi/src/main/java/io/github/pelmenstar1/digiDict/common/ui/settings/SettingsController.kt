@@ -21,16 +21,14 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         val dialogClass: Class<TDialog>,
         val tag: String,
         val createArgs: ((TValue) -> Bundle)? = null,
-        val initializer: SettingsDialogInitializer<TValue, TDialog>
+        val init: (TDialog) -> Unit
     )
 
     private val actionHandlers = SparseArray<() -> Unit>()
-    private val textFormatters = ArrayMap<AppPreferences.Entry<*, TEntries>, StringFormatter<Any>>()
+    private val textFormatters = ArrayMap<AppPreferences.Entry<*, TEntries>, StringFormatter<*>>()
     private val dialogInfos = ArrayList<DialogInfo<TEntries, *, *>>()
 
     private var currentSnapshot: AppPreferences.Snapshot<TEntries>? = null
-
-    private var isDialogsInitialized = false
 
     var navController: NavController? = null
     var onValueChangedHandler: ((AppPreferences.Entry<Any, TEntries>, Any) -> Unit)? = null
@@ -38,10 +36,6 @@ class SettingsController<TEntries : AppPreferences.Entries>(
 
     private fun requireChildFragmentManager(): FragmentManager {
         return childFragmentManager ?: throw IllegalStateException("childFragmentManager should be non-null")
-    }
-
-    private fun requireSnapshot(): AppPreferences.Snapshot<TEntries> {
-        return currentSnapshot ?: throw IllegalStateException("No snapshot has been applied")
     }
 
     private fun generateTag(dialogClass: Class<out DialogFragment>, entry: AppPreferences.Entry<*, TEntries>): String {
@@ -59,17 +53,16 @@ class SettingsController<TEntries : AppPreferences.Entries>(
      * Completely registers the dialog by specifying [initializer].
      *
      * The initializer will be called when the dialog is created and
-     * when the host fragment is recreated and the dialog is on screen. If the host fragment is recreated, the initializers will be
-     * called once when first snapshot is applied.
+     * when the host fragment is recreated and the dialog is on screen.
      */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any, TDialog : DialogFragment> registerDialogForEntry(
         entry: AppPreferences.Entry<TValue, TEntries>,
-        initializer: SettingsDialogInitializer<TValue, TDialog>
+        initializer: (TDialog) -> Unit
     ) {
         val descriptorDialog =
             descriptor.dialogs.find { it.entry == entry } as SettingsDescriptor.Dialog<TValue, TDialog, TEntries>?
-                ?: throw IllegalStateException("The dialog associated with $entry should be registered in settings descriptor")
+                ?: throw IllegalStateException("The dialog associated with ${entry.name} should be registered in settings descriptor")
 
         val dialogClass = descriptorDialog.dialogClass
 
@@ -86,12 +79,12 @@ class SettingsController<TEntries : AppPreferences.Entries>(
 
     private fun <TValue : Any, TDialog : DialogFragment> showDialogForEntry(info: DialogInfo<TEntries, TValue, TDialog>) {
         val fm = requireChildFragmentManager()
-
-        val entryValue = requireSnapshot()[info.entry]
+        val snapshot = currentSnapshot ?: throw IllegalStateException("No snapshot has been applied")
+        val entryValue = snapshot[info.entry]
 
         val fragment = info.dialogClass.newInstance()
         fragment.arguments = info.createArgs?.invoke(entryValue)
-        info.initializer.init(fragment, entryValue)
+        info.init(fragment)
 
         fragment.show(fm, info.tag)
     }
@@ -103,30 +96,19 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         currentSnapshot = snapshot
 
         SettingsInflater.applySnapshot(this, snapshot, container)
-
-        if (!isDialogsInitialized) {
-            isDialogsInitialized = true
-
-            initDialogsIfShown()
-        }
     }
 
+    /**
+     * Initializes all previously registered dialogs (via [registerDialogForEntry]) if they are on the screen.
+     */
     @Suppress("UNCHECKED_CAST")
-    private fun initDialogsIfShown() {
+    fun initDialogsIfShown() {
         val fm = requireChildFragmentManager()
-        val snapshot = requireSnapshot()
 
-        for (descriptorDialog in descriptor.dialogs) {
-            val tag = descriptorDialog.tag
-            val dialog = fm.findFragmentByTag(tag) as DialogFragment?
+        for (info in dialogInfos) {
+            info as DialogInfo<TEntries, *, DialogFragment>
 
-            if (dialog != null) {
-                val info = dialogInfos.find { it.tag == tag } as DialogInfo<TEntries, Any, DialogFragment>?
-                    ?: throw IllegalStateException("No dialog registered with tag: $tag")
-
-                val entryValue = snapshot[info.entry]
-                info.initializer.init(dialog, entryValue)
-            }
+            (fm.findFragmentByTag(info.tag) as DialogFragment?)?.also(info.init)
         }
     }
 
@@ -134,7 +116,7 @@ class SettingsController<TEntries : AppPreferences.Entries>(
      * Sets a handler that will be invoked when user clicks on item with specified [id].
      */
     fun bindActionHandler(id: Int, handler: () -> Unit) {
-        actionHandlers.put(id, handler)
+        actionHandlers[id] = handler
     }
 
     /**
@@ -160,15 +142,12 @@ class SettingsController<TEntries : AppPreferences.Entries>(
      * Performs an action, if it is specified, for the action item with given [id].
      */
     fun performAction(id: Int) {
-        val handler = actionHandlers.get(id)
-
-        handler?.invoke()
+        actionHandlers[id]?.invoke()
     }
 
     /**
      * Performs an action, if it is specified, for the content item associated with given [entry]
      */
-    @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> performContentItemClickListener(entry: AppPreferences.Entry<TValue, TEntries>) {
         findDialogInfoByEntry<TValue, DialogFragment>(entry)?.also { showDialogForEntry(it) }
     }
@@ -180,17 +159,17 @@ class SettingsController<TEntries : AppPreferences.Entries>(
      */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> getTextFormatter(entry: AppPreferences.Entry<TValue, TEntries>): StringFormatter<TValue>? {
-        val formatter = textFormatters[entry] as StringFormatter<TValue>?
+        var formatter = textFormatters[entry]
 
         if (formatter == null) {
             val valueClass = entry.valueClass
 
-            if (valueClass == Int::class.javaObjectType) {
-                return IntegerStringFormatter as StringFormatter<TValue>
+            if (valueClass == Int::class.javaObjectType || valueClass == Int::class.java) {
+                formatter = IntegerStringFormatter
             }
         }
 
-        return formatter
+        return formatter as StringFormatter<TValue>?
     }
 
     /**

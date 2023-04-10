@@ -16,19 +16,13 @@ class BreakStrategyDialogFragment : SingleSelectionDialogFragment<BreakStrategy>
     override val titleRes: Int
         get() = R.string.settings_breakStrategy
 
-    // UNSPECIFIED is not used, so -1
+    // UNSPECIFIED is not used, so +1
     override fun getValueByIndex(index: Int): BreakStrategy = BreakStrategy.fromOrdinal(index + 1)
 
     companion object {
         fun createArguments(selectedValue: BreakStrategy): Bundle {
+            // UNSPECIFIED is not used, so -1
             return createArguments(selectedValue.ordinal - 1)
-        }
-
-        fun create(selectedValue: BreakStrategy): BreakStrategyDialogFragment {
-            return BreakStrategyDialogFragment().apply {
-                // UNSPECIFIED is not used, so -1
-                arguments = createArguments(selectedValue)
-            }
         }
     }
 }

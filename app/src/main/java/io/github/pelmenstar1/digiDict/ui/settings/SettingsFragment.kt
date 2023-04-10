@@ -68,6 +68,8 @@ class SettingsFragment : Fragment() {
             registerChangeValueDialog { scorePointsPerCorrectAnswer }
             registerChangeValueDialog { scorePointsPerWrongAnswer }
             registerChangeValueDialog { widgetListMaxSize }
+
+            initDialogsIfShown()
         }
 
         showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
@@ -116,9 +118,9 @@ class SettingsFragment : Fragment() {
     private fun <TValue : Any> SettingsController<DigiDictAppPreferences.Entries>.registerChangeValueDialog(
         entry: AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>
     ) {
-        registerDialogForEntry<TValue, SingleSelectionDialogFragment<TValue>>(entry) { dialog, _ ->
-            dialog.onValueSelected = { changedValue ->
-                viewModel.changePreferenceValue(entry, changedValue)
+        registerDialogForEntry<TValue, SingleSelectionDialogFragment<TValue>>(entry) { dialog ->
+            dialog.onValueSelected = { newValue ->
+                viewModel.changePreferenceValue(entry, newValue)
             }
         }
     }
@@ -219,11 +221,11 @@ class SettingsFragment : Fragment() {
                 if (Build.VERSION.SDK_INT >= 23) {
                     dialog<_, BreakStrategyDialogFragment>(
                         entry = { recordTextBreakStrategy },
-                        createArgs = { BreakStrategyDialogFragment.createArguments(it) }
+                        createArgs = BreakStrategyDialogFragment::createArguments
                     )
                     dialog<_, HyphenationDialogFragment>(
                         entry = { recordTextHyphenationFrequency },
-                        createArgs = { HyphenationDialogFragment.createArguments(it) }
+                        createArgs = HyphenationDialogFragment::createArguments
                     )
                 }
 
