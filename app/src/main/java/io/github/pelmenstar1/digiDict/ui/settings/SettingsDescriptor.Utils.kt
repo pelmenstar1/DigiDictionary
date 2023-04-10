@@ -30,7 +30,7 @@ inline fun <TValue : Any> SettingsDescriptor.ItemGroup.ItemListBuilder<DigiDictA
 }
 
 inline fun <TValue : Any, reified TDialog : DialogFragment> SettingsDescriptor.DialogListBuilder<DigiDictAppPreferences.Entries>.dialog(
-    tag: String,
+    tag: String? = null,
     entry: DigiDictPrefsGetEntry<TValue>,
     noinline createArgs: ((TValue) -> Bundle)? = null
 ) {
@@ -38,7 +38,7 @@ inline fun <TValue : Any, reified TDialog : DialogFragment> SettingsDescriptor.D
 }
 
 inline fun SettingsDescriptor.DialogListBuilder<DigiDictAppPreferences.Entries>.numberDialog(
-    tag: String,
+    tag: String? = null,
     entry: DigiDictPrefsGetEntry<Int>,
     @StringRes titleRes: Int,
     start: Int,

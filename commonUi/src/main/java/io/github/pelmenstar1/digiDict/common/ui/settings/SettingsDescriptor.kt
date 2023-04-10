@@ -121,22 +121,35 @@ class SettingsDescriptor<TEntries : AppPreferences.Entries>(
 
     data class Dialog<TValue : Any, TDialog : DialogFragment, TEntries : AppPreferences.Entries>(
         val dialogClass: Class<TDialog>,
-        val tag: String,
+        val tag: String?,
         val entry: AppPreferences.Entry<TValue, TEntries>,
         val createArgs: ((selectedValue: TValue) -> Bundle)? = null
     )
 
     @JvmInline
     value class DialogListBuilder<TEntries : AppPreferences.Entries>(private val dialogs: MutableList<Dialog<*, *, TEntries>>) {
+        /**
+         * A shortcut for [dialog] method with explicitly specified class of the dialog.
+         */
         inline fun <TValue : Any, reified TDialog : DialogFragment> dialog(
-            tag: String,
+            tag: String? = null,
             entry: AppPreferences.Entry<TValue, TEntries>,
             noinline createArgs: ((selectedValue: TValue) -> Bundle)? = null
         ) = dialog(TDialog::class.java, tag, entry, createArgs)
 
+        /**
+         * Adds information about dialog associated with specified [entry].
+         *
+         * @param dialogClass class of the dialog
+         * @param tag a tag of the dialog. It should be unique among all fragments in child fragment manager of host fragment.
+         * If null, the tag will be generated via concatenating dialog class name and entry name
+         * @param entry a preference entry the dialog is associated with
+         * @param createArgs a lambda to create arguments for dialog fragment.
+         * Can be null to set `null` to arguments of the dialog fragment
+         */
         fun <TValue : Any> dialog(
             dialogClass: Class<out DialogFragment>,
-            tag: String,
+            tag: String? = null,
             entry: AppPreferences.Entry<TValue, TEntries>,
             createArgs: ((selectedValue: TValue) -> Bundle)? = null
         ) {

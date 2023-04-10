@@ -46,6 +46,17 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         return currentSnapshot ?: throw IllegalStateException("No snapshot has been applied")
     }
 
+    private fun generateTag(dialogClass: Class<out DialogFragment>, entry: AppPreferences.Entry<*, TEntries>): String {
+        return "${dialogClass.simpleName}_${entry.name}"
+    }
+
+    /**
+     * Completely registers the dialog by specifying [initializer].
+     *
+     * The initializer will be called when the dialog is created and
+     * when the host fragment is recreated and the dialog is on screen. If the host fragment is recreated, the initializers will be
+     * called once when first snapshot is applied.
+     */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any, TDialog : DialogFragment> registerDialogForEntry(
         entry: AppPreferences.Entry<TValue, TEntries>,
@@ -55,17 +66,22 @@ class SettingsController<TEntries : AppPreferences.Entries>(
             descriptor.dialogs.find { it.entry == entry } as SettingsDescriptor.Dialog<TValue, TDialog, TEntries>?
                 ?: throw IllegalStateException("The dialog associated with $entry should be registered in settings descriptor")
 
+        val dialogClass = descriptorDialog.dialogClass
+
         dialogInfos.add(
             DialogInfo(
                 entry,
-                descriptorDialog.dialogClass,
-                descriptorDialog.tag,
+                dialogClass,
+                descriptorDialog.tag ?: generateTag(dialogClass, entry),
                 descriptorDialog.createArgs,
                 initializer
             )
         )
     }
 
+    /**
+     * Shows the dialog associated with specified [entry]. Expects that any snapshot was applied and [childFragmentManager] is not null.
+     */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> showDialogForEntry(entry: AppPreferences.Entry<TValue, TEntries>) {
         val fm = requireChildFragmentManager()
@@ -81,6 +97,9 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         fragment.show(fm, info.tag)
     }
 
+    /**
+     * Applies [snapshot]. This will update UI as well.
+     */
     fun applySnapshot(snapshot: AppPreferences.Snapshot<TEntries>) {
         currentSnapshot = snapshot
 
@@ -112,10 +131,16 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         }
     }
 
+    /**
+     * Sets a handler that will be invoked when user clicks on item with specified [id].
+     */
     fun bindActionHandler(id: Int, handler: () -> Unit) {
         actionHandlers.put(id, handler)
     }
 
+    /**
+     * Sets a [SettingsContentItemClickAction] for item associated with given [entry].
+     */
     fun <TValue : Any> bindContentItemClickAction(
         entry: AppPreferences.Entry<TValue, TEntries>,
         action: SettingsContentItemClickAction<TValue, TEntries>
@@ -123,6 +148,9 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         contentItemClickActions[entry] = action
     }
 
+    /**
+     * Sets a [SettingsContentItemClickAction] for item associated with given [entry].
+     */
     inline fun <TValue : Any> bindContentItemClickAction(
         entry: AppPreferences.Entry<TValue, TEntries>,
         action: SettingsContentItemClickActions.() -> SettingsContentItemClickAction<TValue, TEntries>
@@ -130,6 +158,9 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         bindContentItemClickAction(entry, SettingsContentItemClickActions.action())
     }
 
+    /**
+     * Sets a custom text formatter for item, with text content and associated with given [entry].
+     */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> bindTextFormatter(
         entry: AppPreferences.Entry<TValue, TEntries>,
@@ -138,17 +169,26 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         textFormatters[entry] = formatter as StringFormatter<Any>
     }
 
+    /**
+     * The method should be called when preferences value is changed by the UI.
+     */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> onValueChanged(entry: AppPreferences.Entry<TValue, TEntries>, newValue: TValue) {
         (onValueChangedHandler as ((AppPreferences.Entry<TValue, TEntries>, TValue) -> Unit)?)?.invoke(entry, newValue)
     }
 
+    /**
+     * Performs an action, if it is specified, for the action item with given [id].
+     */
     fun performAction(id: Int) {
         val handler = actionHandlers.get(id)
 
         handler?.invoke()
     }
 
+    /**
+     * Performs an action, if it is specified, for the content item associated with given [entry]
+     */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> performContentItemClickListener(entry: AppPreferences.Entry<TValue, TEntries>) {
         val handler = contentItemClickActions[entry] as SettingsContentItemClickAction<TValue, TEntries>?
@@ -156,6 +196,11 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         handler?.perform(entry, this)
     }
 
+    /**
+     * Returns a text formatter for item associated with specified [entry]. If no text formatter is set, the method will try
+     * to lookup for known types (currently only [Int]), and return predefined text formatter. If [entry]'s value class isn't "known",
+     * the method returns null.
+     */
     @Suppress("UNCHECKED_CAST")
     fun <TValue : Any> getTextFormatter(entry: AppPreferences.Entry<TValue, TEntries>): StringFormatter<TValue>? {
         val formatter = textFormatters[entry] as StringFormatter<TValue>?
@@ -172,6 +217,9 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         return formatter
     }
 
+    /**
+     * Navigates to specified [directions]. No-op if [navController] is `null`.
+     */
     fun navigate(directions: NavDirections) {
         navController?.navigate(directions)
     }

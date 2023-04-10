@@ -219,21 +219,17 @@ class SettingsFragment : Fragment() {
 
             dialogs {
                 if (Build.VERSION.SDK_INT >= 23) {
-                    // TODO: Generate a tag automatically
                     dialog<_, BreakStrategyDialogFragment>(
-                        tag = "BreakStrategyDialog",
                         entry = { recordTextBreakStrategy },
                         createArgs = { BreakStrategyDialogFragment.createArguments(it) }
                     )
                     dialog<_, HyphenationDialogFragment>(
-                        tag = "HyphenationFrequencyDialog",
                         entry = { recordTextHyphenationFrequency },
                         createArgs = { HyphenationDialogFragment.createArguments(it) }
                     )
                 }
 
                 numberDialog(
-                    tag = "SingleSelectionIntDialogFragment_scorePointsPerCorrectAnswer",
                     entry = { scorePointsPerCorrectAnswer },
                     titleRes = R.string.settings_selectValueDialogTitle,
                     start = 1,
@@ -241,7 +237,6 @@ class SettingsFragment : Fragment() {
                 )
 
                 numberDialog(
-                    tag = "SingleSelectionIntDialogFragment_scorePointsPerWrongAnswer",
                     entry = { scorePointsPerWrongAnswer },
                     titleRes = R.string.settings_selectValueDialogTitle,
                     start = 1,
@@ -249,7 +244,6 @@ class SettingsFragment : Fragment() {
                 )
 
                 numberDialog(
-                    tag = "SingleSelectionIntDialogFragment_widgetListMaxSize",
                     entry = { widgetListMaxSize },
                     titleRes = R.string.settings_selectValueDialogTitle,
                     start = 10,
