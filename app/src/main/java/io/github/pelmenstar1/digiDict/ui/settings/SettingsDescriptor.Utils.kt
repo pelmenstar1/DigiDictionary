@@ -13,7 +13,7 @@ import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
 
 typealias DigiDictPrefsGetEntry<TValue> = DigiDictAppPreferences.Entries.() -> AppPreferences.Entry<TValue, DigiDictAppPreferences.Entries>
 
-inline fun <TValue : Any> SettingsDescriptor.ItemGroup.ItemListBuilder<DigiDictAppPreferences.Entries>.item(
+inline fun <TValue : Any> SettingsDescriptor.ItemListBuilder<DigiDictAppPreferences.Entries>.item(
     @StringRes nameRes: Int,
     @DrawableRes iconRes: Int? = null,
     preferenceEntry: DigiDictPrefsGetEntry<TValue>,

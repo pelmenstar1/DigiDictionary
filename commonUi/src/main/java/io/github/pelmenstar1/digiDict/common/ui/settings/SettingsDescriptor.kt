@@ -52,56 +52,56 @@ class SettingsDescriptor<TEntries : AppPreferences.Entries>(
         @DrawableRes val iconRes: Int?
     ) : Item
 
-    class ItemGroup(@StringRes val titleRes: Int, val items: List<Item>) {
-        @JvmInline
-        value class ItemListBuilder<TEntries : AppPreferences.Entries>(private val items: MutableList<Item>) {
-            /**
-             * Adds content item to a group.
-             *
-             * @param nameRes a string resource id of name of this item
-             * @param iconRes a drawable resource id of icon of this item
-             * @param preferenceEntry an entry, in preferences, that this item represents
-             * @param content content of this item
-             */
-            fun <TValue : Any> item(
-                @StringRes nameRes: Int,
-                @DrawableRes iconRes: Int? = null,
-                preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
-                clickable: Boolean = false,
-                content: ItemContent<TValue>,
-            ) {
-                items.add(ContentItem(nameRes, iconRes, preferenceEntry, clickable, content))
-            }
+    class ItemGroup(@StringRes val titleRes: Int, val items: List<Item>)
 
-            /**
-             * Adds link item to a group. Link item is an item that navigates to another fragment on click.
-             *
-             * @param nameRes a string resource id of name of this item
-             * @param iconRes a drawable resource id of icon of this item. It can be null in case the item has no icon
-             * @param directions contains a description of fragment to navigate on click
-             */
-            fun linkItem(
-                @StringRes nameRes: Int,
-                @DrawableRes iconRes: Int? = null,
-                directions: NavDirections
-            ) {
-                items.add(LinkItem(nameRes, iconRes, directions))
-            }
+    @JvmInline
+    value class ItemListBuilder<TEntries : AppPreferences.Entries>(private val items: MutableList<Item>) {
+        /**
+         * Adds content item to a group.
+         *
+         * @param nameRes a string resource id of name of this item
+         * @param iconRes a drawable resource id of icon of this item
+         * @param preferenceEntry an entry, in preferences, that this item represents
+         * @param content content of this item
+         */
+        fun <TValue : Any> item(
+            @StringRes nameRes: Int,
+            @DrawableRes iconRes: Int? = null,
+            preferenceEntry: AppPreferences.Entry<TValue, TEntries>,
+            clickable: Boolean = false,
+            content: ItemContent<TValue>,
+        ) {
+            items.add(ContentItem(nameRes, iconRes, preferenceEntry, clickable, content))
+        }
 
-            /**
-             * Adds action item to a group. Action item is an item that executes some action on click.
-             *
-             * @param id id of the action. It should be unique among all action items
-             * @param nameRes a string resource of name of this item
-             * @param iconRes a drawable resource of icon of this item. It can be null in case the item has no icon.
-             */
-            fun actionItem(
-                id: Int,
-                @StringRes nameRes: Int,
-                @DrawableRes iconRes: Int? = null
-            ) {
-                items.add(ActionItem(id, nameRes, iconRes))
-            }
+        /**
+         * Adds link item to a group. Link item is an item that navigates to another fragment on click.
+         *
+         * @param nameRes a string resource id of name of this item
+         * @param iconRes a drawable resource id of icon of this item. It can be null in case the item has no icon
+         * @param directions contains a description of fragment to navigate on click
+         */
+        fun linkItem(
+            @StringRes nameRes: Int,
+            @DrawableRes iconRes: Int? = null,
+            directions: NavDirections
+        ) {
+            items.add(LinkItem(nameRes, iconRes, directions))
+        }
+
+        /**
+         * Adds action item to a group. Action item is an item that executes some action on click.
+         *
+         * @param id id of the action. It should be unique among all action items
+         * @param nameRes a string resource of name of this item
+         * @param iconRes a drawable resource of icon of this item. It can be null in case the item has no icon.
+         */
+        fun actionItem(
+            id: Int,
+            @StringRes nameRes: Int,
+            @DrawableRes iconRes: Int? = null
+        ) {
+            items.add(ActionItem(id, nameRes, iconRes))
         }
     }
 
@@ -111,9 +111,9 @@ class SettingsDescriptor<TEntries : AppPreferences.Entries>(
             groups.add(group)
         }
 
-        inline fun group(@StringRes titleRes: Int, itemsBlock: ItemGroup.ItemListBuilder<TEntries>.() -> Unit) {
+        inline fun group(@StringRes titleRes: Int, itemsBlock: ItemListBuilder<TEntries>.() -> Unit) {
             val items = ArrayList<Item>()
-            ItemGroup.ItemListBuilder<TEntries>(items).also(itemsBlock)
+            ItemListBuilder<TEntries>(items).also(itemsBlock)
 
             group(ItemGroup(titleRes, items))
         }
