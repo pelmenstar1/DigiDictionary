@@ -12,7 +12,7 @@ class PrefixTextView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     @AttrRes defStyleAttr: Int = android.R.attr.textViewStyle,
     @StyleRes defStyleRes: Int = 0
-) : MaterialTextView(context, attrs, defStyleAttr, defStyleRes) {
+) : MaterialTextView(context, attrs, defStyleAttr) {
     var prefix: String = ""
         set(value) {
             field = value
