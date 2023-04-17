@@ -54,54 +54,56 @@ internal inline fun String.processUtf8Bytes(
     val length = length
 
     while (index < length) {
-        val c = this[index]
+        val c = this[index].code
 
         when {
-            c < '\u0080' -> {
+            c < 0x80 -> {
                 // Emit a 7-bit character with 1 byte.
-                on1Byte(c.code.toByte()) // 0xxxxxxx
+                on1Byte(c.toByte()) // 0xxxxxxx
                 index++
 
                 // Assume there is going to be more ASCII
-                while (index < length && this[index] < '\u0080') {
-                    on1Byte(this[index++].code.toByte())
+                while (index < length) {
+                    val seqCharCode = this[index].code
+                    if (seqCharCode >= 0x80) {
+                        break
+                    }
+
+                    on1Byte(seqCharCode.toByte())
+                    index++
                 }
             }
-
-            c < '\u0800' -> {
+            c < 0x0800 -> {
                 // Emit a 11-bit character with 2 bytes.
                 on2Byte(
-                    (c.code shr 6 or 0xc0).toByte(), // 110xxxxx
-                    (c.code and 0x3f or 0x80).toByte() // 10xxxxxx
+                    (c shr 6 or 0xc0).toByte(), // 110xxxxx
+                    (c and 0x3f or 0x80).toByte() // 10xxxxxx
                 )
 
                 index++
             }
-
-            c !in '\ud800'..'\udfff' -> {
+            c !in 0xd800..0xdfff -> {
                 // Emit a 16-bit character with 3 bytes.
                 on3Byte(
-                    (c.code shr 12 or 0xe0).toByte(), // 1110xxxx
-                    (c.code shr 6 and 0x3f or 0x80).toByte(), // 10xxxxxx
-                    (c.code and 0x3f or 0x80).toByte() // 10xxxxxx
+                    (c shr 12 or 0xe0).toByte(), // 1110xxxx
+                    (c shr 6 and 0x3f or 0x80).toByte(), // 10xxxxxx
+                    (c and 0x3f or 0x80).toByte() // 10xxxxxx
                 )
 
                 index++
             }
-
             else -> {
                 // c is a surrogate. Make sure it is a high surrogate & that its successor is a low
                 // surrogate. If not, the UTF-16 is invalid, in which case we emit a replacement
                 // byte.
-
-                if (c > '\udbff' || length <= index + 1 || this[index + 1] !in '\udc00'..'\udfff') {
+                if (c > 0xdbff || length <= index + 1 || this[index + 1].code !in 0xdc00..0xdfff) {
                     on1Byte(REPLACEMENT_BYTE)
                     index++
                 } else {
                     // UTF-16 high surrogate: 110110xxxxxxxxxx (10 bits)
                     // UTF-16 low surrogate:  110111yyyyyyyyyy (10 bits)
                     // Unicode code point:    00010000000000000000 + xxxxxxxxxxyyyyyyyyyy (21 bits)
-                    val codePoint = (((c.code shl 10) + this[index + 1].code) + (0x010000 - (0xd800 shl 10) - 0xdc00))
+                    val codePoint = (((c shl 10) + this[index + 1].code) + (0x010000 - (0xd800 shl 10) - 0xdc00))
 
                     // Emit a 21-bit character with 4 bytes.
                     on4Byte(

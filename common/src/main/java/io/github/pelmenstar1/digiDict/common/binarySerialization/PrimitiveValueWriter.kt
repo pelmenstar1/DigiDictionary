@@ -16,14 +16,14 @@ import java.io.OutputStream
  * The writer is already buffered, thus a reasonable buffer size should be specified in constructor.
  */
 class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
-    private val byteBufferArray = ByteArray(bufferSize)
+    private val buffer = ByteArray(bufferSize)
 
-    // Stores a current position in byteBufferArray from which writing the data should start.
-    // It can't equal to byteBufferArray.size and should be even.
+    // Stores a current position in buffer from which writing the data should start.
+    // It shouldn't be equal to buffer.size, if it's, the buffer must be written to the OutputStream.
     private var bufferPos = 0
 
     fun emit(b: Byte) {
-        val buf = byteBufferArray
+        val buf = buffer
         var bp = bufferPos
         val remaining = buf.size - bp
 
@@ -85,7 +85,7 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     }
 
     private inline fun emitNBytes(length: Int, common: () -> Unit, fast: (buf: ByteArray, bp: Int) -> Unit) {
-        val buf = byteBufferArray
+        val buf = buffer
         val bp = bufferPos
         val remaining = buf.size - bp
 
@@ -101,35 +101,75 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     fun emit(c: Char) = emit(c.code.toShort())
 
     fun emit(value: Short) {
-        emitNumberPrimitive(value.toLong(), byteCount = 2)
+        emitNumberPrimitive(
+            value,
+            byteCount = 2,
+            writeToBuffer = { buffer, offset ->
+                buffer[offset] = value.toByte()
+                buffer[offset + 1] = (value.toInt() shr 8).toByte()
+            },
+            toLong = Short::toLong
+        )
     }
 
     fun emit(value: Int) {
-        emitNumberPrimitive(value.toLong(), byteCount = 4)
+        emitNumberPrimitive(
+            value,
+            byteCount = 4,
+            writeToBuffer = { buffer, offset ->
+                buffer[offset] = value.toByte()
+                buffer[offset + 1] = (value shr 8).toByte()
+                buffer[offset + 2] = (value shr 16).toByte()
+                buffer[offset + 3] = (value shr 24).toByte()
+            },
+            toLong = Int::toLong
+        )
     }
 
     fun emit(value: Long) {
-        emitNumberPrimitive(value, byteCount = 8)
+        emitNumberPrimitive(
+            value,
+            byteCount = 8,
+            writeToBuffer = { buffer, offset ->
+                buffer[offset] = value.toByte()
+                buffer[offset + 1] = (value shr 8).toByte()
+                buffer[offset + 2] = (value shr 16).toByte()
+                buffer[offset + 3] = (value shr 24).toByte()
+                buffer[offset + 4] = (value shr 32).toByte()
+                buffer[offset + 5] = (value shr 40).toByte()
+                buffer[offset + 6] = (value shr 48).toByte()
+                buffer[offset + 7] = (value shr 56).toByte()
+            },
+            toLong = { it }
+        )
     }
 
-    private fun emitNumberPrimitive(value: Long, byteCount: Int) {
-        val buf = byteBufferArray
+    private inline fun <T> emitNumberPrimitive(
+        value: T,
+        byteCount: Int,
+        writeToBuffer: (buffer: ByteArray, offset: Int) -> Unit,
+        toLong: (T) -> Long
+    ) {
+        val buf = buffer
         var bp = bufferPos
         val remaining = buf.size - bp
 
         if (remaining >= byteCount) {
-            writeLongPartToBuffer(buf, bp, value, 0, byteCount)
+            writeToBuffer(buf, bp)
             bp += byteCount
         } else {
-            writeLongPartToBuffer(buf, bp, value, 0, remaining)
+            val valueLong = toLong(value)
 
-            // If remaining < byteCount, it means that we can't write enough bits of value to the buffer and
-            // it needs to be written to the stream first.
+            // Write what we can to the buffer
+            writeLongPartToBuffer(buf, bp, valueLong, 0, remaining)
+
+            // Write buffer
             output.write(buf, 0, buf.size)
 
             val remainingInValue = byteCount - remaining
 
-            writeLongPartToBuffer(buf, 0, value, remaining, remainingInValue)
+            // Write the remaining part to the buffer
+            writeLongPartToBuffer(buf, 0, valueLong, remaining, remainingInValue)
             bp = remainingInValue
         }
 
@@ -142,12 +182,54 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
         checkStringLength(utf8Size)
         emit(utf8Size.toShort())
 
+        if (bufferPos + utf8Size < buffer.size) {
+            emitUtf8NoOverflow(value)
+        } else {
+            emitUtf8Overflow(value)
+        }
+    }
+
+    private fun emitUtf8Overflow(value: String) {
         value.processUtf8Bytes(
             on1Byte = ::emit,
             on2Byte = ::emit2Bytes,
             on3Byte = ::emit3Bytes,
             on4Byte = ::emit4Bytes,
         )
+    }
+
+    private fun emitUtf8NoOverflow(value: String) {
+        val buf = buffer
+        var bp = bufferPos
+
+        value.processUtf8Bytes(
+            on1Byte = { b1 ->
+                buf[bp++] = b1
+            },
+            on2Byte = { b1, b2 ->
+                buf[bp] = b1
+                buf[bp + 1] = b2
+
+                bp += 2
+            },
+            on3Byte = { b1, b2, b3 ->
+                buf[bp] = b1
+                buf[bp + 1] = b2
+                buf[bp + 2] = b3
+
+                bp += 3
+            },
+            on4Byte = { b1, b2, b3, b4 ->
+                buf[bp] = b1
+                buf[bp + 1] = b2
+                buf[bp + 2] = b3
+                buf[bp + 3] = b4
+
+                bp += 4
+            }
+        )
+
+        setBufferPosAndSyncIfNecessary(bp)
     }
 
     fun emitUtf16(value: String) {
@@ -208,17 +290,17 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     fun flush() {
         val bp = bufferPos
         if (bp > 0) {
-            output.write(byteBufferArray, 0, bp)
+            output.write(buffer, 0, bp)
             bufferPos = 0
         }
     }
 
     private fun setBufferPosAndSyncIfNecessary(newPos: Int) {
-        val bb = byteBufferArray
-        val bufSize = bb.size
+        val buf = buffer
+        val bufSize = buf.size
 
         bufferPos = if (newPos == bufSize) {
-            output.write(bb, 0, bufSize)
+            output.write(buf, 0, bufSize)
 
             0
         } else {
@@ -227,12 +309,14 @@ class PrimitiveValueWriter(private val output: OutputStream, bufferSize: Int) {
     }
 
     companion object {
+        @JvmStatic
         internal fun checkStringLength(length: Int) {
             if (length > 65535) {
                 throw IllegalArgumentException("Length of the string to be written can't be greater than 65535")
             }
         }
 
+        @JvmStatic
         internal fun writeLongPartToBuffer(
             buffer: ByteArray,
             bufferStart: Int,

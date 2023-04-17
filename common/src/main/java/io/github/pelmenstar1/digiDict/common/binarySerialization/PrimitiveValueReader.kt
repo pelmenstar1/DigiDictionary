@@ -32,33 +32,70 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
     private var byteBufferForStrings: ByteArray? = null
 
     fun consumeShort(): Short {
-        return consumeNumberPrimitiveInLong(byteCount = 2).toShort()
+        return consumeNumberPrimitive(
+            byteCount = 2,
+            readFromBuffer = { buf, off ->
+                ((buf[off].toInt() and 0xFF) or ((buf[off + 1].toInt() and 0xFF) shl 8)).toShort()
+            },
+            Long::toShort
+        )
     }
 
     private fun consumeShortAsUnsignedInt(): Int {
         return consumeShort().toInt() and 0xFFFF
     }
 
-    fun consumeInt() = consumeNumberPrimitiveInLong(byteCount = 4).toInt()
-    fun consumeLong() = consumeNumberPrimitiveInLong(byteCount = 8)
+    fun consumeInt(): Int {
+        return consumeNumberPrimitive(
+            byteCount = 4,
+            readFromBuffer = { buf, off ->
+                (buf[off].toInt() and 0xFF) or
+                        ((buf[off + 1].toInt() and 0xFF) shl 8) or
+                        ((buf[off + 2].toInt() and 0xFF) shl 16) or
+                        ((buf[off + 3].toInt() and 0xFF) shl 24)
+            },
+            Long::toInt
+        )
+    }
 
-    private fun consumeNumberPrimitiveInLong(byteCount: Int): Long {
+    fun consumeLong(): Long {
+        return consumeNumberPrimitive(
+            byteCount = 8,
+            readFromBuffer = { buf, off ->
+                (buf[off].toLong() and 0xFF) or
+                        ((buf[off + 1].toLong() and 0xFF) shl 8) or
+                        ((buf[off + 2].toLong() and 0xFF) shl 16) or
+                        ((buf[off + 3].toLong() and 0xFF) shl 24) or
+                        ((buf[off + 4].toLong() and 0xFF) shl 32) or
+                        ((buf[off + 5].toLong() and 0xFF) shl 40) or
+                        ((buf[off + 6].toLong() and 0xFF) shl 48) or
+                        ((buf[off + 7].toLong() and 0xFF) shl 56)
+            },
+            longToT = { this }
+        )
+    }
+
+    private inline fun <T> consumeNumberPrimitive(
+        byteCount: Int,
+        readFromBuffer: (buffer: ByteArray, offset: Int) -> T,
+        longToT: Long.() -> T
+    ): T {
         // Locals should be assigned after buffer invalidation.
         invalidateBufferIfNecessary(minLength = byteCount)
 
-        val bb = byteBuffer
-        val bufSize = bb.size
+        val buf = byteBuffer
+        val bufSize = buf.size
         val input = inputStream
         var actualBufLength = actualBufferLength
         var consumedBytes = consumedByteLength
-        var result: Long
+        val result: T
 
         val remBytes = actualBufLength - consumedBytes
 
         // Checks whether a primitive can be read from byteBuffer with additional read from InputStream.
         // It's only possible when amount of unconsumed bytes is greater than or equals to count of bytes needed for storing the primitive.
         if (remBytes >= byteCount) {
-            result = withByteRegion(0L, bb, consumedBytes, 0, byteCount)
+            result = readFromBuffer(buf, consumedBytes)
 
             consumedBytes += byteCount
         } else {
@@ -66,10 +103,11 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
             // write the high bits from the position where we ended.
             val suffixLength = byteCount - remBytes
 
-            result = withByteRegion(0L, bb, bufferStart = consumedBytes, valueStart = 0, length = remBytes)
-            actualBufLength = input.readAtLeast(bb, offset = 0, minLength = suffixLength, maxLength = bufSize)
-            result = withByteRegion(result, bb, bufferStart = 0, valueStart = remBytes, length = suffixLength)
+            var resultLong = withByteRegion(0L, buf, bufferStart = consumedBytes, valueStart = 0, length = remBytes)
+            actualBufLength = input.readAtLeast(buf, offset = 0, minLength = suffixLength, maxLength = bufSize)
+            resultLong = withByteRegion(resultLong, buf, bufferStart = 0, valueStart = remBytes, length = suffixLength)
 
+            result = resultLong.longToT()
             consumedBytes = suffixLength
         }
 
@@ -127,7 +165,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
             if (remBytesToRead > 0) {
                 // Here we need to read into the buf and then copy data to bufForStrings because
-                // we don't use the whole content of the buf here and it might be used outside.
+                // we don't use the whole content of the buf here and it might be used outside the consumeStringUtf8 method.
                 actualBufLength = input.readAtLeast(
                     buf,
                     offset = 0,
