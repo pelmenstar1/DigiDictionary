@@ -1,50 +1,66 @@
 package io.github.pelmenstar1.digiDict.common
 
-import android.app.Activity
-import android.os.Bundle
-import android.os.PersistableBundle
-import android.view.View
+import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.android.PrimitiveAnimator
-import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class PrimitiveAnimatorTests {
-    class TestActivity : Activity() {
-        override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
-            super.onCreate(savedInstanceState, persistentState)
+    private class AnimatorThread(
+        private val createAnimator: () -> PrimitiveAnimator,
+        private val isForward: Boolean
+    ) : Thread() {
+        private var looper: Looper? = null
 
-            setContentView(View(this))
+        fun quitLooper() {
+            looper!!.quitSafely()
+        }
+
+        override fun run() {
+            Looper.prepare()
+            looper = Looper.myLooper()
+
+            createAnimator().also {
+                it.duration = ANIMATION_DURATION
+                it.start(isForward)
+            }
+
+            Looper.loop()
         }
     }
 
-    private inline fun testHelper(crossinline block: () -> Unit) {
-        launchActivity<TestActivity>().onActivity { block() }
+    private fun startAnimatorThread(
+        createAnimator: () -> PrimitiveAnimator,
+        isForward: Boolean
+    ): AnimatorThread {
+        return AnimatorThread(createAnimator, isForward).also { it.start() }
     }
 
     private fun firstFractionShouldBeTestHelper(isForward: Boolean, expectedValue: Float) {
-        testHelper {
-            var isFirst = true
-            val animator = PrimitiveAnimator { fraction ->
-                if (isFirst) {
-                    isFirst = false
+        var isFirst = true
+        val latch = CountDownLatch(1)
 
-                    assertEquals(expectedValue, fraction)
+        val thread = startAnimatorThread(
+            createAnimator = {
+                PrimitiveAnimator { fraction ->
+                    if (isFirst) {
+                        isFirst = false
+
+                        assertEquals(expectedValue, fraction)
+                        latch.countDown()
+                    }
                 }
-            }
-            animator.duration = ANIMATION_DURATION
+            },
+            isForward
+        )
 
-            animator.start(isForward)
-        }
+        latch.await()
+        thread.quitLooper()
     }
 
     @Test
@@ -57,53 +73,50 @@ class PrimitiveAnimatorTests {
         firstFractionShouldBeTestHelper(isForward = false, expectedValue = 1f)
     }
 
-    private fun lastFractionShouldBeTestHelper(isForward: Boolean, expectedValue: Float) = runBlocking {
-        testHelper {
-            var lastFraction = Float.NaN
-            val animator = PrimitiveAnimator { fraction ->
-                lastFraction = fraction
-            }
-            animator.duration = ANIMATION_DURATION
+    private fun lastFractionShouldBeTestHelper(isForward: Boolean, expectedValue: Float) {
+        var lastFraction = Float.NaN
+        val thread = startAnimatorThread(
+            createAnimator = {
+                PrimitiveAnimator { fraction ->
+                    lastFraction = fraction
+                }
+            },
+            isForward
+        )
 
-            animator.start(isForward)
+        // As we cannot check whether the animation actually ended we wait doubled time of animation
+        // and then check the lastFraction
+        Thread.sleep(ANIMATION_DURATION * 2)
+        thread.quitLooper()
 
-            launch(Dispatchers.Default) {
-                // As we cannot check whether the animation actually ended we wait doubled time of animation
-                // and then check the lastFraction
-                delay(ANIMATION_DURATION * 2)
-
-                assertEquals(expectedValue, lastFraction)
-            }
-        }
+        assertEquals(expectedValue, lastFraction)
     }
 
-    // TODO: Fix these tests
     @Test
-    @Ignore("The test fails intermittently")
     fun lastFractionShouldBeOneOnForwardTest() {
         lastFractionShouldBeTestHelper(isForward = true, expectedValue = 1f)
     }
 
     @Test
-    @Ignore("The test fails intermittently")
     fun lastFractionShouldBeZeroOnBackwardTest() {
         lastFractionShouldBeTestHelper(isForward = false, expectedValue = 0f)
     }
 
-    private fun fractionsShouldBeInRangeZeroOneTestHelper(isForward: Boolean) = runBlocking {
-        testHelper {
-            val animator = PrimitiveAnimator { fraction ->
-                assertTrue(fraction in 0f..1f, "fraction: $fraction")
-            }
-            animator.duration = ANIMATION_DURATION
+    private fun fractionsShouldBeInRangeZeroOneTestHelper(isForward: Boolean) {
+        val thread = startAnimatorThread(
+            createAnimator = {
+                PrimitiveAnimator { fraction ->
+                    assertTrue(fraction in 0f..1f, "fraction: $fraction")
+                }
+            },
+            isForward
+        )
 
-            animator.start(isForward)
+        // Keep the test alive.
+        Thread.sleep(ANIMATION_DURATION * 2)
 
-            launch(Dispatchers.Default) {
-                // Keep the test alive
-                delay(ANIMATION_DURATION * 2)
-            }
-        }
+        // To stop the animator thread.
+        thread.quitLooper()
     }
 
     @Test
