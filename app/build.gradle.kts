@@ -1,4 +1,4 @@
-import java.util.*
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -61,12 +61,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
 
         freeCompilerArgs = freeCompilerArgs + arrayOf(
             "-opt-in=kotlin.contracts.ExperimentalContracts",
@@ -78,9 +78,6 @@ android {
 
     sourceSets {
         getByName("androidTest") {
-            // TODO: Wait until 'duplicate contents root detected' warning is fixed and uncomment.
-            //java.srcDirs += "$projectDir/src/test"
-
             assets.srcDirs(files("$projectDir/schemas"))
         }
     }
