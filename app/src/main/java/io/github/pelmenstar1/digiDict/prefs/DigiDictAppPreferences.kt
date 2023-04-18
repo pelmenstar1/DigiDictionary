@@ -12,10 +12,10 @@ abstract class DigiDictAppPreferences :
     AppPreferences<DigiDictAppPreferences.Entries, DigiDictAppPreferences.Snapshot>() {
     @SuppressLint("NewApi")
     object Entries : AppPreferences.Entries {
-        val scorePointsPerCorrectAnswer = entry(defaultValue = 1)
-        val scorePointsPerWrongAnswer = entry(defaultValue = 2)
-        val useCustomTabs = entry(defaultValue = true)
-        val widgetListMaxSize = entry(defaultValue = 20)
+        val scorePointsPerCorrectAnswer = entry(name = "scorePointsPerCorrectAnswer", defaultValue = 1)
+        val scorePointsPerWrongAnswer = entry(name = "scorePointsPerWrongAnswer", defaultValue = 2)
+        val useCustomTabs = entry(name = "useCustomTabs", defaultValue = true)
+        val widgetListMaxSize = entry(name = "widgetListMaxSize", defaultValue = 20)
 
         @get:RequiresApi(23)
         val recordTextBreakStrategy: Entry<BreakStrategy, Entries>
@@ -25,12 +25,14 @@ abstract class DigiDictAppPreferences :
 
         init {
             if (Build.VERSION.SDK_INT >= 23) {
-                recordTextBreakStrategy = entry(defaultValue = BreakStrategy.SIMPLE)
-                recordTextHyphenationFrequency = entry(defaultValue = HyphenationFrequency.NORMAL)
+                recordTextBreakStrategy =
+                    entry(name = "recordTextBreakStrategy", defaultValue = BreakStrategy.SIMPLE)
+                recordTextHyphenationFrequency =
+                    entry(name = "recordTextHyphenationFrequency", defaultValue = HyphenationFrequency.NORMAL)
             } else {
                 // We still need to initialize them.
-                recordTextBreakStrategy = entry(defaultValue = BreakStrategy.UNSPECIFIED)
-                recordTextHyphenationFrequency = entry(defaultValue = HyphenationFrequency.UNSPECIFIED)
+                recordTextBreakStrategy = entry(name = "", defaultValue = BreakStrategy.UNSPECIFIED)
+                recordTextHyphenationFrequency = entry(name = "", defaultValue = HyphenationFrequency.UNSPECIFIED)
             }
         }
     }

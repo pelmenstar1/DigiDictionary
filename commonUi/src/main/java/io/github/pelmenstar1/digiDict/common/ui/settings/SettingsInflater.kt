@@ -11,25 +11,22 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.android.getColorSurfaceVariant
 import io.github.pelmenstar1.digiDict.common.android.getSelectableItemBackground
-import io.github.pelmenstar1.digiDict.common.createNumberRangeList
 import io.github.pelmenstar1.digiDict.common.forEachWithNoIterator
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.R
 import io.github.pelmenstar1.digiDict.common.ui.setTextAppearance
-import kotlin.math.min
 
 class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: Context) {
     @Suppress("UNCHECKED_CAST")
-    fun inflate(descriptor: SettingsDescriptor, container: LinearLayout): SettingsController<TEntries> {
-        val controller = SettingsController<TEntries>()
+    fun inflate(descriptor: SettingsDescriptor<TEntries>, container: LinearLayout): SettingsController<TEntries> {
+        val controller = SettingsController(descriptor, container)
 
         val selectableItemBackground = context.getSelectableItemBackground()
         val bodyMediumTextAppearance = TextAppearance(context) { BodyMedium }
@@ -42,8 +39,8 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         val linkItemViewInfo = createLinkItemViewInfo(itemContainerViewInfo, selectableItemBackground)
 
         val contentOnClickListener = View.OnClickListener {
-            val item = it.tag as SettingsDescriptor.ContentItem<*, *>
-            controller.performContentItemClickListener(item.id)
+            val item = it.tag as SettingsDescriptor.ContentItem<Any, TEntries>
+            controller.performContentItemClickListener(item.preferenceEntry)
         }
 
         val actionOnClickListener = View.OnClickListener {
@@ -97,27 +94,6 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         }
 
         return controller
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun applySnapshot(
-        controller: SettingsController<*>,
-        snapshot: AppPreferences.Snapshot<TEntries>,
-        container: LinearLayout
-    ) {
-        for (i in 0 until container.childCount) {
-            val itemContainer = container.getChildAt(i)
-            val tag = itemContainer.tag
-
-            if (tag is SettingsDescriptor.ContentItem<*, *>) {
-                val item = tag as SettingsDescriptor.ContentItem<Any, TEntries>
-                val value = snapshot[item.preferenceEntry]
-                val contentView = (itemContainer as ViewGroup).getChildAt(ITEM_CONTENT_INDEX_IN_CONTAINER)
-                val content = item.content
-
-                content.getInflater().setValue(controller, item.id, contentView, content, value)
-            }
-        }
     }
 
     private fun getTitleBackground(context: Context): Drawable {
@@ -195,9 +171,9 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         }
     }
 
-    private fun createContentItemContainer(
+    private fun <TValue : Any> createContentItemContainer(
         controller: SettingsController<TEntries>,
-        item: SettingsDescriptor.ContentItem<out Any, TEntries>,
+        item: SettingsDescriptor.ContentItem<TValue, TEntries>,
         containerInfo: ItemContainerViewInfo,
         contentInfo: ContentItemViewInfo,
         onContainerClickListener: View.OnClickListener
@@ -384,7 +360,13 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
     interface ItemContentInflater<T : Any, TContent : SettingsDescriptor.ItemContent<T>, TView : View> {
         fun createView(context: Context, content: TContent, onValueChanged: (T) -> Unit): TView
-        fun setValue(controller: SettingsController<*>, itemId: Int, view: TView, content: TContent, value: T)
+        fun setValue(
+            controller: SettingsController<*>,
+            entry: AppPreferences.Entry<T, *>,
+            view: TView,
+            content: TContent,
+            value: T
+        )
     }
 
     private object SwitchContentInflater :
@@ -404,63 +386,12 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
 
         override fun setValue(
             controller: SettingsController<*>,
-            itemId: Int,
+            entry: AppPreferences.Entry<Boolean, *>,
             view: SwitchMaterial,
             content: SettingsDescriptor.SwitchItemContent,
             value: Boolean
         ) {
             view.isChecked = value
-        }
-    }
-
-    private object RangeSpinnerInflater :
-        ItemContentInflater<Int, SettingsDescriptor.RangeSpinnerItemContent, AppCompatSpinner> {
-
-        override fun createView(
-            context: Context,
-            content: SettingsDescriptor.RangeSpinnerItemContent,
-            onValueChanged: (Int) -> Unit
-        ): AppCompatSpinner {
-            val start = content.start
-            val end = content.endInclusive
-            val step = content.step
-
-            return AppCompatSpinner(context).also {
-                it.adapter = ArrayAdapter(
-                    context,
-                    android.R.layout.simple_spinner_dropdown_item,
-                    createNumberRangeList(start, end, step)
-                )
-
-                it.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                        val value = min(end, start + position * step)
-
-                        onValueChanged(value)
-                    }
-
-                    override fun onNothingSelected(parent: AdapterView<*>?) {
-                    }
-                }
-            }
-
-        }
-
-        override fun setValue(
-            controller: SettingsController<*>,
-            itemId: Int,
-            view: AppCompatSpinner,
-            content: SettingsDescriptor.RangeSpinnerItemContent,
-            value: Int
-        ) {
-            val start = content.start
-            val end = content.endInclusive
-            val step = content.step
-
-            val constrainedValue = value.coerceIn(start, end)
-            val position = (constrainedValue - start) / step
-
-            view.setSelection(position)
         }
     }
 
@@ -476,14 +407,21 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
             }
         }
 
+        @Suppress("UNCHECKED_CAST")
         override fun setValue(
             controller: SettingsController<*>,
-            itemId: Int,
+            entry: AppPreferences.Entry<Any, *>,
             view: MaterialTextView,
             content: SettingsDescriptor.TextContent<Any>,
             value: Any
         ) {
-            view.text = controller.getTextFormatter(itemId)!!.format(value)
+            entry as AppPreferences.Entry<Any, AppPreferences.Entries>
+            controller as SettingsController<AppPreferences.Entries>
+
+            val formatter = controller.getTextFormatter(entry)
+                ?: throw IllegalStateException("No formatter specified for ${entry.valueClass} class")
+
+            view.text = formatter.format(value)
         }
     }
 
@@ -508,15 +446,36 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
         private const val ITEM_CONTENT_INDEX_IN_CONTAINER = 1
 
         @Suppress("UNCHECKED_CAST")
-        internal fun SettingsDescriptor.ItemContent<*>.getInflater(): ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View> {
+        internal fun <TValue : Any> SettingsDescriptor.ItemContent<TValue>.getInflater(): ItemContentInflater<TValue, SettingsDescriptor.ItemContent<TValue>, View> {
             val inflater = when (javaClass) {
                 SettingsDescriptor.SwitchItemContent::class.java -> SwitchContentInflater
-                SettingsDescriptor.RangeSpinnerItemContent::class.java -> RangeSpinnerInflater
                 SettingsDescriptor.TextContent::class.java -> FormattedTextItemInflater
                 else -> throw IllegalStateException("Invalid type of content")
             }
 
-            return inflater as ItemContentInflater<Any, SettingsDescriptor.ItemContent<Any>, View>
+            return inflater as ItemContentInflater<TValue, SettingsDescriptor.ItemContent<TValue>, View>
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        internal fun <TEntries : AppPreferences.Entries> applySnapshot(
+            controller: SettingsController<TEntries>,
+            snapshot: AppPreferences.Snapshot<TEntries>,
+            container: ViewGroup
+        ) {
+            for (i in 0 until container.childCount) {
+                val itemContainer = container.getChildAt(i)
+                val tag = itemContainer.tag
+
+                if (tag is SettingsDescriptor.ContentItem<*, *>) {
+                    val item = tag as SettingsDescriptor.ContentItem<Any, TEntries>
+                    val prefEntry = item.preferenceEntry
+                    val value = snapshot[prefEntry]
+                    val contentView = (itemContainer as ViewGroup).getChildAt(ITEM_CONTENT_INDEX_IN_CONTAINER)
+                    val content = item.content
+
+                    content.getInflater().setValue(controller, prefEntry, contentView, content, value)
+                }
+            }
         }
     }
 }

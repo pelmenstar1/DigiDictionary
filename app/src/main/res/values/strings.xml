@@ -178,6 +178,7 @@
     <string name="settings_miscGroup">Miscellaneous</string>
     <string name="settings_breakStrategy">Line break strategy</string>
     <string name="settings_hyphenation">Hyphenation</string>
+    <string name="settings_selectValueDialogTitle">Select a value</string>
 
     <string name="settings_breakStrategy_simple">Simple</string>
     <string name="settings_breakStrategy_balanced">Balanced</string>

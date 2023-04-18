@@ -10,14 +10,11 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
-import androidx.annotation.ArrayRes
-import androidx.annotation.StringRes
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.FixedBitSet
-import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
 import io.github.pelmenstar1.digiDict.common.android.getParcelableCompat
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.common.ui.R
@@ -25,13 +22,12 @@ import io.github.pelmenstar1.digiDict.common.ui.R
 /**
  * Represents a base class for a dialog fragment that provides a list of choices and multiple of them can be selected
  */
-abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
+abstract class MultiSelectionDialogFragment<TValue> : AbstractSelectionDialogFragment() {
     private lateinit var root: LinearLayout
     private lateinit var applyButton: Button
     private lateinit var noOptionSelectedErrorTextView: TextView
 
     private var selectedStateBitSet: FixedBitSet? = null
-    private var choices: Array<String>? = null
 
     private var noOptionSelectedAnimator: ValueAnimator? = null
     private var noOptionsSelectedAnimationTargetIsVisible: Boolean = false
@@ -40,18 +36,6 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
      * Gets or sets a callback that will be invoked when a user clicks 'apply' button to confirm that all choices have been made
      */
     var onValuesSelected: ((Array<TValue>) -> Unit)? = null
-
-    /**
-     * Gets an array resource that stores a string array of possible choices
-     */
-    @get:ArrayRes
-    abstract val choicesRes: Int
-
-    /**
-     * Gets a string resource that stores a title of the dialog
-     */
-    @get:StringRes
-    abstract val titleRes: Int
 
     /**
      * Gets whether at least one choice should be checked. The default value is `false`.
@@ -65,15 +49,13 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
         val context = requireContext()
         val res = context.resources
 
-        val choices = res.getStringArray(choicesRes).also {
-            this.choices = it
-        }
+        val choicesArray = choices.get()
 
         // Saved state has a greater priority because it actually overwrites data in arguments
         if (savedInstanceState != null) {
             initFromSavedState(savedInstanceState)
         } else {
-            initFromArgs()
+            initFromArgs(choicesArray)
         }
 
         val root = LinearLayout(context).apply {
@@ -86,7 +68,7 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
         }
 
         root.addView(SelectionDialogFragmentUtils.createTitleView(context, titleRes))
-        createAndAddViewsForItems(context, choices, root)
+        createAndAddViewsForItems(context, choicesArray, root)
 
         root.addView(createNoOptionSelectedErrorTextView(context).also {
             noOptionSelectedErrorTextView = it
@@ -237,10 +219,10 @@ abstract class MultiSelectionDialogFragment<TValue> : MaterialDialogFragment() {
         }
     }
 
-    private fun initFromArgs() {
+    private fun initFromArgs(choicesArray: Array<out String>) {
         requireArguments().getIntArray(ARGS_SELECTED_INDICES)?.also { selectedIndices ->
             // choices must be initialized by this moment
-            val bitSet = FixedBitSet(choices!!.size)
+            val bitSet = FixedBitSet(choicesArray.size)
             selectedStateBitSet = bitSet
 
             for (index in selectedIndices) {

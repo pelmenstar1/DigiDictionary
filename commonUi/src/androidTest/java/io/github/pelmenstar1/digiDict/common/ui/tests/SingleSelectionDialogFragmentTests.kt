@@ -10,6 +10,7 @@ import androidx.test.espresso.matcher.RootMatchers.*
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.radiobutton.MaterialRadioButton
+import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.ChoicesProvider
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
 import io.github.pelmenstar1.digiDict.common.ui.tests.R
 import io.github.pelmenstar1.digiDict.commonTestUtils.assertFragmentNotAttached
@@ -21,8 +22,8 @@ import kotlin.test.assertEquals
 @RunWith(AndroidJUnit4::class)
 class SingleSelectionDialogFragmentTests {
     class SingleSelectionDialogFragmentImpl : SingleSelectionDialogFragment<String>() {
-        override val choicesRes: Int
-            get() = R.array.test_singleSelectionDialogFragment_choices
+        override val choices: ChoicesProvider
+            get() = stringArrayResource(R.array.test_singleSelectionDialogFragment_choices)
 
         override val titleRes: Int
             get() = R.string.test_singleSelectionDialogFragment_title

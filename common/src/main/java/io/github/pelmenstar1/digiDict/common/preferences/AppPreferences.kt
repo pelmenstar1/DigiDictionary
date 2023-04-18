@@ -9,7 +9,11 @@ typealias AppPreferencesGetEntry<TValue, TEntries> = TEntries.() -> AppPreferenc
 
 abstract class AppPreferences<TEntries : AppPreferences.Entries, TSnapshot : AppPreferences.Snapshot<TEntries>> {
     interface Entries
-    data class Entry<out TValue : Any, TEntries : Entries>(val defaultValue: TValue)
+    data class Entry<TValue : Any, TEntries : Entries>(
+        val name: String,
+        val valueClass: Class<TValue>,
+        val defaultValue: TValue
+    )
 
     interface Snapshot<TEntries : Entries> {
         operator fun <TValue : Any> get(entry: Entry<TValue, TEntries>): TValue
@@ -63,6 +67,9 @@ suspend inline fun <TValue : Any, TEntries : AppPreferences.Entries, TSnapshot :
     return get(entries.getEntry())
 }
 
-fun <TValue : Any, TEntries : AppPreferences.Entries> TEntries.entry(defaultValue: TValue): AppPreferences.Entry<TValue, TEntries> {
-    return AppPreferences.Entry(defaultValue)
+inline fun <reified TValue : Any, TEntries : AppPreferences.Entries> TEntries.entry(
+    name: String,
+    defaultValue: TValue
+): AppPreferences.Entry<TValue, TEntries> {
+    return AppPreferences.Entry(name, TValue::class.java, defaultValue)
 }
