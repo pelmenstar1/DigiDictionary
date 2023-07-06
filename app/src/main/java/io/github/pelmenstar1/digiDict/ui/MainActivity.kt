@@ -86,8 +86,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                         GlobalSearchQueryProvider.isActive = false
 
                         findSearchItem()?.collapseActionView()
-                        return
+                    } else {
+                        // Home fragment is the first fragment in the stack. If search is inactive,
+                        // the activity should be moved to back of the stack as expected
+                        // when "back button pressed" is not overridden.
+                        moveTaskToBack(true)
                     }
+                } else {
+                    navController.popBackStack()
                 }
             }
         })
