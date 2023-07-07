@@ -214,9 +214,9 @@ class AddEditRecordViewModelTests {
         }
 
         suspend fun testCase(expectedBadges: Array<RecordBadgeInfo>) {
-            testCase(ComplexMeaning.Common("Meaning"), expectedBadges)
-            testCase(ComplexMeaning.List(arrayOf("M1", "M2", "M3")), expectedBadges)
-            testCase(ComplexMeaning.List(arrayOf("M1", "M2")), expectedBadges)
+            testCase(ComplexMeaning.common("Meaning"), expectedBadges)
+            testCase(ComplexMeaning.list(arrayOf("M1", "M2", "M3")), expectedBadges)
+            testCase(ComplexMeaning.list(arrayOf("M1", "M2")), expectedBadges)
         }
 
         testCase(expectedBadges = emptyArray())
@@ -336,7 +336,7 @@ class AddEditRecordViewModelTests {
         vm.currentRecordId = recordId
         vm.expression = "Expr1_New"
         vm.additionalNotes = "Notes1_New"
-        vm.getMeaning = { ComplexMeaning.Common("Meaning1_New") }
+        vm.getMeaning = { ComplexMeaning.common("Meaning1_New") }
         vm.getBadges = { emptyArray() }
         vm.changeCreationTime = false
 
@@ -393,7 +393,7 @@ class AddEditRecordViewModelTests {
 
             throwExceptionOnInsert = false
             vm.getBadges = { emptyArray() }
-            vm.getMeaning = { ComplexMeaning.Common("") }
+            vm.getMeaning = { ComplexMeaning.common("") }
 
             vm.validity.mutate {
                 enable(AddEditRecordViewModel.expressionValidityField)

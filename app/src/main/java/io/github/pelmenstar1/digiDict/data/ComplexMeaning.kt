@@ -8,124 +8,50 @@ import io.github.pelmenstar1.digiDict.common.equalsPattern
 import io.github.pelmenstar1.digiDict.common.parsePositiveInt
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 
-enum class MeaningType {
-    COMMON,
-    LIST
-}
 
-sealed class ComplexMeaning : Parcelable {
-    var rawText: String = ""
-        protected set
+class ComplexMeaning private constructor(
+    val rawText: String,
+    // elements expected to be non-null when it's a list type meaning
+    private val elements: Array<out String>?
+) : Parcelable {
+    val elementCount: Int
+        get() = elements?.size ?: 1
 
-    /**
-     * A meaning with only one entry.
-     * Raw text scheme:
-     * - Mark character is 'C'
-     * - Actual text is after the mark character
-     */
-    class Common : ComplexMeaning {
-        override val type: MeaningType
-            get() = MeaningType.COMMON
+    fun getElement(index: Int): String {
+        return if (elements != null) {
+            if (index !in elements.indices) throw IndexOutOfBoundsException("index")
 
-        val text: String
+            elements[index]
+        } else {
+            if (index != 0) throw IndexOutOfBoundsException("index")
 
-        constructor(parcel: Parcel) {
-            text = parcel.readStringOrThrow()
-            rawText = createCommonRawText(text)
-        }
-
-        constructor(text: String) {
-            this.text = text
-            rawText = createCommonRawText(text)
-        }
-
-        constructor(text: String, rawText: String) {
-            this.text = text
-            this.rawText = rawText
-        }
-
-        override fun writeToParcel(dest: Parcel, flags: Int) {
-            dest.writeString(text)
-        }
-
-        override fun equals(other: Any?) = equalsPattern(other) { o ->
-            text == o.text
-        }
-
-        override fun hashCode(): Int = text.hashCode()
-
-        override fun toString(): String {
-            return "ComplexMeaning.Common(text=$text)"
-        }
-
-        companion object CREATOR : Parcelable.Creator<Common> {
-            override fun createFromParcel(parcel: Parcel) = Common(parcel)
-            override fun newArray(size: Int) = arrayOfNulls<Common>(size)
+            rawText.substring(1)
         }
     }
 
-    /**
-     * A meaning that contains multiple distinct meanings.
-     *
-     * Raw text scheme:
-     * - Mark character is 'L'
-     * - Count of elements is after the mark character
-     * - Then as a delimiter '@' character
-     * - Actual elements are after '@' divided by [ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR] (GS) character.
-     */
-    class List : ComplexMeaning {
-        override val type: MeaningType
-            get() = MeaningType.LIST
-
-        val elements: Array<out String>
-
-        constructor(parcel: Parcel) {
-            val size = parcel.readInt()
-
-            rawText = parcel.readStringOrThrow()
-            elements = Array(size) { parcel.readStringOrThrow() }
-        }
-
-        constructor(elements: Array<out String>) {
-            this.elements = elements
-            rawText = createListRawText(elements)
-        }
-
-        internal constructor(elements: Array<out String>, rawText: String) {
-            this.rawText = rawText
-            this.elements = elements
-        }
-
-        override fun writeToParcel(dest: Parcel, flags: Int) {
-            dest.writeInt(elements.size)
-            dest.writeString(rawText)
-
-            elements.forEach(dest::writeString)
-        }
-
-        override fun equals(other: Any?) = equalsPattern(other) { o ->
-            return elements.contentEquals(o.elements)
-        }
-
-        override fun hashCode(): Int = elements.contentHashCode()
-
-        override fun toString(): String {
-            return "ComplexMeaning.List(elements=${elements.contentToString()})"
-        }
-
-        companion object CREATOR : Parcelable.Creator<List> {
-            override fun createFromParcel(parcel: Parcel) = List(parcel)
-            override fun newArray(size: Int) = arrayOfNulls<List>(size)
-        }
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(rawText)
     }
-
-    abstract val type: MeaningType
-
-    abstract override fun equals(other: Any?): Boolean
-    abstract override fun hashCode(): Int
-    abstract override fun toString(): String
 
     override fun describeContents() = 0
+
+    override fun equals(other: Any?): Boolean {
+        return equalsPattern(other) { o ->
+            rawText == o.rawText
+        }
+    }
+
+    override fun hashCode(): Int {
+        return rawText.hashCode()
+    }
+
+    override fun toString(): String {
+        return if (elements != null) {
+            "ComplexMeaning(type=LIST, elements=${elements.contentToString()})"
+        } else {
+            "ComplexMeaning(type=COMMON, text=${getElement(0)})"
+        }
+    }
 
     companion object {
         const val COMMON_MARKER = 'C'
@@ -136,7 +62,26 @@ sealed class ComplexMeaning : Parcelable {
         // 0x1D - group separator.
         const val LIST_NEW_ELEMENT_SEPARATOR = 0x1D.toChar()
 
-        internal fun createCommonRawText(text: String): String {
+        @JvmField
+        val CREATOR = object : Parcelable.Creator<ComplexMeaning> {
+            override fun createFromParcel(source: Parcel): ComplexMeaning {
+                val rawText = source.readStringOrThrow()
+
+                return parse(rawText)
+            }
+
+            override fun newArray(size: Int) = arrayOfNulls<ComplexMeaning>(size)
+        }
+
+        fun common(text: String): ComplexMeaning {
+            return ComplexMeaning(createCommonRawText(text), elements = null)
+        }
+
+        fun list(elements: Array<out String>): ComplexMeaning {
+            return ComplexMeaning(createListRawText(elements), elements)
+        }
+
+        private fun createCommonRawText(text: String): String {
             val buffer = CharArray(text.length + 1)
             buffer[0] = COMMON_MARKER
             text.toCharArray(buffer, 1)
@@ -144,7 +89,7 @@ sealed class ComplexMeaning : Parcelable {
             return String(buffer)
         }
 
-        internal fun createListRawText(elements: Array<out String>): String {
+        private fun createListRawText(elements: Array<out String>): String {
             val size = elements.size
             val lastIndex = size - 1
 
@@ -223,7 +168,7 @@ sealed class ComplexMeaning : Parcelable {
 
             return when (rawText[0]) {
                 COMMON_MARKER -> {
-                    Common(rawText.substring(1), rawText)
+                    ComplexMeaning(rawText, elements = null)
                 }
                 LIST_MARKER -> {
                     // Skip mark character
@@ -253,7 +198,7 @@ sealed class ComplexMeaning : Parcelable {
                         prevPos = nextPos + 1
                     }
 
-                    List(elements, rawText)
+                    ComplexMeaning(rawText, elements)
                 }
                 else -> throwInvalidFormat(rawText)
             }

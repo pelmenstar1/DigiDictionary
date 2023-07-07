@@ -26,7 +26,7 @@ class DebugDatabaseTest {
             Record(
                 id = 0,
                 "Expression$ordinal",
-                ComplexMeaning.Common("Meaning$ordinal").rawText,
+                ComplexMeaning.common("Meaning$ordinal").rawText,
                 "Notes$ordinal",
                 score = 0,
                 epochSeconds = epochSeconds
@@ -42,7 +42,7 @@ class DebugDatabaseTest {
             Record(
                 id = 0,
                 "Expression$ordinal",
-                ComplexMeaning.List(
+                ComplexMeaning.list(
                     arrayOf("Meaning${ordinal}_1", "Meaning${ordinal}_2", "Meaning${ordinal}_3")
                 ).rawText,
                 "Notes$ordinal",

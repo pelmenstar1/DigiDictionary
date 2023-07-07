@@ -23,14 +23,19 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.theme.overlay.MaterialThemeOverlay
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.EmptyArray
 import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.android.readStringOrThrow
+import io.github.pelmenstar1.digiDict.common.containsLetterOrDigit
+import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.github.pelmenstar1.digiDict.common.trimToString
 import io.github.pelmenstar1.digiDict.common.ui.adjustViewCountWithoutLast
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.setText
+import io.github.pelmenstar1.digiDict.common.withAddedElement
+import io.github.pelmenstar1.digiDict.common.withRemovedElementAt
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
-import java.util.*
+import java.util.BitSet
 
 class MeaningListInteractionView @JvmOverloads constructor(
     context: Context,
@@ -70,55 +75,34 @@ class MeaningListInteractionView @JvmOverloads constructor(
             // If there's only one element, meaning should be considered as "common"
             return elements.let {
                 if (it.size == 1) {
-                    ComplexMeaning.Common(it[0])
+                    ComplexMeaning.common(it[0])
                 } else {
-                    ComplexMeaning.List(it)
+                    ComplexMeaning.list(it)
                 }
             }
         }
-        set(value) {
-            when (value) {
-                is ComplexMeaning.Common -> {
-                    adjustInputCount(1)
+        set(meaning) {
+            val newCount = meaning.elementCount
 
-                    val inputLayout = getTextInputLayoutAt(0)
+            if (elements.size != newCount) {
+                elements = Array(newCount) { "" }
+            }
 
-                    // Trim text just to make sure it's valid in terms of MeaningListInteractionView
+            adjustInputCount(newCount)
+
+            // Errors and other stuff are updated later.
+            withTextInputWatcherIgnored {
+                for (index in 0 until newCount) {
+                    // Trim element just to make sure it's valid in terms of MeaningListInteractionView
                     // (elements should contain only trimmed strings)
                     //
                     // Side note: If a string is already "trimmed", trim() does not allocate,
                     // it returns the same instance.
-                    val text = value.text.trim()
+                    val trimmedElement = meaning.getElement(index)
 
-                    elements = arrayOf(text)
+                    elements[index] = trimmedElement
 
-                    // Errors and other stuff are updated later.
-                    withTextInputWatcherIgnored {
-                        inputLayout.setText(text)
-                    }
-                }
-                is ComplexMeaning.List -> {
-                    val valueElements = value.elements
-                    val newSize = valueElements.size
-
-                    elements = Array(newSize) { "" }
-                    adjustInputCount(newSize)
-
-                    // Errors and other stuff are updated later.
-                    withTextInputWatcherIgnored {
-                        valueElements.forEachIndexed { index, element ->
-                            // Trim element just to make sure it's valid in terms of MeaningListInteractionView
-                            // (elements should contain only trimmed strings)
-                            //
-                            // Side note: If a string is already "trimmed", trim() does not allocate,
-                            // it returns the same instance.
-                            val trimmedElement = element.trim()
-
-                            elements[index] = trimmedElement
-
-                            getTextInputLayoutAt(index).setText(trimmedElement)
-                        }
-                    }
+                    getTextInputLayoutAt(index).setText(trimmedElement)
                 }
             }
 
