@@ -8,9 +8,10 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.github.pelmenstar1.digiDict.common.DataLoadState
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class DataLoadStateContainer @JvmOverloads constructor(
@@ -80,10 +81,11 @@ class DataLoadStateContainer @JvmOverloads constructor(
                         superAdd(li)
                     }
 
-                    li.visibility = View.VISIBLE
-                    errorContainer?.visibility = View.GONE
-                    content.visibility = View.GONE
+                    li.visibility = VISIBLE
+                    errorContainer?.visibility = GONE
+                    content.visibility = GONE
                 }
+
                 is DataLoadState.Error -> {
                     var ec = errorContainer
                     if (ec == null) {
@@ -94,20 +96,21 @@ class DataLoadStateContainer @JvmOverloads constructor(
                         superAdd(ec)
                     }
 
-                    ec.visibility = View.VISIBLE
-                    loadingIndicator?.visibility = View.GONE
-                    content.visibility = View.GONE
+                    ec.visibility = VISIBLE
+                    loadingIndicator?.visibility = GONE
+                    content.visibility = GONE
                 }
+
                 is DataLoadState.Success -> {
-                    content.visibility = View.VISIBLE
+                    content.visibility = VISIBLE
 
                     if (stateHolder.canRefreshAfterSuccess) {
-                        loadingIndicator?.visibility = View.GONE
-                        errorContainer?.visibility = View.GONE
+                        loadingIndicator?.visibility = GONE
+                        errorContainer?.visibility = GONE
                     } else {
                         // If it's stated that it's  unlikely that Loading or Error can be emitted after Success,
                         // remove loadingIndicator and errorContainer from the hierarchy. If the assumption doesn't hold,
-                        // the views will be recreated and added back to the hierarchy but it will have
+                        // the views will be recreated and added back to the hierarchy, but it will have
                         // big performance drawback.
                         loadingIndicator?.let { li ->
                             removeView(li)
@@ -131,11 +134,11 @@ class DataLoadStateContainer @JvmOverloads constructor(
     }
 
     fun <T> setupLoadStateFlow(
-        scope: CoroutineScope,
+        owner: LifecycleOwner,
         stateHolder: SingleDataLoadStateHolder<T>,
         onSuccess: suspend (T) -> Unit
     ) {
-        scope.launch {
+        owner.lifecycleScope.launch {
             setupLoadStateFlowSuspend(stateHolder, onSuccess)
         }
     }

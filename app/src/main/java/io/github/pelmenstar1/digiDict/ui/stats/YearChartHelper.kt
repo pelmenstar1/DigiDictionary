@@ -101,6 +101,7 @@ object YearChartHelper {
                     MotionEvent.ACTION_DOWN -> {
                         parent.requestDisallowInterceptTouchEvent(true)
                     }
+
                     MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
                         parent.requestDisallowInterceptTouchEvent(false)
                     }

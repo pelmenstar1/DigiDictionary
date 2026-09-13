@@ -10,6 +10,7 @@ import android.util.Log
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProvider
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchStyledTextUtil.createFoundRangeSpan
 
 /**
  * Provides methods to created styled texts for search in home fragment.
@@ -19,7 +20,7 @@ object HomeSearchStyledTextUtil {
     private const val FOUND_RANGE_STYLE = Typeface.BOLD
 
     /**
-     * Returns a styled string (if neccessary) for expression [text] of a record.
+     * Returns a styled string (if necessary) for expression [text] of a record.
      * If the expression has no special style, the method returns [String], otherwise [SpannableString].
      */
     fun createExpressionText(text: String, style: HomeSearchItemStyle): CharSequence {
@@ -39,9 +40,9 @@ object HomeSearchStyledTextUtil {
     }
 
     /**
-     * Creates a styled string (if neccessary) for [meaning] of a record.
+     * Creates a styled string (if necessary) for [meaning] of a record.
      *
-     * @param context a [Context] instance that is used to retrieve error string from resources if neccessary
+     * @param context a [Context] instance that is used to retrieve error string from resources if necessary
      * @param meaning a meaning to create styled text for. The format should be as described in [ComplexMeaning]
      * @param style information about style of the meaning
      * @param forceThrow determines whether to throw an exception when one happens or return a string with error.
@@ -75,6 +76,7 @@ object HomeSearchStyledTextUtil {
                         setFoundRangesSpans(it, foundRanges, dataIndex = startIndex + 1, textOffset = 0, rangeCount)
                     }
                 }
+
                 ComplexMeaning.LIST_MARKER -> {
                     val formattedText = MeaningTextHelper.format(meaning)
 
@@ -114,6 +116,7 @@ object HomeSearchStyledTextUtil {
 
                     return styledText
                 }
+
                 else -> ComplexMeaning.throwInvalidFormat(meaning)
             }
         } catch (e: Exception) {

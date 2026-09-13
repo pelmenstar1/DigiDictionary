@@ -2,8 +2,12 @@ package io.github.pelmenstar1.digiDict.common.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.*
-import android.os.Build
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RadialGradient
+import android.graphics.Rect
+import android.graphics.Shader
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -15,10 +19,10 @@ import androidx.annotation.ColorInt
 import androidx.annotation.StyleRes
 import androidx.core.graphics.withSave
 import androidx.core.graphics.withTranslation
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.IntList
 import io.github.pelmenstar1.digiDict.common.android.PrimitiveAnimator
 import io.github.pelmenstar1.digiDict.common.android.getPrimaryColor
-import java.util.*
+import io.github.pelmenstar1.digiDict.common.withAlpha
 
 class ColorPaletteView @JvmOverloads constructor(
     context: Context,
@@ -306,7 +310,7 @@ class ColorPaletteView @JvmOverloads constructor(
     /**
      * Calculates cell index using coordinates of point on screen.
      * The point must be in cell area ([isPointInCellArea] should be true).
-     * The point can be in cell area but it may not point to a particular cell (points to spacing between cells),
+     * The point can be in cell area, but it may not point to a particular cell (points to spacing between cells),
      * so when it's so, the method returns -1.
      */
     private fun getCellByPointOnScreen(x: Float, y: Float): Int {
@@ -460,13 +464,7 @@ class ColorPaletteView @JvmOverloads constructor(
         c.withSave {
             val clipRight = startMargin + titleWidth + hPadding * 2
 
-            if (Build.VERSION.SDK_INT >= 26) {
-                c.clipOutRect(startMargin, 0f, clipRight, th)
-            } else {
-                @Suppress("DEPRECATION")
-                c.clipRect(startMargin, 0f, clipRight, th, Region.Op.DIFFERENCE)
-            }
-
+            c.clipOutRect(startMargin, 0f, clipRight, th)
             c.drawRoundRect(sw, th * 0.5f, w - sw, h - sw, rr, rr, outlinePaint)
         }
 

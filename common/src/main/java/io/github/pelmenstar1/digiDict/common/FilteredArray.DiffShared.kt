@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict.common
 
-import java.util.*
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -158,7 +157,7 @@ internal object FilteredArrayDiffShared {
                 // mapping function: delta - k
                 val backwardsK = delta - k
 
-                // if backwards K is calculated and it passed me, found match
+                // if backwards K is calculated, and it passed me, found match
                 if (backwardsK >= 1 - d && backwardsK <= d - 1 && backward[backwardsK] <= x) {
                     // match
                     outSnake.startX = startX
@@ -232,7 +231,7 @@ internal object FilteredArrayDiffShared {
                 // mapping function: delta - k
                 val forwardsK = delta - k
 
-                // if forwards K is calculated and it passed me, found match
+                // if forwards K is calculated, and it passed me, found match
                 if (forwardsK >= -d && forwardsK <= d && forward[forwardsK] >= x) {
                     // assignment are reverse since we are a reverse snake
                     outSnake.startX = x

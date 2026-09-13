@@ -42,13 +42,13 @@ class AddEditBadgeViewModel @Inject constructor(
 
             if (value < 0) {
                 // Only after we're sure there's no badge to load, we can safely update error
-                // if neccessary.
+                // if necessary.
                 if (name.isBlank()) {
-                    _nameErrorFlow.value = AddEditBadgeMessage.EMPTY_TEXT
+                    nameErrorFlow.value = AddEditBadgeMessage.EMPTY_TEXT
                 }
             }
 
-            startCheckNameJobIfNeccessary()
+            startCheckNameJobIfNecessary()
         }
 
     // RecordBadgeInfo is purposely non-null because it has no sense to edit nonexistent badge
@@ -70,10 +70,8 @@ class AddEditBadgeViewModel @Inject constructor(
         }
     }
 
-    private val _nameErrorFlow = MutableStateFlow<AddEditBadgeMessage?>(null)
-
     val nameErrorFlow: StateFlow<AddEditBadgeMessage?>
-        get() = _nameErrorFlow
+        field = MutableStateFlow<AddEditBadgeMessage?>(null)
 
     val validity = ValidityFlow(validityScheme)
 
@@ -131,7 +129,7 @@ class AddEditBadgeViewModel @Inject constructor(
     }
 
     // Should be invoked only when currentBadgeId is initialized.
-    private fun startCheckNameJobIfNeccessary() {
+    private fun startCheckNameJobIfNecessary() {
         if (!isCheckNameJobStarted) {
             isCheckNameJobStarted = true
 
@@ -172,7 +170,7 @@ class AddEditBadgeViewModel @Inject constructor(
                         }
                     }
 
-                    _nameErrorFlow.value = error
+                    nameErrorFlow.value = error
                     validity.mutate {
                         set(nameValidityField, value = error == null)
                     }

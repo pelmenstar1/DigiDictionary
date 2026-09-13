@@ -6,15 +6,14 @@ import android.widget.Button
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.iterator
-import androidx.test.espresso.Espresso.*
-import androidx.test.espresso.action.ViewActions.*
-import androidx.test.espresso.assertion.ViewAssertions.*
-import androidx.test.espresso.matcher.RootMatchers.*
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.ui.OptionsBar
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
+import io.github.pelmenstar1.digiDict.commonTestUtils.padBySystemBarInsets
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -30,6 +29,8 @@ class OptionsBarTests {
             super.onCreate(savedInstanceState)
 
             setContentView(FrameLayout(this).apply {
+                padBySystemBarInsets()
+
                 optionsBar = OptionsBar(context)
 
                 addView(optionsBar)

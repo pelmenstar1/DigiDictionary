@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,6 +31,7 @@ class ManageRecordBadgesFragment : Fragment() {
                     ManageRecordBadgesAdapter.ACTION_REMOVE -> {
                         showDeleteWarningDialog(badge)
                     }
+
                     ManageRecordBadgesAdapter.ACTION_EDIT -> {
                         navigateToAddEditBadgeFragment(currentBadgeId = badge.id)
                     }
@@ -39,7 +39,7 @@ class ManageRecordBadgesFragment : Fragment() {
             }
         )
 
-        showSnackbarEventHandlerOnError(vm.removeAction, container, R.string.manageRecordBadges_removeError)
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(vm.removeAction, container, R.string.manageRecordBadges_removeError)
 
         binding.manageRecordBadgesRecyclerView.also {
             it.adapter = adapter
@@ -47,7 +47,7 @@ class ManageRecordBadgesFragment : Fragment() {
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-        binding.manageRecordBadgesContainer.setupLoadStateFlow(lifecycleScope, vm) {
+        binding.manageRecordBadgesContainer.setupLoadStateFlow(viewLifecycleOwner, vm) {
             adapter.submitData(it)
         }
 

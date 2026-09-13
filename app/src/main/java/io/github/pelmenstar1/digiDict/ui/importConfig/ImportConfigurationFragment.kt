@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -18,7 +17,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.backup.importing.ImportException
 import io.github.pelmenstar1.digiDict.common.android.fileExtensionOrNull
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.NO_OP_DIALOG_ON_CLICK_LISTENER
 import io.github.pelmenstar1.digiDict.databinding.FragmentImportConfigurationBinding
 import io.github.pelmenstar1.digiDict.ui.importExportConfig.ImportExportConfigProgressIndicatorDialogManager
@@ -65,7 +64,7 @@ class ImportConfigurationFragment : Fragment() {
             openDocumentLauncher.launch(ANY_MIME_TYPE)
         }
 
-        lifecycleScope.run {
+        viewLifecycleOwner.run {
             launchFlowCollector(vm.isReplaceBadgesEnabled) { isEnabled ->
                 binding.importConfigReplaceBadges.isEnabled = isEnabled
                 binding.importConfigReplaceBadgesHelpText.isVisible = isEnabled
@@ -105,7 +104,7 @@ class ImportConfigurationFragment : Fragment() {
     }
 
     private fun startImport(uri: Uri, format: BackupFormat) {
-        viewModel.importAction.run(requireContext(), uri, format)
+        viewModel.importAction.run(ImportConfigurationViewModel.ImportRequest(requireContext(), uri, format))
         progressIndicatorDialogManager.showDialog()
     }
 

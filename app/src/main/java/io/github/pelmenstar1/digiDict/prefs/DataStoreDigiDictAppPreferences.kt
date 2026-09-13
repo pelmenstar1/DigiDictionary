@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.prefs
 
 import android.content.Context
-import android.os.Build
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -47,16 +46,10 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         val useCustomTabs = getNonEnumValue { useCustomTabs }
         val widgetListMaxSize = getNonEnumValue { widgetListMaxSize }
 
-        var recordBreakStrategy = BreakStrategy.UNSPECIFIED
-        var recordHyphenationFrequency = HyphenationFrequency.UNSPECIFIED
+        val recordBreakStrategy = getEnumValue({ recordTextBreakStrategy }, BreakStrategy::fromOrdinal)
 
-        if (Build.VERSION.SDK_INT >= 23) {
-            recordBreakStrategy =
-                getEnumValue({ recordTextBreakStrategy }, BreakStrategy::fromOrdinal)
-
-            recordHyphenationFrequency =
-                getEnumValue({ recordTextHyphenationFrequency }, HyphenationFrequency::fromOrdinal)
-        }
+        val recordHyphenationFrequency =
+            getEnumValue({ recordTextHyphenationFrequency }, HyphenationFrequency::fromOrdinal)
 
         return Snapshot(
             scorePointsPerCorrectAnswer,
@@ -80,15 +73,11 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
     }
 
     private fun <TValue : Any> Entry<TValue, Entries>.getKeyForEnum(): Preferences.Key<Int> {
-        if (Build.VERSION.SDK_INT >= 23) {
-            when {
-                this === Entries.recordTextBreakStrategy -> return RECORD_TEXT_BREAK_STRATEGY
-                this === Entries.recordTextHyphenationFrequency -> return RECORD_TEXT_HYPHENATION_FREQUENCY
-            }
+        return when {
+            this === Entries.recordTextBreakStrategy -> RECORD_TEXT_BREAK_STRATEGY
+            this === Entries.recordTextHyphenationFrequency -> RECORD_TEXT_HYPHENATION_FREQUENCY
+            else -> throwIllegalPreferenceKey()
         }
-
-        // There's no enums on lower API levels
-        throwIllegalPreferenceKey()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -98,15 +87,11 @@ class DataStoreDigiDictAppPreferences(private val dataStore: DataStore<Preferenc
         if (defaultValue is Enum<*>) {
             val ordinal = this[entry.getKeyForEnum()] ?: return defaultValue
 
-            if (Build.VERSION.SDK_INT >= 23) {
-                when (entry) {
-                    Entries.recordTextBreakStrategy -> return BreakStrategy.fromOrdinal(ordinal) as TValue
-                    Entries.recordTextHyphenationFrequency -> return HyphenationFrequency.fromOrdinal(ordinal) as TValue
-                }
+            return when (entry) {
+                Entries.recordTextBreakStrategy -> BreakStrategy.fromOrdinal(ordinal) as TValue
+                Entries.recordTextHyphenationFrequency -> HyphenationFrequency.fromOrdinal(ordinal) as TValue
+                else -> throwIllegalPreferenceKey()
             }
-
-            // There's no enums on lower API levels
-            throwIllegalPreferenceKey()
         }
 
         return getNonEnumValue(entry)

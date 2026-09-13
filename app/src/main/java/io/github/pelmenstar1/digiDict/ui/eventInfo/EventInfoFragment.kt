@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,7 +26,7 @@ class EventInfoFragment : Fragment() {
         val eventId = args.id
 
         with(binding) {
-            eventInfoContainer.setupLoadStateFlow(lifecycleScope, vm) { event ->
+            eventInfoContainer.setupLoadStateFlow(viewLifecycleOwner, vm) { event ->
                 val context = requireContext()
                 val dateFormatter = CompatDateTimeFormatter(context, DATE_TIME_FORMAT)
 

@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.common.ui
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.ListUpdateCallback
 
-class RecyclerViewAdapterListUpdateCallback(private val adapter: RecyclerView.Adapter<*>): ListUpdateCallback {
+class RecyclerViewAdapterListUpdateCallback(private val adapter: RecyclerView.Adapter<*>) : ListUpdateCallback {
     override fun onInserted(position: Int, count: Int) {
         adapter.notifyItemRangeInserted(position, count)
     }

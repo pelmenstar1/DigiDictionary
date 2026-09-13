@@ -4,7 +4,7 @@ import androidx.recyclerview.widget.DiffUtil
 import io.github.pelmenstar1.digiDict.common.FilteredArrayDiffItemCallback
 import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
 
-class EntityWitIdFilteredArrayDiffCallback<in T : EntityWithPrimaryKeyId>: FilteredArrayDiffItemCallback<T> {
+class EntityWitIdFilteredArrayDiffCallback<in T : EntityWithPrimaryKeyId> : FilteredArrayDiffItemCallback<T> {
     override fun areContentsTheSame(a: T, b: T): Boolean {
         return a == b
     }

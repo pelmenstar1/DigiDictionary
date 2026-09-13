@@ -21,6 +21,7 @@ object MeaningTextHelper {
                 // Leave single marker character.
                 meaning.substring(1)
             }
+
             ComplexMeaning.LIST_MARKER -> {
                 val textLength = meaning.length
 
@@ -61,8 +62,9 @@ object MeaningTextHelper {
                     textIndex = nextDelimiterPos + 1
                 }
 
-                return String(buffer)
+                String(buffer)
             }
+
             else -> throwIllegalFormat(meaning)
         }
     }

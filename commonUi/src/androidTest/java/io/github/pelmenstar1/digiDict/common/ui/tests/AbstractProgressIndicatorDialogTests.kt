@@ -30,6 +30,7 @@ class AbstractProgressIndicatorDialogTests {
         }
     }
 
+    @Suppress("SameParameterValue")
     private fun assertProgress(expectedProgress: Int, dialog: AbstractProgressIndicatorDialog) {
         val progressBar = dialog.progressBar
 
@@ -41,7 +42,8 @@ class AbstractProgressIndicatorDialogTests {
     fun recreateTest() {
         val expectedProgress = 50
 
-        val scenario = launchFragmentInContainer<Impl>(themeResId = R.style.Theme_Material3_Dark)
+        val scenario =
+            launchFragmentInContainer<Impl>(themeResId = com.google.android.material.R.style.Theme_Material3_Dark)
         scenario.onFragment {
             it.setProgress(expectedProgress)
 

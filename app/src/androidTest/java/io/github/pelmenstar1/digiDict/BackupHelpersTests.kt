@@ -9,7 +9,7 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.*
+import java.util.Random
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 

@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 /**
  * Stores data required for both importing and exporting logic.
  *
- * Id of elements of [records], [badges] are not stored and are actually 0.
+ * ID of elements of [records], [badges] are not stored and are actually 0.
  * To reference an element, ordinal number (position in the array) can be used.
  */
 @Serializable

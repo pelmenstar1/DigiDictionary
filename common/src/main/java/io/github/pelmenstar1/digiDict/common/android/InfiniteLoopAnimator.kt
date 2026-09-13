@@ -5,7 +5,7 @@ import io.github.pelmenstar1.digiDict.common.time.NANOSECONDS_IN_MILLISECOND
 import kotlin.math.max
 
 /**
- * Responsible for handling basic state of a infinite looped animation.
+ * Responsible for handling basic state of an infinite looped animation.
  */
 class InfiniteLoopAnimator(private val callback: AnimationTickCallback) {
     private var durationNs: Long = 0L
@@ -26,12 +26,6 @@ class InfiniteLoopAnimator(private val callback: AnimationTickCallback) {
             field = value
             durationNs = value * NANOSECONDS_IN_MILLISECOND
         }
-
-    /**
-     * Determines whether the animation is started.
-     */
-    val isStarted: Boolean
-        get() = _isStarted
 
     /**
      * Starts the animation.

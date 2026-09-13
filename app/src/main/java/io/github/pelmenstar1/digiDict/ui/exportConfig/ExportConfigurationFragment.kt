@@ -8,22 +8,20 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.backup.BackupFormat
 import io.github.pelmenstar1.digiDict.common.android.fileExtensionOrNull
-import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.appendPaddedFourDigit
 import io.github.pelmenstar1.digiDict.common.appendPaddedTwoDigit
 import io.github.pelmenstar1.digiDict.common.debugLog
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentExportConfigurationBinding
 import io.github.pelmenstar1.digiDict.ui.importExportConfig.ImportExportConfigProgressIndicatorDialogManager
-import java.util.*
+import java.time.LocalDate
 
 @AndroidEntryPoint
 class ExportConfigurationFragment : Fragment() {
@@ -79,7 +77,7 @@ class ExportConfigurationFragment : Fragment() {
 
         binding.exportConfigSelectFileButton.setOnClickListener {
             vm.selectedFormat?.let { format ->
-                val fileName = createFileName(context.getLocaleCompat(), format)
+                val fileName = createFileName(format)
 
                 createDocLauncher.launch(fileName)
             }
@@ -87,7 +85,7 @@ class ExportConfigurationFragment : Fragment() {
 
         progressIndicatorDialogManager.init(this, vm.progressFlow)
 
-        lifecycleScope.run {
+        viewLifecycleOwner.run {
             launchFlowCollector(vm.exportAction.successFlow) {
                 if (container != null) {
                     Snackbar
@@ -112,7 +110,7 @@ class ExportConfigurationFragment : Fragment() {
     }
 
     private fun startExport(uri: Uri) {
-        viewModel.exportAction.run(requireContext(), uri)
+        viewModel.exportAction.run(ExportConfigurationViewModel.ExportRequest(requireContext(), uri))
         progressIndicatorDialogManager.showDialog()
     }
 
@@ -124,18 +122,16 @@ class ExportConfigurationFragment : Fragment() {
             ExportFormatEntry(BackupFormat.JSON, R.string.exportConfig_jsonDescription)
         )
 
-        internal fun createFileName(locale: Locale, format: BackupFormat): String {
-            val calendar = Calendar.getInstance(locale)
+        internal fun createFileName(format: BackupFormat): String {
+            val date = LocalDate.now()
 
             return buildString(32) {
                 append("digi_dict_")
-                appendPaddedTwoDigit(calendar[Calendar.DAY_OF_MONTH])
+                appendPaddedTwoDigit(date.dayOfMonth)
                 append('_')
-
-                // Month is 0-based in Calendar.
-                appendPaddedTwoDigit(calendar[Calendar.MONTH] + 1)
+                appendPaddedTwoDigit(date.monthValue)
                 append('_')
-                appendPaddedFourDigit(calendar[Calendar.YEAR])
+                appendPaddedFourDigit(date.year)
 
                 append('.')
                 append(format.extension)

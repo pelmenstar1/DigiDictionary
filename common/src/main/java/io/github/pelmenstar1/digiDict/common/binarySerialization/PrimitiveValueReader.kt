@@ -1,8 +1,10 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.ProgressReporter
+import io.github.pelmenstar1.digiDict.common.readAtLeast
+import io.github.pelmenstar1.digiDict.common.readExact
+import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
 import java.io.InputStream
-import java.nio.*
 import kotlin.math.min
 
 /**
@@ -165,7 +167,7 @@ class PrimitiveValueReader(private val inputStream: InputStream, bufferSize: Int
 
             if (remBytesToRead > 0) {
                 // Here we need to read into the buf and then copy data to bufForStrings because
-                // we don't use the whole content of the buf here and it might be used outside the consumeStringUtf8 method.
+                // we don't use the whole content of the buf here, and it might be used outside the consumeStringUtf8 method.
                 actualBufLength = input.readAtLeast(
                     buf,
                     offset = 0,

@@ -34,7 +34,7 @@ interface AppWidgetUpdater {
             context: Context,
             crossinline update: (appWidgetManager: AppWidgetManager, ids: IntArray) -> Unit
         ): AppWidgetUpdater {
-            return object : AppWidgetUpdater.Base(context, T::class.java) {
+            return object : Base(context, T::class.java) {
                 override fun updateWidgets(appWidgetManager: AppWidgetManager, ids: IntArray) {
                     update(appWidgetManager, ids)
                 }

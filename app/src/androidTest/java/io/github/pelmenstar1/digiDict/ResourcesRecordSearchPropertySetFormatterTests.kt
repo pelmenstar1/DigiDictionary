@@ -40,7 +40,7 @@ class ResourcesRecordSearchPropertySetFormatterTests {
 
     @Test
     fun formatAllTest() {
-        formatSpecificValueTestHelper(allString, RecordSearchProperty.values())
+        formatSpecificValueTestHelper(allString, RecordSearchProperty.entries.toTypedArray())
     }
 
     @Test

@@ -11,9 +11,3 @@ class BinarySerializationException(
         const val REASON_INTERNAL = 2
     }
 }
-
-inline fun checkDataValidity(msg: String, condition: () -> Boolean) {
-    if (!condition()) {
-        throw BinarySerializationException(BinarySerializationException.REASON_DATA_VALIDATION, msg)
-    }
-}

@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,7 +30,7 @@ class WordQueueFragment : Fragment() {
         val recyclerView = binding.wordQueueRecyclerView
         val emptyTextView = binding.wordQueueEmptyTextView
 
-        showSnackbarEventHandlerOnError(
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(
             vm.removeFromQueueAction,
             container,
             msgId = R.string.wordQueue_failedToRemoveFromQueue,
@@ -47,7 +46,7 @@ class WordQueueFragment : Fragment() {
 
         addButton.setOnClickListener { showAddToQueueDialog() }
 
-        stateContainer.setupLoadStateFlow(lifecycleScope, vm) {
+        stateContainer.setupLoadStateFlow(viewLifecycleOwner, vm) {
             if (it.isEmpty()) {
                 emptyTextView.visibility = View.VISIBLE
                 adapter.submitEmpty()

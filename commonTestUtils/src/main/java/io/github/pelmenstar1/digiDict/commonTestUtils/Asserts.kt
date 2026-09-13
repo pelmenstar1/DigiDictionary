@@ -1,14 +1,19 @@
 package io.github.pelmenstar1.digiDict.commonTestUtils
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 import kotlin.test.fail
+import kotlin.time.Duration.Companion.milliseconds
 
 suspend fun assertTimeout(timeout: Int, block: suspend () -> Unit) = coroutineScope {
     launch(Dispatchers.Default) {
         try {
-            withTimeout(timeout.toLong()) {
+            withTimeout(timeout.toLong().milliseconds) {
                 block()
             }
             fail("The block should timeout")

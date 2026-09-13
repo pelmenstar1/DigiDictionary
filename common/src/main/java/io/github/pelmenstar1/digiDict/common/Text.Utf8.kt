@@ -21,7 +21,7 @@ internal fun String.utf8Size(): Int {
             // An 11-bit character with 2 bytes.
             result += 2
             i++
-        } else if (c < 0xd800 || c > 0xdfff) {
+        } else if (c !in 0xd800..0xdfff) {
             // A 16-bit character with 3 bytes.
             result += 3
             i++
@@ -73,8 +73,9 @@ internal inline fun String.processUtf8Bytes(
                     index++
                 }
             }
+
             c < 0x0800 -> {
-                // Emit a 11-bit character with 2 bytes.
+                // Emit an 11-bit character with 2 bytes.
                 on2Byte(
                     (c shr 6 or 0xc0).toByte(), // 110xxxxx
                     (c and 0x3f or 0x80).toByte() // 10xxxxxx
@@ -82,6 +83,7 @@ internal inline fun String.processUtf8Bytes(
 
                 index++
             }
+
             c !in 0xd800..0xdfff -> {
                 // Emit a 16-bit character with 3 bytes.
                 on3Byte(
@@ -92,6 +94,7 @@ internal inline fun String.processUtf8Bytes(
 
                 index++
             }
+
             else -> {
                 // c is a surrogate. Make sure it is a high surrogate & that its successor is a low
                 // surrogate. If not, the UTF-16 is invalid, in which case we emit a replacement

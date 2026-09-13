@@ -17,8 +17,8 @@
         <menu>
             <item
                 android:id="@+id/statsFragment"
-                android:title="@string/stats"
-                android:icon="@drawable/ic_stats" />
+                android:icon="@drawable/ic_stats"
+                android:title="@string/stats" />
 
             <item
                 android:id="@+id/quizNavigation"

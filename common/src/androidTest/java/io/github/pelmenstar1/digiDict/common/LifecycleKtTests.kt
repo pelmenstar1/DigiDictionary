@@ -12,7 +12,10 @@ import androidx.lifecycle.ViewModel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar.SnackbarLayout
-import io.github.pelmenstar1.digiDict.common.android.*
+import io.github.pelmenstar1.digiDict.common.android.NoArgumentViewModelAction
+import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
+import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.android.viewModelAction
 import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
 import org.junit.Test
 import org.junit.runner.RunWith

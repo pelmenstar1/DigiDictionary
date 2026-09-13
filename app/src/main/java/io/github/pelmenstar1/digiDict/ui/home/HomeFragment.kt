@@ -4,13 +4,21 @@ import android.os.Build
 import android.os.Bundle
 import android.text.TextPaint
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import androidx.activity.OnBackPressedCallback
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,19 +27,18 @@ import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.filterTrue
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.OptionsBar
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentHomeBinding
 import io.github.pelmenstar1.digiDict.databinding.RecordLoadingErrorAndProgressMergeBinding
 import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
 import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
-import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
 import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchAdapter
+import io.github.pelmenstar1.digiDict.ui.home.search.HomeSearchEditText
 import io.github.pelmenstar1.digiDict.ui.misc.RecordSortTypeDialogFragment
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingAdapter
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingLoadStateAdapter
-import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeParams
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.flatMapConcat
@@ -40,6 +47,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
     private val viewModel by viewModels<HomeViewModel>()
+
+    private var searchMenuItem: MenuItem? = null
 
     @Inject
     lateinit var recordSortTypeStringFormatter: StringFormatter<RecordSortType>
@@ -76,11 +85,8 @@ class HomeFragment : Fragment() {
         val loadingIndicator = stateContainerBinding.loadingErrorAndProgressLoadingIndicator
         val errorContainer = stateContainerBinding.loadingErrorAndProgressErrorContainer
 
-        // This needs to be initialized before collecting HomeViewModel.items
-        viewModel.recordTextPrecomputeController = RecordTextPrecomputeController.create(context)
-
         errorContainer.setOnRetryListener {
-            if (GlobalSearchQueryProvider.isActive) {
+            if (viewModel.isSearchActive) {
                 viewModel.retrySearch()
             } else {
                 pagingAdapter.retry()
@@ -95,12 +101,12 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // homeSearchAddRecordButton is little bit different from addRecordButton that's placed on the center bottom of the screen.
+        // homeSearchAddRecordButton is a little bit different from addRecordButton that's placed on the center bottom of the screen.
         // This button is visible when there's no results in search and suggests a user to add a new record.
         binding.homeSearchAddRecordButton.also {
             it.setOnClickListener {
                 val directions = HomeFragmentDirections.actionHomeToAddEditRecord(
-                    initialExpression = GlobalSearchQueryProvider.query.toString()
+                    initialExpression = viewModel.searchQuery.toString()
                 )
 
                 navController.navigate(directions)
@@ -119,17 +125,18 @@ class HomeFragment : Fragment() {
             it.layoutManager = LinearLayoutManager(context)
         }
 
+        initSearchMenu()
         initHomeOptionsBar(binding, pagingAdapter)
         initDialogsIfShown(pagingAdapter)
         initTextBreakAndHyphenationCustomization(pagingAdapter, searchAdapter)
 
-        lifecycleScope.run {
+        viewLifecycleOwner.run {
             launchFlowCollector(viewModel.items, pagingAdapter::submitData)
 
             // Start searchStateFlow collection only once isActiveFlow is true .
             launchFlowCollector(
-                GlobalSearchQueryProvider
-                    .isActiveFlow
+                viewModel
+                    .isSearchActiveFlow
                     .filterTrue()
                     .flatMapConcat { viewModel.searchStateFlow }
             ) {
@@ -140,11 +147,13 @@ class HomeFragment : Fragment() {
                         errorContainer.visibility = View.GONE
                         recyclerView.visibility = View.GONE
                     }
+
                     is DataLoadState.Error -> {
                         errorContainer.visibility = View.VISIBLE
                         loadingIndicator.visibility = View.GONE
                         recyclerView.visibility = View.GONE
                     }
+
                     is DataLoadState.Success -> {
                         val result = it.value
 
@@ -159,7 +168,7 @@ class HomeFragment : Fragment() {
 
                         // It's better for the UX to scroll to the top in order to
                         // show the most relevant elements. It's due to the fact the scroll position remains the same
-                        // between the changes. Then when we the query or sort type change, the scroll position will be the same and
+                        // between the changes. Then, when we have the query or sort type change, the scroll position will be the same and
                         // the data is changed, so we'll get into the situation when we're showing not very relevant data according
                         // to the sort type.
                         recyclerView.scrollToPosition(0)
@@ -167,7 +176,7 @@ class HomeFragment : Fragment() {
                 }
             }
 
-            launchFlowCollector(GlobalSearchQueryProvider.isActiveFlow) { isActive ->
+            launchFlowCollector(viewModel.isSearchActiveFlow) { isActive ->
                 recyclerView.adapter = if (isActive) searchAdapter else loadStatePagingAdapter
 
                 // While search is active, there's no sense to add new record.
@@ -193,7 +202,7 @@ class HomeFragment : Fragment() {
             launchFlowCollector(
                 pagingAdapter
                     .loadStateFlow
-                    .combineTransform(GlobalSearchQueryProvider.isActiveFlow) { state, isActive ->
+                    .combineTransform(viewModel.isSearchActiveFlow) { state, isActive ->
                         // While search is active, UI should not respond to pagingAdapter state,
                         // as it's not on the screen.
                         if (!isActive) {
@@ -213,43 +222,126 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
+    private fun initSearchMenu() {
+        val vm = viewModel
+        val imm = requireContext().getSystemService(InputMethodManager::class.java)
+
+        // Only takes back presses while the search is running; everything else is left to the
+        // navigation graph and the system, which is what keeps the predictive back animations.
+        val collapseSearchOnBack = object : OnBackPressedCallback(vm.isSearchActive) {
+            override fun handleOnBackPressed() {
+                vm.isSearchActive = false
+
+                searchMenuItem?.collapseActionView()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, collapseSearchOnBack)
+
+        viewLifecycleOwner.launchFlowCollector(vm.isSearchActiveFlow) { isActive ->
+            collapseSearchOnBack.isEnabled = isActive
+        }
+
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.home_menu, menu)
+
+                val item = menu.findItem(R.id.homeMenu_search) ?: return
+                searchMenuItem = item
+
+                // A freshly inflated menu starts collapsed, so the flag has to agree with it. It
+                // can still be true here after a configuration change, since it lives in the
+                // view-model while the menu does not survive.
+                if (!item.isActionViewExpanded) {
+                    vm.isSearchActive = false
+                }
+
+                val actionView = item.actionView as HomeSearchEditText
+                actionView.addTextChangedListener { text ->
+                    vm.searchQuery = text ?: ""
+                }
+
+                item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+                    override fun onMenuItemActionExpand(item: MenuItem): Boolean {
+                        vm.isSearchActive = true
+
+                        val actionView = item.actionView as HomeSearchEditText
+                        actionView.requestFocusFromTouch()
+
+                        // It's deprecated, but at least it works. The same can't be said about setSoftInputMode().
+                        // For some unknown reason, it does not work.
+                        @Suppress("DEPRECATION")
+                        imm?.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+
+                        return true
+                    }
+
+                    override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+                        vm.isSearchActive = false
+
+                        val actionView = item.actionView as HomeSearchEditText
+
+                        // In the next time the active view is expanded, text should be empty.
+                        actionView.setText("")
+                        imm?.hideSoftInputFromWindow(actionView.windowToken, 0)
+
+                        return true
+                    }
+                })
+            }
+
+            // The items of the 'more' submenu are navigation destinations, so let the navigation
+            // graph handle them. Search is handled by its action view, not by a click.
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.homeMenu_more, R.id.homeMenu_search -> false
+                    else -> menuItem.onNavDestinationSelected(findNavController())
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        searchMenuItem = null
+    }
+
     private fun initTextBreakAndHyphenationCustomization(
         pagingAdapter: AppPagingAdapter,
         searchAdapter: HomeSearchAdapter
     ) {
-        if (Build.VERSION.SDK_INT >= 23) {
-            val vm = viewModel
-            val context = requireContext()
+        val vm = viewModel
+        val context = requireContext()
 
-            val expressionTextPaint: TextPaint?
-            val meaningTextPaint: TextPaint?
+        val expressionTextPaint: TextPaint?
+        val meaningTextPaint: TextPaint?
 
+        if (Build.VERSION.SDK_INT >= 28) {
+            expressionTextPaint = pagingAdapter.getExpressionTextPaintForMeasure(context)
+            meaningTextPaint = pagingAdapter.getMeaningTextPaintForMeasure(context)
+        } else {
+            expressionTextPaint = null
+            meaningTextPaint = null
+        }
+
+        viewLifecycleOwner.launchFlowCollector(textBreakAndHyphenationInfoSource.flow) { info ->
             if (Build.VERSION.SDK_INT >= 28) {
-                expressionTextPaint = pagingAdapter.getExpressionTextPaintForMeasure(context)
-                meaningTextPaint = pagingAdapter.getMeaningTextPaintForMeasure(context)
-            } else {
-                expressionTextPaint = null
-                meaningTextPaint = null
+                // expressionTextPaint and meaningTextPaint will never be null on API level >= 28
+                val params = RecordTextPrecomputeParams(expressionTextPaint!!, meaningTextPaint!!, info)
+
+                vm.recordTextPrecomputeController.params = params
             }
 
-            lifecycleScope.launchFlowCollector(textBreakAndHyphenationInfoSource.flow) { info ->
-                if (Build.VERSION.SDK_INT >= 28) {
-                    // expressionTextPaint and meaningTextPaint will never be null on API level >= 28
-                    val params = RecordTextPrecomputeParams(expressionTextPaint!!, meaningTextPaint!!, info)
-
-                    vm.recordTextPrecomputeController?.params = params
-                }
-
-                pagingAdapter.setTextBreakAndHyphenationInfo(info)
-                searchAdapter.setTextBreakAndHyphenationInfo(info)
-            }
+            pagingAdapter.setTextBreakAndHyphenationInfo(info)
+            searchAdapter.setTextBreakAndHyphenationInfo(info)
         }
     }
 
     private fun initHomeOptionsBar(binding: FragmentHomeBinding, pagingAdapter: AppPagingAdapter) {
         val optionsBar = binding.homeOptionsBar
 
-        lifecycleScope.run {
+        viewLifecycleOwner.run {
             launchFlowCollector(viewModel.sortTypeFlow) { sortType ->
                 optionsBar.setOptionValue(R.id.optionsBar_sort, recordSortTypeStringFormatter.format(sortType))
             }

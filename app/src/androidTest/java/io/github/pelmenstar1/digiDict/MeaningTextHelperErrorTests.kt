@@ -6,7 +6,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.*
+import java.util.Locale
 import kotlin.test.assertEquals
 
 @RunWith(AndroidJUnit4::class)

@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -14,7 +13,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.showAlertDialog
 import io.github.pelmenstar1.digiDict.databinding.FragmentManageEventsBinding
 
@@ -25,7 +24,7 @@ class ManageEventsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val context = requireContext()
         val vm = viewModel
-        val ls = lifecycleScope
+        val viewOwner = viewLifecycleOwner
         val navController = findNavController()
 
         val binding = FragmentManageEventsBinding.inflate(inflater, container, false)
@@ -34,7 +33,7 @@ class ManageEventsFragment : Fragment() {
         val recyclerView = binding.manageEventsRecyclerView
         val stateContainer = binding.manageEventsContainer
 
-        showSnackbarEventHandlerOnError(
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(
             vm.deleteAction,
             container,
             msgId = R.string.manageEvents_deleteError,
@@ -56,7 +55,7 @@ class ManageEventsFragment : Fragment() {
             }
         }
 
-        ls.run {
+        viewOwner.run {
             launchFlowCollector(vm.isStartEventEnabledFlow) { isEnabled ->
                 startEventButton.isEnabled = isEnabled
             }
@@ -72,7 +71,7 @@ class ManageEventsFragment : Fragment() {
             }
         }
 
-        stateContainer.setupLoadStateFlow(ls, vm) { events ->
+        stateContainer.setupLoadStateFlow(viewOwner, vm) { events ->
             adapter.submitElements(events)
         }
 
@@ -100,6 +99,7 @@ class ManageEventsFragment : Fragment() {
             R.id.manageEvents_itemDelete -> {
                 requestDelete(itemId)
             }
+
             R.id.manageEvents_itemEdit -> {
                 val directions =
                     ManageEventsFragmentDirections.actionManageEventsFragmentToStartEditEventFragment(itemId)

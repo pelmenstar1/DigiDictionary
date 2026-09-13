@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
-import java.util.*
+import java.util.Arrays
 import kotlin.math.max
 
 interface FilteredArrayDiffResult {

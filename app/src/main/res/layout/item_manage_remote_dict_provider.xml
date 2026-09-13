@@ -1,44 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/itemRemoteDictProvider_padding">
 
     <TextView
-        style="@style/TextAppearance.Material3.BodyLarge"
         android:id="@+id/itemManageRemoteDictProvider_name"
+        style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        android:textIsSelectable="false"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="Provider name"
-        android:textIsSelectable="false" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Provider name" />
 
     <TextView
-        style="@style/TextAppearance.Material3.BodySmall"
         android:id="@+id/itemManageRemoteDictProvider_schema"
+        style="@style/TextAppearance.Material3.BodySmall"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/itemManageRemoteDictProvider_name"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginEnd="8dp"
         android:layout_marginTop="@dimen/itemRemoteDictProvider_schemaTopMargin"
-        app:layout_constraintEnd_toStartOf="@id/itemManageRemoteDictProvider_delete"
+        android:layout_marginEnd="8dp"
         android:textIsSelectable="false"
-        tools:text="https://dicitionary.provider.example/$query$"/>
+        app:layout_constraintEnd_toStartOf="@id/itemManageRemoteDictProvider_delete"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/itemManageRemoteDictProvider_name"
+        tools:text="https://dicitionary.provider.example/$query$" />
 
     <Button
-        style="@style/Widget.Material3.Button.IconButton"
         android:id="@+id/itemManageRemoteDictProvider_delete"
+        style="@style/Widget.Material3.Button.IconButton"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/itemManageRemoteDictProvider_name"
-        app:layout_constraintBottom_toBottomOf="@id/itemManageRemoteDictProvider_schema"
         app:icon="@drawable/ic_remove"
         app:iconGravity="textStart"
-        app:iconTint="?attr/colorControlNormal"/>
+        app:iconTint="?attr/colorControlNormal"
+        app:layout_constraintBottom_toBottomOf="@id/itemManageRemoteDictProvider_schema"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/itemManageRemoteDictProvider_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

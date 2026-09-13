@@ -3,7 +3,7 @@ package io.github.pelmenstar1.digiDict.backup
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
 import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
-import java.util.*
+import java.util.Arrays
 
 object BackupHelpers {
     /**

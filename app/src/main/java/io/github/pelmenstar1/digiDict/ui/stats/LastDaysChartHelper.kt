@@ -10,12 +10,9 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.time.MILLIS_IN_DAY
-import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
-import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import io.github.pelmenstar1.digiDict.common.writePaddedFourDigit
 import io.github.pelmenstar1.digiDict.common.writePaddedTwoDigit
-import java.util.*
+import java.time.LocalDate
 
 object LastDaysChartHelper {
     class ChartOptions(@ColorInt val textColor: Int, @ColorInt val dataColor: Int, val dataSetLabel: String)
@@ -24,75 +21,42 @@ object LastDaysChartHelper {
         private val labels: Array<String>
 
         init {
-            val startEpochSeconds = (todayEpochDay - lastDays + 1) * SECONDS_IN_DAY
-            val startCalendar = Calendar.getInstance().apply { timeInMillis = startEpochSeconds * 1000 }
-            val endCalendar = Calendar.getInstance().apply { timeInMillis = todayEpochDay * MILLIS_IN_DAY }
+            val startDate = LocalDate.ofEpochDay(todayEpochDay - lastDays + 1)
+            val endDate = LocalDate.ofEpochDay(todayEpochDay)
 
-            val startYear = startCalendar[Calendar.YEAR]
-            val startMonth = startCalendar[Calendar.MONTH] + 1
-            val startDay = startCalendar[Calendar.DAY_OF_MONTH]
-
-            val type = if (startYear == endCalendar[Calendar.YEAR]) {
-                if (startMonth == endCalendar[Calendar.MONTH] + 1) {
-                    TYPE_DAY
-                } else {
-                    TYPE_DAY_MONTH
-                }
-            } else {
-                TYPE_DAY_MONTH_YEAR
+            // Show only as much of the date as the range needs to stay unambiguous.
+            val type = when {
+                startDate.year != endDate.year -> TYPE_DAY_MONTH_YEAR
+                startDate.monthValue != endDate.monthValue -> TYPE_DAY_MONTH
+                else -> TYPE_DAY
             }
 
             val bufferLength = when (type) {
                 TYPE_DAY -> 2
                 TYPE_DAY_MONTH -> 5
-                TYPE_DAY_MONTH_YEAR -> 10
-                else -> throw RuntimeException("Invalid type value")
+                else -> 10
             }
             val buffer = CharArray(bufferLength)
 
-            var currentYear = startYear
-            var currentMonth = startMonth
-            var currentDay = startDay
+            labels = Array(lastDays) { index ->
+                // plusDays rolls the month and the year over, which this used to do by hand.
+                val date = startDate.plusDays(index.toLong())
 
-            var currentDaysInMonth = TimeUtils.getDaysInMonth(currentYear, currentMonth)
-
-            labels = Array(lastDays) {
-                val label = buffer.let {
-                    it.writePaddedTwoDigit(currentDay, 0)
+                buffer.let {
+                    it.writePaddedTwoDigit(date.dayOfMonth, 0)
 
                     if (type and TYPE_MONTH_BIT != 0) {
                         it[2] = '.'
-                        it.writePaddedTwoDigit(currentMonth, 3)
+                        it.writePaddedTwoDigit(date.monthValue, 3)
                     }
 
                     if (type and TYPE_YEAR_BIT != 0) {
                         it[5] = '.'
-                        it.writePaddedFourDigit(currentYear, 6)
+                        it.writePaddedFourDigit(date.year, 6)
                     }
 
                     String(it)
                 }
-
-                var updateDaysInMonth = false
-
-                currentDay++
-
-                if (currentDay > currentDaysInMonth) {
-                    currentDay = 1
-                    currentMonth++
-                    updateDaysInMonth = true
-                }
-
-                if (currentMonth > 12) {
-                    currentMonth = 1
-                    currentYear++
-                }
-
-                if (updateDaysInMonth) {
-                    currentDaysInMonth = TimeUtils.getDaysInMonth(currentYear, currentMonth)
-                }
-
-                label
             }
         }
 

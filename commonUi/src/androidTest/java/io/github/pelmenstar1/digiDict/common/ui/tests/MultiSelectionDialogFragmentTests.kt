@@ -3,18 +3,24 @@ package io.github.pelmenstar1.digiDict.common.ui.tests
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragmentInContainer
-import androidx.test.espresso.Espresso.*
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
-import androidx.test.espresso.action.ViewActions.*
-import androidx.test.espresso.assertion.ViewAssertions.*
-import androidx.test.espresso.matcher.RootMatchers.*
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.isNotEnabled
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.checkbox.MaterialCheckBox
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.ChoicesProvider
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.MultiSelectionDialogFragment
-import io.github.pelmenstar1.digiDict.common.ui.tests.R
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.instanceOf
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertContentEquals
@@ -55,7 +61,9 @@ class MultiSelectionDialogFragmentTests {
     }
 
     private fun onNoOptionSelectionError(): ViewInteraction {
-        return onView(withText(R.string.multiSelectionDialog_noOptionSelectedError)).inRoot(isDialog())
+        return onView(withText(io.github.pelmenstar1.digiDict.common.ui.R.string.multiSelectionDialog_noOptionSelectedError)).inRoot(
+            isDialog()
+        )
     }
 
     private fun onChoice(index: Int): ViewInteraction {
@@ -63,7 +71,9 @@ class MultiSelectionDialogFragmentTests {
     }
 
     private fun onApplyButton(): ViewInteraction {
-        return onView(withText(R.string.multiSelectionDialog_apply)).inRoot(isDialog())
+        return onView(withText(io.github.pelmenstar1.digiDict.common.ui.R.string.multiSelectionDialog_apply)).inRoot(
+            isDialog()
+        )
     }
 
     private fun checkNoOptionSelectionErrorDisplayedAndApplyDisabled() {

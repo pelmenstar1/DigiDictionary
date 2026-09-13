@@ -17,7 +17,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.*
+import java.util.Calendar
+import java.util.TimeZone
 import kotlin.random.Random
 import kotlin.test.assertEquals
 

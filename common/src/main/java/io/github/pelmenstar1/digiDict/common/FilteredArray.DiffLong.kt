@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.common
 
-import java.util.*
+import java.util.Collections
 
 private val DIAGONAL_COMPARATOR = Comparator<DiffDiagonal> { a, b -> a.x - b.x }
 

@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.common.time.MILLIS_IN_DAY
 import io.github.pelmenstar1.digiDict.databinding.FragmentStatsBinding
@@ -23,7 +22,7 @@ class StatsFragment : Fragment() {
         val binding = FragmentStatsBinding.inflate(inflater, container, false)
 
         with(binding) {
-            statsContainer.setupLoadStateFlow(lifecycleScope, viewModel) { (count, additionStats) ->
+            statsContainer.setupLoadStateFlow(viewLifecycleOwner, viewModel) { (count, additionStats) ->
                 statsCountView.setValue(count)
                 statsRecordsAddedLast24HoursView.setValue(additionStats.last24Hours)
                 statsRecordsAddedLast7DaysView.setValue(additionStats.last7Days)

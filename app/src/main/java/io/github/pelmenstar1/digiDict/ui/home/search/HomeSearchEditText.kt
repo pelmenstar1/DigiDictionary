@@ -9,7 +9,7 @@ import io.github.pelmenstar1.digiDict.R
 class HomeSearchEditText @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    @AttrRes defStyleAttr: Int = com.google.android.material.R.attr.editTextStyle
+    @AttrRes defStyleAttr: Int = androidx.appcompat.R.attr.editTextStyle
 ) : AppCompatEditText(context, attrs, defStyleAttr) {
     init {
         hint = context.resources.getText(R.string.search)

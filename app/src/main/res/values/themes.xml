@@ -14,9 +14,6 @@
 
         <item name="colorError">@color/color_error</item>
 
-        <item name="android:statusBarColor">?attr/colorSurface</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-
         <item name="materialButtonIconStyle">@style/Widget.Material3.Button.IconButton</item>
     </style>
 

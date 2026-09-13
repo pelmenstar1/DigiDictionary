@@ -31,10 +31,12 @@ class AppPagingLoadStateAdapter(
                     progressIndicator.visibility = View.VISIBLE
                     errorContainer.visibility = View.GONE
                 }
+
                 is LoadState.Error -> {
                     progressIndicator.visibility = View.GONE
                     errorContainer.visibility = View.VISIBLE
                 }
+
                 else -> {}
             }
         }

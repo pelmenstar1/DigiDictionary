@@ -1,6 +1,5 @@
 package io.github.pelmenstar1.digiDict
 
-import androidx.annotation.RequiresApi
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
@@ -11,7 +10,6 @@ import javax.inject.Inject
 /**
  * An implementation of [TextBreakAndHyphenationInfoSource] that extracts the required information from [DigiDictAppPreferences].
  */
-@RequiresApi(23)
 class PreferencesTextBreakAndHyphenationInfoSource @Inject constructor(
     prefs: DigiDictAppPreferences
 ) : TextBreakAndHyphenationInfoSource {

@@ -3,7 +3,6 @@ package io.github.pelmenstar1.digiDict.common.ui
 import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.View.OnClickListener
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -36,7 +35,7 @@ class ErrorContainer @JvmOverloads constructor(
                 gravity = Gravity.CENTER_HORIZONTAL
             }
 
-            textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+            textAlignment = TEXT_ALIGNMENT_CENTER
             setTextAppearance { BodyLarge }
 
             errorTextView = this

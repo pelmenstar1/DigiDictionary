@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -20,7 +19,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.OptionsBar
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.databinding.FragmentEventInfoRecordsBinding
@@ -28,7 +27,6 @@ import io.github.pelmenstar1.digiDict.databinding.RecordLoadingErrorAndProgressM
 import io.github.pelmenstar1.digiDict.ui.misc.RecordSortTypeDialogFragment
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingAdapter
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingLoadStateAdapter
-import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeParams
 import javax.inject.Inject
 
@@ -84,11 +82,9 @@ class EventInfoRecordsFragment : Fragment() {
             it.layoutManager = LinearLayoutManager(context)
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
-
-        vm.recordTextPrecomputeController = RecordTextPrecomputeController.create(context)
         initTextBreakAndHyphenationCustomization(adapter)
 
-        lifecycleScope.run {
+        viewLifecycleOwner.run {
             launchFlowCollector(vm.items, adapter::submitData)
 
             launchFlowCollector(vm.sortTypeFlow) {
@@ -120,31 +116,29 @@ class EventInfoRecordsFragment : Fragment() {
     }
 
     private fun initTextBreakAndHyphenationCustomization(pagingAdapter: AppPagingAdapter) {
-        if (Build.VERSION.SDK_INT >= 23) {
-            val vm = viewModel
-            val context = requireContext()
+        val vm = viewModel
+        val context = requireContext()
 
-            val expressionTextPaint: TextPaint?
-            val meaningTextPaint: TextPaint?
+        val expressionTextPaint: TextPaint?
+        val meaningTextPaint: TextPaint?
 
+        if (Build.VERSION.SDK_INT >= 28) {
+            expressionTextPaint = pagingAdapter.getExpressionTextPaintForMeasure(context)
+            meaningTextPaint = pagingAdapter.getMeaningTextPaintForMeasure(context)
+        } else {
+            expressionTextPaint = null
+            meaningTextPaint = null
+        }
+
+        viewLifecycleOwner.launchFlowCollector(textBreakAndHyphenationInfoSource.flow) { info ->
             if (Build.VERSION.SDK_INT >= 28) {
-                expressionTextPaint = pagingAdapter.getExpressionTextPaintForMeasure(context)
-                meaningTextPaint = pagingAdapter.getMeaningTextPaintForMeasure(context)
-            } else {
-                expressionTextPaint = null
-                meaningTextPaint = null
+                // expressionTextPaint and meaningTextPaint will never be null on API level >= 28
+                val params = RecordTextPrecomputeParams(expressionTextPaint!!, meaningTextPaint!!, info)
+
+                vm.recordTextPrecomputeController.params = params
             }
 
-            lifecycleScope.launchFlowCollector(textBreakAndHyphenationInfoSource.flow) { info ->
-                if (Build.VERSION.SDK_INT >= 28) {
-                    // expressionTextPaint and meaningTextPaint will never be null on API level >= 28
-                    val params = RecordTextPrecomputeParams(expressionTextPaint!!, meaningTextPaint!!, info)
-
-                    vm.recordTextPrecomputeController?.params = params
-                }
-
-                pagingAdapter.setTextBreakAndHyphenationInfo(info)
-            }
+            pagingAdapter.setTextBreakAndHyphenationInfo(info)
         }
     }
 

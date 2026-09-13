@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.time.Duration.Companion.milliseconds
 
 class ValidityFlowTests {
     private class ValidityFieldEnabledComputed(
@@ -247,7 +248,7 @@ class ValidityFlowTests {
             flow.mutate { init(fields) }
 
             launch(Dispatchers.Default) {
-                delay(100)
+                delay(100.milliseconds)
                 flow.mutate { mutation(fields) }
             }
 
@@ -353,7 +354,7 @@ class ValidityFlowTests {
             flow.mutate { init(fields) }
 
             launch(Dispatchers.Default) {
-                delay(100)
+                delay(100.milliseconds)
                 flow.mutate { mutation(fields) }
             }
 

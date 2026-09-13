@@ -13,7 +13,11 @@ import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateViewModel
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.prefs.DigiDictAppPreferences
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -89,8 +93,6 @@ class QuizViewModel @Inject constructor(
                 val duration = when (selectedMode) {
                     QuizMode.LAST_24_HOURS -> SECONDS_IN_DAY
                     QuizMode.LAST_48_HOURS -> 2 * SECONDS_IN_DAY
-                    // It's impossible but compiler doesn't know about it
-                    else -> throw RuntimeException("Impossible")
                 }
 
                 val currentEpochSeconds = currentEpochSecondsProvider.get { Utc }

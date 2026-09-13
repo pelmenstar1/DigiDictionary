@@ -30,22 +30,14 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
     private val checkValueChannel = Channel<Message>(capacity = Channel.UNLIMITED)
     private val isCheckValueJobStarted = AtomicBoolean()
 
-    private val _nameErrorFlow =
-        MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
-
-    private val _schemaErrorFlow =
-        MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
-
-    private val _isInputsEnabled = MutableStateFlow(true)
-
     val nameErrorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>
-        get() = _nameErrorFlow
+        field = MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
 
     val schemaErrorFlow: StateFlow<AddRemoteDictionaryProviderMessage?>
-        get() = _schemaErrorFlow
+        field = MutableStateFlow<AddRemoteDictionaryProviderMessage?>(AddRemoteDictionaryProviderMessage.EMPTY_TEXT)
 
     val isInputEnabledFlow: StateFlow<Boolean>
-        get() = _isInputsEnabled
+        field = MutableStateFlow(true)
 
     val validityFlow = ValidityFlow(validityScheme)
 
@@ -147,11 +139,11 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
             } catch (e: Exception) {
                 // The job still can be restarted.
                 isCheckValueJobStarted.set(false)
-                _isInputsEnabled.value = false
+                isInputEnabledFlow.value = false
 
                 // There can be no errors as name and schema inputs are disabled.
-                _nameErrorFlow.value = null
-                _schemaErrorFlow.value = null
+                nameErrorFlow.value = null
+                schemaErrorFlow.value = null
 
                 // Disable all validity fields in order to disable "Add" button
                 validityFlow.mutate {
@@ -168,7 +160,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
 
             // If the job is started after the error, _isNameEnabledFlow's and _isSchemaEnabledFlow's values might be false.
             // So after we know allProviders are loaded successfully, we can re-enable inputs.
-            _isInputsEnabled.value = true
+            isInputEnabledFlow.value = true
 
             while (isActive) {
                 val message = checkValueChannel.receive()
@@ -176,8 +168,8 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                 val value = message.value.trim()
 
                 val errorFlow = when (type) {
-                    TYPE_NAME -> _nameErrorFlow
-                    TYPE_SCHEMA -> _schemaErrorFlow
+                    TYPE_NAME -> nameErrorFlow
+                    TYPE_SCHEMA -> schemaErrorFlow
                     else -> throw IllegalArgumentException("type")
                 }
 
@@ -192,14 +184,16 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
                                 null
                             }
                         }
+
                         TYPE_SCHEMA -> {
                             when {
                                 !isValidUrl(value) -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_INVALID_URL
-                                !value.contains("\$query$") -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
+                                !value.contains($$"$query$") -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_NO_QUERY_PLACEHOLDER
                                 allProviders.any { it.schema == value } -> AddRemoteDictionaryProviderMessage.PROVIDER_SCHEMA_EXISTS
                                 else -> null
                             }
                         }
+
                         else -> throw IllegalStateException("Invalid message type")
                     }
                 }
@@ -225,7 +219,7 @@ class AddRemoteDictionaryProviderViewModel @Inject constructor(
         private const val TYPE_SCHEMA = 1
 
         private val urlPattern =
-            Pattern.compile("^https?://(?:www\\.)?[-a-zA-Z\\d@:%._+~#=]{1,256}\\.[a-zA-Z\\d()]{1,6}\\b([-a-zA-Z\\d()@:%_+.~#?&/=]|(\\\$query\\\$))*\$")
+            Pattern.compile($$"^https?://(?:www\\.)?[-a-zA-Z\\d@:%._+~#=]{1,256}\\.[a-zA-Z\\d()]{1,6}\\b([-a-zA-Z\\d()@:%_+.~#?&/=]|(\\$query\\$))*$")
 
         val nameValidityField = ValidityFlow.Field(ordinal = 0)
         val schemaValidityField = ValidityFlow.Field(ordinal = 1)

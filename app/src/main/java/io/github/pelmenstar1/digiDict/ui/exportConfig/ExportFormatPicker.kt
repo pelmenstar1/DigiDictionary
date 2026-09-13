@@ -2,7 +2,6 @@ package io.github.pelmenstar1.digiDict.ui.exportConfig
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View.OnClickListener
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes

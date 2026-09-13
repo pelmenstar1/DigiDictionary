@@ -18,11 +18,11 @@
         style="@style/TextAppearance.Material3.BodyLarge"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:layout_marginHorizontal="8dp"
         android:layout_marginVertical="8dp"
-        android:textIsSelectable="false"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:textIsSelectable="false" />
 
     <Button
         android:id="@+id/itemManageRecordBadges_editButton"

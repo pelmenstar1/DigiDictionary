@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 class BackupCompatInfo(
     val newMeaningFormat: Boolean = false,
 
-    // Transient because only JSON format is used with Kotlin serialization and it's always UTF8.
+    // Transient because only JSON format is used with Kotlin serialization, and it's always UTF8.
     // This is property is only used in binary serialization.
     @kotlinx.serialization.Transient val isUtf8Strings: Boolean = false
 ) {

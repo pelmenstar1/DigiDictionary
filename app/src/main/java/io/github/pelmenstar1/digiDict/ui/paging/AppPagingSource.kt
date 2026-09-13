@@ -9,9 +9,15 @@ import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.time.EpochSecondsRange
 import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
+import io.github.pelmenstar1.digiDict.data.PackedRecordToBadgeRelationArray
+import io.github.pelmenstar1.digiDict.data.RecordSortType
+import io.github.pelmenstar1.digiDict.data.compileCountStatement
+import io.github.pelmenstar1.digiDict.data.getAllSortedPackedRecordToBadgeRelations
+import io.github.pelmenstar1.digiDict.data.getConciseRecordsWithBadgesForAppPagingSource
 import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
-import java.util.*
+import java.util.TimeZone
 
 /**
  * [PagingSource] implementation that shows the records info, events, date markers.
@@ -141,7 +147,7 @@ class AppPagingSource(
 
         val recordDataSize = recordData.size
 
-        // For now, the only purpose of computePageResult is to add date markers where neccessary.
+        // For now, the only purpose of computePageResult is to add date markers where necessary.
         // Doing it when sorting is not related to dates has no sense and very strange.
         //
         // As computePageResult has a single purpose, no flags are added to control the transformation for now.

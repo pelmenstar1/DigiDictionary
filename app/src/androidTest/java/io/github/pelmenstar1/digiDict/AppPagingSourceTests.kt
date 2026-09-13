@@ -16,7 +16,8 @@ import io.github.pelmenstar1.digiDict.utils.addRecordWithBadges
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.*
+import java.util.SimpleTimeZone
+import java.util.TimeZone
 import kotlin.test.assertContentEquals
 
 @RunWith(AndroidJUnit4::class)
@@ -323,7 +324,7 @@ class AppPagingSourceTests {
             timeZoneOffsetSeconds = 1000
         )
 
-        // Check if first date marker is inserted only when neccessary
+        // Check if first date marker is inserted only when necessary
         testCase(
             inputRecords = {
                 record(id = 1, time = { epochSeconds(day = 1, seconds = 3) })

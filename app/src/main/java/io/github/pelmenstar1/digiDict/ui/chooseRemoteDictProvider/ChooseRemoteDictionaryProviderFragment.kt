@@ -9,7 +9,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.browser.customtabs.*
+import androidx.browser.customtabs.CustomTabsClient
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsService
+import androidx.browser.customtabs.CustomTabsServiceConnection
+import androidx.browser.customtabs.CustomTabsSession
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -92,8 +97,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val query = args.query
         val context = requireContext()
-        val ls = lifecycleScope
-
+        val viewOwner = viewLifecycleOwner
         val binding = FragmentChooseRemoteDictProviderBinding.inflate(inflater, container, false)
         val adapter = ChooseRemoteDictionaryProviderAdapter(
             onProviderChosen = { openUrl(it, query) }
@@ -107,7 +111,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
         }
 
-        ls.launch {
+        viewOwner.lifecycleScope.launch {
             val providers = try {
                 viewModel.getAllProviders()
             } catch (e: Exception) {
@@ -124,7 +128,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
             adapter.submitItems(providers)
         }
 
-        ls.launch {
+        viewOwner.lifecycleScope.launch {
             try {
                 val isCustomTabsEnabled = viewModel.useCustomTabs().also {
                     useCustomTabs = it
@@ -264,7 +268,7 @@ class ChooseRemoteDictionaryProviderFragment : Fragment() {
             "io.github.pelmenstar1.digiDict.ChooseRDPFragment.isBrowserLaunched"
 
         internal fun RemoteDictionaryProviderInfo.resolvedUrlParsed(query: String): Uri {
-            return Uri.parse(resolvedUrl(query))
+            return resolvedUrl(query).toUri()
         }
     }
 }

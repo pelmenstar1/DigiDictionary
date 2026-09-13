@@ -14,6 +14,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.common.ui.ColorPaletteView
 import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
+import io.github.pelmenstar1.digiDict.commonTestUtils.padBySystemBarInsets
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -27,6 +28,8 @@ class ColorPaletteViewTests {
             super.onCreate(savedInstanceState)
 
             setContentView(FrameLayout(this).apply {
+                padBySystemBarInsets()
+
                 colorPalette = createColorPalette()
 
                 addView(colorPalette)

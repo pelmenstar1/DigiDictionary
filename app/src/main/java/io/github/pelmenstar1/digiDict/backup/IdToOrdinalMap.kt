@@ -40,7 +40,7 @@ class IdToOrdinalMap {
     /**
      * Constructs the [IdToOrdinalMap] instance with specified [values] array from which ids are extracted.
      *
-     * Note that it will be the final state of the map and it can't be no longer mutated.
+     * Note that it will be the final state of the map, and it can be no longer mutated.
      */
     constructor(values: Array<out EntityWithPrimaryKeyId>) {
         capacity = values.size
@@ -51,7 +51,7 @@ class IdToOrdinalMap {
     /**
      * Constructs the [IdToOrdinalMap] instance with specified array of ids.
      *
-     * Note that it will be the final state of the map and it can't be no longer mutated.
+     * Note that it will be the final state of the map, and it can be no longer mutated.
      */
     constructor(ids: IntArray) {
         capacity = ids.size

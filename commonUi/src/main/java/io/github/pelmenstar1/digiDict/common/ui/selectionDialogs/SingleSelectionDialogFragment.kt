@@ -23,7 +23,7 @@ abstract class SingleSelectionDialogFragment<TValue> : AbstractSelectionDialogFr
     var onValueSelected: ((TValue) -> Unit)? = null
 
     /**
-     * Gets an array resource that stores a string array that contains an additional information for each corresponding choice.
+     * Gets an array resource that stores a string array that contains additional information for each corresponding choice.
      *
      * It can return 0 as a mark that such info should not be shown and doesn't exist.
      * If resource id is not 0, the size of the array should be the same as array retrieved from [choices].

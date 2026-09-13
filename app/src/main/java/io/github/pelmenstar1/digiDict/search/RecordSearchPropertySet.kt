@@ -105,7 +105,7 @@ class RecordSearchPropertySet : Set<RecordSearchProperty>, Parcelable {
     }
 
     companion object {
-        private val ALL_ELEMENTS = RecordSearchProperty.values()
+        private val ALL_ELEMENTS = RecordSearchProperty.entries.toTypedArray()
         private val ALL = RecordSearchPropertySet(bits = 0x3)
 
         fun all(): RecordSearchPropertySet = ALL

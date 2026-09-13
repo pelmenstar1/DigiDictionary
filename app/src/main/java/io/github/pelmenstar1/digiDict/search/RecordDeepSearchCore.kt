@@ -55,6 +55,7 @@ object RecordDeepSearchCore : RecordSearchCore {
                         return true
                     }
                 }
+
                 ComplexMeaning.LIST_MARKER -> {
                     ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
                         if (filterPredicateOnTextRange(meaning, start, end, query, queryFlags)) {
@@ -177,6 +178,7 @@ object RecordDeepSearchCore : RecordSearchCore {
                 ComplexMeaning.COMMON_MARKER -> {
                     calculateFoundRangesOnTextRange(meaning, 1, meaning.length, query, queryFlags, list)
                 }
+
                 ComplexMeaning.LIST_MARKER -> {
                     ComplexMeaning.iterateListElementRanges(meaning) { start, end ->
                         calculateFoundRangesOnTextRange(meaning, start, end, query, queryFlags, list)

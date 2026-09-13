@@ -7,8 +7,10 @@
     tools:context=".ui.MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/main_appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
@@ -16,9 +18,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?colorSurface"
-            app:title="@string/home_label"
             app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="?attr/colorControlNormal" />
+            app:navigationIconTint="?attr/colorControlNormal"
+            app:title="@string/home_label" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -27,8 +29,8 @@
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:defaultNavHost="true"
-        app:navGraph="@navigation/main_nav_graph"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:navGraph="@navigation/main_nav_graph" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

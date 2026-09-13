@@ -2,7 +2,10 @@ package io.github.pelmenstar1.digiDict
 
 import androidx.recyclerview.widget.DiffUtil
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.FilteredArray
+import io.github.pelmenstar1.digiDict.common.FilteredArrayDiffManager
+import io.github.pelmenstar1.digiDict.common.containsLetterOrDigit
+import io.github.pelmenstar1.digiDict.common.mapToArrayIndexed
 import io.github.pelmenstar1.digiDict.commonTestUtils.Diff
 import io.github.pelmenstar1.digiDict.commonTestUtils.toArray
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
@@ -38,7 +41,7 @@ class RecordSearchManagerTests {
             manager.currentRecords = realisticRecords
 
             var expectedPrevData: Array<ConciseRecordWithBadges>? = null
-            val sortTypes = RecordSortType.values()
+            val sortTypes = RecordSortType.entries.toTypedArray()
 
             for (query in queries) {
                 for (sortType in sortTypes) {
@@ -128,7 +131,6 @@ class RecordSearchManagerTests {
         val newActualPrevData = newResult.previousData.toArray()
 
         // old current data is new previous data by now.
-        @Suppress("UnnecessaryVariable")
         val newExpectedPrevData = oldActualCurrentData
 
         assertContentEquals(newExpectedCurrentData, newActualCurrentData)

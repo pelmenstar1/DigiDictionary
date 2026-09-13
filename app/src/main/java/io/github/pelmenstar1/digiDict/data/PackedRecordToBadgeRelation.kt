@@ -2,8 +2,6 @@
 
 package io.github.pelmenstar1.digiDict.data
 
-import java.util.*
-
 fun PackedRecordToBadgeRelation(recordId: Int, badgeId: Int): PackedRecordToBadgeRelation {
     val packed = (recordId.toLong() and 0xFFFFFFFFL) or (badgeId.toLong() shl 32)
 

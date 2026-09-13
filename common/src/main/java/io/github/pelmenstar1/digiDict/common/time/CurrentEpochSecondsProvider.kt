@@ -1,6 +1,6 @@
 package io.github.pelmenstar1.digiDict.common.time
 
-import java.util.*
+import java.util.TimeZone
 
 interface CurrentEpochSecondsProvider {
     class Locality private constructor() {

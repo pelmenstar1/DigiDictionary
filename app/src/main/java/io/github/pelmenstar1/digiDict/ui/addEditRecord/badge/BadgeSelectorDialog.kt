@@ -4,14 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.common.EmptyArray
 import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.databinding.DialogBadgeSelectorBinding
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordFragmentDirections
@@ -25,7 +24,9 @@ class BadgeSelectorDialog : MaterialDialogFragment() {
     override fun createDialogView(layoutInflater: LayoutInflater, savedInstanceState: Bundle?): View {
         val context = requireContext()
         val vm = viewModel
-        val ls = lifecycleScope
+        // A MaterialDialogFragment builds its content in onCreateDialog, so it has no view lifecycle
+        // owner; the dialog lives exactly as long as the fragment.
+        val owner = this
         val navController = findNavController()
 
         val binding = DialogBadgeSelectorBinding.inflate(layoutInflater, null, false)
@@ -40,7 +41,7 @@ class BadgeSelectorDialog : MaterialDialogFragment() {
             it.layoutManager = LinearLayoutManager(context)
             it.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
 
-            ls.launchFlowCollector(vm.validBadgesFlow) { data ->
+            owner.launchFlowCollector(vm.validBadgesFlow) { data ->
                 if (data.isEmpty()) {
                     it.visibility = View.GONE
                 } else {

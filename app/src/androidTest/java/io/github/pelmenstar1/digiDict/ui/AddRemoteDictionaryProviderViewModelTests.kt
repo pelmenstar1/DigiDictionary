@@ -13,7 +13,9 @@ import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
 import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderViewModel
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
+import io.github.pelmenstar1.digiDict.utils.RemoteDictionaryProviderDaoStub
+import io.github.pelmenstar1.digiDict.utils.reset
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -22,7 +24,12 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.*
+import kotlin.test.Ignore
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class AddRemoteDictionaryProviderViewModelTests {
@@ -152,9 +159,9 @@ class AddRemoteDictionaryProviderViewModelTests {
         val dao = db.remoteDictionaryProviderDao()
 
         // URL validity, $query$ checks should be run first, so URL's should be valid
-        dao.insert(createProvider("Name1", "https://a.com/\$query$"))
-        dao.insert(createProvider("Name2", "https://b.com/\$query$"))
-        dao.insert(createProvider("Name3", "https://c.com/\$query$"))
+        dao.insert(createProvider("Name1", $$"https://a.com/$query$"))
+        dao.insert(createProvider("Name2", $$"https://b.com/$query$"))
+        dao.insert(createProvider("Name3", $$"https://c.com/$query$"))
 
         val vm = createViewModel(dao)
 
@@ -165,9 +172,9 @@ class AddRemoteDictionaryProviderViewModelTests {
         }
 
         vm.use {
-            testCase("https://a.com/\$query$")
-            testCase("https://b.com/\$query$")
-            testCase("https://c.com/\$query$")
+            testCase($$"https://a.com/$query$")
+            testCase($$"https://b.com/$query$")
+            testCase($$"https://c.com/$query$")
         }
     }
 
@@ -176,13 +183,13 @@ class AddRemoteDictionaryProviderViewModelTests {
         val dao = db.remoteDictionaryProviderDao()
 
         // URL validity, $query$ checks should be run first, so URL's should be valid
-        dao.insert(createProvider("Name1", "https://a.com/\$query$"))
-        dao.insert(createProvider("Name2", "https://b.com/\$query$"))
+        dao.insert(createProvider("Name1", $$"https://a.com/$query$"))
+        dao.insert(createProvider("Name2", $$"https://b.com/$query$"))
 
         val vm = createViewModel(dao)
 
         vm.use {
-            vm.schema = "https://c.com/\$query$"
+            vm.schema = $$"https://c.com/$query$"
 
             assertSchemaValidState(vm)
         }
@@ -210,14 +217,14 @@ class AddRemoteDictionaryProviderViewModelTests {
 
         vm.use {
             vm.name = "Provider1"
-            vm.schema = "https://a.com/\$query$"
+            vm.schema = $$"https://a.com/$query$"
             vm.spaceReplacement = '_'
 
             vm.addAction.runAndWaitForResult()
 
             val info = db.remoteDictionaryProviderDao().getByName("Provider1")!!
 
-            assertEquals("https://a.com/\$query$", info.schema)
+            assertEquals($$"https://a.com/$query$", info.schema)
             assertEquals('_', info.urlEncodingRules.spaceReplacement)
         }
     }
@@ -316,7 +323,7 @@ class AddRemoteDictionaryProviderViewModelTests {
         // Trigger name check and fetching all providers.
         vm.name = "123"
 
-        // The checking is expected to fail due to an exception and in that case, inputs should be dsiabled.
+        // The checking is expected to fail due to an exception and in that case, inputs should be disabled.
         assertFalse(vm.isInputEnabledFlow.first())
 
         vm.restartValidityCheck()
@@ -343,10 +350,10 @@ class AddRemoteDictionaryProviderViewModelTests {
         testCase(value = "https:/google.com", expected = false)
         testCase(value = ".abc.com/", expected = false)
         testCase(value = "https://google./aa", expected = false)
-        testCase(value = "https://aaa.com/\$query", expected = false)
+        testCase(value = $$"https://aaa.com/$query", expected = false)
         testCase(value = "https://aa.com/query$", expected = false)
-        testCase(value = "https://aabb.com/\$query$", expected = true)
-        testCase(value = "https://abc1123.mmm/\$query\$123", expected = true)
+        testCase(value = $$"https://aabb.com/$query$", expected = true)
+        testCase(value = $$"https://abc1123.mmm/$query$123", expected = true)
     }
 
     companion object {

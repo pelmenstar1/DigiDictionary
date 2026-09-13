@@ -31,8 +31,10 @@ class ImportConfigurationViewModel @Inject constructor(
             importBadgesFlow.value = value
         }
 
+    data class ImportRequest(val context: Context, val source: Uri, val format: BackupFormat)
+
     var replaceBadges: Boolean = true
-    val importAction = viewModelAction<Context, Uri, BackupFormat>(TAG, Dispatchers.IO) { context, source, format ->
+    val importAction = viewModelAction<ImportRequest>(TAG, Dispatchers.IO) { (context, source, format) ->
         val options = ImportOptions(importBadges, replaceBadges)
         val reporter = operationProgressReporter
 

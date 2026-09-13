@@ -4,6 +4,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.test.assertFailsWith
+import kotlin.time.Duration.Companion.milliseconds
 
 class AssertsTests {
     @Test
@@ -16,7 +17,7 @@ class AssertsTests {
     @Test
     fun assertTimeoutShouldNotThrowTest(): Unit = runBlocking {
         assertTimeout(timeout = 100) {
-            delay(200)
+            delay(200.milliseconds)
         }
     }
 }

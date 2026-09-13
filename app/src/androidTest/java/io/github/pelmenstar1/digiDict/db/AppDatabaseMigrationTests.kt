@@ -6,7 +6,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.pelmenstar1.digiDict.common.equalsPattern
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
+import io.github.pelmenstar1.digiDict.data.EntityWithPrimaryKeyId
+import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
 import org.junit.Rule
 import org.junit.Test
@@ -20,7 +24,7 @@ class AppDatabaseMigrationTests {
     data class RemoteDictionaryProvider_4(
         override val id: Int = 0, val name: String, val schema: String
     ) : EntityWithPrimaryKeyId {
-        override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+        override fun equalsNoId(other: Any?): Boolean = equalsPattern(other) { o ->
             return name == o.name && schema == o.schema
         }
     }
@@ -138,11 +142,11 @@ class AppDatabaseMigrationTests {
         private val PREDEFINED_PROVIDERS_4 = arrayOf(
             RemoteDictionaryProvider_4(
                 name = "Cambridge English Dictionary",
-                schema = "https://dictionary.cambridge.org/dictionary/english/\$query$",
+                schema = $$"https://dictionary.cambridge.org/dictionary/english/$query$",
             ),
             RemoteDictionaryProvider_4(
                 name = "Urban Dictionary",
-                schema = "https://www.urbandictionary.com/define.php?term=\$query$",
+                schema = $$"https://www.urbandictionary.com/define.php?term=$query$",
             )
         )
 
@@ -158,7 +162,7 @@ class AppDatabaseMigrationTests {
         ) {
             execSQL(
                 "INSERT INTO records (`expression`, `meaning`, `additionalNotes`, `score`, `dateTime`) VALUES (?, ?, ?, ?, ?)",
-                arrayOf(expr, rawMeaning, notes, score, epochSeconds)
+                arrayOf<Any>(expr, rawMeaning, notes, score, epochSeconds)
             )
         }
 

@@ -3,7 +3,11 @@ package io.github.pelmenstar1.digiDict
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
-import io.github.pelmenstar1.digiDict.search.*
+import io.github.pelmenstar1.digiDict.search.RecordDeepSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchMetadataProviderOnCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
+import io.github.pelmenstar1.digiDict.search.RecordSearchProperty
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
 import io.github.pelmenstar1.digiDict.utils.IntRangeSection
 import org.junit.Test
 import org.junit.runner.RunWith

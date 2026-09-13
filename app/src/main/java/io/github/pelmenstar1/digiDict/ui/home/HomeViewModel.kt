@@ -12,22 +12,33 @@ import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.android.onDatabaseTablesUpdated
 import io.github.pelmenstar1.digiDict.common.filterTrue
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
+import io.github.pelmenstar1.digiDict.common.trimToString
 import io.github.pelmenstar1.digiDict.data.AppDatabase
 import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.data.getAllConciseRecordsWithBadges
 import io.github.pelmenstar1.digiDict.data.getAllSortedPackedRecordToBadgeRelations
-import io.github.pelmenstar1.digiDict.search.*
-import io.github.pelmenstar1.digiDict.ui.home.search.GlobalSearchQueryProvider
+import io.github.pelmenstar1.digiDict.search.RecordSearchCore
+import io.github.pelmenstar1.digiDict.search.RecordSearchManager
+import io.github.pelmenstar1.digiDict.search.RecordSearchOptions
+import io.github.pelmenstar1.digiDict.search.RecordSearchPropertySet
+import io.github.pelmenstar1.digiDict.search.RecordSearchResult
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
 import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val appDatabase: AppDatabase,
     searchCore: RecordSearchCore,
+    val recordTextPrecomputeController: RecordTextPrecomputeController,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     val sortTypeFlow = savedStateHandle.getStateFlow(KEY_SORT_TYPE, RecordSortType.NEWEST)
@@ -45,23 +56,37 @@ class HomeViewModel @Inject constructor(
             savedStateHandle[KEY_SORT_TYPE] = value
         }
 
-    /**
-     * Gets or sets [RecordTextPrecomputeController] of the view-model.
-     *
-     * By the time of collecting [items] flow, the [recordTextPrecomputeController] value should be non-null.
-     */
-    var recordTextPrecomputeController: RecordTextPrecomputeController? = null
-
     val items = Pager(
         config = PagingConfig(pageSize = 20, enablePlaceholders = false),
         pagingSourceFactory = {
             AppPagingSource(
                 appDatabase,
                 sortType,
-                recordTextPrecomputeController!!
+                recordTextPrecomputeController
             )
         }
     ).flow.cachedIn(viewModelScope)
+
+    // The search state belongs to this screen, so it lives here rather than in a process-wide
+    // singleton. Like every other view-model property it survives a configuration change and is
+    // discarded together with the screen, and it can be driven directly by a test.
+    private val _isSearchActiveFlow = MutableStateFlow(false)
+    val isSearchActiveFlow = _isSearchActiveFlow.asStateFlow()
+
+    var isSearchActive: Boolean
+        get() = _isSearchActiveFlow.value
+        set(value) {
+            _isSearchActiveFlow.value = value
+        }
+
+    private val _searchQueryFlow = MutableStateFlow("")
+    val searchQueryFlow = _searchQueryFlow.asStateFlow()
+
+    var searchQuery: CharSequence
+        get() = _searchQueryFlow.value
+        set(value) {
+            _searchQueryFlow.value = value.trimToString()
+        }
 
     private val searchManager = RecordSearchManager(searchCore)
     private val searchOptionsFlow = searchPropertiesFlow.map {
@@ -78,8 +103,7 @@ class HomeViewModel @Inject constructor(
             // This makes getAllConciseRecordsWithSearchInfoAndBadges() being invoked once
             // value of isActiveFlow is true. When value is changed from true to false,
             // filterTrue() will prevent false to trigger collection.
-            val recordFlow = GlobalSearchQueryProvider
-                .isActiveFlow
+            val recordFlow = isSearchActiveFlow
                 .filterTrue()
                 .distinctUntilChanged()
                 .map {
@@ -93,7 +117,7 @@ class HomeViewModel @Inject constructor(
                 }
 
             combine(
-                GlobalSearchQueryProvider.queryFlow, sortTypeFlow, searchOptionsFlow, recordFlow
+                searchQueryFlow, sortTypeFlow, searchOptionsFlow, recordFlow
             ) { query, sortType, options, _ ->
                 searchManager.onSearchRequest(query, sortType, options)
             }.flowOn(Dispatchers.Default)

@@ -87,11 +87,3 @@ inline fun Fragment.showAlertDialog(
 ) {
     showAlertDialog(requireContext(), messageId, positionButtonAction)
 }
-
-inline fun Fragment.showAlertDialog(
-    @StringRes messageId: Int,
-    crossinline positionButtonAction: () -> Unit,
-    crossinline negativeButtonAction: () -> Unit
-) {
-    showAlertDialog(requireContext(), messageId, positionButtonAction, negativeButtonAction)
-}

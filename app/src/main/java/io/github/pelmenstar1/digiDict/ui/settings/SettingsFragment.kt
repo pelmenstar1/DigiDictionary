@@ -1,13 +1,11 @@
 package io.github.pelmenstar1.digiDict.ui.settings
 
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -15,7 +13,7 @@ import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.preferences.AppPreferences
 import io.github.pelmenstar1.digiDict.common.ui.SimpleProgressIndicatorDialogManager
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
@@ -56,14 +54,11 @@ class SettingsFragment : Fragment() {
                 requestDeleteAllRecords()
             }
 
-            // On lower API levels, there are no break strategy and hyphenation items
-            if (Build.VERSION.SDK_INT >= 23) {
-                bindTextFormatter({ recordTextBreakStrategy }, ResourcesBreakStrategyStringFormatter(context))
-                bindTextFormatter({ recordTextHyphenationFrequency }, ResourcesHyphenationStringFormatter(context))
+            bindTextFormatter({ recordTextBreakStrategy }, ResourcesBreakStrategyStringFormatter(context))
+            bindTextFormatter({ recordTextHyphenationFrequency }, ResourcesHyphenationStringFormatter(context))
 
-                registerChangeValueDialog { recordTextBreakStrategy }
-                registerChangeValueDialog { recordTextHyphenationFrequency }
-            }
+            registerChangeValueDialog { recordTextBreakStrategy }
+            registerChangeValueDialog { recordTextHyphenationFrequency }
 
             registerChangeValueDialog { scorePointsPerCorrectAnswer }
             registerChangeValueDialog { scorePointsPerWrongAnswer }
@@ -72,17 +67,17 @@ class SettingsFragment : Fragment() {
             initDialogsIfShown()
         }
 
-        showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(vm.deleteAllRecordsAction, container, R.string.dbError)
 
-        lifecycleScope.also { ls ->
-            ls.launchFlowCollector(vm.deleteAllRecordsAction.successFlow) {
+        viewLifecycleOwner.also { viewOwner ->
+            viewOwner.launchFlowCollector(vm.deleteAllRecordsAction.successFlow) {
                 if (container != null) {
                     Snackbar.make(container, R.string.settings_deleteAllSuccess, Snackbar.LENGTH_LONG)
                         .showLifecycleAwareSnackbar(lifecycle)
                 }
             }
 
-            ls.launchFlowCollector(
+            viewOwner.launchFlowCollector(
                 vm.dataStateFlow.transform {
                     if (it is DataLoadState.Success<DigiDictAppPreferences.Snapshot>) {
                         emit(it.value.widgetListMaxSize)
@@ -92,7 +87,7 @@ class SettingsFragment : Fragment() {
                 ListAppWidget.updater(context).updateAllWidgets()
             }
 
-            binding.settingsContainer.setupLoadStateFlow(ls, vm) { snapshot ->
+            binding.settingsContainer.setupLoadStateFlow(viewOwner, vm) { snapshot ->
                 settingsController.applySnapshot(snapshot)
             }
         }
@@ -197,37 +192,33 @@ class SettingsFragment : Fragment() {
                 group(R.string.settings_miscGroup) {
                     actionItem(ACTION_DELETE_ALL_RECORDS, R.string.settings_deleteAllRecords)
 
-                    if (Build.VERSION.SDK_INT >= 23) {
-                        item(
-                            nameRes = R.string.settings_breakStrategy,
-                            preferenceEntry = { recordTextBreakStrategy },
-                            clickable = true
-                        ) {
-                            text()
-                        }
+                    item(
+                        nameRes = R.string.settings_breakStrategy,
+                        preferenceEntry = { recordTextBreakStrategy },
+                        clickable = true
+                    ) {
+                        text()
+                    }
 
-                        item(
-                            nameRes = R.string.settings_hyphenation,
-                            preferenceEntry = { recordTextHyphenationFrequency },
-                            clickable = true
-                        ) {
-                            text()
-                        }
+                    item(
+                        nameRes = R.string.settings_hyphenation,
+                        preferenceEntry = { recordTextHyphenationFrequency },
+                        clickable = true
+                    ) {
+                        text()
                     }
                 }
             }
 
             dialogs {
-                if (Build.VERSION.SDK_INT >= 23) {
-                    dialog<_, BreakStrategyDialogFragment>(
-                        entry = { recordTextBreakStrategy },
-                        createArgs = BreakStrategyDialogFragment::createArguments
-                    )
-                    dialog<_, HyphenationDialogFragment>(
-                        entry = { recordTextHyphenationFrequency },
-                        createArgs = HyphenationDialogFragment::createArguments
-                    )
-                }
+                dialog<_, BreakStrategyDialogFragment>(
+                    entry = { recordTextBreakStrategy },
+                    createArgs = BreakStrategyDialogFragment::createArguments
+                )
+                dialog<_, HyphenationDialogFragment>(
+                    entry = { recordTextHyphenationFrequency },
+                    createArgs = HyphenationDialogFragment::createArguments
+                )
 
                 numberDialog(
                     entry = { scorePointsPerCorrectAnswer },

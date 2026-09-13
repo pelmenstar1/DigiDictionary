@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.firstSuccess
-import io.github.pelmenstar1.digiDict.commonTestUtils.clearThroughReflection
+import io.github.pelmenstar1.digiDict.commonTestUtils.clear
 import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
 import io.github.pelmenstar1.digiDict.commonTestUtils.waitUntilSuccessOrThrowOnError
 import io.github.pelmenstar1.digiDict.data.AppDatabase
@@ -13,7 +13,11 @@ import io.github.pelmenstar1.digiDict.data.Record
 import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
 import io.github.pelmenstar1.digiDict.data.RecordDao
 import io.github.pelmenstar1.digiDict.ui.viewRecord.ViewRecordViewModel
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
+import io.github.pelmenstar1.digiDict.utils.AppWidgetUpdaterStub
+import io.github.pelmenstar1.digiDict.utils.RecordDaoStub
+import io.github.pelmenstar1.digiDict.utils.addRecordAndBadges
+import io.github.pelmenstar1.digiDict.utils.reset
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -27,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 class ViewRecordViewModelTests {
@@ -56,7 +61,7 @@ class ViewRecordViewModelTests {
         val deletedRecord = dao.getRecordById(expectedToDeleteRecord.id)
         assertNull(deletedRecord)
 
-        vm.clearThroughReflection()
+        vm.clear()
     }
 
     @Test
@@ -75,7 +80,7 @@ class ViewRecordViewModelTests {
             assertEquals(expectedRecordWithBadges, actualRecord)
 
             db.reset()
-            vm.clearThroughReflection()
+            vm.clear()
         }
 
         testCase(badges = emptyArray())
@@ -89,7 +94,7 @@ class ViewRecordViewModelTests {
     }
 
     @Test
-    fun refreshRecordTest() = runTest(dispatchTimeoutMs = 10_000) {
+    fun refreshRecordTest() = runTest(timeout = 10.seconds) {
         suspend fun testCase(badges: Array<RecordBadgeInfo>) {
             val expectedRecordId = 4
             val expectedRecordWithBadges = db.addRecordAndBadges(
@@ -123,7 +128,7 @@ class ViewRecordViewModelTests {
             vm.id = expectedRecordId
 
             // There should be error state, if there are not, test will time out.
-            vm.dataStateFlow.filterIsInstance<DataLoadState.Error<Record?>>().first()
+            vm.dataStateFlow.filterIsInstance<DataLoadState.Error>().first()
 
             vm.retryLoadData()
 
@@ -131,7 +136,7 @@ class ViewRecordViewModelTests {
             assertEquals(expectedRecordWithBadges, actualRecord)
 
             db.reset()
-            vm.clearThroughReflection()
+            vm.clear()
         }
 
         testCase(badges = emptyArray())

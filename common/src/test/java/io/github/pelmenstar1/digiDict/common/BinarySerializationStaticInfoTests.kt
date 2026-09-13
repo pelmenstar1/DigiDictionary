@@ -1,6 +1,12 @@
 package io.github.pelmenstar1.digiDict.common
 
-import io.github.pelmenstar1.digiDict.common.binarySerialization.*
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializationCompatInfo
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializationStaticInfo
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializer
+import io.github.pelmenstar1.digiDict.common.binarySerialization.BinarySerializerResolver
+import io.github.pelmenstar1.digiDict.common.binarySerialization.PrimitiveValueReader
+import io.github.pelmenstar1.digiDict.common.binarySerialization.PrimitiveValueWriter
+import io.github.pelmenstar1.digiDict.common.binarySerialization.SimpleBinarySerializationSectionKeys
 import org.junit.Test
 import kotlin.test.assertFails
 import kotlin.test.assertSame

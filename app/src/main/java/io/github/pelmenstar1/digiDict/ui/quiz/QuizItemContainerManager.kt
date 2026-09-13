@@ -1,13 +1,11 @@
 package io.github.pelmenstar1.digiDict.ui.quiz
 
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.EmptyArray
 import io.github.pelmenstar1.digiDict.common.android.BreakStrategy
@@ -27,6 +25,7 @@ class QuizItemContainerManager(
     private inner class ItemViewHolder(@JvmField val container: ViewGroup) {
         @JvmField
         val expressionView: TextView
+
         @JvmField
         val meaningView: TextView
         private val correctButton: Button
@@ -83,11 +82,13 @@ class QuizItemContainerManager(
                     wrongButton.visibility = View.GONE
                     meaningView.visibility = View.INVISIBLE
                 }
+
                 ITEM_STATE_EXTENDED -> {
                     correctButton.visibility = View.VISIBLE
                     wrongButton.visibility = View.VISIBLE
                     meaningView.visibility = View.VISIBLE
                 }
+
                 ITEM_STATE_CORRECT, ITEM_STATE_WRONG -> {
                     correctButton.visibility = View.GONE
                     wrongButton.visibility = View.GONE
@@ -141,7 +142,6 @@ class QuizItemContainerManager(
     /**
      * Changes break strategy and hyphenation frequency of all items in the container.
      */
-    @RequiresApi(23)
     fun setBreakStrategyAndHyphenationToItems(info: TextBreakAndHyphenationInfo) {
         val hf = info.hyphenationFrequency
         val bs = info.breakStrategy
@@ -162,7 +162,6 @@ class QuizItemContainerManager(
         }
     }
 
-    @RequiresApi(23)
     private fun setBreakAndHyphenationToItemContainer(
         exprView: TextView,
         meaningView: TextView,
@@ -184,10 +183,8 @@ class QuizItemContainerManager(
         }
 
         return ItemViewHolder(view as ViewGroup).also { vh ->
-            if (Build.VERSION.SDK_INT >= 23) {
-                breakAndHyphenationInfo?.also { info ->
-                    setBreakAndHyphenationToItemContainer(vh.expressionView, vh.meaningView, info)
-                }
+            breakAndHyphenationInfo?.also { info ->
+                setBreakAndHyphenationToItemContainer(vh.expressionView, vh.meaningView, info)
             }
         }
     }

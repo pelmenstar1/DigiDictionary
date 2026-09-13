@@ -3,11 +3,11 @@ package io.github.pelmenstar1.digiDict.common.binarySerialization
 import io.github.pelmenstar1.digiDict.common.equalsPattern
 
 /**
- * Stores a raw information of compatibility info packed as 64-bit int.
+ * Stores raw information of compatibility info packed as 64-bit int.
  */
 class BinarySerializationCompatInfo(val bits: Long) {
     /**
-     * Gets whether bit at given [index] is set.
+     * Gets whether a bit at given [index] is set.
      */
     operator fun get(index: Int): Boolean {
         require(index in 0 until 64) { "Index is out of bounds" }

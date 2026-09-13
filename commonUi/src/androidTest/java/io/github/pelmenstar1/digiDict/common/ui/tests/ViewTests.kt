@@ -19,20 +19,20 @@ class ViewTests {
         testCase(1, 1)
         testCase(2, 2)
 
-        // When there's no views in the start and we want to add some
+        // When there's no views in the start, and we want to add some
         testCase(0, 1)
         testCase(0, 5)
 
-        // When there's some views and we want to add more
+        // When there's some views, and we want to add more
         testCase(5, 6)
         testCase(1, 2)
         testCase(2, 10)
 
-        // When there's some views and we want to remove all the views
+        // When there's some views, and we want to remove all the views
         testCase(1, 0)
         testCase(5, 0)
 
-        // When there's some views and we want to remove some
+        // When there's some views, and we want to remove some
         testCase(5, 1)
         testCase(5, 4)
         testCase(2, 1)

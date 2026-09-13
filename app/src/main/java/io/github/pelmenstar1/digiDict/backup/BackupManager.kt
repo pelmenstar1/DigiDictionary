@@ -8,14 +8,35 @@ import io.github.pelmenstar1.digiDict.backup.exporting.BinaryDataExporter
 import io.github.pelmenstar1.digiDict.backup.exporting.DataExporter
 import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.backup.exporting.JsonDataExporter
-import io.github.pelmenstar1.digiDict.backup.importing.*
+import io.github.pelmenstar1.digiDict.backup.importing.BinaryDataImporter
+import io.github.pelmenstar1.digiDict.backup.importing.DataImporter
+import io.github.pelmenstar1.digiDict.backup.importing.ImportException
+import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
+import io.github.pelmenstar1.digiDict.backup.importing.JsonDataImporter
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.common.trackLoopProgressWith
 import io.github.pelmenstar1.digiDict.common.trackProgressWith
-import io.github.pelmenstar1.digiDict.data.*
-import java.io.*
-import java.util.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
+import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.data.bindRecordBadgeToInsertStatement
+import io.github.pelmenstar1.digiDict.data.bindRecordToBadgeInsertStatement
+import io.github.pelmenstar1.digiDict.data.bindRecordToInsertStatement
+import io.github.pelmenstar1.digiDict.data.compileInsertOrReplaceRecordBadgeStatement
+import io.github.pelmenstar1.digiDict.data.compileInsertRecordBadgeStatement
+import io.github.pelmenstar1.digiDict.data.compileInsertRecordStatement
+import io.github.pelmenstar1.digiDict.data.compileInsertRecordToBadgeRelation
+import io.github.pelmenstar1.digiDict.data.getAllRecordBadgesOrderByIdAsc
+import io.github.pelmenstar1.digiDict.data.getAllRecordToBadgeRelations
+import io.github.pelmenstar1.digiDict.data.getAllRecordsOrderByIdAsc
+import java.io.FileDescriptor
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.EnumMap
 
 object BackupManager {
     private val exporters = EnumMap<BackupFormat, DataExporter>(BackupFormat::class.java).apply {

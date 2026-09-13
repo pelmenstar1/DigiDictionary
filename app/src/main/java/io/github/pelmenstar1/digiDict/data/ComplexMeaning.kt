@@ -125,7 +125,7 @@ class ComplexMeaning private constructor(
 
         /**
          * Returns how much distinct meaning is stored in a raw meaning string.
-         * The method does a little bit of validating the meaning but it may return wrong value in case the meaning is
+         * The method does a little bit of validating the meaning, but it may return wrong value in case the meaning is
          * encoded incorrectly.
          *
          * @throws IllegalArgumentException if rawText is in invalid format.
@@ -152,6 +152,7 @@ class ComplexMeaning private constructor(
 
                     count
                 }
+
                 else -> throwInvalidFormat(rawText)
             }
         }
@@ -170,6 +171,7 @@ class ComplexMeaning private constructor(
                 COMMON_MARKER -> {
                     ComplexMeaning(rawText, elements = null)
                 }
+
                 LIST_MARKER -> {
                     // Skip mark character
                     val firstDelimiterIndex = rawText.indexOf('@', 1)
@@ -200,6 +202,7 @@ class ComplexMeaning private constructor(
 
                     ComplexMeaning(rawText, elements)
                 }
+
                 else -> throwInvalidFormat(rawText)
             }
         }
@@ -301,6 +304,7 @@ class ComplexMeaning private constructor(
 
                     actualElementCount == count
                 }
+
                 else -> false
             }
         }

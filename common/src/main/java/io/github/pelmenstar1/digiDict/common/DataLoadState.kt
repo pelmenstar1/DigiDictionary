@@ -2,29 +2,37 @@ package io.github.pelmenstar1.digiDict.common
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 
 typealias DataLoadStateFlow<T> = Flow<DataLoadState<T>>
 
-sealed class DataLoadState<out T> {
-    class Loading<T> internal constructor() : DataLoadState<T>() {
-        override fun toString() = "DataLoadState.Loading"
-    }
+sealed interface DataLoadState<out T> {
+    /**
+     * [Loading] and [Error] carry no value, so they are declared as `DataLoadState<Nothing>`. As
+     * the type parameter is covariant, that already makes them usable as a `DataLoadState<T>` for
+     * any [T], which is what the shared instances behind the previous `loading()` and `error()`
+     * factories achieved with an unchecked cast.
+     */
+    data object Loading : DataLoadState<Nothing>
 
-    class Error<T> internal constructor() : DataLoadState<T>() {
-        override fun toString() = "DataLoadState.Error"
-    }
+    /**
+     * @param cause what made the load fail. It is kept so that a caller can report or inspect it;
+     * dropping it here used to leave nothing to attach to a crash report.
+     */
+    data class Error(val cause: Throwable) : DataLoadState<Nothing>
 
-    data class Success<T>(val value: T) : DataLoadState<T>()
-
-    @Suppress("UNCHECKED_CAST")
-    companion object {
-        private val LOADING = Loading<Any>()
-        private val ERROR = Error<Any>()
-
-        fun <T> loading() = LOADING as Loading<T>
-        fun <T> error() = ERROR as Error<T>
-    }
+    data class Success<T>(val value: T) : DataLoadState<T>
 }
 
 private const val LOG_LOAD_STATES = false
@@ -34,7 +42,7 @@ class DataLoadStateManager<T>(val logTag: String) {
         fun fromAction(block: suspend () -> T): DataLoadStateFlow<T> {
             return flow {
                 logLoading()
-                emit(DataLoadState.loading())
+                emit(DataLoadState.Loading)
 
                 try {
                     val value = block()
@@ -44,7 +52,7 @@ class DataLoadStateManager<T>(val logTag: String) {
                 } catch (e: Exception) {
                     logError(e)
 
-                    emit(DataLoadState.error())
+                    emit(DataLoadState.Error(e))
                 }
             }
         }
@@ -57,11 +65,11 @@ class DataLoadStateManager<T>(val logTag: String) {
             }.onStart {
                 logLoading()
 
-                emit(DataLoadState.loading())
+                emit(DataLoadState.Loading)
             }.catch { e ->
                 logError(e)
 
-                emit(DataLoadState.error())
+                emit(DataLoadState.Error(e))
             }
         }
 
@@ -84,7 +92,7 @@ class DataLoadStateManager<T>(val logTag: String) {
             } catch (e: Exception) {
                 Log.e(manager.logTag, "", e)
 
-                flowOf(DataLoadState.error())
+                flowOf(DataLoadState.Error(e))
             }
         }
     }
@@ -105,10 +113,6 @@ class DataLoadStateManager<T>(val logTag: String) {
     fun retry() {
         retryFlow.value = Any()
     }
-
-    internal suspend fun retrySuspend() {
-        retryFlow.emit(Any())
-    }
 }
 
 /**
@@ -120,7 +124,7 @@ suspend fun <T> Flow<DataLoadState<T>>.firstSuccess(): T {
 
 /**
  * Returns the value of most recent state emitted by the flow if it's of type [DataLoadState.Success].
- * Otherwise returns `null`.
+ * Otherwise, returns `null`.
  */
 fun <T> SharedFlow<DataLoadState<T>>.tryGetSuccess(): T? {
     val state = replayCache.getOrNull(0)

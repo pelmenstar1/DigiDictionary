@@ -120,8 +120,9 @@ fun CharSequence.subSequenceToString(start: Int, end: Int): String {
             val buffer = CharArray(end - start)
             getChars(start, end, buffer, 0)
 
-            return String(buffer)
+            String(buffer)
         }
+
         else -> subSequence(start, end).toString()
     }
 }

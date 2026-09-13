@@ -3,15 +3,16 @@ package io.github.pelmenstar1.digiDict.common.ui.settings
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.setPadding
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
@@ -71,6 +72,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                             contentOnClickListener
                         )
                     }
+
                     is SettingsDescriptor.LinkItem -> {
                         createLinkItemContainer(
                             item,
@@ -79,6 +81,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
                             linkOnClickListener
                         )
                     }
+
                     is SettingsDescriptor.ActionItem -> {
                         createActionItemContainer(
                             item,
@@ -99,7 +102,7 @@ class SettingsInflater<TEntries : AppPreferences.Entries>(private val context: C
     private fun getTitleBackground(context: Context): Drawable {
         val colorSurfaceVariant = context.getColorSurfaceVariant(defaultColor = Color.TRANSPARENT)
 
-        return ColorDrawable(colorSurfaceVariant)
+        return colorSurfaceVariant.toDrawable()
     }
 
     private fun createTitleViewInfo(textAppearance: TextAppearance): TitleViewInfo {

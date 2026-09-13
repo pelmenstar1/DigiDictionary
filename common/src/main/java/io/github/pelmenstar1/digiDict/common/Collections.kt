@@ -15,16 +15,6 @@ inline fun <reified T> unsafeNewArray(size: Int): Array<T> {
     return arrayOfNulls<T>(size) as Array<T>
 }
 
-inline fun <reified T> Array<out T>.withAddedElement(element: T): Array<T> {
-    val size = size
-
-    val newArray = unsafeNewArray<T>(size + 1)
-    System.arraycopy(this, 0, newArray, 0, size)
-    newArray[size] = element
-
-    return newArray
-}
-
 inline fun <reified T> Array<out T>.withRemovedElementAt(index: Int): Array<T> {
     val size = size
 

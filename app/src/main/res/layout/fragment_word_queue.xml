@@ -25,8 +25,8 @@
             tools:visibility="visible" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            style="@style/Widget.Material3.ExtendedFloatingActionButton.Icon.Primary"
             android:id="@+id/wordQueue_addButton"
+            style="@style/Widget.Material3.ExtendedFloatingActionButton.Icon.Primary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|bottom"

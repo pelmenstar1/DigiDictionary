@@ -41,7 +41,7 @@ class ManageEventsAdapter(
      * The method is called when the [stopEvent] lambda fails.
      */
     fun onStopEventOperationFailed() {
-        // In onEventEnded, we set last bit but it's wrong by now as the operation failed. Fix it.
+        // In onEventEnded, we set last bit, but it's wrong by now as the operation failed. Fix it.
         setLastEventEndedStateAndUpdatePrevElement(lastEventState = false)
     }
 

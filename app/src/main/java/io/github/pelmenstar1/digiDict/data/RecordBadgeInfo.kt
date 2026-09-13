@@ -41,7 +41,7 @@ class RecordBadgeInfo : Parcelable, EntityWithPrimaryKeyId {
 
     override fun describeContents() = 0
 
-    override fun equals(other: Any?) = equalsPattern(other) { o ->
+    override fun equals(other: Any?): Boolean = equalsPattern(other) { o ->
         return o.id == id && o.name == name && o.outlineColor == outlineColor
     }
 

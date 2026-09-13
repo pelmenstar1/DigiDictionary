@@ -14,6 +14,7 @@ import com.google.android.material.button.MaterialButton
 import io.github.pelmenstar1.digiDict.common.android.MaxRoundRectDrawable
 import io.github.pelmenstar1.digiDict.common.android.getColorSurfaceVariant
 import io.github.pelmenstar1.digiDict.common.equalsPattern
+import io.github.pelmenstar1.digiDict.common.ui.OptionsBar.Companion.Preset
 
 /**
  * A scrollable bar with options.
@@ -35,7 +36,7 @@ class OptionsBar : HorizontalScrollView {
     /**
      * Stores the information about preset for [OptionsBar].
      *
-     * @param options the options for this preset. The ids of [options] must be unique although it's not validated
+     * @param options the options for this preset. The ids of [options] must be unique, although it's not validated
      */
     data class Preset(val options: Array<out Option>) {
         override fun equals(other: Any?) = equalsPattern(other) { o ->

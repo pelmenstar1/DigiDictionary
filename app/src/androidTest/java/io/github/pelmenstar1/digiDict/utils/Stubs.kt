@@ -1,6 +1,11 @@
 package io.github.pelmenstar1.digiDict.utils
 
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.ConciseRecord
+import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.Flow
 

@@ -1,21 +1,27 @@
 <h1 align="center">Digi Dictionary</h1> <br/>
 
 A small Android application which helps you to learn new words and expressions.
-Whenever you find a new word or expression you can add it with its meaning and some notes (for example, a sentence using that word)
+Whenever you find a new word or expression you can add it with its meaning and some notes (for example, a sentence using
+that word)
 
 You also can:
+
 - View all of your expressions.
 - Add, edit, delete them.
 - Search
 - Revise them. By default, you only see random expressions without their meanings.
-The idea is to tell their meanings, click on the item and if you answer correct, then you click "Correct", if wrong, click "Wrong".
-Each record has a score.
-If it is answered correct in the revision, then some score points are added to score, if wrong, some points are subtracted.
-In the settings, you can specify how much points you want to add, when your answer is correct, and subtract, when it's wrong.
-In the next revision, records with negative score will definitely appear and you are given a chance to answer them again 
-in hope you will do that correct.   
+  The idea is to tell their meanings, click on the item and if you answer correct, then you click "Correct", if wrong,
+  click "Wrong".
+  Each record has a score.
+  If it is answered correct in the revision, then some score points are added to score, if wrong, some points are
+  subtracted.
+  In the settings, you can specify how much points you want to add, when your answer is correct, and subtract, when it's
+  wrong.
+  In the next revision, records with negative score will definitely appear, and you are given a chance to answer them
+  again
+  in hope you will do that correct.
 
-There's also a widget which shows you records that were added during last 24 hours. 
+There's also a widget which shows you records that were added during last 24 hours.
 
 ## Import / Export
 

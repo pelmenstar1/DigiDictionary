@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
@@ -49,7 +48,7 @@ class ViewRecordFragment : Fragment() {
                 navController.navigate(directions)
             }
 
-            viewRecordContainer.setupLoadStateFlow(lifecycleScope, vm) { record ->
+            viewRecordContainer.setupLoadStateFlow(viewLifecycleOwner, vm) { record ->
                 if (record != null) {
                     viewRecordExpressionView.setValue(record.expression)
                     viewRecordMeaningView.text = MeaningTextHelper.formatOrErrorText(
@@ -67,8 +66,8 @@ class ViewRecordFragment : Fragment() {
 
         vm.id = args.id
 
-        popBackStackOnSuccess(vm.deleteAction, navController)
-        showSnackbarEventHandlerOnError(vm.deleteAction, container, R.string.dbError)
+        viewLifecycleOwner.popBackStackOnSuccess(vm.deleteAction, navController)
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(vm.deleteAction, container, R.string.dbError)
 
         return binding.root
     }

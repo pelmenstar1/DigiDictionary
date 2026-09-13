@@ -1,20 +1,22 @@
 buildscript {
     dependencies {
-        classpath(libs.dagger.hilt.gradlePlugin)
-        classpath(libs.androidx.nav.safeArgsGradlePlugin)
+        classpath(libs.kotlin.gradlePlugin)
+        classpath(libs.ksp.gradlePlugin)
+        classpath(libs.kotlin.serialization.gradlePlugin)
     }
 }
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file where you can add configuration options common to all subprojects/modules.
 plugins {
-    id("com.android.application") version "8.0.2" apply false
-    id("com.android.library") version "8.0.2" apply false
-
-    kotlin("android") version "1.8.0" apply false
-    kotlin("jvm") version "1.8.0" apply false
-    kotlin("plugin.serialization") version "1.8.0" apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.dagger.hilt) apply false
+    alias(libs.plugins.androidx.room) apply false
+    alias(libs.plugins.androidx.nav.safeargs) apply false
 }
 
-tasks.create<Delete>("delete") {
-    delete(rootProject.buildDir)
+tasks.register<Delete>("clean") {
+    description = "Cleans the build directory"
+
+    delete(rootProject.layout.buildDirectory)
 }

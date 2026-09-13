@@ -2,19 +2,20 @@ package io.github.pelmenstar1.digiDict.common.ui.tests
 
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragmentInContainer
-import androidx.test.espresso.Espresso.*
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
-import androidx.test.espresso.action.ViewActions.*
-import androidx.test.espresso.assertion.ViewAssertions.*
-import androidx.test.espresso.matcher.RootMatchers.*
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.radiobutton.MaterialRadioButton
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.ChoicesProvider
 import io.github.pelmenstar1.digiDict.common.ui.selectionDialogs.SingleSelectionDialogFragment
-import io.github.pelmenstar1.digiDict.common.ui.tests.R
 import io.github.pelmenstar1.digiDict.commonTestUtils.assertFragmentNotAttached
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.instanceOf
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
@@ -31,6 +32,7 @@ class SingleSelectionDialogFragmentTests {
         override fun getValueByIndex(index: Int): String = index.toString()
     }
 
+    @Suppress("SameParameterValue")
     private fun launchDialog(selectedIndex: Int): FragmentScenario<SingleSelectionDialogFragmentImpl> {
         return launchFragmentInContainer(
             themeResId = com.google.android.material.R.style.Theme_Material3_Dark,

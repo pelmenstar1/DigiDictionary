@@ -16,7 +16,7 @@ class FilteredArray<T>(val origin: Array<T>, val size: Int) {
         return origin[index]
     }
 
-    override fun equals(other: Any?) = equalsPattern(other) { o ->
+    override fun equals(other: Any?): Boolean = equalsPattern(other) { o ->
         val size = size
 
         if (size != o.size) return false

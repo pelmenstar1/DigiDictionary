@@ -6,7 +6,6 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.AbsSavedState
 import android.view.Gravity
-import android.view.View.OnClickListener
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes

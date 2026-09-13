@@ -135,6 +135,7 @@ class HomeSearchAdapter(
                 updateBreakAndHyphenationInfoPayload -> {
                     holder.setTextBreakAndHyphenationInfoCompat(breakAndHyphenationInfo)
                 }
+
                 updateStyledExpressionAndMeaning -> {
                     val record = currentData[position]
                     val itemStyle = createItemStyle(record)

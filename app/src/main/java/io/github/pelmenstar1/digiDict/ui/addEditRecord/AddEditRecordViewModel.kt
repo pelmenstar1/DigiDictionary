@@ -4,11 +4,23 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
+import io.github.pelmenstar1.digiDict.common.ValidityFlow
 import io.github.pelmenstar1.digiDict.common.android.viewModelAction
+import io.github.pelmenstar1.digiDict.common.containsLetterOrDigit
+import io.github.pelmenstar1.digiDict.common.firstSuccess
+import io.github.pelmenstar1.digiDict.common.mapToArray
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.get
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.common.trimToString
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
+import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelationDao
+import io.github.pelmenstar1.digiDict.data.RecordWithBadges
+import io.github.pelmenstar1.digiDict.data.WordQueueDao
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -30,10 +42,8 @@ class AddEditRecordViewModel @Inject constructor(
     private val currentEpochSecondsProvider: CurrentEpochSecondsProvider,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val _expressionErrorFlow = MutableStateFlow<AddEditRecordMessage?>(null)
-
     val expressionErrorFlow: StateFlow<AddEditRecordMessage?>
-        get() = _expressionErrorFlow
+        field = MutableStateFlow<AddEditRecordMessage?>(null)
 
     private val currentRecordIdFlow = MutableStateFlow<Int?>(null)
 
@@ -53,11 +63,11 @@ class AddEditRecordViewModel @Inject constructor(
                 // Only after we're sure that there's no record to load, we can update expression error if expression is
                 // actually empty.
                 if (expression.isBlank()) {
-                    _expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
+                    expressionErrorFlow.value = AddEditRecordMessage.EMPTY_TEXT
                 }
             }
 
-            startCheckExpressionJobIfNeccessary()
+            startCheckExpressionJobIfNecessary()
         }
 
     private val currentRecordStateManager = DataLoadStateManager<RecordWithBadges>(TAG)
@@ -178,7 +188,7 @@ class AddEditRecordViewModel @Inject constructor(
     }
 
     // Should be invoked only after currentRecordId is initialized.
-    private fun startCheckExpressionJobIfNeccessary() {
+    private fun startCheckExpressionJobIfNecessary() {
         if (!isCheckExprJobStarted) {
             isCheckExprJobStarted = true
 
@@ -187,7 +197,7 @@ class AddEditRecordViewModel @Inject constructor(
 
                 // Sort expressions to make binary search work.
                 //
-                // SQL's ORDER BY can't be used, because apparently it uses different algorithm to order strings
+                // SQL's ORDER BY can't be used, because apparently it uses different algorithm to order strings,
                 // and it isn't compatible with string sorting algorithm in Android JVM.
                 expressions.sort()
 
@@ -214,7 +224,7 @@ class AddEditRecordViewModel @Inject constructor(
                         set(expressionValidityField, isValid, isComputed = true)
                     }
 
-                    _expressionErrorFlow.value = when {
+                    expressionErrorFlow.value = when {
                         isValid -> null
                         isEmpty -> AddEditRecordMessage.EMPTY_TEXT
                         !isMeaningfulExpr -> AddEditRecordMessage.EXPRESSION_NO_LETTER_OR_DIGIT

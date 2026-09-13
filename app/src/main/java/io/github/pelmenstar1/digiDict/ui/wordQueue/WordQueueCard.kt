@@ -5,7 +5,6 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.View.OnClickListener
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView

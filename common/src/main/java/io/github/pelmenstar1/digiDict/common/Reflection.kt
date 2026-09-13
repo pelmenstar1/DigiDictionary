@@ -1,8 +1,15 @@
 package io.github.pelmenstar1.digiDict.common
 
 import androidx.collection.SimpleArrayMap
+import kotlin.enums.enumEntries
 
-inline fun <reified T : Enum<T>> getEnumFieldCount() = getEnumFieldCount(T::class.java)
+/**
+ * Returns the number of entries of the enum [T].
+ *
+ * Resolved by the compiler through [enumEntries], so this form needs no reflection and nothing to
+ * cache. Prefer it over the [Class]-based overload wherever the type is known statically.
+ */
+inline fun <reified T : Enum<T>> getEnumFieldCount() = enumEntries<T>().size
 
 // The default constructor with no parameters initializes the map with 0 capacity.
 // getEnumFieldCount() will be used frequently in the app, so 8 is the best value for initial capacity.

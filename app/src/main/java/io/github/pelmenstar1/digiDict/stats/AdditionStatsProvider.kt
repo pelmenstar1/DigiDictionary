@@ -97,7 +97,7 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
         month: Int
     ): MonthAdditionStats {
         // As we don't know exactly any element from cursor now, min and max should contain some impossible values for them
-        // to be replaced by real values later. It's an essential detail because if all elements in cursor > 1 and we set
+        // to be replaced by real values later. It's an essential detail because if all elements in cursor > 1, and we set
         // min to 0, then it will be calculated wrong.
         var minAdded = Int.MAX_VALUE
         var maxAdded = Int.MIN_VALUE
@@ -134,7 +134,7 @@ class DbAdditionStatsProvider(private val appDatabase: AppDatabase) : AdditionSt
             maxAdded = 0
         } else {
             // FromEpochSecondsAggregateCountQuery doesn't report the days during which no records were added.
-            // If we've iterated less days than days in the month, it means that some of the elements
+            // If we've iterated fewer days than days in the month, it means that some of the elements
             // are zero, so minimum value of amount of added days during the month is zero.
             if (daysIterated != daysInMonth) {
                 minAdded = 0

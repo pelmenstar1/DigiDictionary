@@ -27,7 +27,7 @@ class ValidityFlow(val scheme: Scheme) {
             get() = 1 shl (ordinal * 2)
 
         init {
-            if (ordinal < 0 || ordinal > 15) {
+            if (ordinal !in 0..15) {
                 throw IllegalArgumentException("ordinal can't be negative or greater than 15")
             }
         }

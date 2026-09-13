@@ -24,9 +24,8 @@ class AddWordToQueueDialogViewModel @Inject constructor(
 ) : ViewModel() {
     private var isCheckWordJobStarted = false
 
-    private val _wordErrorFlow = MutableStateFlow<AddWordToQueueDialogError?>(null)
     val wordErrorFlow: StateFlow<AddWordToQueueDialogError?>
-        get() = _wordErrorFlow
+        field = MutableStateFlow<AddWordToQueueDialogError?>(null)
 
     val wordFlow: StateFlow<String> = savedStateHandle.getStateFlow(KEY_WORD, initialValue = "")
 
@@ -82,6 +81,7 @@ class AddWordToQueueDialogViewModel @Inject constructor(
                         // Otherwise, checks whether allWordEntries contains trimmedWord.
                         allWords?.contains(trimmedWord) ?: allWordEntries!!.any { it.word == trimmedWord } ->
                             AddWordToQueueDialogError.WORD_EXISTS
+
                         recordsExpressions.binarySearch(trimmedWord) >= 0 -> AddWordToQueueDialogError.RECORD_EXPRESSION_EXISTS
                         else -> null
                     }
@@ -90,7 +90,7 @@ class AddWordToQueueDialogViewModel @Inject constructor(
                         set(wordValidityField, error == null)
                     }
 
-                    _wordErrorFlow.value = error
+                    wordErrorFlow.value = error
                 }
             }
         }

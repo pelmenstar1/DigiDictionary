@@ -35,10 +35,8 @@ class StartEditEventViewModel @Inject constructor(
     private var isCheckNameJobStarted = false
     private val checkEventNameChannel = Channel<String>(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    private val _nameErrorFlow = MutableStateFlow<StartEditEventError?>(null)
-
     val nameErrorFlow: Flow<StartEditEventError?>
-        get() = _nameErrorFlow
+        field = MutableStateFlow<StartEditEventError?>(null)
 
     val validity = ValidityFlow(validityScheme)
 
@@ -50,7 +48,7 @@ class StartEditEventViewModel @Inject constructor(
                 currentEventIdFlow.value = value
             } else {
                 if (name.isBlank()) {
-                    _nameErrorFlow.value = StartEditEventError.EMPTY_TEXT
+                    nameErrorFlow.value = StartEditEventError.EMPTY_TEXT
                 }
             }
 
@@ -146,7 +144,7 @@ class StartEditEventViewModel @Inject constructor(
                     validity.mutate {
                         set(nameValidityField, isValid, isComputed = true)
                     }
-                    _nameErrorFlow.value = error
+                    nameErrorFlow.value = error
                 }
             }
         }

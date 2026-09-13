@@ -13,7 +13,11 @@ import io.github.pelmenstar1.digiDict.data.RecordSortType
 import io.github.pelmenstar1.digiDict.ui.paging.AppPagingSource
 import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +26,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class EventInfoRecordsViewModel @Inject constructor(
-    private val appDatabase: AppDatabase
+    private val appDatabase: AppDatabase,
+    val recordTextPrecomputeController: RecordTextPrecomputeController
 ) : ViewModel() {
     private class TimeRangeState(@JvmField val startTime: Long, @JvmField val endTime: Long) {
         val isLoaded: Boolean
@@ -38,7 +43,6 @@ class EventInfoRecordsViewModel @Inject constructor(
 
     private val eventDao = appDatabase.eventDao()
     private val eventTimeRangeStateFlow = MutableSharedFlow<TimeRangeState>(replay = 1)
-    private val _sortTypeFlow = MutableStateFlow(RecordSortType.NEWEST)
 
     /**
      * Gets the flow that indicates whether the event is loaded successfully.
@@ -62,7 +66,7 @@ class EventInfoRecordsViewModel @Inject constructor(
      * A flow a value to which is emitted any time the [sortType] is changed.
      */
     val sortTypeFlow: Flow<RecordSortType>
-        get() = _sortTypeFlow
+        field = MutableStateFlow(RecordSortType.NEWEST)
 
     /**
      * Sets current [RecordSortType].
@@ -70,18 +74,11 @@ class EventInfoRecordsViewModel @Inject constructor(
      * When value is changed, the paging is not notified about it and it should be explicitly.
      */
     var sortType: RecordSortType
-        get() = _sortTypeFlow.value
+        get() = sortTypeFlow.value
         set(value) {
-            _sortTypeFlow.value = value
+            sortTypeFlow.value = value
         }
 
-
-    /**
-     * Gets or sets [RecordTextPrecomputeController] of the view-model.
-     *
-     * By the time of collecting [items] flow, the [recordTextPrecomputeController] value should be non-null.
-     */
-    var recordTextPrecomputeController: RecordTextPrecomputeController? = null
 
     val items = Pager(
         config = PagingConfig(pageSize = 20, enablePlaceholders = false),
@@ -89,7 +86,7 @@ class EventInfoRecordsViewModel @Inject constructor(
             AppPagingSource(
                 appDatabase,
                 sortType,
-                recordTextPrecomputeController!!,
+                recordTextPrecomputeController,
                 getTimeRangeLambda = {
                     eventTimeRangeStateFlow.first { it.isLoaded }.toEpochSecondsRange()
                 }

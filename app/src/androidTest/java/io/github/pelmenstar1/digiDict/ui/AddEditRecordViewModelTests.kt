@@ -6,11 +6,27 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.commonTestUtils.*
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.commonTestUtils.clear
+import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
+import io.github.pelmenstar1.digiDict.commonTestUtils.use
+import io.github.pelmenstar1.digiDict.commonTestUtils.waitForResult
+import io.github.pelmenstar1.digiDict.commonTestUtils.waitUntilSuccessOrThrowOnError
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
+import io.github.pelmenstar1.digiDict.data.Record
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelationDao
+import io.github.pelmenstar1.digiDict.data.RecordWithBadges
+import io.github.pelmenstar1.digiDict.data.WordQueueDao
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordMessage
 import io.github.pelmenstar1.digiDict.ui.addEditRecord.AddEditRecordViewModel
-import io.github.pelmenstar1.digiDict.utils.*
+import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
+import io.github.pelmenstar1.digiDict.utils.AppWidgetUpdaterStub
+import io.github.pelmenstar1.digiDict.utils.FakeCurrentEpochSecondsProvider
+import io.github.pelmenstar1.digiDict.utils.RecordDaoStub
+import io.github.pelmenstar1.digiDict.utils.addRecordAndBadges
+import io.github.pelmenstar1.digiDict.utils.reset
 import io.github.pelmenstar1.digiDict.widgets.AppWidgetUpdater
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -20,7 +36,12 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.*
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class AddEditRecordViewModelTests {
@@ -210,7 +231,7 @@ class AddEditRecordViewModelTests {
             assertEquals(0, actualRecord.score)
 
             db.reset()
-            vm.clearThroughReflection()
+            vm.clear()
         }
 
         suspend fun testCase(expectedBadges: Array<RecordBadgeInfo>) {
@@ -287,7 +308,7 @@ class AddEditRecordViewModelTests {
             assertEquals(expectedNewRecord, actualRecord)
 
             db.reset()
-            vm.clearThroughReflection()
+            vm.clear()
         }
 
         testCase(

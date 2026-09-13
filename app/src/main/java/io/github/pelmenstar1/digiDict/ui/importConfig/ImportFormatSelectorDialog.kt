@@ -23,7 +23,7 @@ class ImportFormatSelectorDialog : MaterialDialogFragment() {
                     dismiss()
                 }
             ).also {
-                it.submitItems(BackupFormat.values())
+                it.submitItems(BackupFormat.entries.toTypedArray())
             }
 
             layoutManager = LinearLayoutManager(context)

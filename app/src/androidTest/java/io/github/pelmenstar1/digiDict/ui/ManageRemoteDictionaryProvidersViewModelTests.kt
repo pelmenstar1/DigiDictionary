@@ -3,9 +3,13 @@ package io.github.pelmenstar1.digiDict.ui
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.pelmenstar1.digiDict.commonTestUtils.clearThroughReflection
+import io.github.pelmenstar1.digiDict.commonTestUtils.clear
 import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderInfo
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStats
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
 import io.github.pelmenstar1.digiDict.ui.manageRemoteDictProviders.ManageRemoteDictionaryProvidersViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset
@@ -53,7 +57,7 @@ class ManageRemoteDictionaryProvidersViewModelTests {
 
         assertNull(providerDao.getByName("Name"))
         assertNull(statsDao.getById(provider.id))
-        vm.clearThroughReflection()
+        vm.clear()
     }
 
     companion object {

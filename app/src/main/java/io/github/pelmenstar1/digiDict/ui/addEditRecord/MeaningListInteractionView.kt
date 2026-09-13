@@ -9,8 +9,6 @@ import android.text.InputType
 import android.util.AttributeSet
 import android.view.AbsSavedState
 import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.StyleRes
@@ -32,7 +30,6 @@ import io.github.pelmenstar1.digiDict.common.trimToString
 import io.github.pelmenstar1.digiDict.common.ui.adjustViewCountWithoutLast
 import io.github.pelmenstar1.digiDict.common.ui.getTypedViewAt
 import io.github.pelmenstar1.digiDict.common.ui.setText
-import io.github.pelmenstar1.digiDict.common.withAddedElement
 import io.github.pelmenstar1.digiDict.common.withRemovedElementAt
 import io.github.pelmenstar1.digiDict.data.ComplexMeaning
 import java.util.BitSet
@@ -179,7 +176,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         setIconResource(R.drawable.ic_add)
 
         setOnClickListener {
-            elements = elements.withAddedElement("")
+            elements += ""
 
             addNewItem(isUserInteraction = true)
         }
@@ -207,7 +204,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
             errorIconDrawable = null
 
             // This is necessary because if the meaning is set through meaning setter
-            // some text inputs will have different heights although they are initialized in the same way.
+            // some text inputs will have different heights, although they are initialized in the same way.
             // It's due to the fact that no error was set on some inputs. So to fix this, we should set isErrorEnabled to true.
             isErrorEnabled = true
 
@@ -314,14 +311,17 @@ class MeaningListInteractionView @JvmOverloads constructor(
                 duplicateError,
                 R.string.addEditRecord_meaningDuplicateError,
             ) { duplicateError = it }
+
             ERROR_NO_LETTER_OR_DIGIT -> res.getLazyString(
                 noLetterOrDigitError,
                 R.string.addEditRecord_meaningNoLetterOrDigit,
             ) { noLetterOrDigitError = it }
+
             ERROR_ILLEGAL_CHARACTERS -> res.getLazyString(
                 illegalCharactersError,
                 R.string.addEditRecord_meaningIllegalCharactersError
             ) { illegalCharactersError = it }
+
             else -> null
         }
     }
@@ -387,7 +387,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
                     ) { endIconContentDescription = it }
 
                     input.setEndIconOnClickListener {
-                        // Position of the input can change, so i can be a wrong index.
+                        // Position of the input can change, so it can be a wrong index.
                         // Instead, use indexOfChild to determine view's position.
                         val actualIndex = indexOfChild(input)
 
@@ -418,7 +418,7 @@ class MeaningListInteractionView @JvmOverloads constructor(
         iterateInputs { input, _ -> input.isEnabled = enabled }
 
         // "Add" button should be invisible when the view is disabled
-        getChildAt(childCount - 1).visibility = if (enabled) View.VISIBLE else View.INVISIBLE
+        getChildAt(childCount - 1).visibility = if (enabled) VISIBLE else INVISIBLE
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
@@ -449,8 +449,8 @@ class MeaningListInteractionView @JvmOverloads constructor(
 
     companion object {
         private val listItemLayoutParams = LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
         )
 
         private const val ERROR_NONE = 0

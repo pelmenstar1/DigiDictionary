@@ -50,6 +50,7 @@ inline fun <TGroup : ViewGroup> TGroup.adjustViewCountInternal(
         currentCount > targetCount -> {
             removeViews(targetCount, currentCount - targetCount)
         }
+
         currentCount < targetCount -> {
             repeat(targetCount - currentCount) { addNewView() }
         }

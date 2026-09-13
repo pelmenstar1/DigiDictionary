@@ -27,7 +27,7 @@ class RemoteDictionaryProviderDaoTests {
         return RemoteDictionaryProviderInfo(
             id = 0,
             name,
-            "https://a.com/\$query$",
+            $$"https://a.com/$query$",
             urlEncodingRules = RemoteDictionaryProviderInfo.UrlEncodingRules()
         )
     }

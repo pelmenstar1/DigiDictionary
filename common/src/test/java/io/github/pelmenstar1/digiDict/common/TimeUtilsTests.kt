@@ -4,7 +4,7 @@ import io.github.pelmenstar1.digiDict.common.time.SECONDS_IN_DAY
 import io.github.pelmenstar1.digiDict.common.time.TimeUtils
 import org.junit.Test
 import java.time.LocalDate
-import java.util.*
+import java.util.SimpleTimeZone
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFalse

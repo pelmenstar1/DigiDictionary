@@ -1,13 +1,13 @@
 package io.github.pelmenstar1.digiDict.common.ui
 
 import android.view.View
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.textfield.TextInputLayout
 import io.github.pelmenstar1.digiDict.common.StringFormatter
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
-import kotlinx.coroutines.CoroutineScope
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import kotlinx.coroutines.flow.Flow
 
-fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
+fun <T : Enum<T>> LifecycleOwner.launchErrorFlowCollector(
     inputLayout: TextInputLayout,
     flow: Flow<T?>,
     formatter: StringFormatter<T>
@@ -17,6 +17,6 @@ fun <T : Enum<T>> CoroutineScope.launchErrorFlowCollector(
     }
 }
 
-fun CoroutineScope.launchSetEnabledFlowCollector(view: View, flow: Flow<Boolean>) {
+fun LifecycleOwner.launchSetEnabledFlowCollector(view: View, flow: Flow<Boolean>) {
     launchFlowCollector(flow) { view.isEnabled = it }
 }

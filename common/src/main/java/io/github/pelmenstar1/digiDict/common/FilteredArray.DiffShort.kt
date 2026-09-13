@@ -126,7 +126,7 @@ internal class FilteredArrayDiffManagerDelegateShortImpl<T> : FilteredArrayDiffM
         val oldOrigin = oldArray.origin
         val newOrigin = newArray.origin
 
-        // Behave as if the list is empty but it won't allocate if there's space for a diagonal
+        // Behave as if the list is empty, but it won't allocate if there's space for a diagonal
         diagonals.size = 0
 
         // instead of a recursive implementation, we keep our own stack to avoid potential stack

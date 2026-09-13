@@ -23,7 +23,7 @@ class SimpleProgressIndicatorDialogManagerTests {
     class HostFragment : Fragment()
 
     private fun launchHost(): FragmentScenario<HostFragment> {
-        return launchFragmentInContainer(themeResId = R.style.Theme_Material3_Dark)
+        return launchFragmentInContainer(themeResId = com.google.android.material.R.style.Theme_Material3_Dark)
     }
 
     private fun dialogShouldNotBeShownIfFirstProgressTestHelper(firstProgress: Int) {

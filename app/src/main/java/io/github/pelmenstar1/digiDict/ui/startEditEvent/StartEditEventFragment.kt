@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
@@ -20,7 +19,7 @@ import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
@@ -40,7 +39,7 @@ class StartEditEventFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vm = viewModel
-        val ls = lifecycleScope
+        val viewOwner = viewLifecycleOwner
         val navController = findNavController()
         val currentEventId = args.currentEventId
 
@@ -51,8 +50,8 @@ class StartEditEventFragment : Fragment() {
 
         val actionButton = binding.startEditEventActionButton
 
-        popBackStackOnSuccess(vm.startOrEditAction, navController)
-        showSnackbarEventHandlerOnError(
+        viewLifecycleOwner.popBackStackOnSuccess(vm.startOrEditAction, navController)
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(
             vm.startOrEditAction,
             container,
             msgId = if (currentEventId >= 0) R.string.startEditEvent_editError else R.string.startEditEvent_startError,
@@ -64,7 +63,7 @@ class StartEditEventFragment : Fragment() {
 
         actionButton.also {
             it.setActionButtonText(currentEventId)
-            it.setEnabledWhenValid(vm.validity, ls)
+            it.setEnabledWhenValid(vm.validity, viewOwner)
 
             it.setOnClickListener {
                 vm.startOrEdit()
@@ -73,18 +72,19 @@ class StartEditEventFragment : Fragment() {
 
         nameEditText.addTextChangedListener { vm.name = it.toStringOrEmpty() }
 
-        ls.launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, errorStringFormatter)
+        viewOwner.launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, errorStringFormatter)
 
-        ls.launchFlowCollector(vm.nameFlow) {
+        viewOwner.launchFlowCollector(vm.nameFlow) {
             nameEditText.setTextIfCharsChanged(it)
         }
 
         if (currentEventId >= 0) {
-            ls.launchFlowCollector(vm.currentEventStateFlow) {
+            viewOwner.launchFlowCollector(vm.currentEventStateFlow) {
                 when (it) {
                     is DataLoadState.Loading -> {
                         nameInputLayout.isEnabled = false
                     }
+
                     is DataLoadState.Error -> {
                         nameInputLayout.isEnabled = false
 
@@ -99,6 +99,7 @@ class StartEditEventFragment : Fragment() {
                                 }
                         }
                     }
+
                     is DataLoadState.Success -> {
                         currentEventErrorSnackbar?.dismiss()
                         currentEventErrorSnackbar = null

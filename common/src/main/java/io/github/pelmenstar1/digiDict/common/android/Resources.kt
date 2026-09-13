@@ -13,7 +13,7 @@ fun Context.getSelectableItemBackground(): Drawable? {
     val typedValue = TypedValue()
 
     val isResolved =
-        theme.resolveAttribute(com.google.android.material.R.attr.selectableItemBackground, typedValue, true)
+        theme.resolveAttribute(androidx.appcompat.R.attr.selectableItemBackground, typedValue, true)
 
     return if (isResolved) {
         ResourcesCompat.getDrawable(resources, typedValue.resourceId, theme)
@@ -36,7 +36,7 @@ private fun Context.getColorFromAttribute(@AttrRes attrId: Int, @ColorInt defaul
 
 @ColorInt
 fun Context.getPrimaryColor(@ColorInt defaultColor: Int = Color.TRANSPARENT): Int {
-    return getColorFromAttribute(com.google.android.material.R.attr.colorPrimary, defaultColor)
+    return getColorFromAttribute(androidx.appcompat.R.attr.colorPrimary, defaultColor)
 }
 
 @ColorInt

@@ -1,12 +1,17 @@
 package io.github.pelmenstar1.digiDict.data
 
 import android.content.Context
-import androidx.room.*
+import androidx.room.AutoMigration
+import androidx.room.Database
+import androidx.room.DeleteColumn
+import androidx.room.DeleteTable
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.github.pelmenstar1.digiDict.common.android.runInTransactionBlocking
-import io.github.pelmenstar1.digiDict.common.getLazyValue
 
 @Database(
     entities = [
@@ -70,14 +75,14 @@ abstract class AppDatabase : RoomDatabase() {
     class Migration_11_12 : AutoMigrationSpec
 
     object Migration_2_3 : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_records_expression ON records(expression)")
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_records_expression ON records(expression)")
         }
     }
 
     object Migration_3_4 : Migration(3, 4) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.runInTransactionBlocking {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.runInTransactionBlocking {
                 execSQL("CREATE TABLE IF NOT EXISTS remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL)")
                 execSQL("CREATE TABLE IF NOT EXISTS `remote_dict_provider_stats` (`id` INTEGER NOT NULL, `visitCount` INTEGER NOT NULL, PRIMARY KEY(`id`))")
 
@@ -87,8 +92,8 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     object Migration_4_5 : Migration(4, 5) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.runInTransactionBlocking {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.runInTransactionBlocking {
                 execSQL("DROP TABLE remote_dict_providers")
                 execSQL("DROP TABLE remote_dict_provider_stats")
                 execSQL("CREATE TABLE remote_dict_providers (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, schema TEXT NOT NULL, urlEncodingRules TEXT NOT NULL)")
@@ -102,14 +107,14 @@ abstract class AppDatabase : RoomDatabase() {
     // Does effectively nothing as there's no longer search-prepared records.
     // Version 7 doesn't rely on search-prepared records and version 8 removes search-prepared records completely.
     object Migration_5_6 : Migration(5, 6) {
-        override fun migrate(database: SupportSQLiteDatabase) {
+        override fun migrate(db: SupportSQLiteDatabase) {
         }
     }
 
     object Migration_10_11 : Migration(10, 11) {
-        override fun migrate(database: SupportSQLiteDatabase) {
+        override fun migrate(db: SupportSQLiteDatabase) {
             // L% to replace new lines only in list meanings.
-            database.execSQL("UPDATE records SET meaning=replace(meaning, '${ComplexMeaning.LIST_OLD_ELEMENT_SEPARATOR}', '${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}') WHERE meaning LIKE 'L%'")
+            db.execSQL("UPDATE records SET meaning=replace(meaning, '${ComplexMeaning.LIST_OLD_ELEMENT_SEPARATOR}', '${ComplexMeaning.LIST_NEW_ELEMENT_SEPARATOR}') WHERE meaning LIKE 'L%'")
         }
     }
 
@@ -122,8 +127,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun wordQueueDao(): WordQueueDao
 
     companion object {
-        private var singleton: AppDatabase? = null
-
         // Inserts given providers to the DB with version 4
         internal fun SupportSQLiteDatabase.insertRemoteDictProviders_4(providers: Array<out RemoteDictionaryProviderInfo>) {
             val statement = compileStatement("INSERT INTO remote_dict_providers (name, schema) VALUES(?, ?)")
@@ -156,20 +159,11 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        fun getOrCreate(context: Context): AppDatabase {
-            return synchronized(this) {
-                getLazyValue(
-                    singleton,
-                    { createFileDatabase(context) }
-                ) { singleton = it }
-            }
-        }
-
         fun createInMemory(context: Context): AppDatabase {
             return Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).configureAndBuild()
         }
 
-        private fun createFileDatabase(context: Context): AppDatabase {
+        fun createFileDatabase(context: Context): AppDatabase {
             return Room
                 .databaseBuilder(context, AppDatabase::class.java, "database")
                 .configureAndBuild()

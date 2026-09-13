@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import io.github.pelmenstar1.digiDict.common.ProgressReporter
 import io.github.pelmenstar1.digiDict.common.cancelAfter
 import io.github.pelmenstar1.digiDict.common.debugLog
+import io.github.pelmenstar1.digiDict.common.ui.ProgressIndicatorDialogManagerBase.Companion.PROGRESS_INDICATOR_DIALOG_TAG
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch

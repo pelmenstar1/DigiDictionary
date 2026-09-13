@@ -5,7 +5,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.commonTestUtils.runAndWaitForResult
 import io.github.pelmenstar1.digiDict.commonTestUtils.use
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelationDao
 import io.github.pelmenstar1.digiDict.ui.manageRecordBadges.ManageRecordBadgesViewModel
 import io.github.pelmenstar1.digiDict.utils.AppDatabaseUtils
 import io.github.pelmenstar1.digiDict.utils.reset

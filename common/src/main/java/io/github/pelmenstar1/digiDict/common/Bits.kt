@@ -2,7 +2,7 @@ package io.github.pelmenstar1.digiDict.common
 
 import android.os.Parcel
 import android.os.Parcelable
-import java.util.*
+import java.util.Arrays
 
 class FixedBitSet : Parcelable {
     @PublishedApi
@@ -107,7 +107,7 @@ class FixedBitSet : Parcelable {
     }
 
     private fun checkIndex(index: Int) {
-        if (index < 0 || index >= size) {
+        if (index !in 0..<size) {
             throw IndexOutOfBoundsException("index=$index; size=$size")
         }
     }
@@ -139,8 +139,6 @@ class FixedBitSet : Parcelable {
     companion object {
         private const val WORD_SIZE = 6
         private const val WORD_BITS_COUNT = 64
-
-        val EMPTY = FixedBitSet(EmptyArray.LONG, 0)
 
         @JvmField
         val CREATOR = object : Parcelable.Creator<FixedBitSet> {

@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
@@ -18,7 +17,7 @@ import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 import io.github.pelmenstar1.digiDict.common.ui.ColorPaletteView
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
@@ -40,8 +39,8 @@ class AddEditBadgeFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vm = viewModel
 
-        popBackStackOnSuccess(vm.addOrEditAction, findNavController())
-        showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
+        viewLifecycleOwner.popBackStackOnSuccess(vm.addOrEditAction, findNavController())
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
 
         val currentBadgeId = args.currentBadgeId
         vm.currentBadgeId = currentBadgeId
@@ -87,13 +86,14 @@ class AddEditBadgeFragment : Fragment() {
         val colorPalette = binding.addBadgeDialogColorPalette
         val addButton = binding.addBadgeDialogAddButton
 
-        lifecycleScope.run {
+        viewLifecycleOwner.run {
             if (currentBadgeId >= 0) {
                 launchFlowCollector(vm.currentBadgeStateFlow) {
                     when (it) {
                         is DataLoadState.Loading -> {
                             setInputsEnabled(false)
                         }
+
                         is DataLoadState.Error -> {
                             setInputsEnabled(false)
 
@@ -106,6 +106,7 @@ class AddEditBadgeFragment : Fragment() {
                                     .showLifecycleAwareSnackbar(lifecycle)
                             }
                         }
+
                         is DataLoadState.Success -> {
                             setInputsEnabled(true)
                         }
@@ -121,8 +122,8 @@ class AddEditBadgeFragment : Fragment() {
                 colorPalette.selectColorOrLast(it, animate = true)
             }
 
-            launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageStringFormatter)
-            addButton.setEnabledWhenValid(vm.validity, lifecycleScope)
+            viewLifecycleOwner.launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageStringFormatter)
+            addButton.setEnabledWhenValid(vm.validity, viewLifecycleOwner)
         }
     }
 

@@ -4,12 +4,17 @@ import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.CompoundButton
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import androidx.core.widget.TextViewCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
@@ -105,13 +110,14 @@ abstract class MultiSelectionDialogFragment<TValue> : AbstractSelectionDialogFra
         }
     }
 
+    @SuppressLint("Recycle")
     private fun startNoOptionSelectedVisibilityAnimation(isVisible: Boolean) {
         val errorView = noOptionSelectedErrorTextView
 
         var animator = noOptionSelectedAnimator
         if (animator == null) {
             val res = requireContext().resources
-            val duration = res.getInteger(R.integer.multiSelectionDialog_noOptionSelectedVisiblityAnimationDuration)
+            val duration = res.getInteger(R.integer.multiSelectionDialog_noOptionSelectedVisibilityAnimationDuration)
 
             animator = ObjectAnimator()
             animator.duration = duration.toLong()

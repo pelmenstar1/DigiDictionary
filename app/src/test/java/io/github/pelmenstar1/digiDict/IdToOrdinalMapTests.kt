@@ -2,7 +2,11 @@ package io.github.pelmenstar1.digiDict
 
 import io.github.pelmenstar1.digiDict.backup.IdToOrdinalMap
 import org.junit.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class IdToOrdinalMapTests {
     private fun createConsecutiveMap(startId: Int, endId: Int): IdToOrdinalMap {
@@ -60,7 +64,7 @@ class IdToOrdinalMapTests {
         testCase(startId = 3, endId = 10)
         testCase(startId = 0, endId = 2)
 
-        // In practice, there's no negative ids but it should work.
+        // In practice, there's no negative ids, but it should work.
         testCase(startId = -100, endId = -50)
     }
 

@@ -11,7 +11,7 @@ suspend fun <T> Flow<DataLoadState<T>>.waitUntilSuccessOrThrowOnError(): T {
         it is DataLoadState.Success || it is DataLoadState.Error
     }.map {
         if (it is DataLoadState.Error) {
-            throw Exception("Error happened in data load state flow")
+            throw Exception("Error happened in data load state flow", it.cause)
         }
 
         (it as DataLoadState.Success).value

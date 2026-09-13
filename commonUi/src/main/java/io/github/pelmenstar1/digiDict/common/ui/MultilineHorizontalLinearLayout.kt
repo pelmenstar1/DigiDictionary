@@ -253,6 +253,7 @@ open class MultilineHorizontalLinearLayout @JvmOverloads constructor(
                     VERTICAL_ROW_ALIGNMENT_TOP -> {
                         childTop += childTopMargin
                     }
+
                     VERTICAL_ROW_ALIGNMENT_CENTER -> {
                         childTop += (rowHeight - childHeight) / 2
                     }

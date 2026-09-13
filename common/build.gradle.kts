@@ -1,16 +1,16 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    alias(libs.plugins.android.library)
+    id("com.google.devtools.ksp")
 }
 
 android {
     namespace = "io.github.pelmenstar1.digiDict.common"
-    compileSdk = 33
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = 21
-        targetSdk = 33
+        minSdk = libs.versions.minSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -27,42 +27,49 @@ android {
             enableAndroidTestCoverage = true
             enableUnitTestCoverage = true
         }
+    }
 
-        release {
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
+    buildFeatures {
+        // Logging.kt and the instrumented tests rely on BuildConfig.DEBUG.
+        buildConfig = true
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
-
-        freeCompilerArgs = freeCompilerArgs + arrayOf(
-            "-opt-in=kotlin.contracts.ExperimentalContracts",
-            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-opt-in=kotlinx.coroutines.FlowPreview"
-        )
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     testOptions {
+        targetSdk = libs.versions.targetSdk.get().toInt()
+
         testCoverage {
-            jacocoVersion = "0.8.7"
+            jacocoVersion = libs.versions.jacoco.get()
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+
+        optIn.addAll(
+            "kotlin.contracts.ExperimentalContracts",
+            "kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "kotlinx.coroutines.FlowPreview"
+        )
     }
 }
 
 dependencies {
     implementation(libs.androidx.room.runtime)
-    kaptAndroidTest(libs.androidx.room.compiler)
+    kspAndroidTest(libs.androidx.room.compiler)
 
     implementation(libs.bundles.kotlinx.coroutines)
     implementation(libs.bundles.androidx.nav)
     implementation(libs.bundles.androidx.sqlite)
+
+    implementation(platform(libs.sentry.bom))
+    implementation(libs.sentry.kotlin.extensions)
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.appcompat)
@@ -82,6 +89,7 @@ dependencies {
 }
 
 tasks.register<JacocoReport>("jacocoMergeCoverageReports") {
+    description = "Generates coverage report"
     dependsOn("createDebugUnitTestCoverageReport", "createDebugAndroidTestCoverageReport")
 
     reports {
@@ -89,21 +97,21 @@ tasks.register<JacocoReport>("jacocoMergeCoverageReports") {
         html.required.set(true)
     }
 
+    val buildDirectory = layout.buildDirectory
     val fileFilter =
         listOf("**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*", "**/*Test*.*", "android/**/*.*")
-    val kotlinTree = fileTree(mapOf("dir" to "${buildDir}/tmp/kotlin-classes/debug", "excludes" to fileFilter))
-    val mainSrc = "${project.projectDir}/src/main/java"
 
-    sourceDirectories.from(files(mainSrc))
-    classDirectories.from(files(kotlinTree))
+    sourceDirectories.from(files("${project.projectDir}/src/main/java"))
+    classDirectories.from(
+        buildDirectory.dir("tmp/kotlin-classes/debug").map { it.asFileTree.matching { exclude(fileFilter) } })
     executionData.from(
-        fileTree(
-            mapOf(
-                "dir" to "$buildDir", "includes" to listOf(
+        buildDirectory.map {
+            it.asFileTree.matching {
+                include(
                     "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-                    "outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec",
+                    "outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec"
                 )
-            )
-        )
+            }
+        }
     )
 }

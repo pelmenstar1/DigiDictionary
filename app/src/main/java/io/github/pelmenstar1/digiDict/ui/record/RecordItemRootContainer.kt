@@ -7,7 +7,6 @@ import android.graphics.Paint
 import android.os.Build
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.core.view.setPadding
 import com.google.android.material.textview.MaterialTextView
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
@@ -21,7 +20,7 @@ import io.github.pelmenstar1.digiDict.ui.badge.BadgeContainer
  * it doesn't have a compatible constructor for XML layout.
  */
 @SuppressLint("ViewConstructor")
-class RecordItemRootContainer constructor(
+class RecordItemRootContainer(
     context: Context,
     private val staticInfo: ConciseRecordWithBadgesViewHolderStaticInfo
 ) : LinearLayout(context) {
@@ -82,7 +81,7 @@ class RecordItemRootContainer constructor(
                 meaningView = this
                 layoutParams = MEANING_LAYOUT_PARAMS
 
-                textAlignment = TextView.TEXT_ALIGNMENT_VIEW_END
+                textAlignment = TEXT_ALIGNMENT_VIEW_END
                 initTextView(bodyLargeTextAppearance)
             })
         })
@@ -146,19 +145,17 @@ class RecordItemRootContainer constructor(
         }
 
         scoreView.setTextColor(textColorList)
-        scoreView.text = value.toString()
+        scoreView.text = staticInfo.scoreNumberFormat.format(value.toLong())
     }
 
     /**
      * Sets break strategy and hyphenation frequency for expression and meaning text views.
      */
-    @RequiresApi(23)
     fun setTextBreakAndHyphenationInfo(value: TextBreakAndHyphenationInfo) {
         expressionView.setTextBreakAndHyphenationInfo(value)
         meaningView.setTextBreakAndHyphenationInfo(value)
     }
 
-    @RequiresApi(23)
     private fun TextView.setTextBreakAndHyphenationInfo(info: TextBreakAndHyphenationInfo) {
         val hf = info.hyphenationFrequency.layoutInt
         val bs = info.breakStrategy.layoutInt

@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 @Ignore("Should be run manually") // remove this to run the test.
 class DebugDatabaseTest {
     private val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    private val db = AppDatabase.getOrCreate(appContext)
+    private val db = AppDatabase.createFileDatabase(appContext)
 
     @Test
     fun generateCommon() {

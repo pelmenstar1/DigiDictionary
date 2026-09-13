@@ -10,7 +10,7 @@ import kotlin.math.min
 /**
  * A [Drawable] that represents a rectangle whose corners are as round as possible with given size.
  *
- * By default, the rectangle will be filled but it can be changed using [style]
+ * By default, the rectangle will be filled, but it can be changed using [style]
  */
 class MaxRoundRectDrawable : Drawable() {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)

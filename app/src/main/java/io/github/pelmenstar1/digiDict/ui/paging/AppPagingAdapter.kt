@@ -7,13 +7,13 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
 import io.github.pelmenstar1.digiDict.common.getOrCreateAndSet
-import io.github.pelmenstar1.digiDict.ui.paging.*
-import io.github.pelmenstar1.digiDict.ui.record.*
+import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolder
+import io.github.pelmenstar1.digiDict.ui.record.ConciseRecordWithBadgesViewHolderStaticInfo
+import io.github.pelmenstar1.digiDict.ui.record.RecordItemRootContainer
 
 class AppPagingAdapter(
     onViewRecord: (id: Int) -> Unit
@@ -69,7 +69,6 @@ class AppPagingAdapter(
         return getRecordStaticInfo(context).meaningTextPaintForMeasure
     }
 
-    @RequiresApi(23)
     fun setTextBreakAndHyphenationInfo(value: TextBreakAndHyphenationInfo) {
         textBreakAndHyphenationInfo = value
 
@@ -96,6 +95,7 @@ class AppPagingAdapter(
                     it.setTextBreakAndHyphenationInfoCompat(textBreakAndHyphenationInfo)
                 }
             }
+
             TYPE_DATE_MARKER, TYPE_EVENT_MARKER -> {
                 val inflater = getNonRecordInflater(viewType)
                 val staticInfo = getNonRecordStaticInfo(context, inflater, viewType)
@@ -103,6 +103,7 @@ class AppPagingAdapter(
 
                 NonRecordViewHolder(createNonRecordItemContainer(context, view), viewType)
             }
+
             else -> throw IllegalArgumentException("Invalid viewType")
         }
     }

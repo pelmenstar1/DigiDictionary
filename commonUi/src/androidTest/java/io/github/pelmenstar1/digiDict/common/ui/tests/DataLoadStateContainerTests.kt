@@ -7,13 +7,15 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.lifecycle.lifecycleScope
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.*
-import androidx.test.espresso.action.ViewActions.*
-import androidx.test.espresso.assertion.ViewAssertions.*
-import androidx.test.espresso.matcher.RootMatchers.*
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.pelmenstar1.digiDict.common.DataLoadState
 import io.github.pelmenstar1.digiDict.common.DataLoadStateManager
@@ -25,6 +27,7 @@ import io.github.pelmenstar1.digiDict.common.ui.SingleDataLoadStateHolder
 import io.github.pelmenstar1.digiDict.commonTestUtils.assertSameIf
 import io.github.pelmenstar1.digiDict.commonTestUtils.firstViewOfType
 import io.github.pelmenstar1.digiDict.commonTestUtils.launchActivity
+import io.github.pelmenstar1.digiDict.commonTestUtils.padBySystemBarInsets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -33,7 +36,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.instanceOf
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.atomic.AtomicReference
@@ -100,6 +103,8 @@ class DataLoadStateContainerTests {
             super.onCreate(savedInstanceState)
 
             setContentView(FrameLayout(this).apply {
+                padBySystemBarInsets()
+
                 dataLoadStateContainer = DataLoadStateContainer(context).apply {
                     dataContent = AppCompatTextView(context).apply {
                         text = "content"
@@ -128,7 +133,7 @@ class DataLoadStateContainerTests {
         val ref = AtomicReference<String?>()
 
         scenario.onActivity { activity ->
-            activity.dataLoadStateContainer.setupLoadStateFlow(activity.lifecycleScope, impl) { value ->
+            activity.dataLoadStateContainer.setupLoadStateFlow(activity, impl) { value ->
                 ref.set(value)
             }
         }

@@ -52,10 +52,10 @@ data class RemoteDictionaryProviderInfo(
         var encodedQuery = urlEncodingRules.applyTo(query)
         encodedQuery = Uri.encode(encodedQuery, "+")
 
-        return schema.replace("\$query$", encodedQuery)
+        return schema.replace($$"$query$", encodedQuery)
     }
 
-    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+    override fun equalsNoId(other: Any?): Boolean = equalsPattern(other) { o ->
         return name == o.name && schema == o.schema && urlEncodingRules == o.urlEncodingRules
     }
 
@@ -63,12 +63,12 @@ data class RemoteDictionaryProviderInfo(
         val PREDEFINED_PROVIDERS = arrayOf(
             RemoteDictionaryProviderInfo(
                 name = "Cambridge English Dictionary",
-                schema = "https://dictionary.cambridge.org/dictionary/english/\$query$",
+                schema = $$"https://dictionary.cambridge.org/dictionary/english/$query$",
                 urlEncodingRules = UrlEncodingRules(spaceReplacement = '-')
             ),
             RemoteDictionaryProviderInfo(
                 name = "Urban Dictionary",
-                schema = "https://www.urbandictionary.com/define.php?term=\$query$",
+                schema = $$"https://www.urbandictionary.com/define.php?term=$query$",
                 urlEncodingRules = UrlEncodingRules()
             )
         )

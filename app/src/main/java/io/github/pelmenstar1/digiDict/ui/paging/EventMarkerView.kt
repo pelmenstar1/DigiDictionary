@@ -41,31 +41,21 @@ class EventMarkerViewStaticInfo(context: Context) {
 
 // This view should be created only in HomeEventMarkerInflater
 @SuppressLint("ViewConstructor")
-class EventMarkerView constructor(
+class EventMarkerView(
     context: Context,
     private val staticInfo: EventMarkerViewStaticInfo
 ) : View(context) {
     private var eventStartedFormat: String? = null
     private var eventEndedFormat: String? = null
 
-    private val textPaint: Paint
-    private val outlinePaint: Paint
+    private val textPaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = staticInfo.textColor
+        textSize = staticInfo.textSize
+    }
 
     private var text = ""
     private var textWidth = 0f
     private var textHeight = 0f
-
-    init {
-        textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = staticInfo.textColor
-            textSize = staticInfo.textSize
-        }
-
-        outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = staticInfo.outlineColor
-            strokeWidth = staticInfo.outlineStrokeWidth
-        }
-    }
 
     fun setContent(isStarted: Boolean, eventName: String) {
         val res = context.resources

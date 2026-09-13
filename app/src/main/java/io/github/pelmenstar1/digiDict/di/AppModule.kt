@@ -1,7 +1,6 @@
 package io.github.pelmenstar1.digiDict.di
 
 import android.content.Context
-import android.os.Build
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -9,11 +8,18 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.pelmenstar1.digiDict.PreferencesTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.StringFormatter
-import io.github.pelmenstar1.digiDict.common.android.NoOpTextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfoSource
 import io.github.pelmenstar1.digiDict.common.time.CurrentEpochSecondsProvider
 import io.github.pelmenstar1.digiDict.common.time.SystemEpochSecondsProvider
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.EventDao
+import io.github.pelmenstar1.digiDict.data.RecordBadgeDao
+import io.github.pelmenstar1.digiDict.data.RecordDao
+import io.github.pelmenstar1.digiDict.data.RecordSortType
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelationDao
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderDao
+import io.github.pelmenstar1.digiDict.data.RemoteDictionaryProviderStatsDao
+import io.github.pelmenstar1.digiDict.data.WordQueueDao
 import io.github.pelmenstar1.digiDict.formatters.RecordSearchPropertySetFormatter
 import io.github.pelmenstar1.digiDict.formatters.ResourcesRecordSearchPropertySetFormatter
 import io.github.pelmenstar1.digiDict.prefs.DataStoreDigiDictAppPreferences
@@ -30,6 +36,7 @@ import io.github.pelmenstar1.digiDict.ui.addEditRecord.ResourcesAddEditRecordMes
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.AddRemoteDictionaryProviderMessage
 import io.github.pelmenstar1.digiDict.ui.addRemoteDictProvider.ResourcesAddRemoteDictionaryProviderMessageStringFormatter
 import io.github.pelmenstar1.digiDict.ui.misc.ResourcesRecordSortTypeStringFormatter
+import io.github.pelmenstar1.digiDict.ui.record.RecordTextPrecomputeController
 import io.github.pelmenstar1.digiDict.ui.startEditEvent.ResourcesStartEditEventErrorStringFormatter
 import io.github.pelmenstar1.digiDict.ui.startEditEvent.StartEditEventError
 import io.github.pelmenstar1.digiDict.ui.wordQueue.addWordDialog.AddWordToQueueDialogError
@@ -52,9 +59,17 @@ class AppModule {
         return ListAppWidget.updater(context)
     }
 
+   @Provides
+    fun provideRecordTextPrecomputeController(
+        @ApplicationContext context: Context
+    ): RecordTextPrecomputeController {
+        return RecordTextPrecomputeController.create(context)
+    }
+
     @Provides
+    @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getOrCreate(context)
+        return AppDatabase.createFileDatabase(context)
     }
 
     @Provides
@@ -151,10 +166,6 @@ class AppModule {
 
     @Provides
     fun provideTextBreakAndHyphenationInfoSource(prefs: DigiDictAppPreferences): TextBreakAndHyphenationInfoSource {
-        return if (Build.VERSION.SDK_INT >= 23) {
-            PreferencesTextBreakAndHyphenationInfoSource(prefs)
-        } else {
-            NoOpTextBreakAndHyphenationInfoSource
-        }
+        return PreferencesTextBreakAndHyphenationInfoSource(prefs)
     }
 }

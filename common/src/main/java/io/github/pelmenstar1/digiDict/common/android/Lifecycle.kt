@@ -9,7 +9,14 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.launch
+
+fun <T> LifecycleOwner.launchFlowCollector(flow: Flow<T>, collector: FlowCollector<T>): Job {
+    return lifecycleScope.launch { flow.collect(collector) }
+}
 
 /**
  * Shows snackbar which will be dismissed when [Lifecycle.Event.ON_DESTROY] event happens in specified [lifecycle].
@@ -30,7 +37,7 @@ fun <B : BaseTransientBottomBar<B>> BaseTransientBottomBar<B>.showLifecycleAware
 }
 
 fun LifecycleOwner.showSnackbarEventHandlerOnError(
-    vmAction: ViewModelAction,
+    vmAction: ViewModelAction<*>,
     container: ViewGroup?,
     @StringRes msgId: Int,
     duration: Int = Snackbar.LENGTH_LONG,
@@ -39,7 +46,7 @@ fun LifecycleOwner.showSnackbarEventHandlerOnError(
     snackbarAction: View.OnClickListener? = null
 ) {
     if (container != null) {
-        lifecycleScope.launchFlowCollector(vmAction.errorFlow) {
+        launchFlowCollector(vmAction.errorFlow) {
             Snackbar.make(container, msgId, duration).apply {
                 anchorView?.let { setAnchorView(it) }
                 snackbarAction?.let { setAction(actionText, snackbarAction) }

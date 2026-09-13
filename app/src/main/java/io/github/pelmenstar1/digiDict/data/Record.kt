@@ -30,11 +30,11 @@ open class Record(
         require(epochSeconds >= 0) { "Epoch seconds can't be negative" }
     }
 
-    override fun equals(other: Any?) = equalsPattern(other) { o ->
+    override fun equals(other: Any?): Boolean = equalsPattern(other) { o ->
         return id == o.id && equalsNoId(other)
     }
 
-    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+    override fun equalsNoId(other: Any?): Boolean = equalsPattern(other) { o ->
         return expression == o.expression &&
                 meaning == o.meaning &&
                 additionalNotes == o.additionalNotes &&
@@ -133,7 +133,7 @@ open class ConciseRecordWithBadges(
         id == o.id && equalsNoId(o)
     }
 
-    override fun equalsNoId(other: Any?) = equalsPattern(other) { o ->
+    override fun equalsNoId(other: Any?): Boolean = equalsPattern(other) { o ->
         return expression == o.expression && meaning == o.meaning && score == o.score && epochSeconds == o.epochSeconds && badges.contentEquals(
             o.badges
         )

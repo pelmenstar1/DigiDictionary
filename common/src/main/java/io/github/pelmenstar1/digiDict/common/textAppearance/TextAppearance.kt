@@ -12,13 +12,11 @@ import android.os.LocaleList
 import android.text.TextPaint
 import android.util.TypedValue
 import android.widget.TextView
-import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleRes
 import androidx.annotation.StyleableRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.TextViewCompat
-import java.util.*
 import kotlin.math.min
 
 /**
@@ -45,14 +43,13 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
 
     private val lineHeight: Int
 
-    // If API level >= 24, the type is LocaleList, otherwise Locale.
-    // If there's no locale set, it's null.
-    private val textLocaleOrList: Any?
+    // Null when there is no locale set.
+    private val textLocales: LocaleList?
 
     init {
         val theme = context.theme
 
-        val a = theme.obtainStyledAttributes(styleRes, com.google.android.material.R.styleable.TextAppearance)
+        val a = theme.obtainStyledAttributes(styleRes, androidx.appcompat.R.styleable.TextAppearance)
 
         try {
             textSize = a.getDimension(androidx.appcompat.R.styleable.TextAppearance_android_textSize, 0f)
@@ -79,13 +76,10 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
             font = resolveFont(context, a)
             lineHeight = getLineHeightIfCanApply(theme, styleRes)
 
-            fontVariationSettings = if (Build.VERSION.SDK_INT >= 26) {
+            fontVariationSettings =
                 a.getString(androidx.appcompat.R.styleable.TextAppearance_fontVariationSettings)
-            } else {
-                null
-            }
 
-            textLocaleOrList = getLocale(a)
+            textLocales = getLocales(a)
         } finally {
             a.recycle()
         }
@@ -118,14 +112,9 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= 26) {
-            fontVariationSettings?.also(textView::setFontVariationSettings)
-        }
+        fontVariationSettings?.also(textView::setFontVariationSettings)
 
-        useLocaleOrList(
-            onLocale = { textView.textLocale = it },
-            onLocaleList = { textView.textLocales = it }
-        )
+        textLocales?.also { textView.textLocales = it }
     }
 
     fun getTextPaintForMeasure(): TextPaint {
@@ -140,29 +129,11 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= 26) {
-            fontVariationSettings?.also(paint::setFontVariationSettings)
-        }
+        fontVariationSettings?.also(paint::setFontVariationSettings)
 
-        useLocaleOrList(
-            onLocale = { paint.textLocale = it },
-            onLocaleList = { paint.textLocales = it }
-        )
+        textLocales?.also { paint.textLocales = it }
 
         return paint
-    }
-
-    @ChecksSdkIntAtLeast(api = 24, lambda = 1)
-    private inline fun useLocaleOrList(onLocale: (Locale) -> Unit, onLocaleList: (LocaleList) -> Unit) {
-        val obj = textLocaleOrList
-
-        if (obj != null) {
-            if (Build.VERSION.SDK_INT >= 24) {
-                onLocaleList(obj as LocaleList)
-            } else {
-                onLocale(obj as Locale)
-            }
-        }
     }
 
     companion object {
@@ -171,18 +142,10 @@ class TextAppearance(context: Context, @StyleRes styleRes: Int) {
         private const val TYPEFACE_SERIF = 2
         private const val TYPEFACE_MONOSPACE = 3
 
-        internal fun getLocale(a: TypedArray): Any? {
+        internal fun getLocales(a: TypedArray): LocaleList? {
             val localeStr = a.getString(androidx.appcompat.R.styleable.TextAppearance_textLocale)
 
-            return if (localeStr != null) {
-                if (Build.VERSION.SDK_INT >= 24) {
-                    LocaleList.forLanguageTags(localeStr)
-                } else {
-                    Locale.forLanguageTag(localeStr)
-                }
-            } else {
-                null
-            }
+            return localeStr?.let(LocaleList::forLanguageTags)
         }
 
         internal fun getLetterSpacing(theme: Resources.Theme, styleRes: Int): Float {

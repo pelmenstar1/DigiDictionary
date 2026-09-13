@@ -9,7 +9,6 @@ import android.widget.ArrayAdapter
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,7 +17,7 @@ import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
@@ -55,8 +54,8 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
         val spaceReplacementSpinner = binding.addRemoteDictProviderSpaceReplacementSpinner
         val addButton = binding.addRemoteDictProviderAdd
 
-        popBackStackOnSuccess(vm.addAction, navController)
-        showSnackbarEventHandlerOnError(
+        viewLifecycleOwner.popBackStackOnSuccess(vm.addAction, navController)
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(
             vm.addAction,
             container,
             msgId = R.string.dbError,
@@ -87,11 +86,11 @@ class AddRemoteDictionaryProviderFragment : Fragment() {
             }
         }
 
-        lifecycleScope.run {
-            addButton.setEnabledWhenValid(vm.validityFlow, scope = this)
+        viewLifecycleOwner.run {
+            addButton.setEnabledWhenValid(vm.validityFlow, owner = this)
 
-            launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageStringFormatter)
-            launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageStringFormatter)
+            viewLifecycleOwner.launchErrorFlowCollector(nameInputLayout, vm.nameErrorFlow, messageStringFormatter)
+            viewLifecycleOwner.launchErrorFlowCollector(schemaInputLayout, vm.schemaErrorFlow, messageStringFormatter)
 
             launchFlowCollector(vm.nameFlow) {
                 nameEditText.setTextIfCharsChanged(it)

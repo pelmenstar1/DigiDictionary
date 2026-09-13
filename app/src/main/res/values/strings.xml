@@ -13,6 +13,8 @@
     <string name="start">Start</string>
     <string name="sort">Sort</string>
 
+    <string name="textAction_label">Add a word</string>
+
     <string name="dbError">Internal error</string>
 
     <!-- Remote dict. provider -->
@@ -271,8 +273,6 @@
 
     <!-- Word queue -->
     <string name="wordQueue_title">Queue</string>
-    <string name="wordQueue_addMeaning">Add a meaning</string>
-    <string name="wordQueue_removeFromQueue">Remove from the queue</string>
     <string name="wordQueue_failedToRemoveFromQueue">Failed to remove the entry from the queue</string>
     <string name="wordQueue_addWordContentDescription">Add word to the queue</string>
 

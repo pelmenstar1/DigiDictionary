@@ -1,6 +1,7 @@
 package io.github.pelmenstar1.digiDict.common.binarySerialization
 
 import android.util.SparseArray
+import androidx.core.util.size
 
 interface BinarySerializer<T : Any> {
     fun newArrayOfNulls(size: Int): Array<T?>
@@ -24,9 +25,9 @@ class SparseArrayBinarySerializerResolver<T : Any>(
     private val serializers: SparseArray<BinarySerializer<T>>
 ) : BinarySerializerResolver<T> {
     // As elements is sorted by key in SparseArray, element with the greatest key (version) should be the last.
-    override val latest: BinarySerializer<T> = serializers.valueAt(serializers.size() - 1)
+    override val latest: BinarySerializer<T> = serializers.valueAt(serializers.size - 1)
 
-    override val latestVersion = serializers.keyAt(serializers.size() - 1)
+    override val latestVersion = serializers.keyAt(serializers.size - 1)
 
     override fun get(version: Int): BinarySerializer<T>? {
         return serializers[version]

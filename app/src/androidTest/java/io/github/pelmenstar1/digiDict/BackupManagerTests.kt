@@ -10,7 +10,16 @@ import io.github.pelmenstar1.digiDict.backup.exporting.ExportOptions
 import io.github.pelmenstar1.digiDict.backup.importing.ImportOptions
 import io.github.pelmenstar1.digiDict.common.debugLog
 import io.github.pelmenstar1.digiDict.common.unsafeNewArray
-import io.github.pelmenstar1.digiDict.data.*
+import io.github.pelmenstar1.digiDict.data.AppDatabase
+import io.github.pelmenstar1.digiDict.data.ComplexMeaning
+import io.github.pelmenstar1.digiDict.data.RecordBadgeInfo
+import io.github.pelmenstar1.digiDict.data.RecordToBadgeRelation
+import io.github.pelmenstar1.digiDict.data.bindRecordBadgeToInsertStatement
+import io.github.pelmenstar1.digiDict.data.bindRecordToBadgeInsertStatement
+import io.github.pelmenstar1.digiDict.data.bindRecordToInsertStatement
+import io.github.pelmenstar1.digiDict.data.compileInsertRecordBadgeStatement
+import io.github.pelmenstar1.digiDict.data.compileInsertRecordStatement
+import io.github.pelmenstar1.digiDict.data.compileInsertRecordToBadgeRelation
 import io.github.pelmenstar1.digiDict.utils.assertContentEqualsNoId
 import io.github.pelmenstar1.digiDict.utils.useInMemoryDb
 import kotlinx.coroutines.test.runTest

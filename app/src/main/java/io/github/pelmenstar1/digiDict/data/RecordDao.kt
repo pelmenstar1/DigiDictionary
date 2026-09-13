@@ -1,6 +1,9 @@
 package io.github.pelmenstar1.digiDict.data
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Transaction
 import io.github.pelmenstar1.digiDict.common.generateUniqueRandomNumbers
 import io.github.pelmenstar1.digiDict.common.mapToArray
 import kotlinx.coroutines.flow.Flow
@@ -145,21 +148,6 @@ abstract class RecordDao {
 
     @Query("SELECT COUNT(*) FROM records WHERE dateTime BETWEEN :startEpochSeconds AND :endEpochSeconds")
     abstract suspend fun countRecordsDuringTimeRange(startEpochSeconds: Long, endEpochSeconds: Long): Int
-
-    suspend fun getRandomConciseRecordsWithBadgesRegardlessScore(
-        random: Random,
-        requestedSize: Int
-    ): Array<ConciseRecordWithBadges> {
-        val totalSize = count()
-        val resolvedSize = min(requestedSize, totalSize)
-
-        val indices = random.generateUniqueRandomNumbers(totalSize, resolvedSize)
-        val allIds = getAllIds()
-
-        val resultIds = IntArray(indices.size) { allIds[indices[it]] }
-
-        return getConciseRecordsWithBadgesByIds(resultIds)
-    }
 
     @Transaction
     open suspend fun getRandomConciseRecordsWithBadges(random: Random, size: Int): Array<ConciseRecordWithBadges> {

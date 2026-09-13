@@ -6,18 +6,6 @@ import kotlin.test.assertFailsWith
 
 class CollectionsTests {
     @Test
-    fun withAddedElementTest() {
-        fun testCase(input: Array<String>, elementToAdd: String, expectedResult: Array<String>) {
-            val actualResult = input.withAddedElement(elementToAdd)
-
-            assertContentEquals(expectedResult, actualResult)
-        }
-
-        testCase(input = emptyArray(), elementToAdd = "123", expectedResult = arrayOf("123"))
-        testCase(input = arrayOf("1"), elementToAdd = "2", expectedResult = arrayOf("1", "2"))
-    }
-
-    @Test
     fun withRemovedElementAtTest() {
         fun testCase(input: Array<String>, index: Int, expectedResult: Array<String>) {
             val actualResult = input.withRemovedElementAt(index)

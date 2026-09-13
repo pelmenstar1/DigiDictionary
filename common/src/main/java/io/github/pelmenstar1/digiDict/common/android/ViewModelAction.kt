@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.pelmenstar1.digiDict.common.ValidityFlow
 import io.github.pelmenstar1.digiDict.common.getLazyValue
+import io.sentry.kotlin.SentryContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,7 +16,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-sealed class ViewModelAction(
+/**
+ * An operation started by a view-model, exposing its outcome through [successFlow] and [errorFlow].
+ *
+ * The action takes a single argument of type [T]. An action that needs no argument is a
+ * [NoArgumentViewModelAction], which fixes [T] to [Unit]; one that needs several takes a type that
+ * holds them. Use `ViewModelAction<*>` to refer to an action whose argument type does not matter.
+ */
+abstract class ViewModelAction<in T>(
     protected val vm: ViewModel,
     protected val coroutineContext: CoroutineContext,
     protected val logTag: String
@@ -42,6 +50,12 @@ sealed class ViewModelAction(
             { resultFlow.filterIsInstance() },
             { _errorFlow = it }
         )
+
+    fun run(arg: T) {
+        runInternal { invokeAction(arg) }
+    }
+
+    protected abstract suspend fun invokeAction(arg: T)
 
     protected inline fun runInternal(crossinline action: suspend () -> Unit) {
         if (isActionStarted.compareAndSet(false, true)) {
@@ -80,8 +94,10 @@ sealed class ViewModelAction(
         }
     }
 
+    protected fun sentryAwareContext(): CoroutineContext = coroutineContext + SentryContext()
+
     protected inline fun launchInViewModelScope(crossinline action: suspend () -> Unit) {
-        vm.viewModelScope.launch(coroutineContext) {
+        vm.viewModelScope.launch(sentryAwareContext()) {
             action()
         }
     }
@@ -91,68 +107,26 @@ sealed class ViewModelAction(
     }
 }
 
+/**
+ * A [ViewModelAction] that takes no argument, so that it can be started with a plain [run] and
+ * gated on a [ValidityFlow] with [runWhenValid].
+ */
 abstract class NoArgumentViewModelAction(
     vm: ViewModel,
     coroutineContext: CoroutineContext,
     logTag: String,
-) : ViewModelAction(vm, coroutineContext, logTag) {
+) : ViewModelAction<Unit>(vm, coroutineContext, logTag) {
     fun run() {
-        runInternal { invokeAction() }
+        run(Unit)
     }
 
     fun runWhenValid(flow: ValidityFlow) {
         runWhenValidInternal(flow, ::run)
     }
 
+    final override suspend fun invokeAction(arg: Unit) = invokeAction()
+
     protected abstract suspend fun invokeAction()
-}
-
-abstract class SingleArgumentViewModelAction<T>(
-    vm: ViewModel,
-    coroutineContext: CoroutineContext,
-    logTag: String
-) : ViewModelAction(vm, coroutineContext, logTag) {
-    fun run(arg: T) {
-        runInternal { invokeAction(arg) }
-    }
-
-    fun runWhenValid(flow: ValidityFlow, arg: T) {
-        runWhenValidInternal(flow) { run(arg) }
-    }
-
-    protected abstract suspend fun invokeAction(arg: T)
-}
-
-abstract class TwoArgumentViewModelAction<T1, T2>(
-    vm: ViewModel,
-    coroutineContext: CoroutineContext,
-    logTag: String
-) : ViewModelAction(vm, coroutineContext, logTag) {
-    fun run(arg1: T1, arg2: T2) {
-        runInternal { invokeAction(arg1, arg2) }
-    }
-
-    fun runWhenValid(flow: ValidityFlow, arg1: T1, arg2: T2) {
-        runWhenValidInternal(flow) { run(arg1, arg2) }
-    }
-
-    protected abstract suspend fun invokeAction(arg1: T1, arg2: T2)
-}
-
-abstract class ThreeArgumentViewModelAction<T1, T2, T3>(
-    vm: ViewModel,
-    coroutineContext: CoroutineContext,
-    logTag: String
-) : ViewModelAction(vm, coroutineContext, logTag) {
-    fun run(arg1: T1, arg2: T2, arg3: T3) {
-        runInternal { invokeAction(arg1, arg2, arg3) }
-    }
-
-    fun runWhenValid(flow: ValidityFlow, arg1: T1, arg2: T2, arg3: T3) {
-        runWhenValidInternal(flow) { run(arg1, arg2, arg3) }
-    }
-
-    protected abstract suspend fun invokeAction(arg1: T1, arg2: T2, arg3: T3)
 }
 
 @JvmName("noArgViewModelAction")
@@ -173,36 +147,10 @@ inline fun <T> ViewModel.viewModelAction(
     logTag: String,
     coroutineContext: CoroutineContext = EmptyCoroutineContext,
     crossinline action: suspend (T) -> Unit
-): SingleArgumentViewModelAction<T> {
+): ViewModelAction<T> {
     val vm = this
 
-    return object : SingleArgumentViewModelAction<T>(vm, coroutineContext, logTag) {
+    return object : ViewModelAction<T>(vm, coroutineContext, logTag) {
         override suspend fun invokeAction(arg: T) = action(arg)
-    }
-}
-
-@JvmName("twoArgViewModelAction")
-inline fun <T1, T2> ViewModel.viewModelAction(
-    logTag: String,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext,
-    crossinline action: suspend (T1, T2) -> Unit
-): TwoArgumentViewModelAction<T1, T2> {
-    val vm = this
-
-    return object : TwoArgumentViewModelAction<T1, T2>(vm, coroutineContext, logTag) {
-        override suspend fun invokeAction(arg1: T1, arg2: T2) = action(arg1, arg2)
-    }
-}
-
-@JvmName("threeArgViewModelAction")
-inline fun <T1, T2, T3> ViewModel.viewModelAction(
-    logTag: String,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext,
-    crossinline action: suspend (T1, T2, T3) -> Unit
-): ThreeArgumentViewModelAction<T1, T2, T3> {
-    val vm = this
-
-    return object : ThreeArgumentViewModelAction<T1, T2, T3>(vm, coroutineContext, logTag) {
-        override suspend fun invokeAction(arg1: T1, arg2: T2, arg3: T3) = action(arg1, arg2, arg3)
     }
 }

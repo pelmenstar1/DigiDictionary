@@ -14,10 +14,14 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
-import io.github.pelmenstar1.digiDict.common.*
+import io.github.pelmenstar1.digiDict.common.DataLoadState
+import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.popBackStackOnSuccess
 import io.github.pelmenstar1.digiDict.common.android.showLifecycleAwareSnackbar
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.mapToIntArray
+import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 import io.github.pelmenstar1.digiDict.common.ui.launchErrorFlowCollector
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenFieldValid
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenValid
@@ -55,14 +59,14 @@ class AddEditRecordFragment : Fragment() {
         vm.currentRecordId = recordId
         args.initialExpression?.also { vm.expression = it }
 
-        popBackStackOnSuccess(vm.addOrEditAction, findNavController())
-        showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
+        viewLifecycleOwner.popBackStackOnSuccess(vm.addOrEditAction, findNavController())
+        viewLifecycleOwner.showSnackbarEventHandlerOnError(vm.addOrEditAction, container, R.string.dbError)
 
         // If there's no 'current record', currentRecordStateFlow shouldn't be collect at all
         // because as there's no record to load, state of currentRecordStateFlow will always be Loading
         // and the inputs will be disabled.
         if (recordId >= 0) {
-            lifecycleScope.launchFlowCollector(vm.currentRecordStateFlow) {
+            viewLifecycleOwner.launchFlowCollector(vm.currentRecordStateFlow) {
                 // If the fragment is in edit mode, inputs should be temporarily disabled and then when the record
                 // is successfully loaded, they should be re-enabled.
 
@@ -70,6 +74,7 @@ class AddEditRecordFragment : Fragment() {
                     is DataLoadState.Loading -> {
                         setInputsEnabled(false)
                     }
+
                     is DataLoadState.Error -> {
                         setInputsEnabled(false)
 
@@ -82,6 +87,7 @@ class AddEditRecordFragment : Fragment() {
                                 .showLifecycleAwareSnackbar(lifecycle)
                         }
                     }
+
                     is DataLoadState.Success -> {
                         val (value) = it
 
@@ -107,7 +113,9 @@ class AddEditRecordFragment : Fragment() {
         val badgeInteraction = binding.addRecordBadgeInteraction
         val badgeIds = badgeInteraction.badges.mapToIntArray { it.id }
 
-        lifecycleScope.launch {
+        // Bound to the view lifecycle: the result is written straight back into a view, so the
+        // query must not outlive the view it updates.
+        viewLifecycleOwner.lifecycleScope.launch {
             val updatedBadges = recordBadgeDao.getByIds(badgeIds)
 
             badgeInteraction.badges = updatedBadges
@@ -126,8 +134,7 @@ class AddEditRecordFragment : Fragment() {
     private fun initViews(currentRecordId: Int) {
         binding.run {
             val vm = viewModel
-            val ls = lifecycleScope
-
+            val viewOwner = viewLifecycleOwner
             val expressionEditText = addRecordExpressionInput
             val additionalNotesEditText = addRecordAdditionalNotesInput
             val doNotChangeCreationDateBox = addRecordDoNotChangeCreationTimeBox
@@ -182,26 +189,26 @@ class AddEditRecordFragment : Fragment() {
                 }
             }
 
-            ls.launchFlowCollector(vm.expressionFlow) {
+            viewOwner.launchFlowCollector(vm.expressionFlow) {
                 expressionEditText.setTextIfCharsChanged(it)
             }
 
-            ls.launchFlowCollector(vm.additionalNotesFlow) {
+            viewOwner.launchFlowCollector(vm.additionalNotesFlow) {
                 additionalNotesEditText.setTextIfCharsChanged(it)
             }
 
-            ls.launchFlowCollector(vm.changeCreationTimeFlow) {
+            viewOwner.launchFlowCollector(vm.changeCreationTimeFlow) {
                 doNotChangeCreationDateBox.isChecked = !it
             }
 
-            ls.launchErrorFlowCollector(addRecordExpressionInputLayout, vm.expressionErrorFlow, messageStringFormatter)
+            viewOwner.launchErrorFlowCollector(addRecordExpressionInputLayout, vm.expressionErrorFlow, messageStringFormatter)
 
             addRecordSearchExpression.setEnabledWhenFieldValid(
                 vm.validity, AddEditRecordViewModel.expressionValidityField,
-                ls
+                viewOwner
             )
 
-            addRecordAddButton.setEnabledWhenValid(vm.validity, ls)
+            addRecordAddButton.setEnabledWhenValid(vm.validity, viewOwner)
         }
     }
 }

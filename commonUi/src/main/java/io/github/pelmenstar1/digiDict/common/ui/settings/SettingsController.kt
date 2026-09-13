@@ -82,7 +82,7 @@ class SettingsController<TEntries : AppPreferences.Entries>(
         val snapshot = currentSnapshot ?: throw IllegalStateException("No snapshot has been applied")
         val entryValue = snapshot[info.entry]
 
-        val fragment = info.dialogClass.newInstance()
+        val fragment = info.dialogClass.getDeclaredConstructor().newInstance()
         fragment.arguments = info.createArgs?.invoke(entryValue)
         info.init(fragment)
 

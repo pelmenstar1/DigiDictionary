@@ -6,17 +6,15 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 class ProgressReporter {
-    private val _progressFlow: MutableStateFlow<Int>
-
     val progressFlow: StateFlow<Int>
-        get() = _progressFlow
+        field: MutableStateFlow<Int>
 
     private val _completed: Int
     private val _target: Int
     private val _diff: Int
 
     constructor() {
-        _progressFlow = MutableStateFlow(UNREPORTED)
+        progressFlow = MutableStateFlow(UNREPORTED)
 
         _completed = 0
         _target = 100
@@ -24,7 +22,7 @@ class ProgressReporter {
     }
 
     private constructor(pFlow: MutableStateFlow<Int>, completed: Int, target: Int) {
-        _progressFlow = pFlow
+        progressFlow = pFlow
 
         _completed = completed
         _target = target
@@ -36,7 +34,7 @@ class ProgressReporter {
             throw IllegalArgumentException("Value is out of bounds")
         }
 
-        _progressFlow.value = _completed + (_diff * value) / 100
+        progressFlow.value = _completed + (_diff * value) / 100
     }
 
     fun onProgress(current: Int, total: Int) {
@@ -46,23 +44,23 @@ class ProgressReporter {
 
         val newProgress = _completed + (_diff * current) / total
 
-        _progressFlow.value = newProgress
+        progressFlow.value = newProgress
     }
 
     fun start() {
-        _progressFlow.value = _completed
+        progressFlow.value = _completed
     }
 
     fun end() {
-        _progressFlow.value = _target
+        progressFlow.value = _target
     }
 
     fun reset() {
-        _progressFlow.value = UNREPORTED
+        progressFlow.value = UNREPORTED
     }
 
     fun reportError() {
-        _progressFlow.value = ERROR
+        progressFlow.value = ERROR
     }
 
     fun subReporter(completed: Int, target: Int): ProgressReporter {
@@ -76,7 +74,7 @@ class ProgressReporter {
         val completedDelta = (currentDiff * completed) / 100
         val targetDelta = (currentDiff * (100 - target)) / 100
 
-        return ProgressReporter(_progressFlow, _completed + completedDelta, _target - targetDelta)
+        return ProgressReporter(progressFlow, _completed + completedDelta, _target - targetDelta)
     }
 
     companion object {

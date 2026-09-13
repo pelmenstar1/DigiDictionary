@@ -2,7 +2,6 @@ package io.github.pelmenstar1.digiDict.ui.record
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.os.Build
 import android.text.TextPaint
 import android.view.View
 import android.widget.LinearLayout
@@ -12,10 +11,12 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.android.TextBreakAndHyphenationInfo
+import io.github.pelmenstar1.digiDict.common.android.getLocaleCompat
 import io.github.pelmenstar1.digiDict.common.getLazyValue
 import io.github.pelmenstar1.digiDict.common.textAppearance.TextAppearance
 import io.github.pelmenstar1.digiDict.data.ConciseRecordWithBadges
 import io.github.pelmenstar1.digiDict.ui.MeaningTextHelper
+import java.text.NumberFormat
 
 class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
     private val res = context.resources
@@ -49,6 +50,8 @@ class ConciseRecordWithBadgesViewHolderStaticInfo(context: Context) {
 
             return padding
         }
+
+    val scoreNumberFormat: NumberFormat = NumberFormat.getIntegerInstance(context.getLocaleCompat())
 
     val bodyMediumTextAppearance = TextAppearance(context) { BodyMedium }
     val bodyLargeTextAppearance = TextAppearance(context) { BodyLarge }
@@ -144,9 +147,7 @@ open class ConciseRecordWithBadgesViewHolder(
     }
 
     fun setTextBreakAndHyphenationInfoCompat(info: TextBreakAndHyphenationInfo?) {
-        if (Build.VERSION.SDK_INT >= 23) {
-            info?.also { container.setTextBreakAndHyphenationInfo(it) }
-        }
+        info?.also { container.setTextBreakAndHyphenationInfo(it) }
     }
 
     companion object {

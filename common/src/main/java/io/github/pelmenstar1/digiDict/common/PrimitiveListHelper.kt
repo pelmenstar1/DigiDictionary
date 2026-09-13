@@ -25,7 +25,7 @@ object PrimitiveListHelper {
         return addFirstInternal(elements, elements.size, size, element, LongArray::set, ::LongArray)
     }
 
-    private inline fun <TArray, TElement> addLastInternal(
+    private inline fun <TArray : Any, TElement> addLastInternal(
         elements: TArray,
         elementsLength: Int,
         size: Int,
@@ -38,8 +38,6 @@ object PrimitiveListHelper {
         if (size == elementsLength) {
             val newElements = newArray(newArraySize(size))
 
-            // The lint doesn't understand that TArray is an array type
-            @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             System.arraycopy(elements, 0, newElements, 0, size)
             currentElements = newElements
         }
@@ -49,9 +47,7 @@ object PrimitiveListHelper {
         return currentElements
     }
 
-    // The lint doesn't understand that TArray is an array type
-    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    private inline fun <TArray, TElement> addFirstInternal(
+    private inline fun <TArray : Any, TElement> addFirstInternal(
         elements: TArray,
         elementsLength: Int,
         size: Int,

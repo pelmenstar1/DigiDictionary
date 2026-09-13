@@ -5,13 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.pelmenstar1.digiDict.R
 import io.github.pelmenstar1.digiDict.common.StringFormatter
 import io.github.pelmenstar1.digiDict.common.android.MaterialDialogFragment
 import io.github.pelmenstar1.digiDict.common.android.showSnackbarEventHandlerOnError
-import io.github.pelmenstar1.digiDict.common.launchFlowCollector
+import io.github.pelmenstar1.digiDict.common.android.launchFlowCollector
 import io.github.pelmenstar1.digiDict.common.toStringOrEmpty
 import io.github.pelmenstar1.digiDict.common.ui.setEnabledWhenFieldValid
 import io.github.pelmenstar1.digiDict.common.ui.setTextIfCharsChanged
@@ -31,7 +30,9 @@ class AddWordToQueueDialogFragment : MaterialDialogFragment() {
     override fun createDialogView(layoutInflater: LayoutInflater, savedInstanceState: Bundle?): View {
         val binding = DialogAddWordToQueueBinding.inflate(layoutInflater, null, false)
 
-        val ls = lifecycleScope
+        // A MaterialDialogFragment builds its content in onCreateDialog, so it has no view lifecycle
+        // owner; the dialog lives exactly as long as the fragment.
+        val owner = this
         val vm = viewModel
 
         val root = binding.root
@@ -48,7 +49,7 @@ class AddWordToQueueDialogFragment : MaterialDialogFragment() {
         vm.cachedWordEntries = cachedEntries
 
         addButton.apply {
-            setEnabledWhenFieldValid(vm.validity, AddWordToQueueDialogViewModel.wordValidityField, ls)
+            setEnabledWhenFieldValid(vm.validity, AddWordToQueueDialogViewModel.wordValidityField, owner)
 
             setOnClickListener { vm.addEntry() }
         }
@@ -57,15 +58,15 @@ class AddWordToQueueDialogFragment : MaterialDialogFragment() {
             vm.word = it.toStringOrEmpty()
         }
 
-        ls.launchFlowCollector(vm.wordFlow) {
+        owner.launchFlowCollector(vm.wordFlow) {
             wordEditText.setTextIfCharsChanged(it)
         }
 
-        ls.launchFlowCollector(vm.wordErrorFlow) {
+        owner.launchFlowCollector(vm.wordErrorFlow) {
             wordInputLayout.error = it?.let(errorFormatter::format)
         }
 
-        ls.launchFlowCollector(vm.addAction.successFlow) {
+        owner.launchFlowCollector(vm.addAction.successFlow) {
             dismiss()
         }
 

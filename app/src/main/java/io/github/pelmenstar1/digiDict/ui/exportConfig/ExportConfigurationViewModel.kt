@@ -21,10 +21,12 @@ class ExportConfigurationViewModel @Inject constructor(
     private val progressReporter = ProgressReporter()
     val progressFlow = progressReporter.progressFlow
 
+    data class ExportRequest(val context: Context, val uri: Uri)
+
     var selectedFormat: BackupFormat? = null
     var exportBadges: Boolean = true
 
-    val exportAction = viewModelAction<Context, Uri>(TAG, Dispatchers.IO) { context, uri ->
+    val exportAction = viewModelAction<ExportRequest>(TAG, Dispatchers.IO) { (context, uri) ->
         val options = ExportOptions(exportBadges)
         val reporter = progressReporter
 
